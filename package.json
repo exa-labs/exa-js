@@ -1,0 +1,29 @@
+{
+  "name": "metaphor-node",
+  "version": "1.0.0",
+  "description": "Metaphor Node SDK",
+  "main": "index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metaphorsystems/metaphor-node.git"
+  },
+  "keywords": [
+    "metaphor",
+    "api",
+    "search",
+    "sdk",
+    "axios",
+    "http",
+    "typescript",
+    "javascript"
+  ],
+  "author": "Metapho",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/metaphorsystems/metaphor-node/issues"
+  },
+  "homepage": "https://github.com/metaphorsystems/metaphor-node#readme",
+  "dependencies": {
+    "axios": "^1.4.0"
+  }
+}
