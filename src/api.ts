@@ -444,7 +444,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
  * @class DefaultApi
  * @extends {BaseAPI}
  */
-export class DefaultApi extends BaseAPI {
+export default class DefaultApi extends BaseAPI {
     /**
      * Find similar links to the link provided.
      * @summary Find similar links
