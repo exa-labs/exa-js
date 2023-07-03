@@ -38,14 +38,13 @@ export interface DocumentContent {
     title: string;
     extract: string;
 }
-interface GetContentsResponse {
+export interface GetContentsResponse {
     contents: DocumentContent[];
 }
-export default class MetaphorAPI {
+export default class Metaphor {
     private client;
     constructor(apiKey: string);
     search(request: SearchRequest): Promise<AxiosResponse<SearchResponse>>;
     findSimilar(request: FindSimilarRequest): Promise<AxiosResponse<SearchResponse>>;
     getContents(request: GetContentsRequest): Promise<AxiosResponse<GetContentsResponse>>;
 }
-export {};

@@ -4,7 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
-class MetaphorAPI {
+// The Metaphor class encapsulates the API's endpoints.
+class Metaphor {
     constructor(apiKey) {
         this.client = axios_1.default.create({
             baseURL: 'https://api.metaphor.systems',
@@ -23,4 +24,4 @@ class MetaphorAPI {
         return this.client.get('/contents', { params: request });
     }
 }
-exports.default = MetaphorAPI;
+exports.default = Metaphor;
