@@ -1,8 +1,12 @@
 {
   "name": "metaphor-node",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Metaphor Node SDK",
-  "main": "index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/metaphorsystems/metaphor-node.git"
@@ -17,7 +21,7 @@
     "typescript",
     "javascript"
   ],
-  "author": "Metapho",
+  "author": "Metaphor",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/metaphorsystems/metaphor-node/issues"
