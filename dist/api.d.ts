@@ -313,7 +313,7 @@ export declare const DefaultApiFactory: (configuration?: Configuration, basePath
  * @class DefaultApi
  * @extends {BaseAPI}
  */
-export default class DefaultApi extends BaseAPI {
+export declare class DefaultApi extends BaseAPI {
     /**
      * Find similar links to the link provided.
      * @summary Find similar links

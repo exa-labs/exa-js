@@ -12,7 +12,10 @@
  * Do not edit the class manually.
  */
 
+// Manually added to have default.
+import { DefaultApi } from './api';
 
 export * from "./api";
 export * from "./configuration";
 
+export default DefaultApi;

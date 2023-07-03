@@ -16,7 +16,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DefaultApiFactory = exports.DefaultApiFp = exports.DefaultApiAxiosParamCreator = void 0;
+exports.DefaultApi = exports.DefaultApiFactory = exports.DefaultApiFp = exports.DefaultApiAxiosParamCreator = void 0;
 const axios_1 = __importDefault(require("axios"));
 // Some imports not used depending on template conditions
 // @ts-ignore
@@ -253,4 +253,4 @@ class DefaultApi extends base_1.BaseAPI {
         return (0, exports.DefaultApiFp)(this.configuration).search(searchRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
-exports.default = DefaultApi;
+exports.DefaultApi = DefaultApi;

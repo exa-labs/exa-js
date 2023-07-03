@@ -27,5 +27,8 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+// Manually added to have default.
+const api_1 = require("./api");
 __exportStar(require("./api"), exports);
 __exportStar(require("./configuration"), exports);
+exports.default = api_1.DefaultApi;

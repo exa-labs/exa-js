@@ -9,5 +9,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { DefaultApi } from './api';
 export * from "./api";
 export * from "./configuration";
+export default DefaultApi;
