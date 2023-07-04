@@ -50,6 +50,7 @@ export interface GetContentsRequest {
 
 // The DocumentContent interface represents the content of a document from the /contents endpoint.
 export interface DocumentContent {
+  id: string // The ID of the document.
   url: string; // The URL of the document.
   title: string; // The title of the document.
   extract: string; // The first 1000 tokens of content in the document.
