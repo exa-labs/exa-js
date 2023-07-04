@@ -34,6 +34,7 @@ export interface GetContentsRequest {
     ids: string[];
 }
 export interface DocumentContent {
+    id: string;
     url: string;
     title: string;
     extract: string;
