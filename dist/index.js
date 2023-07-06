@@ -15,13 +15,16 @@ class Metaphor {
         });
     }
     async search(request) {
-        return this.client.post('/search', request);
+        const response = await this.client.post('/search', request);
+        return response.data;
     }
     async findSimilar(request) {
-        return this.client.post('/findSimilar', request);
+        const response = await this.client.post('/findSimilar', request);
+        return response.data;
     }
     async getContents(request) {
-        return this.client.get('/contents', { params: request });
+        const response = await this.client.get('/contents', { params: request });
+        return response.data;
     }
 }
 exports.default = Metaphor;

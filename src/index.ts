@@ -75,15 +75,18 @@ export default class Metaphor {
     });
   }
 
-  async search(request: SearchRequest): Promise<AxiosResponse<SearchResponse>> {
-    return this.client.post('/search', request);
+    async search(request: SearchRequest): Promise<SearchResponse> {
+    const response = await this.client.post<SearchResponse>('/search', request);
+    return response.data;
   }
 
-  async findSimilar(request: FindSimilarRequest): Promise<AxiosResponse<SearchResponse>> {
-    return this.client.post('/findSimilar', request);
+  async findSimilar(request: FindSimilarRequest): Promise<SearchResponse> {
+    const response = await this.client.post<SearchResponse>('/findSimilar', request);
+    return response.data;
   }
 
-  async getContents(request: GetContentsRequest): Promise<AxiosResponse<GetContentsResponse>> {
-    return this.client.get('/contents', { params: request });
+  async getContents(request: GetContentsRequest): Promise<GetContentsResponse> {
+    const response = await this.client.get<GetContentsResponse>('/contents', { params: request });
+    return response.data;
   }
 }

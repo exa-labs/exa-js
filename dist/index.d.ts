@@ -1,4 +1,3 @@
-import { AxiosResponse } from 'axios';
 export interface SearchRequest {
     query: string;
     numResults?: number;
@@ -45,7 +44,7 @@ export interface GetContentsResponse {
 export default class Metaphor {
     private client;
     constructor(apiKey: string);
-    search(request: SearchRequest): Promise<AxiosResponse<SearchResponse>>;
-    findSimilar(request: FindSimilarRequest): Promise<AxiosResponse<SearchResponse>>;
-    getContents(request: GetContentsRequest): Promise<AxiosResponse<GetContentsResponse>>;
+    search(request: SearchRequest): Promise<SearchResponse>;
+    findSimilar(request: FindSimilarRequest): Promise<SearchResponse>;
+    getContents(request: GetContentsRequest): Promise<GetContentsResponse>;
 }
