@@ -7,6 +7,7 @@ export interface SearchRequest {
     endCrawlDate?: string;
     startPublishedDate?: string;
     endPublishedDate?: string;
+    useAutoprompt?: string;
 }
 export interface Result {
     title: string;
@@ -18,6 +19,7 @@ export interface Result {
 }
 export interface SearchResponse {
     results: Result[];
+    autopromptString?: string;
 }
 export interface FindSimilarRequest {
     url: string;

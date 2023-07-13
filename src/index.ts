@@ -11,6 +11,7 @@ export interface SearchRequest {
   endCrawlDate?: string; // Include results only that were crawled before this date. Must be in ISO 8601 format. Example: "2023-12-31"
   startPublishedDate?: string; // Include only links with a published date after this. Must be in ISO 8601 format. Example: "2023-01-01"
   endPublishedDate?: string; // Include only links with a published date before this. Must be in ISO 8601 format. Example: "2023-12-31"
+  useAutoprompt?: string; // 
 }
 
 // The Result interface represents a search result object from the API.
@@ -27,6 +28,7 @@ export interface Result {
 // It includes an array of result objects.
 export interface SearchResponse {
   results: Result[];
+  autopromptString?: string; // The autoprompt string for the query, if useAutoprompt was on.
 }
 
 // FindSimilar request interface corresponds to the request schema for the /findSimilar endpoint.
