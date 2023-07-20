@@ -7,7 +7,7 @@ export interface SearchRequest {
     endCrawlDate?: string;
     startPublishedDate?: string;
     endPublishedDate?: string;
-    useAutoprompt?: string;
+    useAutoprompt?: boolean;
 }
 export interface Result {
     title: string;
