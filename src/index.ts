@@ -68,9 +68,9 @@ export interface GetContentsResponse {
 export default class Metaphor {
   private client: AxiosInstance;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, baseURL: string = 'https://api.metaphor.systems') {
     this.client = axios.create({
-      baseURL: 'https://api.metaphor.systems',
+      baseURL,
       headers: {
         'x-api-key': apiKey
       }

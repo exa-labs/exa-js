@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
 // The Metaphor class encapsulates the API's endpoints.
 class Metaphor {
-    constructor(apiKey) {
+    constructor(apiKey, baseURL = 'https://api.metaphor.systems') {
         this.client = axios_1.default.create({
-            baseURL: 'https://api.metaphor.systems',
+            baseURL,
             headers: {
                 'x-api-key': apiKey
             }

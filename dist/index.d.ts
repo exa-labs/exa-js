@@ -45,7 +45,7 @@ export interface GetContentsResponse {
 }
 export default class Metaphor {
     private client;
-    constructor(apiKey: string);
+    constructor(apiKey: string, baseURL?: string);
     search(request: SearchRequest): Promise<SearchResponse>;
     findSimilar(request: FindSimilarRequest): Promise<SearchResponse>;
     getContents(request: GetContentsRequest): Promise<GetContentsResponse>;
