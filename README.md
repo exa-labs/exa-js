@@ -9,7 +9,7 @@ https://www.npmjs.com/package/metaphor-node
 npm install metaphor-node
 ```
 
-## `metaphor.search(request: SearchRequest): Promise<SearchResponse>`
+### `metaphor.search(request: SearchRequest): Promise<SearchResponse>`
 Performs a search on the Metaphor system with the given parameters.
 
 ```javascript
@@ -21,7 +21,7 @@ const response = await metaphor.search({
 });
 ```
 
-## `metaphor.findSimilar(request: FindSimilarRequest): Promise<SearchResponse>`
+### `metaphor.findSimilar(request: FindSimilarRequest): Promise<SearchResponse>`
 Finds content similar to the specified URL.
 
 ```javascript
@@ -31,7 +31,7 @@ const response = await metaphor.findSimilar({
 });
 ```
 
-## metaphor.getContents(request: GetContentsRequest): Promise<GetContentsResponse>
+### `metaphor.getContents(request: GetContentsRequest): Promise<GetContentsResponse>`
 Retrieves the contents of the specified documents.
 
 const response = await metaphor.getContents({
