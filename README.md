@@ -16,7 +16,6 @@ Performs a search on the Metaphor system with the given parameters.
 const response = await metaphor.search('global warming', {
   numResults: 5,
   includeDomains: ['example.com'],
-  excludeDomains: ['excludedomain.com']
 });
 ```
 
