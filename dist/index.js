@@ -24,8 +24,9 @@ class Metaphor {
     }
     async getContents(request) {
         let ids;
-        if ('results' in request) {
-            ids = request.results.map(result => result.id);
+        // If it's an array, then it is the Result[] that is being passed.
+        if (Array.isArray(request)) {
+            ids = request.map(result => result.id);
         }
         else {
             ids = request.ids;

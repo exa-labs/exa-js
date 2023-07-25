@@ -49,5 +49,5 @@ export default class Metaphor {
     constructor(apiKey: string, baseURL?: string);
     search(request: SearchRequest): Promise<SearchResponse>;
     findSimilar(request: FindSimilarRequest): Promise<SearchResponse>;
-    getContents(request: GetContentsRequest | SearchResponse): Promise<GetContentsResponse>;
+    getContents(request: GetContentsRequest | Result[]): Promise<GetContentsResponse>;
 }

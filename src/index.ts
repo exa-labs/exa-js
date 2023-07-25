@@ -88,14 +88,16 @@ export default class Metaphor {
     return response.data;
   }
 
-  async getContents(request: GetContentsRequest | SearchResponse): Promise<GetContentsResponse> {
+  async getContents(request: GetContentsRequest | Result[]): Promise<GetContentsResponse> {
     let ids: string[];
-    if ('results' in request) {
-      ids = request.results.map(result => result.id);
+    // If it's an array, then it is the Result[] that is being passed.
+    if (Array.isArray(request)) {
+      ids = request.map(result => result.id);
     } else {
       ids = request.ids;
     }
     const response = await this.client.get<GetContentsResponse>('/contents', { params: { ids } });
     return response.data;
   }
+
 }
