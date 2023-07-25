@@ -12,6 +12,7 @@ export interface SearchRequest {
   startPublishedDate?: string; // Include only links with a published date after this. Must be in ISO 8601 format. Example: "2023-01-01"
   endPublishedDate?: string; // Include only links with a published date before this. Must be in ISO 8601 format. Example: "2023-12-31"
   useAutoprompt?: boolean; // Uses Metaphor-optimized query.
+  type?: string; // Search can be 'keyword' or 'neural'. Default is 'neural'
 }
 
 // The Result interface represents a search result object from the API.
@@ -87,8 +88,14 @@ export default class Metaphor {
     return response.data;
   }
 
-  async getContents(request: GetContentsRequest): Promise<GetContentsResponse> {
-    const response = await this.client.get<GetContentsResponse>('/contents', { params: request });
+  async getContents(request: GetContentsRequest | SearchResponse): Promise<GetContentsResponse> {
+    let ids: string[];
+    if ('results' in request) {
+      ids = request.results.map(result => result.id);
+    } else {
+      ids = request.ids;
+    }
+    const response = await this.client.get<GetContentsResponse>('/contents', { params: { ids } });
     return response.data;
   }
 }

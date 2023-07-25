@@ -8,6 +8,7 @@ export interface SearchRequest {
     startPublishedDate?: string;
     endPublishedDate?: string;
     useAutoprompt?: boolean;
+    type?: string;
 }
 export interface Result {
     title: string;
@@ -48,5 +49,5 @@ export default class Metaphor {
     constructor(apiKey: string, baseURL?: string);
     search(request: SearchRequest): Promise<SearchResponse>;
     findSimilar(request: FindSimilarRequest): Promise<SearchResponse>;
-    getContents(request: GetContentsRequest): Promise<GetContentsResponse>;
+    getContents(request: GetContentsRequest | SearchResponse): Promise<GetContentsResponse>;
 }

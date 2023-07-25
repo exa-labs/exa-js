@@ -23,7 +23,14 @@ class Metaphor {
         return response.data;
     }
     async getContents(request) {
-        const response = await this.client.get('/contents', { params: request });
+        let ids;
+        if ('results' in request) {
+            ids = request.results.map(result => result.id);
+        }
+        else {
+            ids = request.ids;
+        }
+        const response = await this.client.get('/contents', { params: { ids } });
         return response.data;
     }
 }
