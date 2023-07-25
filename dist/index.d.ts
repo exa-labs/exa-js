@@ -1,5 +1,4 @@
-export interface SearchRequest {
-    query: string;
+export interface SearchOptions {
     numResults?: number;
     includeDomains?: string[];
     excludeDomains?: string[];
@@ -22,8 +21,7 @@ export interface SearchResponse {
     results: Result[];
     autopromptString?: string;
 }
-export interface FindSimilarRequest {
-    url: string;
+export interface FindSimilarOptions {
     numResults?: number;
     includeDomains?: string[];
     excludeDomains?: string[];
@@ -31,9 +29,6 @@ export interface FindSimilarRequest {
     endCrawlDate?: string;
     startPublishedDate?: string;
     endPublishedDate?: string;
-}
-export interface GetContentsRequest {
-    ids: string[];
 }
 export interface DocumentContent {
     id: string;
@@ -47,7 +42,7 @@ export interface GetContentsResponse {
 export default class Metaphor {
     private client;
     constructor(apiKey: string, baseURL?: string);
-    search(request: SearchRequest): Promise<SearchResponse>;
-    findSimilar(request: FindSimilarRequest): Promise<SearchResponse>;
-    getContents(request: GetContentsRequest | Result[]): Promise<GetContentsResponse>;
+    search(query: string, options?: SearchOptions): Promise<SearchResponse>;
+    findSimilar(url: string, options?: FindSimilarOptions): Promise<SearchResponse>;
+    getContents(ids: string[] | Result[]): Promise<GetContentsResponse>;
 }

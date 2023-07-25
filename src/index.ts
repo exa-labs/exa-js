@@ -1,10 +1,8 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 
-// Search request interface corresponds to the request schema for the /search endpoint.
-// It includes properties for the query, number of results, included and excluded domains, and date ranges for crawled and published data.
-export interface SearchRequest {
-  query: string; // A declarative suggestion query string. Example: "Here is an article about the state of search:"
-  numResults?: number; // Number of search results to return. Maximum 500. Default 100
+// Search options interface corresponds to the request schema for the /search endpoint without the query, which is the first parameter in  search()
+export interface SearchOptions {
+  numResults?: number; // Number of search results to return. Maximum 100. Default 10
   includeDomains?: string[]; // Include results only from these domains. Example: ["example.com", "sample.net"]
   excludeDomains?: string[]; // Exclude results from these domains. Example: ["excludedomain.comcludeme.net"]
   startCrawlDate?: string; // Include results only that were crawled after this date. Must be in ISO 8601 format. Example: "2023-01-01"
@@ -32,23 +30,15 @@ export interface SearchResponse {
   autopromptString?: string; // The autoprompt string for the query, if useAutoprompt was on.
 }
 
-// FindSimilar request interface corresponds to the request schema for the /findSimilar endpoint.
-// It includes properties for the URL to find similar links, number of results, included and excluded domains, and date ranges for crawled and published data.
-export interface FindSimilarRequest {
-  url: string; // The url for which you would like to find similar links. Example: "https://slatestarcodex.com/2014/07/30/meditations-on-moloch/"
-  numResults?: number; // Number of search results to return. Maximum 500. Default 100
+// FindSimilarOptions interface corresponds to the request schema for the /findSimilar endpoint without the url, which is the first parameter in findSimilar()
+export interface FindSimilarOptions {
+  numResults?: number; // Number of search results to return. Maximum 100. Default 10
   includeDomains?: string[]; // Include results only from these domains. Example: ["example.com", "sample.net"]
   excludeDomains?: string[]; // Exclude results from these domains. Example: ["excludedomain.com", "excludeme.net"]
   startCrawlDate?: string; // The optional start date (inclusive) for the crawled data. Must be specified in ISO 8601 format. Example: "2023-01-01"
   endCrawlDate?: string; // The optional end date (inclusive) for the crawled data. Must be specified in ISO 8601 format. Example: "2023-12-31"
   startPublishedDate?: string; // The optional start date (inclusive) for the published data. Must be specified in ISO 8601 format. Example: "2023-01-01"
   endPublishedDate?: string; // The optional end date (inclusive) for the published data. Must be specified in ISO 8601 format. Example: "2023-12-31"
-}
-
-// The GetContentsRequest interface corresponds to the query parameters for the /contents endpoint.
-// It includes an array of document IDs.
-export interface GetContentsRequest {
-  ids: string[]; // An array of document IDs obtained from either /search or /findSimilar endpoints.
 }
 
 // The DocumentContent interface represents the content of a document from the /contents endpoint.
@@ -70,34 +60,35 @@ export default class Metaphor {
   private client: AxiosInstance;
 
   constructor(apiKey: string, baseURL: string = 'https://api.metaphor.systems') {
-    this.client = axios.create({
-      baseURL,
+    this.client = axios.create({ baseURL,
       headers: {
         'x-api-key': apiKey
       }
     });
   }
 
-    async search(request: SearchRequest): Promise<SearchResponse> {
-    const response = await this.client.post<SearchResponse>('/search', request);
+  async search(query: string, options?: SearchOptions): Promise<SearchResponse> {
+    const response = await this.client.post<SearchResponse>('/search', {query, ...options});
     return response.data;
   }
 
-  async findSimilar(request: FindSimilarRequest): Promise<SearchResponse> {
-    const response = await this.client.post<SearchResponse>('/findSimilar', request);
+  async findSimilar(url: string, options?: FindSimilarOptions): Promise<SearchResponse> {
+    const response = await this.client.post<SearchResponse>('/findSimilar', {url, ...options});
     return response.data;
   }
 
-  async getContents(request: GetContentsRequest | Result[]): Promise<GetContentsResponse> {
-    let ids: string[];
-    // If it's an array, then it is the Result[] that is being passed.
-    if (Array.isArray(request)) {
-      ids = request.map(result => result.id);
+  async getContents(ids: string[] | Result[]): Promise<GetContentsResponse> {
+    let requestIds: string[];
+
+    // Check if the first element is a string or not. If it's a string, it's an ID array.
+    if (typeof ids[0] === 'string') {
+      requestIds = ids as string[];
     } else {
-      ids = request.ids;
+      // If it's not a string, then it's a Result array.
+      requestIds = (ids as Result[]).map(result => result.id);
     }
-    const response = await this.client.get<GetContentsResponse>('/contents', { params: { ids } });
+
+    const response = await this.client.get<GetContentsResponse>('/contents', { params: { ids: requestIds } });
     return response.data;
   }
-
 }
