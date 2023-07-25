@@ -13,8 +13,7 @@ npm install metaphor-node
 Performs a search on the Metaphor system with the given parameters.
 
 ```javascript
-const response = await metaphor.search({
-  query: 'global warming',
+const response = await metaphor.search('global warming', {
   numResults: 5,
   includeDomains: ['example.com'],
   excludeDomains: ['excludedomain.com']
@@ -25,8 +24,7 @@ const response = await metaphor.search({
 Finds content similar to the specified URL.
 
 ```javascript
-const response = await metaphor.findSimilar({
-  url: 'https://example.com/some-article',
+const response = await metaphor.findSimilar('https://example.com/some-article', {
   numResults: 3
 });
 ```
@@ -35,9 +33,7 @@ const response = await metaphor.findSimilar({
 Retrieves the contents of the specified documents.
 
 ```javascript
-const response = await metaphor.getContents({
-  ids: ['doc1', 'doc2']
-});
+const response = await metaphor.getContents(['doc1', 'doc2']);
 ```
 
 # Contributing
