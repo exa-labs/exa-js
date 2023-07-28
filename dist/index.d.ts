@@ -14,7 +14,7 @@ export interface Result {
     url: string;
     publishedDate?: string;
     author?: string;
-    score: number;
+    score?: number;
     id: string;
 }
 export interface SearchResponse {
