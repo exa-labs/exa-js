@@ -9,35 +9,31 @@ https://www.npmjs.com/package/metaphor-node
 npm install metaphor-node
 ```
 
-### `metaphor.search(request: SearchRequest): Promise<SearchResponse>`
+### `metaphor.search(query: string, options?: SearchOptions): Promise<SearchResponse>`
 Performs a search on the Metaphor system with the given parameters.
 
 ```javascript
-const response = await metaphor.search({
-  query: 'global warming',
+const response = await metaphor.search('funny article about tech culture', {
   numResults: 5,
-  includeDomains: ['example.com'],
-  excludeDomains: ['excludedomain.com']
+  includeDomains: ['nytimes.com', 'wsj.com'], 
+  startPublishedDate: '2023-06-12'
 });
 ```
 
-### `metaphor.findSimilar(request: FindSimilarRequest): Promise<SearchResponse>`
+### `metaphor.findSimilar(url: string, options?: FindSimilarOptions): Promise<SearchResponse>`
 Finds content similar to the specified URL.
 
 ```javascript
-const response = await metaphor.findSimilar({
-  url: 'https://example.com/some-article',
-  numResults: 3
+const response = await metaphor.findSimilar('https://waitbutwhy.com/2014/05/fermi-paradox.html', {
+  numResults: 10
 });
 ```
 
-### `metaphor.getContents(request: GetContentsRequest): Promise<GetContentsResponse>`
+### `metaphor.getContents(ids: string[] | Result[]): Promise<GetContentsResponse>`
 Retrieves the contents of the specified documents.
 
 ```javascript
-const response = await metaphor.getContents({
-  ids: ['doc1', 'doc2']
-});
+const response = await metaphor.getContents(['8U71IlQ5DUTdsZFherhhYA', 'X3wd0PbJmAvhu_DQjDKA7A']);
 ```
 
 # Contributing
