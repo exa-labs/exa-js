@@ -40,8 +40,10 @@ export interface GetContentsResponse {
     contents: DocumentContent[];
 }
 export default class Metaphor {
-    private client;
+    private baseURL;
+    private headers;
     constructor(apiKey: string, baseURL?: string);
+    private request;
     search(query: string, options?: SearchOptions): Promise<SearchResponse>;
     findSimilar(url: string, options?: FindSimilarOptions): Promise<SearchResponse>;
     getContents(ids: string[] | Result[]): Promise<GetContentsResponse>;

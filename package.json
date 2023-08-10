@@ -1,33 +1,31 @@
 {
-  "name": "metaphor-node",
-  "version": "1.0.18",
-  "description": "Metaphor Node SDK",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/metaphorsystems/metaphor-node.git"
-  },
-  "keywords": [
-    "metaphor",
-    "api",
-    "search",
-    "sdk",
-    "axios",
-    "http",
-    "typescript",
-    "javascript"
-  ],
-  "author": "Metaphor",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/metaphorsystems/metaphor-node/issues"
-  },
-  "homepage": "https://github.com/metaphorsystems/metaphor-node#readme",
-  "dependencies": {
-    "axios": "^1.4.0"
-  }
+	"name": "metaphor-node",
+	"version": "1.0.18",
+	"description": "Metaphor Node SDK",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "tsc"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/metaphorsystems/metaphor-node.git"
+	},
+	"keywords": [
+		"metaphor",
+		"api",
+		"search",
+		"sdk",
+		"axios",
+		"http",
+		"typescript",
+		"javascript"
+	],
+	"author": "Metaphor",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/metaphorsystems/metaphor-node/issues"
+	},
+	"homepage": "https://github.com/metaphorsystems/metaphor-node#readme",
+	"dependencies": {}
 }

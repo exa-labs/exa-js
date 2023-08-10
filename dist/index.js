@@ -1,38 +1,42 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const axios_1 = __importDefault(require("axios"));
 // The Metaphor class encapsulates the API's endpoints.
 class Metaphor {
-    constructor(apiKey, baseURL = 'https://api.metaphor.systems') {
-        this.client = axios_1.default.create({ baseURL,
-            headers: {
-                'x-api-key': apiKey
-            }
+    constructor(apiKey, baseURL = "https://api.metaphor.systems") {
+        this.baseURL = baseURL;
+        this.headers = new Headers({
+            "x-api-key": apiKey,
+            "Content-Type": "application/json",
         });
     }
+    async request(endpoint, method, body) {
+        const response = await fetch(this.baseURL + endpoint, {
+            method,
+            headers: this.headers,
+            body: body ? JSON.stringify(body) : undefined,
+        });
+        if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`);
+        }
+        return await response.json();
+    }
     async search(query, options) {
-        const response = await this.client.post('/search', { query, ...options });
-        return response.data;
+        return await this.request("/search", "POST", { query, ...options });
     }
     async findSimilar(url, options) {
-        const response = await this.client.post('/findSimilar', { url, ...options });
-        return response.data;
+        return await this.request("/findSimilar", "POST", { url, ...options });
     }
     async getContents(ids) {
         let requestIds;
-        // Check if the first element is a string or not. If it's a string, it's an ID array.
-        if (typeof ids[0] === 'string') {
+        if (typeof ids[0] === "string") {
             requestIds = ids;
         }
         else {
-            // If it's not a string, then it's a Result array.
-            requestIds = ids.map(result => result.id);
+            requestIds = ids.map((result) => result.id);
         }
-        const response = await this.client.get('/contents', { params: { ids: requestIds } });
-        return response.data;
+        // Using URLSearchParams to append the parameters to the URL
+        const params = new URLSearchParams({ ids: requestIds.join(",") });
+        return await this.request(`/contents?${params}`, "GET");
     }
 }
 exports.default = Metaphor;
