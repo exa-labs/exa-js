@@ -31,6 +31,7 @@ class Metaphor {
         this.headers = new node_fetch_1.Headers({
             'x-api-key': apiKey,
             'Content-Type': 'application/json',
+            'User-Agent': 'metaphor-node 1.0.19',
         });
     }
     async request(endpoint, method, body) {

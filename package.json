@@ -1,6 +1,6 @@
 {
 	"name": "metaphor-node",
-	"version": "1.0.19",
+	"version": "1.0.20",
 	"description": "Metaphor Node SDK",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
