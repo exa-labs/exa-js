@@ -1,6 +1,6 @@
 # metaphor-node
 
-Our official Node SDK. Uses axios under the hood.
+Our official Node SDK. Uses node-fetch under the hood.
 
 https://www.npmjs.com/package/metaphor-node
 
