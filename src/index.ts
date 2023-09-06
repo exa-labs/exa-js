@@ -72,11 +72,11 @@ export default class Metaphor {
     });
   }
 
-  private async request(
+ private async request<T>(
     endpoint: string,
     method: string,
     body?: any
-  ): Promise<any> {
+  ): Promise<T> {
     const response = await fetch(this.baseURL + endpoint, {
       method,
       headers: this.headers,
@@ -84,11 +84,13 @@ export default class Metaphor {
     });
 
     if (!response.ok) {
-      const message = (await response.json()).error;
+      const errorData = (await response.json()) as { error: string };
+      const message = errorData.error
       throw new Error(`Request failed with status ${response.status}. ${message}`);
     }
 
-    return await response.json();
+    return response.json() as T;
+
   }
 
   async search(
