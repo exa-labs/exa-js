@@ -68,4 +68,4 @@ class Metaphor {
         return await this.request(`/contents?${params}`, 'GET');
     }
 }
-exports.default = Metaphor;
+module.exports = Metaphor;

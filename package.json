@@ -28,6 +28,6 @@
 	"homepage": "https://github.com/metaphorsystems/metaphor-node#readme",
 	"devDependencies": {
 		"@types/node-fetch": "^2.6.4",
-		"node-fetch": "^2.6.12"
+		"node-fetch": "^2.6.7"
 	}
 }
