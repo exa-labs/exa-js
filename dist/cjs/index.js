@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const cross_fetch_1 = __importDefault(require("cross-fetch"));
 // The Metaphor class encapsulates the API's endpoints.
 class Metaphor {
+    baseURL;
+    headers;
     constructor(apiKey, baseURL = "https://api.metaphor.systems") {
         this.baseURL = baseURL;
         this.headers = new Headers({

@@ -1,15 +1,18 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
-    "module": "commonjs",
-    "declaration": true,
-    "outDir": "dist",
-    "rootDir": "src",
+    "target": "ESNext",
+    "moduleResolution": "node",
     "strict": true,
+    "declaration": true,
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "isolatedModules": true,
+    "rootDir": "./src",
+    "baseUrl": "./",
+    "outDir": "./dist"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]
 }

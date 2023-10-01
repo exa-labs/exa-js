@@ -1,11 +1,8 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const cross_fetch_1 = __importDefault(require("cross-fetch"));
+import fetch from "cross-fetch";
 // The Metaphor class encapsulates the API's endpoints.
-class Metaphor {
+export default class Metaphor {
+    baseURL;
+    headers;
     constructor(apiKey, baseURL = "https://api.metaphor.systems") {
         this.baseURL = baseURL;
         this.headers = new Headers({
@@ -15,7 +12,7 @@ class Metaphor {
         });
     }
     async request(endpoint, method, body) {
-        const response = await (0, cross_fetch_1.default)(this.baseURL + endpoint, {
+        const response = await fetch(this.baseURL + endpoint, {
             method,
             headers: this.headers,
             body: body ? JSON.stringify(body) : undefined,
@@ -48,4 +45,3 @@ class Metaphor {
         return await this.request(`/contents?${params}`, "GET");
     }
 }
-exports.default = Metaphor;

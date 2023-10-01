@@ -1,5 +1,4 @@
-import fetch, { Headers } from 'node-fetch';
-
+import fetch from "cross-fetch";
 // Search options interface corresponds to the request schema for the /search endpoint without the query, which is the first parameter in  search()
 export interface SearchOptions {
   numResults?: number; // Number of search results to return. Maximum 100. Default 10
@@ -62,13 +61,13 @@ export default class Metaphor {
 
   constructor(
     apiKey: string,
-    baseURL: string = 'https://api.metaphor.systems'
+    baseURL: string = "https://api.metaphor.systems"
   ) {
     this.baseURL = baseURL;
     this.headers = new Headers({
-      'x-api-key': apiKey,
-      'Content-Type': 'application/json',
-      'User-Agent': 'metaphor-node 1.0.19',
+      "x-api-key": apiKey,
+      "Content-Type": "application/json",
+      "User-Agent": "metaphor-node 1.0.19",
     });
   }
 
@@ -85,7 +84,9 @@ export default class Metaphor {
 
     if (!response.ok) {
       const message = (await response.json()).error;
-      throw new Error(`Request failed with status ${response.status}. ${message}`);
+      throw new Error(
+        `Request failed with status ${response.status}. ${message}`
+      );
     }
 
     return await response.json();
@@ -95,29 +96,29 @@ export default class Metaphor {
     query: string,
     options?: SearchOptions
   ): Promise<SearchResponse> {
-    return await this.request('/search', 'POST', { query, ...options });
+    return await this.request("/search", "POST", { query, ...options });
   }
 
   async findSimilar(
     url: string,
     options?: FindSimilarOptions
   ): Promise<SearchResponse> {
-    return await this.request('/findSimilar', 'POST', { url, ...options });
+    return await this.request("/findSimilar", "POST", { url, ...options });
   }
 
   async getContents(ids: string[] | Result[]): Promise<GetContentsResponse> {
     if (ids.length === 0) {
-      throw new Error('Must provide at least one ID');
+      throw new Error("Must provide at least one ID");
     }
     let requestIds: string[];
-    if (typeof ids[0] === 'string') {
+    if (typeof ids[0] === "string") {
       requestIds = ids as string[];
     } else {
       requestIds = (ids as Result[]).map((result) => result.id);
     }
 
     // Using URLSearchParams to append the parameters to the URL
-    const params = new URLSearchParams({ ids: requestIds.join(',') });
-    return await this.request(`/contents?${params}`, 'GET');
+    const params = new URLSearchParams({ ids: requestIds.join(",") });
+    return await this.request(`/contents?${params}`, "GET");
   }
 }
