@@ -1,11 +1,11 @@
 "use client";
 import Image from "next/image";
-import Metaphor from "jiito-kowalski-node";
+import Metaphor from "metaphor-node";
 import { useEffect } from "react";
 
 export default function Home() {
   useEffect(() => {
-    const metaphor = new Metaphor("fcac2ebb-a2fe-4348-bf45-7470298f0055");
+    const metaphor = new Metaphor("API_KEY");
     metaphor.search("hottest ai startups").then((result) => {
       console.log(result);
     });

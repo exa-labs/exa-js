@@ -15,7 +15,7 @@
     "autoprefixer": "10.4.16",
     "eslint": "8.50.0",
     "eslint-config-next": "13.5.3",
-    "jiito-kowalski-node": "^0.0.2",
+    "metaphor-node": "*",
     "next": "13.5.3",
     "postcss": "8.4.31",
     "react": "18.2.0",
