@@ -1,4 +1,4 @@
-import fetch from "cross-fetch";
+import fetch, { Headers } from "cross-fetch";
 // Search options interface corresponds to the request schema for the /search endpoint without the query, which is the first parameter in  search()
 export interface SearchOptions {
   numResults?: number; // Number of search results to return. Maximum 100. Default 10
