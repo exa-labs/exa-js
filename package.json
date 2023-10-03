@@ -1,4 +1,11 @@
 {
   "private": true,
-  "workspaces": ["examples/*", "packages/*"]
+  "workspaces": [
+    "examples/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "cd packages/core && yarn build",
+    "publish": "cd packages/core && yarn publish"
+  }
 }

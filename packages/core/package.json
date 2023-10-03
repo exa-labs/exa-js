@@ -2,9 +2,11 @@
   "name": "metaphor-node",
   "version": "1.0.20",
   "description": "Metaphor Node SDK",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "files": ["dist"],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
