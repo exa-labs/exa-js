@@ -1,12 +1,19 @@
 # metaphor-node
 
-Our official Node SDK. Uses axios under the hood.
+Our official Javscript SDK. Uses `cross-fetch` under the hood.
 
 https://www.npmjs.com/package/metaphor-node
 
 ## Installation
 ```
 npm install metaphor-node
+```
+
+## Initialization 
+```js
+import Metaphor from "metaphor-node"
+
+const metaphor = new Metaphor(process.env.METAPHOR_API_KEY)
 ```
 
 ### `metaphor.search(query: string, options?: SearchOptions): Promise<SearchResponse>`
