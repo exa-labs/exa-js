@@ -1,7 +1,6 @@
-import fetch, { Headers } from 'node-fetch';
-
+import fetch, { Headers } from "cross-fetch";
 // Search options interface corresponds to the request schema for the /search endpoint without the query, which is the first parameter in  search()
-export interface SearchOptions {
+interface SearchOptions {
   numResults?: number; // Number of search results to return. Maximum 100. Default 10
   includeDomains?: string[]; // Include results only from these domains. Example: ['example.com', 'sample.net']
   excludeDomains?: string[]; // Exclude results from these domains. Example: ['excludedomain.comcludeme.net']
@@ -14,7 +13,7 @@ export interface SearchOptions {
 }
 
 // The Result interface represents a search result object from the API.
-export interface Result {
+interface Result {
   title: string; // The title of the search result.
   url: string; // The URL of the search result.
   publishedDate?: string; // The estimated creation date of the content. Format is YYYY-MM-DD. Nullable
@@ -25,13 +24,13 @@ export interface Result {
 
 // The SearchResponse interface represents the response from the /search endpoint.
 // It includes an array of result objects.
-export interface SearchResponse {
+interface SearchResponse {
   results: Result[];
   autopromptString?: string; // The autoprompt string for the query, if useAutoprompt was on.
 }
 
 // FindSimilarOptions interface corresponds to the request schema for the /findSimilar endpoint without the url, which is the first parameter in findSimilar()
-export interface FindSimilarOptions {
+interface FindSimilarOptions {
   numResults?: number; // Number of search results to return. Maximum 100. Default 10
   includeDomains?: string[]; // Include results only from these domains. Example: ['example.com', 'sample.net']
   excludeDomains?: string[]; // Exclude results from these domains. Example: ['excludedomain.com', 'excludeme.net']
@@ -42,7 +41,7 @@ export interface FindSimilarOptions {
 }
 
 // The DocumentContent interface represents the content of a document from the /contents endpoint.
-export interface DocumentContent {
+interface DocumentContent {
   id: string; // The ID of the document.
   url: string; // The URL of the document.
   title: string; // The title of the document.
@@ -51,24 +50,24 @@ export interface DocumentContent {
 
 // The GetContentsResponse interface represents the response from the /contents endpoint.
 // It includes an array of document content objects.
-export interface GetContentsResponse {
+interface GetContentsResponse {
   contents: DocumentContent[];
 }
 
 // The Metaphor class encapsulates the API's endpoints.
-export default class Metaphor {
+class Metaphor {
   private baseURL: string;
   private headers: Headers;
 
   constructor(
     apiKey: string,
-    baseURL: string = 'https://api.metaphor.systems'
+    baseURL: string = "https://api.metaphor.systems"
   ) {
     this.baseURL = baseURL;
     this.headers = new Headers({
-      'x-api-key': apiKey,
-      'Content-Type': 'application/json',
-      'User-Agent': 'metaphor-node 1.0.19',
+      "x-api-key": apiKey,
+      "Content-Type": "application/json",
+      "User-Agent": "metaphor-node 1.0.20",
     });
   }
 
@@ -85,7 +84,9 @@ export default class Metaphor {
 
     if (!response.ok) {
       const message = (await response.json()).error;
-      throw new Error(`Request failed with status ${response.status}. ${message}`);
+      throw new Error(
+        `Request failed with status ${response.status}. ${message}`
+      );
     }
 
     return await response.json();
@@ -95,29 +96,45 @@ export default class Metaphor {
     query: string,
     options?: SearchOptions
   ): Promise<SearchResponse> {
-    return await this.request('/search', 'POST', { query, ...options });
+    return await this.request("/search", "POST", { query, ...options });
   }
 
   async findSimilar(
     url: string,
     options?: FindSimilarOptions
   ): Promise<SearchResponse> {
-    return await this.request('/findSimilar', 'POST', { url, ...options });
+    return await this.request("/findSimilar", "POST", { url, ...options });
   }
 
   async getContents(ids: string[] | Result[]): Promise<GetContentsResponse> {
     if (ids.length === 0) {
-      throw new Error('Must provide at least one ID');
+      throw new Error("Must provide at least one ID");
     }
     let requestIds: string[];
-    if (typeof ids[0] === 'string') {
+    if (typeof ids[0] === "string") {
       requestIds = ids as string[];
     } else {
       requestIds = (ids as Result[]).map((result) => result.id);
     }
 
     // Using URLSearchParams to append the parameters to the URL
-    const params = new URLSearchParams({ ids: requestIds.join(',') });
-    return await this.request(`/contents?${params}`, 'GET');
+    const params = new URLSearchParams({ ids: requestIds.join(",") });
+    return await this.request(`/contents?${params}`, "GET");
   }
+}
+
+// NAMED EXPORTS
+export type {
+  SearchOptions,
+  Result,
+  SearchResponse,
+  FindSimilarOptions,
+  DocumentContent,
+  GetContentsResponse,
+};
+
+export default Metaphor;
+// Necessary to allow for ergonomic 'const metaphor = require('metaphor-node') in CommonJS
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = Metaphor;
 }

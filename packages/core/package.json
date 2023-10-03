@@ -1,0 +1,47 @@
+{
+  "name": "metaphor-node",
+  "version": "1.0.20",
+  "description": "Metaphor Node SDK",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "module": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metaphorsystems/metaphor-node.git"
+  },
+  "keywords": [
+    "metaphor",
+    "api",
+    "search",
+    "sdk",
+    "http",
+    "typescript",
+    "javascript"
+  ],
+  "author": "Metaphor",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/metaphorsystems/metaphor-node/issues"
+  },
+  "homepage": "https://github.com/metaphorsystems/metaphor-node#readme",
+  "dependencies": {
+    "cross-fetch": "^4.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^7.2.0"
+  }
+}
