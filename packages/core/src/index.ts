@@ -38,6 +38,7 @@ interface FindSimilarOptions {
   endCrawlDate?: string; // The optional end date (inclusive) for the crawled data. Must be specified in ISO 8601 format. Example: '2023-12-31'
   startPublishedDate?: string; // The optional start date (inclusive) for the published data. Must be specified in ISO 8601 format. Example: '2023-01-01'
   endPublishedDate?: string; // The optional end date (inclusive) for the published data. Must be specified in ISO 8601 format. Example: '2023-12-31'
+  excludeSourceDomain?: boolean; // If true, links from the base domain of the input will be automatically excluded from the results. Default: true
 }
 
 // The DocumentContent interface represents the content of a document from the /contents endpoint.
