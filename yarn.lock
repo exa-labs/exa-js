@@ -2310,10 +2310,12 @@ merge2@^1.3.0, merge2@^1.4.1:
   resolved "https://registry.yarnpkg.com/merge2/-/merge2-1.4.1.tgz#4368892f885e907455a6fd7dc55c0c9d404990ae"
   integrity sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==
 
-metaphor-node@1.0.20:
-  version "1.0.20"
-  resolved "https://registry.yarnpkg.com/metaphor-node/-/metaphor-node-1.0.20.tgz#ffa40129d0cc7c61a45d2288ae30ce3cac7dbb58"
-  integrity sha512-Yui+UuXriltS/FssJCMmOqW4pOUDOhRCAMpkxqZ4gIygupE6LJituIgoTLd8VjZweE4j5hVZthskIvpLyxewKg==
+metaphor-node@1.0.22:
+  version "1.0.22"
+  resolved "https://registry.yarnpkg.com/metaphor-node/-/metaphor-node-1.0.22.tgz#1a82d5a98e9978fee6ed61494e2be5c12a6ba7c1"
+  integrity sha512-0UaKIENuvXibYWgDKuc8slL9MwDN4i+NIIXwGWzklyeor8xgy5KLZFkAyq48Bj9iMy2Nv+dOeyWCiyTxU3/EmQ==
+  dependencies:
+    cross-fetch "^4.0.0"
 
 methods@~1.1.2:
   version "1.1.2"

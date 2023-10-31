@@ -68,7 +68,7 @@ class Metaphor {
     this.headers = new Headers({
       "x-api-key": apiKey,
       "Content-Type": "application/json",
-      "User-Agent": "metaphor-node 1.0.20",
+      "User-Agent": "metaphor-node 1.0.22",
     });
   }
 
