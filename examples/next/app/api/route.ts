@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
 import Metaphor from "metaphor-node";
 
-export async function GET(req: NextResponse) {
+export async function GET() {
   const metaphor = new Metaphor(process.env.METAPHOR_API_KEY!);
-  const res = await metaphor.search("hottest ai startups");
+  const results = await metaphor.search("hottest ai startups");
 
-  return NextResponse.json(res);
+  return Response.json({ results });
 }
