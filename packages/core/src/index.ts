@@ -135,7 +135,3 @@ export type {
 };
 
 export default Metaphor;
-// Necessary to allow for ergonomic 'const metaphor = require('metaphor-node') in CommonJS
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = Metaphor;
-}
