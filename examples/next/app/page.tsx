@@ -1,15 +1,6 @@
-"use client";
 import Image from "next/image";
-import Metaphor from "metaphor-node";
-import { useEffect } from "react";
 
 export default function Home() {
-  useEffect(() => {
-    const metaphor = new Metaphor("API_KEY");
-    metaphor.search("hottest ai startups").then((result) => {
-      console.log(result);
-    });
-  }, []);
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
