@@ -47,6 +47,7 @@ interface DocumentContent {
   url: string; // The URL of the document.
   title: string; // The title of the document.
   extract: string; // The first 1000 tokens of content in the document.
+  author?: string | null;
 }
 
 // The GetContentsResponse interface represents the response from the /contents endpoint.
