@@ -1,66 +1,121 @@
 import fetch, { Headers } from "cross-fetch";
-// Search options interface corresponds to the request schema for the /search endpoint without the query, which is the first parameter in  search()
+
+/**
+ * Search options for performing a search query.
+ * @typedef {Object} SearchOptions
+ * @property {number} [numResults] - Number of search results to return. Default 10. Max 10 for basic plans.
+ * @property {string[]} [includeDomains] - List of domains to include in the search.
+ * @property {string[]} [excludeDomains] - List of domains to exclude in the search.
+ * @property {string} [startCrawlDate] - Start date for results based on crawl date.
+ * @property {string} [endCrawlDate] - End date for results based on crawl date.
+ * @property {string} [startPublishedDate] - Start date for results based on published date.
+ * @property {string} [endPublishedDate] - End date for results based on published date.
+ * @property {boolean} [useAutoprompt] - If true, converts query to a Metaphor query.
+ * @property {string} [type] - Type of search, 'keyword' or 'neural'.
+ */
 interface SearchOptions {
-  numResults?: number; // Number of search results to return. Maximum 100. Default 10
-  includeDomains?: string[]; // Include results only from these domains. Example: ['example.com', 'sample.net']
-  excludeDomains?: string[]; // Exclude results from these domains. Example: ['excludedomain.comcludeme.net']
-  startCrawlDate?: string; // Include results only that were crawled after this date. Must be in ISO 8601 format. Example: '2023-01-01'
-  endCrawlDate?: string; // Include results only that were crawled before this date. Must be in ISO 8601 format. Example: '2023-12-31'
-  startPublishedDate?: string; // Include only links with a published date after this. Must be in ISO 8601 format. Example: '2023-01-01'
-  endPublishedDate?: string; // Include only links with a published date before this. Must be in ISO 8601 format. Example: '2023-12-31'
-  useAutoprompt?: boolean; // Uses Metaphor-optimized query.
-  type?: string; // Search can be 'keyword' or 'neural'. Default is 'neural'
+  numResults?: number;
+  includeDomains?: string[];
+  excludeDomains?: string[];
+  startCrawlDate?: string;
+  endCrawlDate?: string;
+  startPublishedDate?: string;
+  endPublishedDate?: string;
+  useAutoprompt?: boolean;
+  type?: string;
 }
 
-// The Result interface represents a search result object from the API.
+/**
+ * Represents a search result object.
+ * @typedef {Object} Result
+ * @property {string} title - The title of the search result.
+ * @property {string} url - The URL of the search result.
+ * @property {string} [publishedDate] - The estimated creation date of the content.
+ * @property {string} [author] - The author of the content, if available.
+ * @property {number} [score] - Similarity score between the query/url and the result.
+ * @property {string} id - The temporary ID for the document.
+ */
 interface Result {
-  title: string; // The title of the search result.
-  url: string; // The URL of the search result.
-  publishedDate?: string; // The estimated creation date of the content. Format is YYYY-MM-DD. Nullable
-  author?: string; // The author of the content, if available. Nullable
-  score?: number; // A number from 0 to 1 representing similarity between the query/url and the result.
-  id: string; // The temporary ID for the document. Useful for /contents endpoint.
+  title: string;
+  url: string;
+  publishedDate?: string;
+  author?: string;
+  score?: number;
+  id: string;
 }
 
-// The SearchResponse interface represents the response from the /search endpoint.
-// It includes an array of result objects.
+/**
+ * Represents the response from the /search endpoint.
+ * @typedef {Object} SearchResponse
+ * @property {Result[]} results - Array of result objects.
+ * @property {string} [autopromptString] - The Metaphor query created by autoprompt.
+ */
 interface SearchResponse {
   results: Result[];
-  autopromptString?: string; // The autoprompt string for the query, if useAutoprompt was on.
+  autopromptString?: string;
 }
 
-// FindSimilarOptions interface corresponds to the request schema for the /findSimilar endpoint without the url, which is the first parameter in findSimilar()
+/**
+ * Options for finding similar links.
+ * @typedef {Object} FindSimilarOptions
+ * @property {number} [numResults] - Number of search results to return. Default 10. Max 10 for basic plans.
+ * @property {string[]} [includeDomains] - List of domains to include in the search.
+ * @property {string[]} [excludeDomains] - List of domains to exclude from the search.
+ * @property {string} [startCrawlDate] - Start date for results based on crawl date.
+ * @property {string} [endCrawlDate] - End date for results based on crawl date.
+ * @property {string} [startPublishedDate] - Start date for results based on published date.
+ * @property {string} [endPublishedDate] - End date for results based on published date.
+ * @property {boolean} [excludeSourceDomain] - If true, excludes links from the base domain of the input.
+ */
 interface FindSimilarOptions {
-  numResults?: number; // Number of search results to return. Maximum 100. Default 10
-  includeDomains?: string[]; // Include results only from these domains. Example: ['example.com', 'sample.net']
-  excludeDomains?: string[]; // Exclude results from these domains. Example: ['excludedomain.com', 'excludeme.net']
-  startCrawlDate?: string; // The optional start date (inclusive) for the crawled data. Must be specified in ISO 8601 format. Example: '2023-01-01'
-  endCrawlDate?: string; // The optional end date (inclusive) for the crawled data. Must be specified in ISO 8601 format. Example: '2023-12-31'
-  startPublishedDate?: string; // The optional start date (inclusive) for the published data. Must be specified in ISO 8601 format. Example: '2023-01-01'
-  endPublishedDate?: string; // The optional end date (inclusive) for the published data. Must be specified in ISO 8601 format. Example: '2023-12-31'
-  excludeSourceDomain?: boolean; // If true, links from the base domain of the input will be automatically excluded from the results. Default: true
+  numResults?: number;
+  includeDomains?: string[];
+  excludeDomains?: string[];
+  startCrawlDate?: string;
+  endCrawlDate?: string;
+  startPublishedDate?: string;
+  endPublishedDate?: string;
+  excludeSourceDomain?: boolean;
 }
 
-// The DocumentContent interface represents the content of a document from the /contents endpoint.
+/**
+ * Represents the content of a document.
+ * @typedef {Object} DocumentContent
+ * @property {string} id - The ID of the document.
+ * @property {string} url - The URL of the document.
+ * @property {string} title - The title of the document.
+ * @property {string} extract - The first 1000 tokens of content in the document.
+ * @property {string} [author] - The author of the content, if available.
+ */
 interface DocumentContent {
-  id: string; // The ID of the document.
-  url: string; // The URL of the document.
-  title: string; // The title of the document.
-  extract: string; // The first 1000 tokens of content in the document.
+  id: string;
+  url: string;
+  title: string;
+  extract: string;
   author?: string | null;
 }
 
-// The GetContentsResponse interface represents the response from the /contents endpoint.
-// It includes an array of document content objects.
+/**
+ * Represents the response from the /contents endpoint.
+ * @typedef {Object} GetContentsResponse
+ * @property {DocumentContent[]} contents - Array of document content objects.
+ */
 interface GetContentsResponse {
   contents: DocumentContent[];
 }
 
-// The Metaphor class encapsulates the API's endpoints.
+/**
+ * The Metaphor class encapsulates the API's endpoints.
+ */
 class Metaphor {
   private baseURL: string;
   private headers: Headers;
 
+  /**
+   * Constructs the Metaphor API client.
+   * @param {string} apiKey - The API key for authentication.
+   * @param {string} [baseURL] - The base URL of the Metaphor API.
+   */
   constructor(
     apiKey: string,
     baseURL: string = "https://api.metaphor.systems"
@@ -73,6 +128,13 @@ class Metaphor {
     });
   }
 
+  /**
+   * Makes a request to the Metaphor API.
+   * @param {string} endpoint - The API endpoint to call.
+   * @param {string} method - The HTTP method to use.
+   * @param {any} [body] - The request body for POST requests.
+   * @returns {Promise<any>} The response from the API.
+   */
   private async request(
     endpoint: string,
     method: string,
@@ -94,6 +156,12 @@ class Metaphor {
     return await response.json();
   }
 
+  /**
+   * Performs a search with a Metaphor prompt-engineered query.
+   * @param {string} query - The query string.
+   * @param {SearchOptions} [options] - Additional search options.
+   * @returns {Promise<SearchResponse>} A list of relevant search results.
+   */
   async search(
     query: string,
     options?: SearchOptions
@@ -101,6 +169,12 @@ class Metaphor {
     return await this.request("/search", "POST", { query, ...options });
   }
 
+  /**
+   * Finds similar links to the provided URL.
+   * @param {string} url - The URL for which to find similar links.
+   * @param {FindSimilarOptions} [options] - Additional options for finding similar links.
+   * @returns {Promise<SearchResponse>} A list of similar search results.
+   */
   async findSimilar(
     url: string,
     options?: FindSimilarOptions
@@ -108,6 +182,11 @@ class Metaphor {
     return await this.request("/findSimilar", "POST", { url, ...options });
   }
 
+  /**
+   * Retrieves contents of documents based on a list of document IDs.
+   * @param {string[] | Result[]} ids - An array of document IDs.
+   * @returns {Promise<GetContentsResponse>} A list of document contents.
+   */
   async getContents(ids: string[] | Result[]): Promise<GetContentsResponse> {
     if (ids.length === 0) {
       throw new Error("Must provide at least one ID");
@@ -119,7 +198,6 @@ class Metaphor {
       requestIds = (ids as Result[]).map((result) => result.id);
     }
 
-    // Using URLSearchParams to append the parameters to the URL
     const params = new URLSearchParams({ ids: requestIds.join(",") });
     return await this.request(`/contents?${params}`, "GET");
   }
