@@ -1,4 +1,4 @@
-# Search with LLMs: Recent News Summarizer
+# Metaphor Researcher
 ---
 In this example, we will build Metaphor Researcher, a Javascript app that given a research topic, automatically searches for different sources about the topic with Metaphor and synthesizes the searched contents into a research report.
 
