@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "metaphor-node": "^1.0.25",
+    "openai": "^4.20.1"
+  }
+}
