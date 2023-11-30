@@ -12,6 +12,7 @@ import fetch, { Headers } from "cross-fetch";
  * @property {string} [endPublishedDate] - End date for results based on published date.
  * @property {boolean} [useAutoprompt] - If true, converts query to a Metaphor query.
  * @property {string} [type] - Type of search, 'keyword' or 'neural'.
+ * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness. Currently, the only category is company.
  */
 interface SearchOptions {
   numResults?: number;
@@ -23,6 +24,7 @@ interface SearchOptions {
   endPublishedDate?: string;
   useAutoprompt?: boolean;
   type?: string;
+  category?: string;
 }
 
 /**
@@ -66,6 +68,7 @@ interface SearchResponse {
  * @property {string} [startPublishedDate] - Start date for results based on published date.
  * @property {string} [endPublishedDate] - End date for results based on published date.
  * @property {boolean} [excludeSourceDomain] - If true, excludes links from the base domain of the input.
+ * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness. Currently, the only category is company.
  */
 interface FindSimilarOptions {
   numResults?: number;
@@ -76,6 +79,7 @@ interface FindSimilarOptions {
   startPublishedDate?: string;
   endPublishedDate?: string;
   excludeSourceDomain?: boolean;
+  category?: string;
 }
 
 /**
@@ -124,7 +128,7 @@ class Metaphor {
     this.headers = new Headers({
       "x-api-key": apiKey,
       "Content-Type": "application/json",
-      "User-Agent": "metaphor-node 1.0.26",
+      "User-Agent": "metaphor-node 1.0.27",
     });
   }
 
