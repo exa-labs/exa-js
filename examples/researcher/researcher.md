@@ -57,7 +57,7 @@ The first thing our app has to do is decide what kind of search to do for the gi
 
 Metaphor offers two kinds of search: **neural** and **keyword** search. Here's how we decide:
 
-- Neural search is preferred because lets us retrieve high quality, semantically relevant data. It is especially suitable when a topic is well-known and popularly discussed on the Internet, allowing the machine learning model to retrieve contents which are more likely recommended by real humans.  
+- Neural search is preferred because it lets us retrieve high quality, semantically relevant data. It is especially suitable when a topic is well-known and popularly discussed on the Internet, allowing the machine learning model to retrieve contents which are more likely recommended by real humans.  
 - Keyword search is only necessary when the topic is extremely specific, local or obscure. If the machine learning model might not know about the topic, but relevant documents can be found by directly matching the search query, keyword search is suitable.
 
 So, Metaphor Researcher is going to get a query, and it needs to automatically decide whether to use `keyword` or `neural` search to research the query based on the criteria. Sounds like a job for the LLM! But we need to write a prompt that tells it about the difference between keyword and neural search-- oh wait, we have a perfectly good explanation right there.
@@ -65,7 +65,7 @@ So, Metaphor Researcher is going to get a query, and it needs to automatically d
 
 ```typescript
 // Let's generalize the prompt and call the search types (1) and (2) in case the LLM is sensitive to the names. We can replace them with different names programmatically to see what works best.
-const SEARCH_TYPE_EXPLANATION = `- (1) search is preferred because lets us retrieve high quality, up-to-date, and semantically relevant data. It is especially suitable when a topic is well-known and popularly discussed on the Internet, allowing the machine learning model to retrieve contents which are more likely recommended by real humans.  
+const SEARCH_TYPE_EXPLANATION = `- (1) search is preferred because it lets us retrieve high quality, up-to-date, and semantically relevant data. It is especially suitable when a topic is well-known and popularly discussed on the Internet, allowing the machine learning model to retrieve contents which are more likely recommended by real humans.  
 - (2) search is only necessary when the topic is extremely specific, local or obscure. If the machine learning model might not know about the topic, but relevant documents can be found by directly matching the search query, (2) search is suitable.
 `;
 ```
@@ -127,7 +127,7 @@ console.log(await getLLMResponse({
 
 Those are some good ideas!
 
-Now we have to handle the neural Metaphor search. This is tougher: you can read all about crafting good Metaphor searches here. But this is actually a really good thing: making the perfect Metaphor search is hard because Metaphor is so powerful! Metaphor allows us to express so much more nuance in our searches and gives us unparalleled ability to steer our search queries towards our real objective.
+Now we have to handle the neural Metaphor search. This is tougher: you can read all about crafting good Metaphor searches [here](https://docs.metaphor.systems/reference/prompting-guide). But this is actually a really good thing: making the perfect Metaphor search is hard because Metaphor is so powerful! Metaphor allows us to express so much more nuance in our searches and gives us unparalleled ability to steer our search queries towards our real objective.
 
 We need to our app to understand our goal, what Metaphor is, and how to use it to achieve the goal. So let's just tell the LLM everything it needs to know.
 
