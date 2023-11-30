@@ -70,7 +70,7 @@ const SEARCH_TYPE_EXPLANATION = `- (1) search is preferred because it lets us re
 `;
 ```
 
-Here's a function that instructs the LLM to choose between the search types and give its answer is a single word. Based on its choice, we return `keyword` or `neural`.
+Here's a function that instructs the LLM to choose between the search types and give its answer in a single word. Based on its choice, we return `keyword` or `neural`.
 
 
 ```typescript
