@@ -45,7 +45,7 @@ async function getLLMResponse({system = 'You are a helpful assistant.', user = '
 }
 ```
 
-Okay, great! Now let's starting building Metaphor Researcher. The app should be able to automatically generate research reports for all kinds of different topics. Here's two to start:
+Okay, great! Now let's start building Metaphor Researcher. The app should be able to automatically generate research reports for all kinds of different topics. Here's two to start:
 
 
 ```typescript
