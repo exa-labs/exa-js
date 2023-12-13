@@ -28,6 +28,15 @@ interface SearchOptions {
 }
 
 /**
+ * Search options for performing a search query.
+ * @typedef {Object} ContentsOptions
+ * @property {string[]} [formats] - An array of format types asked for. Currently supports `extract` (first 1000 tokens) and `text` (full parsed HTML text). If this isn't specified, defaults to `extract`.
+ */
+interface ContentsOptions {
+  formats?: string[];
+}
+
+/**
  * Represents a search result object.
  * @typedef {Object} Result
  * @property {string} title - The title of the search result.
@@ -189,12 +198,14 @@ class Metaphor {
   /**
    * Retrieves contents of documents based on a list of document IDs.
    * @param {string[] | Result[]} ids - An array of document IDs.
+   * @param {ContentsOptions} [options] - Additional options for retrieving document contents.
    * @returns {Promise<GetContentsResponse>} A list of document contents.
    */
-  async getContents(ids: string[] | Result[]): Promise<GetContentsResponse> {
+  async getContents(ids: string[] | Result[], options?: ContentsOptions): Promise<GetContentsResponse> {
     if (ids.length === 0) {
       throw new Error("Must provide at least one ID");
     }
+
     let requestIds: string[];
     if (typeof ids[0] === "string") {
       requestIds = ids as string[];
@@ -203,11 +214,15 @@ class Metaphor {
     }
 
     const params = new URLSearchParams({ ids: requestIds.join(",") });
-    return await this.request(`/contents?${params}`, "GET");
+
+    if (options?.formats && options.formats.length) {
+      params.append('formats', options.formats.join(","));
+    }
+
+    return await this.request(`/contents?${params.toString()}`, "GET");
   }
 }
 
-// NAMED EXPORTS
 export type {
   SearchOptions,
   Result,
