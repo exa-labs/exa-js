@@ -2,6 +2,9 @@
 
 Our official Javscript SDK. Uses `cross-fetch` under the hood.
 
+Note: This API is basically the same as `metaphor-node` but reflects new
+features associated with Metaphor's rename to Exa. New site is https://exa.ai
+
 https://www.npmjs.com/package/exa-js
 
 ## Installation
