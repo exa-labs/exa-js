@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "metaphor-node": "^1.0.25",
+    "exa-js": "^1.0.3",
     "openai": "^4.20.1"
   }
 }

@@ -1,8 +1,8 @@
-import Metaphor from "metaphor-node";
+import Exa from "exa-js";
 
 export async function GET() {
-  const metaphor = new Metaphor(process.env.METAPHOR_API_KEY!);
-  const results = await metaphor.search("hottest ai startups");
+  const exa = new Exa(process.env.EXA_API_KEY!);
+  const results = await exa.search("hottest ai startups");
 
   return Response.json({ results });
 }

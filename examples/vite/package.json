@@ -1,5 +1,5 @@
 {
-  "name": "@metaphorsystems/vite-react-template",
+  "name": "@exa-labs/vite-react-template",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,7 +12,7 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "metaphor-node": "1.0.22"
+    "exa-js": "file:../.."
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

@@ -1,6 +1,4 @@
-wwwroot/*.js
 node_modules
-typings
+.DS_Store
+dist
 *.log
-# Build files
-/dist

@@ -1,17 +1,17 @@
 import express, { Express, Request, Response } from "express";
-import Metaphor from "metaphor-node";
+import Exa from "exa-js";
 
-const metaphorClient = new Metaphor(process.env.METAPHOR_API_KEY!);
+const exa = new Exa(process.env.EXA_API_KEY!);
 
 const app: Express = express();
 const port = 8000;
 
 app.get("/", async (req: Request, res: Response) => {
-  const metaphorRes = await metaphorClient.search(
+  const exaRes = await exa.search(
     "If you're looking for the hottest AI agent startup, check this out:"
   );
 
-  res.json(metaphorRes);
+  res.json(exaRes);
 });
 
 app.listen(port, () => {

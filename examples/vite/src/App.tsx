@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
-import Metaphor from "metaphor-node";
+import Exa from 'exa-js';
 
 function App() {
   const [count, setCount] = useState(0);
   useEffect(() => {
-    const metaphor = new Metaphor("fcac2ebb-a2fe-4348-bf45-7470298f0055");
-    metaphor.search("hottest ai startups");
+    const exa = new Exa("your_key");
+    exa.search("hottest ai startups");
   }, []);
 
   return (
