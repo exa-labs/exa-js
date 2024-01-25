@@ -1,6 +1,6 @@
 {
   "name": "exa-js",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Exa SDK for Node.js and the browser",
   "publishConfig": {
     "access": "public"
@@ -44,7 +44,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/HubertY/exanodesdk.git"
+    "url": "git+https://github.com/exa-labs/exa-js.git"
   },
   "keywords": [
     "exa",
@@ -59,7 +59,7 @@
   ],
   "author": "jeffzwang",
   "bugs": {
-    "url": "https://github.com/HubertY/exanodesdk/issues"
+    "url": "https://github.com/exa-labs/exa-js/issues"
   },
-  "homepage": "https://github.com/HubertY/exanodesdk#readme"
+  "homepage": "https://github.com/exa-labs/exa-js#readme"
 }
