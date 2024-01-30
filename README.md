@@ -19,6 +19,61 @@ import Exa from "exa-node"
 const exa = new Exa(process.env.EXA_API_KEY)
 ```
 
+## Cheat Sheet
+
+```js
+// Basic search
+const basicResults = await exa.search("This is a Exa query:");
+
+// Autoprompted search
+const autoPromptedResults = await exa.search("autopromptable query", { useAutoprompt: true });
+
+// Search with date filters
+const dateFilteredResults = await exa.search("This is a Exa query:", {
+  startPublishedDate: "2019-01-01",
+  endPublishedDate: "2019-01-31"
+});
+
+// Search with domain filters
+const domainFilteredResults = await exa.search("This is a Exa query:", {
+  includeDomains: ["www.cnn.com", "www.nytimes.com"]
+});
+
+// Search and get text contents
+const searchAndTextResults = await exa.searchAndContents("This is a Exa query:", { text: true });
+
+// Search and get highlights
+const searchAndHighlightsResults = await exa.searchAndContents("This is a Exa query:", { highlights: true });
+
+// Search and get contents with contents options
+const searchAndCustomContentsResults = await exa.searchAndContents("This is a Exa query:", {
+  text: { includeHtmlTags: true, maxCharacters: 1000 },
+  highlights: { highlightsPerUrl: 2, numSentences: 1, query: "This is the highlight query:" }
+});
+
+// Find similar documents
+const similarResults = await exa.findSimilar("https://example.com");
+
+// Find similar excluding source domain
+const similarExcludingSourceResults = await exa.findSimilar("https://example.com", { excludeSourceDomain: true });
+
+// Find similar with contents
+const similarWithContentsResults = await exa.findSimilarAndContents("https://example.com", { text: true, highlights: true });
+
+// Get text contents
+const textContentsResults = await exa.getContents(["ids"], { text: true });
+
+// Get highlights
+const highlightsContentsResults = await exa.getContents(["ids"], { highlights: true });
+
+// Get contents with contents options
+const customContentsResults = await exa.getContents(["ids"], {
+  text: { includeHtmlTags: true, maxCharacters: 1000 },
+  highlights: { highlightsPerUrl: 2, numSentences: 1, query: "This is the highlight query:" }
+});
+```
+
+
 ### `exa.search(query: string, options?: SearchOptions): Promise<SearchResponse>`
 Performs a search on the Exa system with the given parameters.
 
