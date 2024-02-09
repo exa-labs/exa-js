@@ -7,34 +7,7 @@ features associated with Metaphor's rename to Exa. New site is https://exa.ai
 
 https://www.npmjs.com/package/exa-js
 
-This Turborepo includes the following packages/apps:
-
-### Packages
-
-- `exa-js`: Exa official Javscript SDK
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Examples
-
-- `next`: Exa official Javscript SDK
-- `node`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `researcher`: `tsconfig.json`s used throughout the monorepo
-- `vite`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-s## Installation
+## Installation
 
 ```
 npm install exa-js
@@ -73,13 +46,13 @@ const domainFilteredResults = await exa.search("This is a Exa query:", {
 // Search and get text contents
 const searchAndTextResults = await exa.searchAndContents(
   "This is a Exa query:",
-  { text: true }
+  { text: true },
 );
 
 // Search and get highlights
 const searchAndHighlightsResults = await exa.searchAndContents(
   "This is a Exa query:",
-  { highlights: true }
+  { highlights: true },
 );
 
 // Search and get contents with contents options
@@ -92,7 +65,7 @@ const searchAndCustomContentsResults = await exa.searchAndContents(
       numSentences: 1,
       query: "This is the highlight query:",
     },
-  }
+  },
 );
 
 // Find similar documents
@@ -101,13 +74,13 @@ const similarResults = await exa.findSimilar("https://example.com");
 // Find similar excluding source domain
 const similarExcludingSourceResults = await exa.findSimilar(
   "https://example.com",
-  { excludeSourceDomain: true }
+  { excludeSourceDomain: true },
 );
 
 // Find similar with contents
 const similarWithContentsResults = await exa.findSimilarAndContents(
   "https://example.com",
-  { text: true, highlights: true }
+  { text: true, highlights: true },
 );
 
 // Get text contents
@@ -150,7 +123,7 @@ const response = await exa.findSimilar(
   "https://waitbutwhy.com/2014/05/fermi-paradox.html",
   {
     numResults: 10,
-  }
+  },
 );
 ```
 

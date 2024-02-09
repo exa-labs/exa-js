@@ -1,6 +1,25 @@
 {
+  "name": "@exa-labs/node-ts-researcher",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx watch index.ts",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "exa-js": "^1.0.3",
-    "openai": "^4.20.1"
+    "dotenv": "^16.4.1",
+    "exa-js": "workspace:*",
+    "openai": "^4.27.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.17",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
   }
 }
