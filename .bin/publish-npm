@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -eux
+
+# Setting authentication token for npm registry
+echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+
+# Building the project
+cd packages/exa-js && pnpm build
+
+# Publishing the package with public access
+pnpm publish --access public
