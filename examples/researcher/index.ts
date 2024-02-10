@@ -40,7 +40,7 @@ async function decideSearchType(
   userMessage += `Topic: ${topic}\n`;
   userMessage += "Search type: ";
   userMessage = userMessage
-    .replaceAll("(1)", choiceNames?.[0] || "neural")
+    ?.replaceAll("(1)", choiceNames?.[0] || "neural")
     ?.replaceAll("(2)", choiceNames?.[1] || "neural");
 
   const response = await getLLMResponse({
