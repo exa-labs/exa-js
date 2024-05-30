@@ -1,10 +1,10 @@
-import Metaphor from 'metaphor-node';
+import Exa from 'exa-js'
 import OpenAI from 'openai';
 
-const METAPHOR_API_KEY = // insert or load your API key here
-const OPENAI_API_KEY = // insert or load your API key here
+const EXA_API_KEY = "" // insert or load your API key here
+const OPENAI_API_KEY = ""// insert or load your API key here
 
-const metaphor = new Metaphor(METAPHOR_API_KEY);
+const exa = new Exa(EXA_API_KEY);
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
 async function getLLMResponse({system = 'You are a helpful assistant.', user = '', temperature = 1, model = 'gpt-3.5-turbo'}){
@@ -47,10 +47,10 @@ Please generate a diverse list of ${n} Google keyword search queries that would 
 }
 
 function createNeuralQueryGenerationPrompt(topic, n){
-    return `I'm writing a research report on ${topic} and need help coming up with Metaphor keyword search queries.
-Metaphor is a fully neural search engine that uses an embeddings based approach to search. Metaphor was trained on how people refer to content on the internet. The model is trained given the description to predict the link. For example, if someone tweets 'This is an amazing, scientific article about Roman architecture: <link>', then our model is trained given the description to predict the link, and it is able to beautifully and super strongly learn associations between descriptions and the nature of the content (style, tone, entity type, etc) after being trained on many many examples. Because Metaphor was trained on examples of how people talk about links on the Internet, the actual Metaphor queries must actually be formed as if they are content recommendations that someone would make on the Internet where a highly relevant link would naturally follow the recommendation, such as the example shown above.
-Metaphor neural search queries should be phrased like a person on the Internet indicating a webpage to a friend by describing its contents. It should end in a colon :.
-Please generate a diverse list of ${n} Metaphor neural search queries for informative and trustworthy sources useful for writing a research report on ${topic}. Do not add any quotations or numbering to the queries.`
+    return `I'm writing a research report on ${topic} and need help coming up with Exa keyword search queries.
+Exa is a fully neural search engine that uses an embeddings based approach to search. Exa was trained on how people refer to content on the internet. The model is trained given the description to predict the link. For example, if someone tweets 'This is an amazing, scientific article about Roman architecture: <link>', then our model is trained given the description to predict the link, and it is able to beautifully and super strongly learn associations between descriptions and the nature of the content (style, tone, entity type, etc) after being trained on many many examples. Because Exa was trained on examples of how people talk about links on the Internet, the actual Exa queries must actually be formed as if they are content recommendations that someone would make on the Internet where a highly relevant link would naturally follow the recommendation, such as the example shown above.
+Exa neural search queries should be phrased like a person on the Internet indicating a webpage to a friend by describing its contents. It should end in a colon :.
+Please generate a diverse list of ${n} Exa neural search queries for informative and trustworthy sources useful for writing a research report on ${topic}. Do not add any quotations or numbering to the queries.`
 }
 
 async function generateSearchQueries(topic, n, searchType){
@@ -70,14 +70,14 @@ async function generateSearchQueries(topic, n, searchType){
 async function getSearchResults(queries, type, linksPerQuery=2){
     let results = [];
     for (const query of queries){
-        const searchResponse = await metaphor.search(query, { type, numResults: linksPerQuery, useAutoprompt: false });
+        const searchResponse = await exa.search(query, { type, numResults: linksPerQuery, useAutoprompt: false });
         results.push(...searchResponse.results);
     }
     return results;
 }
 
 async function getPageContents(searchResults){
-    const contentsResponse = await metaphor.getContents(searchResults);
+    const contentsResponse = await exa.getContents(searchResults);
     return contentsResponse.contents;
 }
 
