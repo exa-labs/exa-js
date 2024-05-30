@@ -12,7 +12,7 @@
     "react": "^18",
     "react-dom": "^18",
     "next": "14.0.1",
-    "exa-js": "*"
+    "exa-js": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5",

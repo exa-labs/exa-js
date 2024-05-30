@@ -1,0 +1,29 @@
+# workflow for re-running publishing to NPM in case it fails for some reason
+# you can run this workflow by navigating to https://www.github.com/exa-labs/exa-js/actions/workflows/publish-npm.yml
+name: Publish NPM
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: publish
+    runs-on: ubuntu-latest
+    environment: publish
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+
+      - name: Publish to NPM
+        run: |
+          bash ./bin/publish-npm
+        env:
+          NPM_TOKEN: ${{ secrets.EXA_NPM_TOKEN || secrets.NPM_TOKEN }}
