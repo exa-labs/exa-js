@@ -57,10 +57,12 @@ export type FindSimilarOptions = BaseSearchOptions & {
  * @typedef {Object} ContentsOptions
  * @property {TextContentsOptions | boolean} [text] - Options for retrieving text contents.
  * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights.
+ * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
  */
 export type ContentsOptions = {
   text?: TextContentsOptions | true;
   highlights?: HighlightsContentsOptions | true;
+  summary?: SummaryContentsOptions | true;
 };
 
 /**
@@ -87,6 +89,14 @@ export type HighlightsContentsOptions = {
   highlightsPerUrl?: number;
 }
 
+/**
+ * Options for retrieving summary from page.
+ * @typedef {Object} SummaryContentsOptions
+ * @property {string} [query] - The query string to use for summary generation.
+ */
+export type SummaryContentsOptions = {
+  query?: string;
+}
 
 /**
  * @typedef {Object} TextResponse
@@ -101,18 +111,24 @@ export type TextResponse = { text: string };
  */
 export type HighlightsResponse = { highlights: string[], highlightScores: number[] };
 
+/**
+ * @typedef {Object} SummaryResponse
+ * @property {string} summary - The generated summary of the page content.
+ */
+export type SummaryResponse = { summary: string };
+
 export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
 
 /**
  * @typedef {Object} ContentsResultComponent
- * Depending on 'ContentsOptions', this yields either a 'TextResponse', a 'HighlightsResponse', both, or an empty object.
+ * Depending on 'ContentsOptions', this yields a combination of 'TextResponse', 'HighlightsResponse', 'SummaryResponse', or an empty object.
  *
  * @template T - A type extending from 'ContentsOptions'.
  */
 export type ContentsResultComponent<T extends ContentsOptions> =
   Default<(T['text'] extends (object | true) ? TextResponse : {}) &
-    (T['highlights'] extends (object | true) ? HighlightsResponse : {}), TextResponse>;
-
+    (T['highlights'] extends (object | true) ? HighlightsResponse : {}) &
+    (T['summary'] extends (object | true) ? SummaryResponse : {}), TextResponse>
 
 /**
  * Represents a search result object.
@@ -175,12 +191,12 @@ class Exa {
   }
 
   /**
-* Makes a request to the Exa API.
-* @param {string} endpoint - The API endpoint to call.
-* @param {string} method - The HTTP method to use.
-* @param {any} [body] - The request body for POST requests.
-* @returns {Promise<any>} The response from the API.
-*/
+   * Makes a request to the Exa API.
+   * @param {string} endpoint - The API endpoint to call.
+   * @param {string} method - The HTTP method to use.
+   * @param {any} [body] - The request body for POST requests.
+   * @returns {Promise<any>} The response from the API.
+   */
   private async request(
     endpoint: string,
     method: string,
@@ -219,12 +235,13 @@ class Exa {
    * @returns {Promise<SearchResponse>} A list of relevant search results.
    */
   async searchAndContents<T extends ContentsOptions>(query: string, options?: RegularSearchOptions & T): Promise<SearchResponse<T>> {
-    const { text, highlights, ...rest } = options || {};
+    const { text, highlights, summary, ...rest } = options || {};
     return await this.request("/search", 'POST', {
       query,
-      contents: (!text && !highlights) ? { text: true } : {
+      contents: (!text && !highlights && !summary) ? { text: true } : {
         ...(text ? { text } : {}),
-        ...(highlights ? { highlights } : {})
+        ...(highlights ? { highlights } : {}),
+        ...(summary ? { summary } : {})
       },
       ...rest
     });
@@ -250,12 +267,13 @@ class Exa {
    * @returns {Promise<SearchResponse>} A list of similar search results.
    */
   async findSimilarAndContents<T extends ContentsOptions>(url: string, options?: FindSimilarOptions & T): Promise<SearchResponse<T>> {
-    const { text, highlights, ...rest } = options || {};
+    const { text, highlights, summary, ...rest } = options || {};
     return await this.request("/findSimilar", 'POST', {
       url,
-      contents: (!text && !highlights) ? { text: true } : {
+      contents: (!text && !highlights && !summary) ? { text: true } : {
         ...(text ? { text } : {}),
-        ...(highlights ? { highlights } : {})
+        ...(highlights ? { highlights } : {}),
+        ...(summary ? { summary } : {})
       },
       ...rest
     });
