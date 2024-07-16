@@ -13,6 +13,8 @@ import fetch, { Headers } from 'cross-fetch';
  * @property {boolean} [useAutoprompt] - If true, converts query to a Metaphor query.
  * @property {string} [type] - Type of search, 'keyword' or 'neural'.
  * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness. Currently, the only category is company.
+ * @property {string[]} [includeText] - List of strings that must be present in webpage text of results. Currently only supports 1 string of up to 5 words.
+ * @property {string[]} [excludeText] - List of strings that must not be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  */
 export type BaseSearchOptions = {
   numResults?: number;
@@ -23,12 +25,13 @@ export type BaseSearchOptions = {
   startPublishedDate?: string;
   endPublishedDate?: string;
   category?: string;
+  includeText?: string[];
+  excludeText?: string[];
 };
 
 /**
  * Search options for performing a search query.
- * @typedef {Object} ContentsOptions
- * @property {string[]} [formats] - An array of format types asked for. Currently supports `extract` (first 1000 tokens) and `text` (full parsed HTML text). If this isn't specified, defaults to `extract`.
+ * @typedef {Object} RegularSearchOptions
  */
 export type RegularSearchOptions = BaseSearchOptions & {
   useAutoprompt?: boolean;
@@ -47,6 +50,8 @@ export type RegularSearchOptions = BaseSearchOptions & {
  * @property {string} [endPublishedDate] - End date for results based on published date.
  * @property {boolean} [excludeSourceDomain] - If true, excludes links from the base domain of the input.
  * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness. Currently, the only category is company.
+ * @property {string[]} [includeText] - List of strings that must be present in webpage text of results. Currently only supports 1 string of up to 5 words.
+ * @property {string[]} [excludeText] - List of strings that must not be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  */
 export type FindSimilarOptions = BaseSearchOptions & {
   excludeSourceDomain?: boolean;
