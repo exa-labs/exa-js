@@ -1,5 +1,5 @@
 {
-  "name": "my-testing",
+  "name": "@eugenechantk/my-testing",
   "version": "1.0.15-beta.0",
   "description": "Exa SDK for Node.js and the browser",
   "publishConfig": {
