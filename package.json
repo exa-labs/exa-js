@@ -25,15 +25,21 @@
     "build": "tsup",
     "test": "vitest run",
     "generate-docs": "typedoc --plugin typedoc-plugin-markdown --out docs src/index.ts",
+    "build:beta": "cross-env NPM_CONFIG_TAG=beta npm run build",
+    "version:beta": "npm version prerelease --preid=beta",
+    "version:stable": "npm version patch",
+    "publish:beta": "npm run version:beta && npm run build:beta && npm publish --tag beta",
+    "publish:stable": "npm run version:stable && npm run build && npm publish",
     "prepublishOnly": "npm run build"
   },
   "license": "MIT",
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "prettier": "2.8.4",
     "tsup": "6.6.3",
-    "typescript": "4.9.5",
     "typedoc": "^0.25.4",
     "typedoc-plugin-markdown": "^3.17.1",
+    "typescript": "4.9.5",
     "vitest": "0.28.5"
   },
   "dependencies": {
