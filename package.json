@@ -1,6 +1,6 @@
 {
   "name": "my-testing",
-  "version": "1.0.15-beta.0",
+  "version": "1.0.14",
   "description": "Exa SDK for Node.js and the browser",
   "publishConfig": {
     "access": "public"
