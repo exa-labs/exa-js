@@ -1,6 +1,6 @@
 {
   "name": "@eugenechan0715/my-testing",
-  "version": "1.0.14",
+  "version": "1.0.14-beta.0",
   "description": "Exa SDK for Node.js and the browser",
   "publishConfig": {
     "access": "public"
