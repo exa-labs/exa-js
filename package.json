@@ -1,6 +1,6 @@
 {
-  "name": "@eugenechantk/my-testing",
-  "version": "1.0.15-beta.0",
+  "name": "@eugenechan0715/my-testing",
+  "version": "1.0.14",
   "description": "Exa SDK for Node.js and the browser",
   "publishConfig": {
     "access": "public"
@@ -26,7 +26,7 @@
     "test": "vitest run",
     "generate-docs": "typedoc --plugin typedoc-plugin-markdown --out docs src/index.ts",
     "build:beta": "cross-env NPM_CONFIG_TAG=beta npm run build",
-    "version:beta": "npm version prerelease --preid=beta",
+    "version:beta": "npm version 1.0.14-beta.0",
     "version:stable": "npm version patch",
     "publish:beta": "npm run version:beta && npm run build:beta && npm publish --tag beta",
     "publish:stable": "npm run version:stable && npm run build && npm publish",
