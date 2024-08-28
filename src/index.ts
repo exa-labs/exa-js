@@ -1,5 +1,7 @@
 import fetch, { Headers } from "cross-fetch";
 
+const isBeta = true;
+
 /**
  * Search options for performing a search query.
  * @typedef {Object} SearchOptions
@@ -65,14 +67,19 @@ export type FindSimilarOptions = BaseSearchOptions & {
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
  * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
+ * @property {number} [livecrawlTimeout] - The timeout for livecrawling.
  */
 export type ContentsOptions = {
   text?: TextContentsOptions | true;
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
-  livecrawl?: LivecrawlOptions;
-  filterEmptyResults?: boolean;
-};
+} & (typeof isBeta extends true
+  ? {
+      livecrawl?: LivecrawlOptions;
+      filterEmptyResults?: boolean;
+      livecrawlTimeout?: number;
+    }
+  : {});
 
 /**
  * Options for livecrawling contents
@@ -260,25 +267,32 @@ class Exa {
     query: string,
     options?: RegularSearchOptions & T
   ): Promise<SearchResponse<T>> {
-    const {
-      text,
-      highlights,
-      summary,
-      livecrawl,
-      filterEmptyResults,
-      ...rest
-    } = options || {};
-    const isBeta = process.env.NPM_CONFIG_TAG === "beta";
+    const { text, highlights, summary, ...rest } = options || {};
     return await this.request("/search", "POST", {
       query,
       contents:
         !text && !highlights && !summary
-          ? { text: true, ...(isBeta ? { livecrawl, filterEmptyResults } : {}) }
+          ? {
+              text: true,
+              ...(isBeta
+                ? {
+                    livecrawl: options?.livecrawl,
+                    filterEmptyResults: options?.filterEmptyResults,
+                    livecrawlTimeout: options?.livecrawlTimeout,
+                  }
+                : {}),
+            }
           : {
               ...(text ? { text } : {}),
               ...(highlights ? { highlights } : {}),
               ...(summary ? { summary } : {}),
-              ...(isBeta ? { livecrawl, filterEmptyResults } : {}),
+              ...(isBeta
+                ? {
+                    livecrawl: options?.livecrawl,
+                    filterEmptyResults: options?.filterEmptyResults,
+                    livecrawlTimeout: options?.livecrawlTimeout,
+                  }
+                : {}),
             },
       ...rest,
     });
@@ -307,25 +321,32 @@ class Exa {
     url: string,
     options?: FindSimilarOptions & T
   ): Promise<SearchResponse<T>> {
-    const {
-      text,
-      highlights,
-      summary,
-      livecrawl,
-      filterEmptyResults,
-      ...rest
-    } = options || {};
-    const isBeta = process.env.NPM_CONFIG_TAG === "beta";
+    const { text, highlights, summary, ...rest } = options || {};
     return await this.request("/findSimilar", "POST", {
       url,
       contents:
         !text && !highlights && !summary
-          ? { text: true, ...(isBeta ? { livecrawl, filterEmptyResults } : {}) }
+          ? {
+              text: true,
+              ...(isBeta
+                ? {
+                    livecrawl: options?.livecrawl,
+                    filterEmptyResults: options?.filterEmptyResults,
+                    livecrawlTimeout: options?.livecrawlTimeout,
+                  }
+                : {}),
+            }
           : {
               ...(text ? { text } : {}),
               ...(highlights ? { highlights } : {}),
               ...(summary ? { summary } : {}),
-              ...(isBeta ? { livecrawl, filterEmptyResults } : {}),
+              ...(isBeta
+                ? {
+                    livecrawl: options?.livecrawl,
+                    filterEmptyResults: options?.filterEmptyResults,
+                    livecrawlTimeout: options?.livecrawlTimeout,
+                  }
+                : {}),
             },
       ...rest,
     });
@@ -342,7 +363,6 @@ class Exa {
     options?: T
   ): Promise<SearchResponse<T>> {
     const { livecrawl, filterEmptyResults, ...rest } = options || {};
-    const isBeta = process.env.NPM_CONFIG_TAG === "beta";
     if (ids.length === 0) {
       throw new Error("Must provide at least one ID");
     }
@@ -356,7 +376,13 @@ class Exa {
     }
     return await this.request(`/contents`, "POST", {
       ids: requestIds,
-      ...(isBeta ? { livecrawl, filterEmptyResults } : {}),
+      ...(isBeta
+        ? {
+            livecrawl: options?.livecrawl,
+            filterEmptyResults: options?.filterEmptyResults,
+            livecrawlTimeout: options?.livecrawlTimeout,
+          }
+        : {}),
       ...rest,
     });
   }
