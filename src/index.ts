@@ -73,11 +73,11 @@ export type ContentsOptions = {
   text?: TextContentsOptions | true;
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
+  livecrawl?: LivecrawlOptions;
+  livecrawlTimeout?: number;
 } & (typeof isBeta extends true
   ? {
-      livecrawl?: LivecrawlOptions;
       filterEmptyResults?: boolean;
-      livecrawlTimeout?: number;
     }
   : {});
 
@@ -274,23 +274,23 @@ class Exa {
         !text && !highlights && !summary
           ? {
               text: true,
+              livecrawl: options?.livecrawl,
+              livecrawlTimeout: options?.livecrawlTimeout,
               ...(isBeta
                 ? {
-                    livecrawl: options?.livecrawl,
                     filterEmptyResults: options?.filterEmptyResults,
-                    livecrawlTimeout: options?.livecrawlTimeout,
                   }
                 : {}),
             }
           : {
+              livecrawl: options?.livecrawl,
+              livecrawlTimeout: options?.livecrawlTimeout,
               ...(text ? { text } : {}),
               ...(highlights ? { highlights } : {}),
               ...(summary ? { summary } : {}),
               ...(isBeta
                 ? {
-                    livecrawl: options?.livecrawl,
                     filterEmptyResults: options?.filterEmptyResults,
-                    livecrawlTimeout: options?.livecrawlTimeout,
                   }
                 : {}),
             },
@@ -328,23 +328,23 @@ class Exa {
         !text && !highlights && !summary
           ? {
               text: true,
+              livecrawl: options?.livecrawl,
+              livecrawlTimeout: options?.livecrawlTimeout,
               ...(isBeta
                 ? {
-                    livecrawl: options?.livecrawl,
                     filterEmptyResults: options?.filterEmptyResults,
-                    livecrawlTimeout: options?.livecrawlTimeout,
                   }
                 : {}),
             }
           : {
+              livecrawl: options?.livecrawl,
+              livecrawlTimeout: options?.livecrawlTimeout,
               ...(text ? { text } : {}),
               ...(highlights ? { highlights } : {}),
               ...(summary ? { summary } : {}),
               ...(isBeta
                 ? {
-                    livecrawl: options?.livecrawl,
                     filterEmptyResults: options?.filterEmptyResults,
-                    livecrawlTimeout: options?.livecrawlTimeout,
                   }
                 : {}),
             },
@@ -376,11 +376,11 @@ class Exa {
     }
     return await this.request(`/contents`, "POST", {
       ids: requestIds,
+      livecrawl: options?.livecrawl,
+      livecrawlTimeout: options?.livecrawlTimeout,
       ...(isBeta
         ? {
-            livecrawl: options?.livecrawl,
             filterEmptyResults: options?.filterEmptyResults,
-            livecrawlTimeout: options?.livecrawlTimeout,
           }
         : {}),
       ...rest,
