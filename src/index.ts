@@ -1,6 +1,6 @@
 import fetch, { Headers } from "cross-fetch";
 
-const isBeta = true;
+const isBeta = false;
 
 /**
  * Search options for performing a search query.
@@ -212,7 +212,7 @@ class Exa {
     this.headers = new Headers({
       "x-api-key": apiKey,
       "Content-Type": "application/json",
-      "User-Agent": "exa-node 1.0.27",
+      "User-Agent": "exa-node 1.1.0",
     });
   }
 
