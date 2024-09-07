@@ -1,6 +1,6 @@
 import fetch, { Headers } from "cross-fetch";
 
-const isBeta = true;
+const isBeta = false;
 
 /**
  * Search options for performing a search query.
@@ -73,11 +73,11 @@ export type ContentsOptions = {
   text?: TextContentsOptions | true;
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
+  livecrawl?: LivecrawlOptions;
+  livecrawlTimeout?: number;
 } & (typeof isBeta extends true
   ? {
-      livecrawl?: LivecrawlOptions;
       filterEmptyResults?: boolean;
-      livecrawlTimeout?: number;
     }
   : {});
 
@@ -212,7 +212,7 @@ class Exa {
     this.headers = new Headers({
       "x-api-key": apiKey,
       "Content-Type": "application/json",
-      "User-Agent": "exa-node 1.0.27",
+      "User-Agent": "exa-node 1.1.0",
     });
   }
 
@@ -274,25 +274,13 @@ class Exa {
         !text && !highlights && !summary
           ? {
               text: true,
-              ...(isBeta
-                ? {
-                    livecrawl: options?.livecrawl,
-                    filterEmptyResults: options?.filterEmptyResults,
-                    livecrawlTimeout: options?.livecrawlTimeout,
-                  }
-                : {}),
+              ...options
             }
           : {
               ...(text ? { text } : {}),
               ...(highlights ? { highlights } : {}),
               ...(summary ? { summary } : {}),
-              ...(isBeta
-                ? {
-                    livecrawl: options?.livecrawl,
-                    filterEmptyResults: options?.filterEmptyResults,
-                    livecrawlTimeout: options?.livecrawlTimeout,
-                  }
-                : {}),
+              ...options
             },
       ...rest,
     });
@@ -328,25 +316,17 @@ class Exa {
         !text && !highlights && !summary
           ? {
               text: true,
-              ...(isBeta
-                ? {
-                    livecrawl: options?.livecrawl,
-                    filterEmptyResults: options?.filterEmptyResults,
-                    livecrawlTimeout: options?.livecrawlTimeout,
-                  }
-                : {}),
+              livecrawl: options?.livecrawl,
+              livecrawlTimeout: options?.livecrawlTimeout,
+              ...options
             }
           : {
+              livecrawl: options?.livecrawl,
+              livecrawlTimeout: options?.livecrawlTimeout,
               ...(text ? { text } : {}),
               ...(highlights ? { highlights } : {}),
               ...(summary ? { summary } : {}),
-              ...(isBeta
-                ? {
-                    livecrawl: options?.livecrawl,
-                    filterEmptyResults: options?.filterEmptyResults,
-                    livecrawlTimeout: options?.livecrawlTimeout,
-                  }
-                : {}),
+              ...options
             },
       ...rest,
     });
@@ -362,7 +342,6 @@ class Exa {
     ids: string | string[] | SearchResult[],
     options?: T
   ): Promise<SearchResponse<T>> {
-    const { livecrawl, filterEmptyResults, ...rest } = options || {};
     if (ids.length === 0) {
       throw new Error("Must provide at least one ID");
     }
@@ -376,14 +355,7 @@ class Exa {
     }
     return await this.request(`/contents`, "POST", {
       ids: requestIds,
-      ...(isBeta
-        ? {
-            livecrawl: options?.livecrawl,
-            filterEmptyResults: options?.filterEmptyResults,
-            livecrawlTimeout: options?.livecrawlTimeout,
-          }
-        : {}),
-      ...rest,
+      ...options
     });
   }
 }
