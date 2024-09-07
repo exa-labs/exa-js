@@ -274,25 +274,13 @@ class Exa {
         !text && !highlights && !summary
           ? {
               text: true,
-              livecrawl: options?.livecrawl,
-              livecrawlTimeout: options?.livecrawlTimeout,
-              ...(isBeta
-                ? {
-                    filterEmptyResults: options?.filterEmptyResults,
-                  }
-                : {}),
+              ...options
             }
           : {
-              livecrawl: options?.livecrawl,
-              livecrawlTimeout: options?.livecrawlTimeout,
               ...(text ? { text } : {}),
               ...(highlights ? { highlights } : {}),
               ...(summary ? { summary } : {}),
-              ...(isBeta
-                ? {
-                    filterEmptyResults: options?.filterEmptyResults,
-                  }
-                : {}),
+              ...options
             },
       ...rest,
     });
@@ -330,11 +318,7 @@ class Exa {
               text: true,
               livecrawl: options?.livecrawl,
               livecrawlTimeout: options?.livecrawlTimeout,
-              ...(isBeta
-                ? {
-                    filterEmptyResults: options?.filterEmptyResults,
-                  }
-                : {}),
+              ...options
             }
           : {
               livecrawl: options?.livecrawl,
@@ -342,11 +326,7 @@ class Exa {
               ...(text ? { text } : {}),
               ...(highlights ? { highlights } : {}),
               ...(summary ? { summary } : {}),
-              ...(isBeta
-                ? {
-                    filterEmptyResults: options?.filterEmptyResults,
-                  }
-                : {}),
+              ...options
             },
       ...rest,
     });
@@ -362,7 +342,6 @@ class Exa {
     ids: string | string[] | SearchResult[],
     options?: T
   ): Promise<SearchResponse<T>> {
-    const { livecrawl, filterEmptyResults, ...rest } = options || {};
     if (ids.length === 0) {
       throw new Error("Must provide at least one ID");
     }
@@ -376,14 +355,7 @@ class Exa {
     }
     return await this.request(`/contents`, "POST", {
       ids: requestIds,
-      livecrawl: options?.livecrawl,
-      livecrawlTimeout: options?.livecrawlTimeout,
-      ...(isBeta
-        ? {
-            filterEmptyResults: options?.filterEmptyResults,
-          }
-        : {}),
-      ...rest,
+      ...options
     });
   }
 }
