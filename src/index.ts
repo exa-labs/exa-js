@@ -66,8 +66,8 @@ export type FindSimilarOptions = BaseSearchOptions & {
  * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights.
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
  * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
+ * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
- * @property {number} [livecrawlTimeout] - The timeout for livecrawling.
  */
 export type ContentsOptions = {
   text?: TextContentsOptions | true;
