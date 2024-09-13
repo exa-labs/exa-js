@@ -181,10 +181,14 @@ export type SearchResult<T extends ContentsOptions = {}> = {
  * @typedef {Object} SearchResponse
  * @property {Result[]} results - The list of search results.
  * @property {string} [autopromptString] - The autoprompt string, if applicable.
+ * @property {string} [autoDate] - The autoprompt date, if applicable.
+ * @property {string} requestId - The request ID for the search.
  */
 export type SearchResponse<T extends ContentsOptions = {}> = {
   results: SearchResult<T>[];
   autopromptString?: string;
+  autoDate?: string;
+  requestId: string;
 };
 
 /**
