@@ -75,11 +75,8 @@ export type ContentsOptions = {
   summary?: SummaryContentsOptions | true;
   livecrawl?: LivecrawlOptions;
   livecrawlTimeout?: number;
-} & (typeof isBeta extends true
-  ? {
-      filterEmptyResults?: boolean;
-    }
-  : {});
+  filterEmptyResults?: boolean;
+} & (typeof isBeta extends true ? {} : {}); // FOR BETA OPTIONS
 
 /**
  * Options for livecrawling contents
@@ -278,13 +275,13 @@ class Exa {
         !text && !highlights && !summary
           ? {
               text: true,
-              ...options
+              ...options,
             }
           : {
               ...(text ? { text } : {}),
               ...(highlights ? { highlights } : {}),
               ...(summary ? { summary } : {}),
-              ...options
+              ...options,
             },
       ...rest,
     });
@@ -322,7 +319,7 @@ class Exa {
               text: true,
               livecrawl: options?.livecrawl,
               livecrawlTimeout: options?.livecrawlTimeout,
-              ...options
+              ...options,
             }
           : {
               livecrawl: options?.livecrawl,
@@ -330,7 +327,7 @@ class Exa {
               ...(text ? { text } : {}),
               ...(highlights ? { highlights } : {}),
               ...(summary ? { summary } : {}),
-              ...options
+              ...options,
             },
       ...rest,
     });
@@ -359,7 +356,7 @@ class Exa {
     }
     return await this.request(`/contents`, "POST", {
       ids: requestIds,
-      ...options
+      ...options,
     });
   }
 }
