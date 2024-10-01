@@ -171,6 +171,7 @@ export type SearchResult<T extends ContentsOptions = {}> = {
   author?: string;
   score?: number;
   id: string;
+  image?: string;
 } & ContentsResultComponent<T>;
 
 /**
@@ -206,7 +207,7 @@ class Exa {
       apiKey = process.env.EXASEARCH_API_KEY;
       if (!apiKey) {
         throw new Error(
-          "API key must be provided as an argument or as an environment variable (EXASEARCH_API_KEY)"
+          "API key must be provided as an argument or as an environment variable (EXASEARCH_API_KEY)",
         );
       }
     }
@@ -227,7 +228,7 @@ class Exa {
   private async request(
     endpoint: string,
     method: string,
-    body?: any
+    body?: any,
   ): Promise<any> {
     const response = await fetch(this.baseURL + endpoint, {
       method,
@@ -238,7 +239,7 @@ class Exa {
     if (!response.ok) {
       const message = (await response.json()).error;
       throw new Error(
-        `Request failed with status ${response.status}. ${message}`
+        `Request failed with status ${response.status}. ${message}`,
       );
     }
 
@@ -253,7 +254,7 @@ class Exa {
    */
   async search(
     query: string,
-    options?: RegularSearchOptions
+    options?: RegularSearchOptions,
   ): Promise<SearchResponse> {
     return await this.request("/search", "POST", { query, ...options });
   }
@@ -266,7 +267,7 @@ class Exa {
    */
   async searchAndContents<T extends ContentsOptions>(
     query: string,
-    options?: RegularSearchOptions & T
+    options?: RegularSearchOptions & T,
   ): Promise<SearchResponse<T>> {
     const { text, highlights, summary, ...rest } = options || {};
     return await this.request("/search", "POST", {
@@ -295,7 +296,7 @@ class Exa {
    */
   async findSimilar(
     url: string,
-    options?: FindSimilarOptions
+    options?: FindSimilarOptions,
   ): Promise<SearchResponse> {
     return await this.request("/findSimilar", "POST", { url, ...options });
   }
@@ -308,7 +309,7 @@ class Exa {
    */
   async findSimilarAndContents<T extends ContentsOptions>(
     url: string,
-    options?: FindSimilarOptions & T
+    options?: FindSimilarOptions & T,
   ): Promise<SearchResponse<T>> {
     const { text, highlights, summary, ...rest } = options || {};
     return await this.request("/findSimilar", "POST", {
@@ -341,7 +342,7 @@ class Exa {
    */
   async getContents<T extends ContentsOptions>(
     ids: string | string[] | SearchResult[],
-    options?: T
+    options?: T,
   ): Promise<SearchResponse<T>> {
     if (ids.length === 0) {
       throw new Error("Must provide at least one ID");
