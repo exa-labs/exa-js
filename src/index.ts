@@ -78,6 +78,11 @@ export type ContentsOptions = {
   filterEmptyResults?: boolean;
 } & (typeof isBeta extends true ? {} : {}); // FOR BETA OPTIONS
 
+type BetaSubpagesOptions = {
+  subpages?: number;
+  subpageTarget?: string | string[];
+};
+
 /**
  * Options for livecrawling contents
  * @typedef {string} LivecrawlOptions
@@ -342,7 +347,7 @@ class Exa {
    */
   async getContents<T extends ContentsOptions>(
     ids: string | string[] | SearchResult[],
-    options?: T,
+    options?: T & BetaSubpagesOptions,
   ): Promise<SearchResponse<T>> {
     if (ids.length === 0) {
       throw new Error("Must provide at least one ID");
