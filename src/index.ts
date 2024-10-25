@@ -14,7 +14,7 @@ const isBeta = false;
  * @property {string} [endPublishedDate] - End date for results based on published date.
  * @property {boolean} [useAutoprompt] - If true, converts query to a Metaphor query.
  * @property {string} [type] - Type of search, 'keyword' or 'neural'.
- * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness. Categories include company, research paper, news, etc.
+ * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness. Currently, the only category is company.
  * @property {string[]} [includeText] - List of strings that must be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  * @property {string[]} [excludeText] - List of strings that must not be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  */
@@ -51,7 +51,7 @@ export type RegularSearchOptions = BaseSearchOptions & {
  * @property {string} [startPublishedDate] - Start date for results based on published date.
  * @property {string} [endPublishedDate] - End date for results based on published date.
  * @property {boolean} [excludeSourceDomain] - If true, excludes links from the base domain of the input.
- * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness. Categories include company, research paper, news, etc.
+ * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness. Currently, the only category is company.
  * @property {string[]} [includeText] - List of strings that must be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  * @property {string[]} [excludeText] - List of strings that must not be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  */
@@ -67,9 +67,6 @@ export type FindSimilarOptions = BaseSearchOptions & {
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
  * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
  * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
- * @property {number} [subpages] - The number of subpages to crawl.
- * @property {string | string[]} [subpageTarget] - The target subpage(s). Can be a single string or an array of strings.
- * @property {ExtrasOptions} [extras] - Extra parameters to pass.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
  */
 export type ContentsOptions = {
@@ -78,9 +75,6 @@ export type ContentsOptions = {
   summary?: SummaryContentsOptions | true;
   livecrawl?: LivecrawlOptions;
   livecrawlTimeout?: number;
-  subpages?: number;
-  subpageTarget?: string | string[];
-  extras?: ExtrasOptions;
   filterEmptyResults?: boolean;
 } & (typeof isBeta extends true ? {} : {}); // FOR BETA OPTIONS
 
@@ -124,15 +118,6 @@ export type SummaryContentsOptions = {
 };
 
 /**
- * Extra options for retrieving additional data.
- * @typedef {Object} ExtrasOptions
- * @property {number} [links] - The number of links to return.
- */
-export type ExtrasOptions = {
-  links?: number;
-};
-
-/**
  * @typedef {Object} TextResponse
  * @property {string} text - Text from page
  */
@@ -154,32 +139,18 @@ export type HighlightsResponse = {
  */
 export type SummaryResponse = { summary: string };
 
-/**
- * @typedef {Object} SubpagesResponse
- * @property {SearchResult[]} subpages - Array of subpages for the search result.
- */
-export type SubpagesResponse = { subpages: SearchResult[] };
-
-/**
- * @typedef {Object} ExtrasResponse
- * @property {string[]} links - Array of links from the search result.
- */
-export type ExtrasResponse = { links: string[] };
-
 export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
 
 /**
  * @typedef {Object} ContentsResultComponent
- * Depending on 'ContentsOptions', this yields a combination of 'TextResponse', 'HighlightsResponse', 'SummaryResponse', 'SubpagesResponse', 'ExtrasResponse', or an empty object.
+ * Depending on 'ContentsOptions', this yields a combination of 'TextResponse', 'HighlightsResponse', 'SummaryResponse', or an empty object.
  *
  * @template T - A type extending from 'ContentsOptions'.
  */
 export type ContentsResultComponent<T extends ContentsOptions> = Default<
   (T["text"] extends object | true ? TextResponse : {}) &
     (T["highlights"] extends object | true ? HighlightsResponse : {}) &
-    (T["summary"] extends object | true ? SummaryResponse : {}) &
-    (T["subpages"] extends number ? SubpagesResponse : {}) &
-    (T["extras"] extends object ? ExtrasResponse : {}),
+    (T["summary"] extends object | true ? SummaryResponse : {}),
   TextResponse
 >;
 
@@ -298,12 +269,11 @@ class Exa {
     query: string,
     options?: RegularSearchOptions & T,
   ): Promise<SearchResponse<T>> {
-    const { text, highlights, summary, subpages, extras, ...rest } =
-      options || {};
+    const { text, highlights, summary, ...rest } = options || {};
     return await this.request("/search", "POST", {
       query,
       contents:
-        !text && !highlights && !summary && !subpages && !extras
+        !text && !highlights && !summary
           ? {
               text: true,
               ...options,
@@ -312,8 +282,6 @@ class Exa {
               ...(text ? { text } : {}),
               ...(highlights ? { highlights } : {}),
               ...(summary ? { summary } : {}),
-              ...(subpages ? { subpages } : {}),
-              ...(extras ? { extras } : {}),
               ...options,
             },
       ...rest,
@@ -343,12 +311,11 @@ class Exa {
     url: string,
     options?: FindSimilarOptions & T,
   ): Promise<SearchResponse<T>> {
-    const { text, highlights, summary, subpages, extras, ...rest } =
-      options || {};
+    const { text, highlights, summary, ...rest } = options || {};
     return await this.request("/findSimilar", "POST", {
       url,
       contents:
-        !text && !highlights && !summary && !subpages && !extras
+        !text && !highlights && !summary
           ? {
               text: true,
               livecrawl: options?.livecrawl,
@@ -361,8 +328,6 @@ class Exa {
               ...(text ? { text } : {}),
               ...(highlights ? { highlights } : {}),
               ...(summary ? { summary } : {}),
-              ...(subpages ? { subpages } : {}),
-              ...(extras ? { extras } : {}),
               ...options,
             },
       ...rest,
