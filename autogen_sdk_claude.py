@@ -50,7 +50,8 @@ def generate_new_sdk(old_spec, new_spec):
     )
 
     # Extract the response text
-    generated_text = message.content
+    generated_text = message.content[0].text
+
 
     # save_to_file(generated_text, file_name="full_response.txt")
 
