@@ -36,7 +36,7 @@ jobs:
         curl http://localhost:8000
         kill %1
       env:
-        EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
+        EXASEARCH_API_KEY: ${{ secrets.EXA_API_KEY }}
 
     # Optional: Add steps to publish the package if on main branch
     # - name: Publish to npm
@@ -44,3 +44,31 @@ jobs:
     #   run: npm run publish:stable
     #   env:
     #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  run-typescript-examples:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build SDK
+      run: npm run build
+
+    - name: Run TypeScript examples
+      run: |
+        for file in examples/*.ts; do
+          if [ -f "$file" ]; then
+            echo "Running $file"
+            npx ts-node "$file"
+          fi
+        done
+      env:
+        EXASEARCH_API_KEY: ${{ secrets.EXA_API_KEY }}
