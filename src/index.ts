@@ -59,6 +59,8 @@ export type FindSimilarOptions = BaseSearchOptions & {
   excludeSourceDomain?: boolean;
 };
 
+export type ExtrasOptions = {links: number}
+
 /**
  * Search options for performing a search query.
  * @typedef {Object} ContentsOptions
@@ -68,7 +70,11 @@ export type FindSimilarOptions = BaseSearchOptions & {
  * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
  * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
+ * @property {number} [subpages] - The number of subpage to return for each result
+ * @property {string | string[]} [subpageTarget] - Subpages targets to return in the subpages results. Eg. 'shop.tesla.com' for tesla.com
+ * @property {ExtrasOptions} [extras] - Miscelleneous data for derived from resutls
  */
+
 export type ContentsOptions = {
   text?: TextContentsOptions | true;
   highlights?: HighlightsContentsOptions | true;
@@ -76,6 +82,9 @@ export type ContentsOptions = {
   livecrawl?: LivecrawlOptions;
   livecrawlTimeout?: number;
   filterEmptyResults?: boolean;
+  subpages?: number
+  subpageTarget?: string | string[]
+  extras?: ExtrasOptions
 } & (typeof isBeta extends true ? {} : {}); // FOR BETA OPTIONS
 
 /**
@@ -139,6 +148,18 @@ export type HighlightsResponse = {
  */
 export type SummaryResponse = { summary: string };
 
+/**
+ * @typedef {Object} ExtrasResponse
+ * @property {string[]} links - The links on the page of a result
+ */
+export type ExtrasResponse = { links: string[] };
+
+/**
+ * @typedef {Object} SubpagesResponse
+ * @property {ContentsResultComponent<T extends ContentsOptions>} subpages - The links on the page of a result
+ */
+export type SubpagesResponse<T extends ContentsOptions> = {subpages: ContentsResultComponent<T>[]}
+
 export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
 
 /**
@@ -149,14 +170,16 @@ export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
  */
 export type ContentsResultComponent<T extends ContentsOptions> = Default<
   (T["text"] extends object | true ? TextResponse : {}) &
-    (T["highlights"] extends object | true ? HighlightsResponse : {}) &
-    (T["summary"] extends object | true ? SummaryResponse : {}),
-  TextResponse
+  (T["highlights"] extends object | true ? HighlightsResponse : {}) &
+  (T["summary"] extends object | true ? SummaryResponse : {}) &
+  (T["subpages"] extends number ? SubpagesResponse<T> : {}) &
+  (T["extras"] extends object ? ExtrasResponse : {} )
+  ,TextResponse
 >;
 
 /**
  * Represents a search result object.
- * @typedef {Object} Result
+ * @typedef {Object} SearchResult
  * @property {string} title - The title of the search result.
  * @property {string} url - The URL of the search result.
  * @property {string} [publishedDate] - The estimated creation date of the content.
@@ -195,6 +218,39 @@ export type SearchResponse<T extends ContentsOptions = {}> = {
 class Exa {
   private baseURL: string;
   private headers: Headers;
+
+  /**
+   * Derives the contents options from the provided options object.
+   * If no contents options are specified, it defaults to { text: true }.
+   * 
+   * @param options - The options object that may contain contents options.
+   * @returns An object with derived contentsOptions and the rest of the options.
+   */
+  private deriveContentsOptions<T extends ContentsOptions>(options?: T): {
+    contentsOptions: ContentsOptions;
+    restOptions: Omit<T, keyof ContentsOptions>;
+  } {
+    if (!options) {
+      return { contentsOptions: { text: true }, restOptions: {} as Omit<T, keyof ContentsOptions> };
+    }
+
+    const { text, highlights, summary, subpages, subpageTarget, extras, livecrawl, livecrawlTimeout, ...rest } = options;
+
+    const contentsOptions: ContentsOptions = {};
+    if (text !== undefined) contentsOptions.text = text;
+    if (highlights !== undefined) contentsOptions.highlights = highlights;
+    if (summary !== undefined) contentsOptions.summary = summary;
+    if (subpages !== undefined) contentsOptions.subpages = subpages;
+    if (subpageTarget !== undefined) contentsOptions.subpageTarget = subpageTarget;
+    if (extras !== undefined) contentsOptions.extras = extras;
+    if (livecrawl !== undefined) contentsOptions.livecrawl = livecrawl;
+    if (livecrawlTimeout !== undefined) contentsOptions.livecrawlTimeout = livecrawlTimeout;
+
+    return {
+      contentsOptions: Object.keys(contentsOptions).length > 0 ? contentsOptions : { text: true },
+      restOptions: rest as Omit<T, keyof ContentsOptions>
+    };
+  }
 
   /**
    * Constructs the Exa API client.
@@ -246,6 +302,7 @@ class Exa {
     return await response.json();
   }
 
+
   /**
    * Performs a search with a Exa prompt-engineered query.
    * @param {string} query - The query string.
@@ -269,22 +326,11 @@ class Exa {
     query: string,
     options?: RegularSearchOptions & T,
   ): Promise<SearchResponse<T>> {
-    const { text, highlights, summary, ...rest } = options || {};
+    const { contentsOptions, restOptions } = this.deriveContentsOptions(options);
     return await this.request("/search", "POST", {
       query,
-      contents:
-        !text && !highlights && !summary
-          ? {
-              text: true,
-              ...options,
-            }
-          : {
-              ...(text ? { text } : {}),
-              ...(highlights ? { highlights } : {}),
-              ...(summary ? { summary } : {}),
-              ...options,
-            },
-      ...rest,
+      contents: contentsOptions,
+      ...restOptions,
     });
   }
 
@@ -311,26 +357,11 @@ class Exa {
     url: string,
     options?: FindSimilarOptions & T,
   ): Promise<SearchResponse<T>> {
-    const { text, highlights, summary, ...rest } = options || {};
+    const { contentsOptions, restOptions } = this.deriveContentsOptions(options);
     return await this.request("/findSimilar", "POST", {
       url,
-      contents:
-        !text && !highlights && !summary
-          ? {
-              text: true,
-              livecrawl: options?.livecrawl,
-              livecrawlTimeout: options?.livecrawlTimeout,
-              ...options,
-            }
-          : {
-              livecrawl: options?.livecrawl,
-              livecrawlTimeout: options?.livecrawlTimeout,
-              ...(text ? { text } : {}),
-              ...(highlights ? { highlights } : {}),
-              ...(summary ? { summary } : {}),
-              ...options,
-            },
-      ...rest,
+      contents: contentsOptions,
+      ...restOptions,
     });
   }
 
