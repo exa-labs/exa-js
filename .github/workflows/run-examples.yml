@@ -64,20 +64,20 @@ jobs:
 
     - name: Compile TypeScript files
       run: |
-        mkdir -p dist/examples
-        for file in examples/*.ts; do
+        cd examples
+        for file in *.ts; do
           echo "Compiling $file"
-          tsc "$file" --outDir dist/examples
+          tsc $file
         done
 
     - name: List compiled files
       run: ls -R dist/examples
 
-    - name: Run compiled JavaScript files
+    - name: Run JavaScript files
       run: |
-        for file in dist/examples/*.js; do
+        for file in examples/*.js; do
           echo "Running $file"
-          node "$file" || echo "Failed to run $file"
+          node $file || echo "Failed to run $file"
         done
       env:
         EXASEARCH_API_KEY: ${{ secrets.EXA_API_KEY }}
