@@ -71,7 +71,7 @@ jobs:
         done
 
     - name: List compiled files
-      run: ls -R dist/examples
+      run: ls -R examples/*.js
 
     - name: Run JavaScript files
       run: |
