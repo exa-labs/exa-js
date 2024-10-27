@@ -152,7 +152,7 @@ export type SummaryResponse = { summary: string };
  * @typedef {Object} ExtrasResponse
  * @property {string[]} links - The links on the page of a result
  */
-export type ExtrasResponse = { links: string[] };
+export type ExtrasResponse = { extras: { links: string[] } };
 
 /**
  * @typedef {Object} SubpagesResponse
@@ -160,7 +160,6 @@ export type ExtrasResponse = { links: string[] };
  */
 export type SubpagesResponse<T extends ContentsOptions> = {subpages: ContentsResultComponent<T>[]}
 
-export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
 
 /**
  * @typedef {Object} ContentsResultComponent
@@ -168,14 +167,12 @@ export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
  *
  * @template T - A type extending from 'ContentsOptions'.
  */
-export type ContentsResultComponent<T extends ContentsOptions> = Default<
+export type ContentsResultComponent<T extends ContentsOptions> = 
   (T["text"] extends object | true ? TextResponse : {}) &
   (T["highlights"] extends object | true ? HighlightsResponse : {}) &
   (T["summary"] extends object | true ? SummaryResponse : {}) &
   (T["subpages"] extends number ? SubpagesResponse<T> : {}) &
   (T["extras"] extends object ? ExtrasResponse : {} )
-  ,TextResponse
->;
 
 /**
  * Represents a search result object.
@@ -187,7 +184,7 @@ export type ContentsResultComponent<T extends ContentsOptions> = Default<
  * @property {number} [score] - Similarity score between the query/url and the result.
  * @property {string} id - The temporary ID for the document.
  */
-export type SearchResult<T extends ContentsOptions = {}> = {
+export type SearchResult<T extends ContentsOptions> = {
   title: string | null;
   url: string;
   publishedDate?: string;
@@ -205,7 +202,7 @@ export type SearchResult<T extends ContentsOptions = {}> = {
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
  */
-export type SearchResponse<T extends ContentsOptions = {}> = {
+export type SearchResponse<T extends ContentsOptions> = {
   results: SearchResult<T>[];
   autopromptString?: string;
   autoDate?: string;
@@ -219,20 +216,10 @@ class Exa {
   private baseURL: string;
   private headers: Headers;
 
-  /**
-   * Derives the contents options from the provided options object.
-   * If no contents options are specified, it defaults to { text: true }.
-   * 
-   * @param options - The options object that may contain contents options.
-   * @returns An object with derived contentsOptions and the rest of the options.
-   */
-  private deriveContentsOptions<T extends ContentsOptions>(options?: T): {
+  private extractContentsOptions<T extends ContentsOptions>(options: T): {
     contentsOptions: ContentsOptions;
     restOptions: Omit<T, keyof ContentsOptions>;
   } {
-    if (!options) {
-      return { contentsOptions: { text: true }, restOptions: {} as Omit<T, keyof ContentsOptions> };
-    }
 
     const { text, highlights, summary, subpages, subpageTarget, extras, livecrawl, livecrawlTimeout, ...rest } = options;
 
@@ -247,7 +234,7 @@ class Exa {
     if (livecrawlTimeout !== undefined) contentsOptions.livecrawlTimeout = livecrawlTimeout;
 
     return {
-      contentsOptions: Object.keys(contentsOptions).length > 0 ? contentsOptions : { text: true },
+      contentsOptions: contentsOptions,
       restOptions: rest as Omit<T, keyof ContentsOptions>
     };
   }
@@ -270,7 +257,7 @@ class Exa {
     this.headers = new Headers({
       "x-api-key": apiKey,
       "Content-Type": "application/json",
-      "User-Agent": "exa-node 1.1.0",
+      "User-Agent": "exa-node 1.3.0",
     });
   }
 
@@ -312,7 +299,7 @@ class Exa {
   async search(
     query: string,
     options?: RegularSearchOptions,
-  ): Promise<SearchResponse> {
+  ): Promise<SearchResponse<{}>> {
     return await this.request("/search", "POST", { query, ...options });
   }
 
@@ -322,11 +309,14 @@ class Exa {
    * @param {SearchOptions} [options] - Additional search options.
    * @returns {Promise<SearchResponse>} A list of relevant search results.
    */
-  async searchAndContents<T extends ContentsOptions>(
+  async searchAndContents<T extends ContentsOptions = {text: true}>(
     query: string,
     options?: RegularSearchOptions & T,
   ): Promise<SearchResponse<T>> {
-    const { contentsOptions, restOptions } = this.deriveContentsOptions(options);
+    const { contentsOptions, restOptions } = options === undefined ? 
+      { contentsOptions: { text: true }, restOptions: {}} :
+      this.extractContentsOptions(options);
+
     return await this.request("/search", "POST", {
       query,
       contents: contentsOptions,
@@ -343,21 +333,19 @@ class Exa {
   async findSimilar(
     url: string,
     options?: FindSimilarOptions,
-  ): Promise<SearchResponse> {
+  ): Promise<SearchResponse<{}>> {
     return await this.request("/findSimilar", "POST", { url, ...options });
   }
 
-  /**
-   * Finds similar links to the provided URL and returns the contents of the documents.
-   * @param {string} url - The URL for which to find similar links.
-   * @param {FindSimilarOptions} [options] - Additional options for finding similar links.
-   * @returns {Promise<SearchResponse>} A list of similar search results.
-   */
-  async findSimilarAndContents<T extends ContentsOptions>(
+  /** Finds similar links to the provided URL and returns the contents of the documents. @param {string} url - The URL for which to find similar links. @param {FindSimilarOptions} [options] - Additional options for finding similar links. @returns {Promise<SearchResponse>} A list of similar search results. */ 
+  async findSimilarAndContents<T extends ContentsOptions = {text: true}>(
     url: string,
     options?: FindSimilarOptions & T,
   ): Promise<SearchResponse<T>> {
-    const { contentsOptions, restOptions } = this.deriveContentsOptions(options);
+    const { contentsOptions, restOptions } = options === undefined ?
+      {contentsOptions: {text: true}, restOptions: {}} :
+      this.extractContentsOptions(options);
+     
     return await this.request("/findSimilar", "POST", {
       url,
       contents: contentsOptions,
@@ -371,8 +359,8 @@ class Exa {
    * @param {ContentsOptions} [options] - Additional options for retrieving document contents.
    * @returns {Promise<GetContentsResponse>} A list of document contents.
    */
-  async getContents<T extends ContentsOptions>(
-    ids: string | string[] | SearchResult[],
+  async getContents<T extends ContentsOptions = {text: true}>(
+    ids: string | string[] | SearchResult<T>[],
     options?: T,
   ): Promise<SearchResponse<T>> {
     if (ids.length === 0) {
@@ -384,7 +372,7 @@ class Exa {
     } else if (typeof ids[0] === "string") {
       requestIds = ids as string[];
     } else {
-      requestIds = (ids as SearchResult[]).map((result) => result.id);
+      requestIds = (ids as SearchResult<T>[]).map((result) => result.id);
     }
     return await this.request(`/contents`, "POST", {
       ids: requestIds,
