@@ -65,7 +65,7 @@ jobs:
     - name: Compile TypeScript files
       run: |
         mkdir -p dist/examples
-        for file in examples/*.ts examples/*.mts; do
+        for file in examples/*.ts; do
           echo "Compiling $file"
           tsc "$file" --outDir dist/examples
         done
