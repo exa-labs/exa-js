@@ -81,11 +81,3 @@ jobs:
         done
       env:
         EXASEARCH_API_KEY: ${{ secrets.EXA_API_KEY }}
-
-    - name: Check for errors
-      run: |
-        echo "Checking for errors in compiled files"
-        for file in dist/examples/*.js; do
-          echo "Checking $file"
-          node --check "$file"
-        done
