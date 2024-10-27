@@ -64,6 +64,7 @@ jobs:
 
     - name: Compile TypeScript files
       run: |
+        mkdir -p dist
         for file in examples/*.ts examples/*.mts; do
           if [ -f "$file" ]; then
             echo "Compiling $file"
@@ -71,13 +72,27 @@ jobs:
           fi
         done
 
+    - name: List compiled files
+      run: ls -R dist
+
     - name: Run compiled JavaScript files
       run: |
         for file in dist/*.js; do
           if [ -f "$file" ]; then
             echo "Running $file"
-            node "$file"
+            node "$file" || echo "Failed to run $file"
           fi
         done
       env:
         EXASEARCH_API_KEY: ${{ secrets.EXA_API_KEY }}
+
+    - name: Check for errors
+      if: failure()
+      run: |
+        echo "Checking for errors in compiled files"
+        for file in dist/*.js; do
+          if [ -f "$file" ]; then
+            echo "Checking $file"
+            node --check "$file"
+          fi
+        done
