@@ -64,10 +64,10 @@ jobs:
 
     - name: Run TypeScript examples
       run: |
-        for file in examples/*.ts; do
+        for file in examples/*.ts examples/*.mts; do
           if [ -f "$file" ]; then
             echo "Running $file"
-            npx ts-node "$file"
+            npx ts-node-esm "$file"
           fi
         done
       env:
