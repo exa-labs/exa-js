@@ -64,20 +64,20 @@ jobs:
 
     - name: Compile TypeScript files
       run: |
-        mkdir -p dist
+        mkdir -p dist/examples
         for file in examples/*.ts examples/*.mts; do
           if [ -f "$file" ]; then
             echo "Compiling $file"
-            tsc "$file" --outDir dist
+            tsc "$file" --outDir dist/examples
           fi
         done
 
     - name: List compiled files
-      run: ls -R dist
+      run: ls -R dist/examples
 
     - name: Run compiled JavaScript files
       run: |
-        for file in dist/*.js; do
+        for file in dist/examples/*.js; do
           if [ -f "$file" ]; then
             echo "Running $file"
             node "$file" || echo "Failed to run $file"
@@ -90,7 +90,7 @@ jobs:
       if: failure()
       run: |
         echo "Checking for errors in compiled files"
-        for file in dist/*.js; do
+        for file in dist/examples/*.js; do
           if [ -f "$file" ]; then
             echo "Checking $file"
             node --check "$file"
