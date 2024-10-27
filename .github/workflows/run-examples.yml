@@ -59,15 +59,24 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Build SDK
-      run: npm run build
+    - name: Install TypeScript
+      run: npm install -g typescript
 
-    - name: Run TypeScript examples
+    - name: Compile TypeScript files
       run: |
         for file in examples/*.ts examples/*.mts; do
           if [ -f "$file" ]; then
+            echo "Compiling $file"
+            tsc "$file" --outDir dist
+          fi
+        done
+
+    - name: Run compiled JavaScript files
+      run: |
+        for file in dist/*.js; do
+          if [ -f "$file" ]; then
             echo "Running $file"
-            npx ts-node-esm "$file"
+            node "$file"
           fi
         done
       env:
