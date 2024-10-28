@@ -160,18 +160,23 @@ export type ExtrasResponse = { extras: { links: string[] } };
 export type SubpagesResponse<T extends ContentsOptions> = {subpages: ContentsResultComponent<T>[]}
 
 
+
+export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
+
 /**
  * @typedef {Object} ContentsResultComponent
  * Depending on 'ContentsOptions', this yields a combination of 'TextResponse', 'HighlightsResponse', 'SummaryResponse', or an empty object.
  *
  * @template T - A type extending from 'ContentsOptions'.
  */
-export type ContentsResultComponent<T extends ContentsOptions> = 
+export type ContentsResultComponent<T extends ContentsOptions> = Default< 
   (T["text"] extends object | true ? TextResponse : {}) &
   (T["highlights"] extends object | true ? HighlightsResponse : {}) &
   (T["summary"] extends object | true ? SummaryResponse : {}) &
   (T["subpages"] extends number ? SubpagesResponse<T> : {}) &
-  (T["extras"] extends object ? ExtrasResponse : {} )
+  (T["extras"] extends object ? ExtrasResponse : {} ),
+  TextResponse
+>;
 
 /**
  * Represents a search result object.
@@ -308,7 +313,7 @@ class Exa {
    * @param {SearchOptions} [options] - Additional search options.
    * @returns {Promise<SearchResponse>} A list of relevant search results.
    */
-  async searchAndContents<T extends ContentsOptions = {text: true}>(
+  async searchAndContents<T extends ContentsOptions>(
     query: string,
     options?: RegularSearchOptions & T,
   ): Promise<SearchResponse<T>> {
@@ -337,7 +342,7 @@ class Exa {
   }
 
   /** Finds similar links to the provided URL and returns the contents of the documents. @param {string} url - The URL for which to find similar links. @param {FindSimilarOptions} [options] - Additional options for finding similar links. @returns {Promise<SearchResponse>} A list of similar search results. */ 
-  async findSimilarAndContents<T extends ContentsOptions = {text: true}>(
+  async findSimilarAndContents<T extends ContentsOptions>(
     url: string,
     options?: FindSimilarOptions & T,
   ): Promise<SearchResponse<T>> {
@@ -358,7 +363,7 @@ class Exa {
    * @param {ContentsOptions} [options] - Additional options for retrieving document contents.
    * @returns {Promise<GetContentsResponse>} A list of document contents.
    */
-  async getContents<T extends ContentsOptions = {text: true}>(
+  async getContents<T extends ContentsOptions>(
     ids: string | string[] | SearchResult<T>[],
     options?: T,
   ): Promise<SearchResponse<T>> {
