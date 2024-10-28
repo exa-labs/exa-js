@@ -1,5 +1,7 @@
 import Exa from "../src/index";
 
+import assert from "assert"
+
 const exa = new Exa(process.env.EXASEARCH_API_KEY);
 
 async function runLivecrawlExample() {
