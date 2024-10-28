@@ -70,8 +70,7 @@ export type ExtrasOptions = {links: number}
  * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
  * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
- * @property {number} [subpages] - The number of subpage to return for each result
- * @property {string | string[]} [subpageTarget] - Subpages targets to return in the subpages results. Eg. 'shop.tesla.com' for tesla.com
+ * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result
  * @property {ExtrasOptions} [extras] - Miscelleneous data for derived from resutls
  */
 
