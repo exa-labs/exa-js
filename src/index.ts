@@ -71,7 +71,7 @@ export type ExtrasOptions = {links: number}
  * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
  * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result.
- * @property {string} [subpageTarget] - Text used to match/rank subpages in the returned subpage list. You could use "about" to get *about* page for websites. Note that this is a fuzzy filter.
+ * @property {string} [subpageTarget] - Text used to match/rank subpages in the returned subpage list. You could use "about" to get *about* page for websites. Note that this is a fuzzy matcher.
  * @property {ExtrasOptions} [extras] - Miscelleneous data for derived from resutls
  */
 export type ContentsOptions = {
