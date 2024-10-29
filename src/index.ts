@@ -266,7 +266,7 @@ class Exa {
     this.headers = new Headers({
       "x-api-key": apiKey,
       "Content-Type": "application/json",
-      "User-Agent": "exa-node 1.3.0",
+      "User-Agent": "exa-node 1.3.1",
     });
   }
 
