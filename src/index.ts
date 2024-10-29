@@ -70,12 +70,12 @@ export type ExtrasOptions = {links: number}
  * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
  * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
- * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result
+ * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result. If subpages is specified, text will be enabled automatically
+ * @property {string} [subpageTarget] - Text used to match/rank subpages in the returned subpage list. You could use "about" to get *about* page for websites. Note that this is a fuzzy filter.
  * @property {ExtrasOptions} [extras] - Miscelleneous data for derived from resutls
  */
-
 export type ContentsOptions = {
-  text?: TextContentsOptions | true;
+  text?: TextContentsOptions | boolean; 
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
   livecrawl?: LivecrawlOptions;
@@ -85,6 +85,7 @@ export type ContentsOptions = {
   subpageTarget?: string | string[]
   extras?: ExtrasOptions
 } & (typeof isBeta extends true ? {} : {}); // FOR BETA OPTIONS
+
 
 /**
  * Options for livecrawling contents
@@ -228,11 +229,15 @@ class Exa {
     const { text, highlights, summary, subpages, subpageTarget, extras, livecrawl, livecrawlTimeout, ...rest } = options;
 
     const contentsOptions: ContentsOptions = {};
-    if (text !== undefined) contentsOptions.text = text;
+    // don't send text if its false
+    if (text !== false) contentsOptions.text = text === undefined ? true : text;
     if (highlights !== undefined) contentsOptions.highlights = highlights;
     if (summary !== undefined) contentsOptions.summary = summary;
+
     if (subpages !== undefined) contentsOptions.subpages = subpages;
+    if (text === undefined && highlights === undefined && summary === undefined && subpages !== undefined) contentsOptions.text = true;
     if (subpageTarget !== undefined) contentsOptions.subpageTarget = subpageTarget;
+
     if (extras !== undefined) contentsOptions.extras = extras;
     if (livecrawl !== undefined) contentsOptions.livecrawl = livecrawl;
     if (livecrawlTimeout !== undefined) contentsOptions.livecrawlTimeout = livecrawlTimeout;
