@@ -75,7 +75,7 @@ export type ExtrasOptions = {links: number}
  * @property {ExtrasOptions} [extras] - Miscelleneous data for derived from resutls
  */
 export type ContentsOptions = {
-  text?: TextContentsOptions | boolean; 
+  text?: TextContentsOptions | true; 
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
   livecrawl?: LivecrawlOptions;
@@ -231,7 +231,7 @@ class Exa {
     const contentsOptions: ContentsOptions = {};
     // don't send text if it's explicitly false
     if (text === undefined && summary === undefined && highlights === undefined) contentsOptions.text = true
-    if (text !== false && text !== undefined) contentsOptions.text = text
+    if (text !== undefined) contentsOptions.text = text
 
     if (summary !== undefined) contentsOptions.summary = summary;
 
