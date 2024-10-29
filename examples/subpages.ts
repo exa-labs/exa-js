@@ -8,11 +8,8 @@ async function runExamples() {
     const search = await exa.searchAndContents("canonical url for the homepage of a fintech startup", { 
       numResults: 5,
       subpages: 5,
+      summary: true,
       subpageTarget: "about",
-      text: {
-        maxCharacters: 1
-      }
-
     });
     console.log("Search results with subpages:", JSON.stringify(search, null, 2));
 

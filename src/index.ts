@@ -70,7 +70,7 @@ export type ExtrasOptions = {links: number}
  * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
  * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
- * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result. If subpages is specified, text will be enabled automatically
+ * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result.
  * @property {string} [subpageTarget] - Text used to match/rank subpages in the returned subpage list. You could use "about" to get *about* page for websites. Note that this is a fuzzy filter.
  * @property {ExtrasOptions} [extras] - Miscelleneous data for derived from resutls
  */
@@ -229,13 +229,13 @@ class Exa {
     const { text, highlights, summary, subpages, subpageTarget, extras, livecrawl, livecrawlTimeout, ...rest } = options;
 
     const contentsOptions: ContentsOptions = {};
-    // don't send text if its false
-    if (text !== false) contentsOptions.text = text === undefined ? true : text;
-    if (highlights !== undefined) contentsOptions.highlights = highlights;
+    // don't send text if it's explicitly false
+    if (text === undefined && summary === undefined && highlights === undefined) contentsOptions.text = true
+    if (text !== false && text !== undefined) contentsOptions.text = text
+
     if (summary !== undefined) contentsOptions.summary = summary;
 
     if (subpages !== undefined) contentsOptions.subpages = subpages;
-    if (text === undefined && highlights === undefined && summary === undefined && subpages !== undefined) contentsOptions.text = true;
     if (subpageTarget !== undefined) contentsOptions.subpageTarget = subpageTarget;
 
     if (extras !== undefined) contentsOptions.extras = extras;
