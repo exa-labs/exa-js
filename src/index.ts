@@ -230,7 +230,7 @@ class Exa {
 
     const contentsOptions: ContentsOptions = {};
     // don't send text if it's explicitly false
-    if (text === undefined && summary === undefined && highlights === undefined) contentsOptions.text = true
+    if (text === undefined && summary === undefined && highlights === undefined && extras === undefined) contentsOptions.text = true
     if (text !== undefined) contentsOptions.text = text
 
     if (summary !== undefined) contentsOptions.summary = summary;
