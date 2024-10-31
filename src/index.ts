@@ -234,6 +234,7 @@ class Exa {
     if (text !== undefined) contentsOptions.text = text
 
     if (summary !== undefined) contentsOptions.summary = summary;
+    if (highlights !== undefined) contentsOptions.highlights = highlights;
 
     if (subpages !== undefined) contentsOptions.subpages = subpages;
     if (subpageTarget !== undefined) contentsOptions.subpageTarget = subpageTarget;
@@ -266,7 +267,7 @@ class Exa {
     this.headers = new Headers({
       "x-api-key": apiKey,
       "Content-Type": "application/json",
-      "User-Agent": "exa-node 1.3.1",
+      "User-Agent": "exa-node 1.3.2",
     });
   }
 

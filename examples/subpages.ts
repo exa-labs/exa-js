@@ -8,6 +8,7 @@ async function runExamples() {
     const search = await exa.searchAndContents("canonical url for the homepage of a fintech startup", { 
       numResults: 5,
       subpages: 5,
+      highlights: true,
       summary: true,
       subpageTarget: "about",
     });
