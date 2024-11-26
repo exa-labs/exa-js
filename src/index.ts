@@ -59,7 +59,7 @@ export type FindSimilarOptions = BaseSearchOptions & {
   excludeSourceDomain?: boolean;
 };
 
-export type ExtrasOptions = {links: number}
+export type ExtrasOptions = {links?: number, imageLinks?: number}
 
 /**
  * Search options for performing a search query.
@@ -151,8 +151,9 @@ export type SummaryResponse = { summary: string };
 /**
  * @typedef {Object} ExtrasResponse
  * @property {string[]} links - The links on the page of a result
+ * @property {string[]} imageLinks - The image links on the page of a result
  */
-export type ExtrasResponse = { extras: { links: string[] } };
+export type ExtrasResponse = { extras: { links?: string[], imageLinks?: string[] } };
 
 /**
  * @typedef {Object} SubpagesResponse
@@ -197,6 +198,7 @@ export type SearchResult<T extends ContentsOptions> = {
   score?: number;
   id: string;
   image?: string;
+  favicon?: string;
 } & ContentsResultComponent<T>;
 
 /**
