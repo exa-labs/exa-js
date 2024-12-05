@@ -17,7 +17,7 @@ const isBeta = false;
  * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness. Currently, the only category is company.
  * @property {string[]} [includeText] - List of strings that must be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  * @property {string[]} [excludeText] - List of strings that must not be present in webpage text of results. Currently only supports 1 string of up to 5 words.
- */
+ */ 
 export type BaseSearchOptions = {
   numResults?: number;
   includeDomains?: string[];
@@ -91,7 +91,7 @@ export type ContentsOptions = {
  * Options for livecrawling contents
  * @typedef {string} LivecrawlOptions
  */
-export type LivecrawlOptions = "never" | "fallback" | "always";
+export type LivecrawlOptions = "never" | "fallback" | "always" | "auto";
 
 /**
  * Options for retrieving text from page.
