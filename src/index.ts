@@ -26,7 +26,7 @@ export type BaseSearchOptions = {
   endCrawlDate?: string;
   startPublishedDate?: string;
   endPublishedDate?: string;
-  category?: string;
+  category?: "company" | "research paper" | "news" | "pdf" | "github" | "tweet" | "personal site" | "linkedin profile" | "financial report";
   includeText?: string[];
   excludeText?: string[];
 };
@@ -37,7 +37,7 @@ export type BaseSearchOptions = {
  */
 export type RegularSearchOptions = BaseSearchOptions & {
   useAutoprompt?: boolean;
-  type?: string;
+  type?: "keyword" | "neural" | "auto";
 };
 
 /**
@@ -91,7 +91,7 @@ export type ContentsOptions = {
  * Options for livecrawling contents
  * @typedef {string} LivecrawlOptions
  */
-export type LivecrawlOptions = "never" | "fallback" | "always" | "auto";
+export type LivecrawlOptions = "never" | "fallback" | "always";
 
 /**
  * Options for retrieving text from page.
@@ -160,8 +160,6 @@ export type ExtrasResponse = { extras: { links?: string[], imageLinks?: string[]
  * @property {ContentsResultComponent<T extends ContentsOptions>} subpages - The links on the page of a result
  */
 export type SubpagesResponse<T extends ContentsOptions> = {subpages: ContentsResultComponent<T>[]}
-
-
 
 export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
 
@@ -269,7 +267,7 @@ class Exa {
     this.headers = new Headers({
       "x-api-key": apiKey,
       "Content-Type": "application/json",
-      "User-Agent": "exa-node 1.3.2",
+      "User-Agent": "exa-node 1.3.3",
     });
   }
 
