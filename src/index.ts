@@ -267,7 +267,7 @@ class Exa {
     this.headers = new Headers({
       "x-api-key": apiKey,
       "Content-Type": "application/json",
-      "User-Agent": "exa-node 1.3.3",
+      "User-Agent": "exa-node 1.4.0",
     });
   }
 
@@ -364,30 +364,32 @@ class Exa {
   }
 
   /**
-   * Retrieves contents of documents based on a list of document IDs.
-   * @param {string | string[] | SearchResult[]} ids - An array of document IDs.
+   * Retrieves contents of documents based on URLs
+   * @param {string | string[] | SearchResult[]} urls - An array of URLs.
    * @param {ContentsOptions} [options] - Additional options for retrieving document contents.
    * @returns {Promise<GetContentsResponse>} A list of document contents.
    */
   async getContents<T extends ContentsOptions>(
-    ids: string | string[] | SearchResult<T>[],
+    urls: string | string[] | SearchResult<T>[],
     options?: T,
   ): Promise<SearchResponse<T>> {
-    if (ids.length === 0) {
-      throw new Error("Must provide at least one ID");
+    if (urls.length === 0) {
+      throw new Error("Must provide at least one URL");
     }
-    let requestIds: string[];
-    if (typeof ids === "string") {
-      requestIds = [ids];
-    } else if (typeof ids[0] === "string") {
-      requestIds = ids as string[];
+    let requestUrls: string[];
+    if (typeof urls === "string") {
+      requestUrls = [urls];
+    } else if (typeof urls[0] === "string") {
+      requestUrls = urls as string[];
     } else {
-      requestIds = (ids as SearchResult<T>[]).map((result) => result.id);
+      requestUrls = (urls as SearchResult<T>[]).map((result) => result.url);
     }
-    return await this.request(`/contents`, "POST", {
-      ids: requestIds,
+    const payload = {
+      urls: requestUrls,
       ...options,
-    });
+    };
+
+    return await this.request(`/contents`, "POST", payload);
   }
 }
 
