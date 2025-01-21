@@ -80,7 +80,7 @@ export type ContentsOptions = {
  * Options for livecrawling contents
  * @typedef {string} LivecrawlOptions
  */
-export type LivecrawlOptions = "never" | "fallback" | "always";
+export type LivecrawlOptions = "never" | "fallback" | "always" | "auto";
 
 /**
  * Options for retrieving text from page.
