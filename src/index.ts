@@ -12,12 +12,11 @@ const isBeta = false;
  * @property {string} [endCrawlDate] - End date for results based on crawl date.
  * @property {string} [startPublishedDate] - Start date for results based on published date.
  * @property {string} [endPublishedDate] - End date for results based on published date.
- * @property {boolean} [useAutoprompt] - If true, converts query to a Metaphor query.
- * @property {string} [type] - Type of search, 'keyword' or 'neural'.
  * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness. Currently, the only category is company.
  * @property {string[]} [includeText] - List of strings that must be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  * @property {string[]} [excludeText] - List of strings that must not be present in webpage text of results. Currently only supports 1 string of up to 5 words.
- */ 
+ * @property {string[]} [flags] - Experimental flags
+ */
 export type BaseSearchOptions = {
   numResults?: number;
   includeDomains?: string[];
@@ -29,6 +28,7 @@ export type BaseSearchOptions = {
   category?: "company" | "research paper" | "news" | "pdf" | "github" | "tweet" | "personal site" | "linkedin profile" | "financial report";
   includeText?: string[];
   excludeText?: string[];
+  flags?: string[];
 };
 
 /**
@@ -43,23 +43,13 @@ export type RegularSearchOptions = BaseSearchOptions & {
 /**
  * Options for finding similar links.
  * @typedef {Object} FindSimilarOptions
- * @property {number} [numResults] - Number of search results to return. Default 10. Max 10 for basic plans.
- * @property {string[]} [includeDomains] - List of domains to include in the search.
- * @property {string[]} [excludeDomains] - List of domains to exclude from the search.
- * @property {string} [startCrawlDate] - Start date for results based on crawl date.
- * @property {string} [endCrawlDate] - End date for results based on crawl date.
- * @property {string} [startPublishedDate] - Start date for results based on published date.
- * @property {string} [endPublishedDate] - End date for results based on published date.
  * @property {boolean} [excludeSourceDomain] - If true, excludes links from the base domain of the input.
- * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness. Currently, the only category is company.
- * @property {string[]} [includeText] - List of strings that must be present in webpage text of results. Currently only supports 1 string of up to 5 words.
- * @property {string[]} [excludeText] - List of strings that must not be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  */
 export type FindSimilarOptions = BaseSearchOptions & {
   excludeSourceDomain?: boolean;
 };
 
-export type ExtrasOptions = {links?: number, imageLinks?: number}
+export type ExtrasOptions = { links?: number; imageLinks?: number };
 
 /**
  * Search options for performing a search query.
@@ -72,20 +62,19 @@ export type ExtrasOptions = {links?: number, imageLinks?: number}
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
  * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result.
  * @property {string | string[]} [subpageTarget] - Text used to match/rank subpages in the returned subpage list. You could use "about" to get *about* page for websites. Note that this is a fuzzy matcher.
- * @property {ExtrasOptions} [extras] - Miscelleneous data for derived from resutls
+ * @property {ExtrasOptions} [extras] - Miscelleneous data for derived from results
  */
 export type ContentsOptions = {
-  text?: TextContentsOptions | true; 
+  text?: TextContentsOptions | true;
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
   livecrawl?: LivecrawlOptions;
   livecrawlTimeout?: number;
   filterEmptyResults?: boolean;
-  subpages?: number
-  subpageTarget?: string | string[]
-  extras?: ExtrasOptions
-} & (typeof isBeta extends true ? {} : {}); // FOR BETA OPTIONS
-
+  subpages?: number;
+  subpageTarget?: string | string[];
+  extras?: ExtrasOptions;
+} & (typeof isBeta extends true ? {} : {});
 
 /**
  * Options for livecrawling contents
@@ -153,13 +142,15 @@ export type SummaryResponse = { summary: string };
  * @property {string[]} links - The links on the page of a result
  * @property {string[]} imageLinks - The image links on the page of a result
  */
-export type ExtrasResponse = { extras: { links?: string[], imageLinks?: string[] } };
+export type ExtrasResponse = { extras: { links?: string[]; imageLinks?: string[] } };
 
 /**
  * @typedef {Object} SubpagesResponse
  * @property {ContentsResultComponent<T extends ContentsOptions>} subpages - The links on the page of a result
  */
-export type SubpagesResponse<T extends ContentsOptions> = {subpages: ContentsResultComponent<T>[]}
+export type SubpagesResponse<T extends ContentsOptions> = {
+  subpages: ContentsResultComponent<T>[];
+};
 
 export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
 
@@ -169,12 +160,12 @@ export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
  *
  * @template T - A type extending from 'ContentsOptions'.
  */
-export type ContentsResultComponent<T extends ContentsOptions> = Default< 
+export type ContentsResultComponent<T extends ContentsOptions> = Default<
   (T["text"] extends object | true ? TextResponse : {}) &
-  (T["highlights"] extends object | true ? HighlightsResponse : {}) &
-  (T["summary"] extends object | true ? SummaryResponse : {}) &
-  (T["subpages"] extends number ? SubpagesResponse<T> : {}) &
-  (T["extras"] extends object ? ExtrasResponse : {} ),
+    (T["highlights"] extends object | true ? HighlightsResponse : {}) &
+    (T["summary"] extends object | true ? SummaryResponse : {}) &
+    (T["subpages"] extends number ? SubpagesResponse<T> : {}) &
+    (T["extras"] extends object ? ExtrasResponse : {}),
   TextResponse
 >;
 
@@ -225,27 +216,44 @@ class Exa {
     contentsOptions: ContentsOptions;
     restOptions: Omit<T, keyof ContentsOptions>;
   } {
-
-    const { text, highlights, summary, subpages, subpageTarget, extras, livecrawl, livecrawlTimeout, ...rest } = options;
+    const {
+      text,
+      highlights,
+      summary,
+      subpages,
+      subpageTarget,
+      extras,
+      livecrawl,
+      livecrawlTimeout,
+      ...rest
+    } = options;
 
     const contentsOptions: ContentsOptions = {};
     // don't send text if it's explicitly false
-    if (text === undefined && summary === undefined && highlights === undefined && extras === undefined) contentsOptions.text = true
-    if (text !== undefined) contentsOptions.text = text
+    if (
+      text === undefined &&
+      summary === undefined &&
+      highlights === undefined &&
+      extras === undefined
+    )
+      contentsOptions.text = true;
+    if (text !== undefined) contentsOptions.text = text;
 
     if (summary !== undefined) contentsOptions.summary = summary;
     if (highlights !== undefined) contentsOptions.highlights = highlights;
 
     if (subpages !== undefined) contentsOptions.subpages = subpages;
-    if (subpageTarget !== undefined) contentsOptions.subpageTarget = subpageTarget;
+    if (subpageTarget !== undefined)
+      contentsOptions.subpageTarget = subpageTarget;
 
     if (extras !== undefined) contentsOptions.extras = extras;
     if (livecrawl !== undefined) contentsOptions.livecrawl = livecrawl;
-    if (livecrawlTimeout !== undefined) contentsOptions.livecrawlTimeout = livecrawlTimeout;
+    if (livecrawlTimeout !== undefined)
+      contentsOptions.livecrawlTimeout = livecrawlTimeout;
 
     return {
       contentsOptions: contentsOptions,
-      restOptions: rest as Omit<T, keyof ContentsOptions>
+      restOptions: rest as Omit<T, keyof ContentsOptions>,
     };
   }
 
@@ -299,12 +307,11 @@ class Exa {
     return await response.json();
   }
 
-
   /**
-   * Performs a search with a Exa prompt-engineered query.
+   * Performs a search with an Exa prompt-engineered query.
    * @param {string} query - The query string.
-   * @param {SearchOptions} [options] - Additional search options.
-   * @returns {Promise<SearchResponse>} A list of relevant search results.
+   * @param {RegularSearchOptions} [options] - Additional search options.
+   * @returns {Promise<SearchResponse<{}>>} A list of relevant search results.
    */
   async search(
     query: string,
@@ -314,18 +321,19 @@ class Exa {
   }
 
   /**
-   * Performs a search with a Exa prompt-engineered query and returns the contents of the documents.
+   * Performs a search with an Exa prompt-engineered query and returns the contents of the documents.
    * @param {string} query - The query string.
-   * @param {SearchOptions} [options] - Additional search options.
-   * @returns {Promise<SearchResponse>} A list of relevant search results.
+   * @param {RegularSearchOptions & T} [options] - Additional search + contents options.
+   * @returns {Promise<SearchResponse<T>>} A list of relevant search results.
    */
   async searchAndContents<T extends ContentsOptions>(
     query: string,
     options?: RegularSearchOptions & T,
   ): Promise<SearchResponse<T>> {
-    const { contentsOptions, restOptions } = options === undefined ? 
-      { contentsOptions: { text: true }, restOptions: {}} :
-      this.extractContentsOptions(options);
+    const { contentsOptions, restOptions } =
+      options === undefined
+        ? { contentsOptions: { text: true }, restOptions: {} }
+        : this.extractContentsOptions(options);
 
     return await this.request("/search", "POST", {
       query,
@@ -338,7 +346,7 @@ class Exa {
    * Finds similar links to the provided URL.
    * @param {string} url - The URL for which to find similar links.
    * @param {FindSimilarOptions} [options] - Additional options for finding similar links.
-   * @returns {Promise<SearchResponse>} A list of similar search results.
+   * @returns {Promise<SearchResponse<{}>>} A list of similar search results.
    */
   async findSimilar(
     url: string,
@@ -347,15 +355,21 @@ class Exa {
     return await this.request("/findSimilar", "POST", { url, ...options });
   }
 
-  /** Finds similar links to the provided URL and returns the contents of the documents. @param {string} url - The URL for which to find similar links. @param {FindSimilarOptions} [options] - Additional options for finding similar links. @returns {Promise<SearchResponse>} A list of similar search results. */ 
+  /**
+   * Finds similar links to the provided URL and returns the contents of the documents.
+   * @param {string} url - The URL for which to find similar links.
+   * @param {FindSimilarOptions & T} [options] - Additional options for finding similar links + contents.
+   * @returns {Promise<SearchResponse<T>>} A list of similar search results.
+   */
   async findSimilarAndContents<T extends ContentsOptions>(
     url: string,
     options?: FindSimilarOptions & T,
   ): Promise<SearchResponse<T>> {
-    const { contentsOptions, restOptions } = options === undefined ?
-      {contentsOptions: {text: true}, restOptions: {}} :
-      this.extractContentsOptions(options);
-     
+    const { contentsOptions, restOptions } =
+      options === undefined
+        ? { contentsOptions: { text: true }, restOptions: {} }
+        : this.extractContentsOptions(options);
+
     return await this.request("/findSimilar", "POST", {
       url,
       contents: contentsOptions,
@@ -367,7 +381,7 @@ class Exa {
    * Retrieves contents of documents based on URLs
    * @param {string | string[] | SearchResult[]} urls - An array of URLs.
    * @param {ContentsOptions} [options] - Additional options for retrieving document contents.
-   * @returns {Promise<GetContentsResponse>} A list of document contents.
+   * @returns {Promise<SearchResponse<T>>} A list of document contents.
    */
   async getContents<T extends ContentsOptions>(
     urls: string | string[] | SearchResult<T>[],
