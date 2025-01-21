@@ -62,13 +62,13 @@ const similarExcludingSourceResults = await exa.findSimilar("https://example.com
 const similarWithContentsResults = await exa.findSimilarAndContents("https://example.com", { text: true, highlights: true });
 
 // Get text contents
-const textContentsResults = await exa.getContents(["ids"], { text: true });
+const textContentsResults = await exa.getContents(["urls"], { text: true });
 
 // Get highlights
-const highlightsContentsResults = await exa.getContents(["ids"], { highlights: true });
+const highlightsContentsResults = await exa.getContents(["urls"], { highlights: true });
 
 // Get contents with contents options
-const customContentsResults = await exa.getContents(["ids"], {
+const customContentsResults = await exa.getContents(["urls"], {
   text: { includeHtmlTags: true, maxCharacters: 1000 },
   highlights: { highlightsPerUrl: 2, numSentences: 1, query: "This is the highlight query:" }
 });
@@ -94,7 +94,7 @@ const response = await exa.findSimilar('https://waitbutwhy.com/2014/05/fermi-par
 });
 ```
 
-### `exa.getContents(ids: string[] | Result[]): Promise<GetContentsResponse>`
+### `exa.getContents(urls: string[] | Result[]): Promise<GetContentsResponse>`
 Retrieves the contents of the specified documents.
 
 ```javascript
