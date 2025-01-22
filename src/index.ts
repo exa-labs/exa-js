@@ -1,5 +1,9 @@
 import fetch, { Headers } from "cross-fetch";
 
+// Use native fetch in Node.js environments
+const fetchImpl = typeof global !== "undefined" && global.fetch ? global.fetch : fetch;
+const HeadersImpl = typeof global !== "undefined" && global.Headers ? global.Headers : Headers;
+
 const isBeta = false;
 
 /**
@@ -311,7 +315,7 @@ class Exa {
         );
       }
     }
-    this.headers = new Headers({
+    this.headers = new HeadersImpl({
       "x-api-key": apiKey,
       "Content-Type": "application/json",
       "User-Agent": "exa-node 1.4.0",
@@ -334,7 +338,7 @@ class Exa {
     stream?: boolean,
     onChunk?: (chunk: AnswerStreamResponse) => void,
   ): Promise<any> {
-    const response = await fetch(this.baseURL + endpoint, {
+    const response = await fetchImpl(this.baseURL + endpoint, {
       method,
       headers: this.headers,
       body: body ? JSON.stringify(body) : undefined,

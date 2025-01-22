@@ -1,4 +1,4 @@
-import Exa from "../src";
+import Exa from "../src/";
 
 const exa = new Exa(process.env.EXASEARCH_API_KEY);
 

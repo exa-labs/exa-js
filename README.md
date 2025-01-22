@@ -128,7 +128,7 @@ const response = await exa.answer('What is the population of New York City?', {
 ```
 
 ### Streaming Responses
-The answer endpoint supports streaming responses, where the answer is returned in chunks as it's being generated. This is useful for providing users with tokens as they are generated.
+The answer endpoint supports streaming responses, where the answer is returned in chunks as it's being generated. This is useful if you'd like to provide users with tokens as they are generated.
 
 ```javascript
 await exa.answer(
