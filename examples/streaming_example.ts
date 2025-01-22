@@ -1,7 +1,4 @@
 import Exa from "../src";
-const dotenv = require("dotenv");
-
-dotenv.config();
 
 const exa = new Exa(process.env.EXASEARCH_API_KEY);
 
