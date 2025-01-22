@@ -206,6 +206,45 @@ export type SearchResponse<T extends ContentsOptions> = {
 };
 
 /**
+ * Options for the answer endpoint
+ * @typedef {Object} AnswerOptions
+ * @property {number} [expandedQueriesLimit] - Maximum number of query variations (0-4). Default 1.
+ * @property {boolean} [stream] - Whether to stream the response. Default false.
+ * @property {boolean} [includeText] - Whether to include text in the source results. Default false.
+ */
+export type AnswerOptions = {
+  expandedQueriesLimit?: number;
+  stream?: boolean;
+  includeText?: boolean;
+};
+
+/**
+ * Represents an answer response object from the /answer endpoint.
+ * @typedef {Object} AnswerResponse
+ * @property {string} answer - The generated answer text.
+ * @property {SearchResult<{}>[]]} sources - The sources used to generate the answer.
+ * @property {string} [requestId] - Optional request ID for the answer.
+ */
+export type AnswerResponse = {
+  answer: string;
+  sources: SearchResult<{}>[];
+  requestId?: string;
+};
+
+/**
+ * Represents a streaming answer response chunk from the /answer endpoint.
+ * @typedef {Object} AnswerStreamResponse
+ * @property {string} [answer] - A chunk of the generated answer text.
+ * @property {SearchResult<{}>[]]} [sources] - The sources used to generate the answer.
+ * @property {string} [error] - Error message if something went wrong.
+ */
+export type AnswerStreamResponse = {
+  answer?: string;
+  sources?: SearchResult<{}>[];
+  error?: string;
+};
+
+/**
  * The Exa class encapsulates the API's endpoints.
  */
 class Exa {
@@ -284,12 +323,16 @@ class Exa {
    * @param {string} endpoint - The API endpoint to call.
    * @param {string} method - The HTTP method to use.
    * @param {any} [body] - The request body for POST requests.
+   * @param {boolean} [stream] - Whether to stream the response.
+   * @param {(chunk: AnswerStreamResponse) => void} [onChunk] - Callback for handling stream chunks.
    * @returns {Promise<any>} The response from the API.
    */
   private async request(
     endpoint: string,
     method: string,
     body?: any,
+    stream?: boolean,
+    onChunk?: (chunk: AnswerStreamResponse) => void,
   ): Promise<any> {
     const response = await fetch(this.baseURL + endpoint, {
       method,
@@ -304,6 +347,51 @@ class Exa {
       );
     }
 
+    /**
+     * Handle streaming responses from the API. This processes Server-Sent Events (SSE)
+     * where data is sent in chunks with the format "data: {...}". Each chunk is decoded,
+     * parsed as JSON, and passed to the provided callback function.
+     */
+    if (stream && response.body) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                onChunk?.(data);
+              } catch (e) {
+              }
+            }
+          }
+        }
+
+        if (buffer && buffer.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(buffer.slice(6));
+            onChunk?.(data);
+          } catch (e) {
+          }
+        }
+      } catch (error: any) {
+        throw new Error(`Streaming error: ${error?.message || 'Unknown error'}`);
+      } finally {
+        reader.releaseLock();
+      }
+
+      return null;
+    }
     return await response.json();
   }
 
@@ -404,6 +492,27 @@ class Exa {
     };
 
     return await this.request(`/contents`, "POST", payload);
+  }
+
+  /**
+   * Generates an answer to a query using search results as context.
+   * @param {string} query - The question or query to answer.
+   * @param {AnswerOptions} [options] - Additional options for answer generation.
+   * @param {(chunk: AnswerStreamResponse) => void} [onChunk] - Callback for handling stream chunks.
+   * @returns {Promise<AnswerResponse | null>} The generated answer and source references, or null if streaming.
+   */
+  async answer(
+    query: string,
+    options?: AnswerOptions,
+    onChunk?: (chunk: AnswerStreamResponse) => void,
+  ): Promise<AnswerResponse | null> {
+    const requestBody = {
+      query,
+      expandedQueriesLimit: options?.expandedQueriesLimit ?? 1,
+      stream: options?.stream ?? false,
+      includeText: options?.includeText ?? false
+    };
+    return await this.request("/answer", "POST", requestBody, options?.stream, onChunk);
   }
 }
 

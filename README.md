@@ -72,6 +72,23 @@ const customContentsResults = await exa.getContents(["urls"], {
   text: { includeHtmlTags: true, maxCharacters: 1000 },
   highlights: { highlightsPerUrl: 2, numSentences: 1, query: "This is the highlight query:" }
 });
+
+// Get an answer to a question
+const answerResult = await exa.answer("What is the population of New York City?", {
+  expandedQueriesLimit: 2,
+  includeText: false
+});
+
+// Get answer with source contents
+const answerWithTextResults = await exa.answer("What is the population of New York City?", {
+  includeText: true,
+  expandedQueriesLimit: 2
+});
+
+// Stream answer response
+const streamingResults = await exa.answer("What is the population of New York City?", {
+  stream: true
+});
 ```
 
 ### `exa.search(query: string, options?: SearchOptions): Promise<SearchResponse>`
@@ -99,6 +116,33 @@ Retrieves the contents of the specified documents.
 
 ```javascript
 const response = await exa.getContents(['8U71IlQ5DUTdsZFherhhYA', 'X3wd0PbJmAvhu_DQjDKA7A']);
+```
+
+### `exa.answer(query: string, options?: AnswerOptions): Promise<AnswerResponse>`
+Generates an answer to a query using search results as context.
+
+```javascript
+const response = await exa.answer('What is the population of New York City?', {
+  expandedQueriesLimit: 2,
+});
+```
+
+### Streaming Responses
+The answer endpoint supports streaming responses, where the answer is returned in chunks as it's being generated. This is useful for providing users with tokens as they are generated.
+
+```javascript
+await exa.answer(
+  'What are the latest developments in AI?',
+  {
+    expandedQueriesLimit: 2,
+    stream: true,
+    includeText: false
+  },
+  (chunk) => {
+    // Process each chunk as it arrives
+    console.log(chunk.answer);
+  }
+);
 ```
 
 # Contributing
