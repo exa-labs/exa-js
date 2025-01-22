@@ -29,7 +29,16 @@ export type BaseSearchOptions = {
   endCrawlDate?: string;
   startPublishedDate?: string;
   endPublishedDate?: string;
-  category?: "company" | "research paper" | "news" | "pdf" | "github" | "tweet" | "personal site" | "linkedin profile" | "financial report";
+  category?:
+    | "company"
+    | "research paper"
+    | "news"
+    | "pdf"
+    | "github"
+    | "tweet"
+    | "personal site"
+    | "linkedin profile"
+    | "financial report";
   includeText?: string[];
   excludeText?: string[];
   flags?: string[];
@@ -40,6 +49,11 @@ export type BaseSearchOptions = {
  * @typedef {Object} RegularSearchOptions
  */
 export type RegularSearchOptions = BaseSearchOptions & {
+  /**
+   * If true, the search results are moderated for safety.
+   */
+  moderation?: boolean;
+
   useAutoprompt?: boolean;
   type?: "keyword" | "neural" | "auto";
 };
@@ -66,7 +80,7 @@ export type ExtrasOptions = { links?: number; imageLinks?: number };
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
  * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result.
  * @property {string | string[]} [subpageTarget] - Text used to match/rank subpages in the returned subpage list. You could use "about" to get *about* page for websites. Note that this is a fuzzy matcher.
- * @property {ExtrasOptions} [extras] - Miscelleneous data for derived from results
+ * @property {ExtrasOptions} [extras] - Miscelleneous data derived from results
  */
 export type ContentsOptions = {
   text?: TextContentsOptions | true;
@@ -150,7 +164,7 @@ export type ExtrasResponse = { extras: { links?: string[]; imageLinks?: string[]
 
 /**
  * @typedef {Object} SubpagesResponse
- * @property {ContentsResultComponent<T extends ContentsOptions>} subpages - The links on the page of a result
+ * @property {ContentsResultComponent<T extends ContentsOptions>} subpages - The subpages for a result
  */
 export type SubpagesResponse<T extends ContentsOptions> = {
   subpages: ContentsResultComponent<T>[];
@@ -182,6 +196,8 @@ export type ContentsResultComponent<T extends ContentsOptions> = Default<
  * @property {string} [author] - The author of the content, if available.
  * @property {number} [score] - Similarity score between the query/url and the result.
  * @property {string} id - The temporary ID for the document.
+ * @property {string} [image] - A representative image for the content, if any.
+ * @property {string} [favicon] - A favicon for the site, if any.
  */
 export type SearchResult<T extends ContentsOptions> = {
   title: string | null;
@@ -226,7 +242,7 @@ export type AnswerOptions = {
  * Represents an answer response object from the /answer endpoint.
  * @typedef {Object} AnswerResponse
  * @property {string} answer - The generated answer text.
- * @property {SearchResult<{}>[]]} sources - The sources used to generate the answer.
+ * @property {SearchResult<{}>[]} sources - The sources used to generate the answer.
  * @property {string} [requestId] - Optional request ID for the answer.
  */
 export type AnswerResponse = {
@@ -255,6 +271,9 @@ class Exa {
   private baseURL: string;
   private headers: Headers;
 
+  /**
+   * Helper method to separate out the contents-specific options from the rest.
+   */
   private extractContentsOptions<T extends ContentsOptions>(options: T): {
     contentsOptions: ContentsOptions;
     restOptions: Omit<T, keyof ContentsOptions>;
@@ -272,30 +291,28 @@ class Exa {
     } = options;
 
     const contentsOptions: ContentsOptions = {};
-    // don't send text if it's explicitly false
+
+    // Default: if none of text, summary, or highlights is provided, we retrieve text
     if (
       text === undefined &&
       summary === undefined &&
       highlights === undefined &&
       extras === undefined
-    )
+    ) {
       contentsOptions.text = true;
-    if (text !== undefined) contentsOptions.text = text;
+    }
 
+    if (text !== undefined) contentsOptions.text = text;
     if (summary !== undefined) contentsOptions.summary = summary;
     if (highlights !== undefined) contentsOptions.highlights = highlights;
-
     if (subpages !== undefined) contentsOptions.subpages = subpages;
-    if (subpageTarget !== undefined)
-      contentsOptions.subpageTarget = subpageTarget;
-
+    if (subpageTarget !== undefined) contentsOptions.subpageTarget = subpageTarget;
     if (extras !== undefined) contentsOptions.extras = extras;
     if (livecrawl !== undefined) contentsOptions.livecrawl = livecrawl;
-    if (livecrawlTimeout !== undefined)
-      contentsOptions.livecrawlTimeout = livecrawlTimeout;
+    if (livecrawlTimeout !== undefined) contentsOptions.livecrawlTimeout = livecrawlTimeout;
 
     return {
-      contentsOptions: contentsOptions,
+      contentsOptions,
       restOptions: rest as Omit<T, keyof ContentsOptions>,
     };
   }
@@ -351,11 +368,7 @@ class Exa {
       );
     }
 
-    /**
-     * Handle streaming responses from the API. This processes Server-Sent Events (SSE)
-     * where data is sent in chunks with the format "data: {...}". Each chunk is decoded,
-     * parsed as JSON, and passed to the provided callback function.
-     */
+    // Streaming logic if `stream` is true
     if (stream && response.body) {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -376,6 +389,7 @@ class Exa {
                 const data = JSON.parse(line.slice(6));
                 onChunk?.(data);
               } catch (e) {
+                // Could not parse JSON, ignore
               }
             }
           }
@@ -386,6 +400,7 @@ class Exa {
             const data = JSON.parse(buffer.slice(6));
             onChunk?.(data);
           } catch (e) {
+            // Could not parse JSON, ignore
           }
         }
       } catch (error: any) {
@@ -396,13 +411,15 @@ class Exa {
 
       return null;
     }
+
     return await response.json();
   }
 
   /**
    * Performs a search with an Exa prompt-engineered query.
+   * 
    * @param {string} query - The query string.
-   * @param {RegularSearchOptions} [options] - Additional search options.
+   * @param {RegularSearchOptions} [options] - Additional search options
    * @returns {Promise<SearchResponse<{}>>} A list of relevant search results.
    */
   async search(
@@ -414,9 +431,10 @@ class Exa {
 
   /**
    * Performs a search with an Exa prompt-engineered query and returns the contents of the documents.
+   * 
    * @param {string} query - The query string.
-   * @param {RegularSearchOptions & T} [options] - Additional search + contents options.
-   * @returns {Promise<SearchResponse<T>>} A list of relevant search results.
+   * @param {RegularSearchOptions & T} [options] - Additional search + contents options
+   * @returns {Promise<SearchResponse<T>>} A list of relevant search results with requested contents.
    */
   async searchAndContents<T extends ContentsOptions>(
     query: string,
@@ -451,7 +469,7 @@ class Exa {
    * Finds similar links to the provided URL and returns the contents of the documents.
    * @param {string} url - The URL for which to find similar links.
    * @param {FindSimilarOptions & T} [options] - Additional options for finding similar links + contents.
-   * @returns {Promise<SearchResponse<T>>} A list of similar search results.
+   * @returns {Promise<SearchResponse<T>>} A list of similar search results, including requested contents.
    */
   async findSimilarAndContents<T extends ContentsOptions>(
     url: string,
@@ -470,19 +488,21 @@ class Exa {
   }
 
   /**
-   * Retrieves contents of documents based on URLs
-   * @param {string | string[] | SearchResult[]} urls - An array of URLs.
+   * Retrieves contents of documents based on URLs.
+   * @param {string | string[] | SearchResult[]} urls - A URL or array of URLs, or an array of SearchResult objects.
    * @param {ContentsOptions} [options] - Additional options for retrieving document contents.
-   * @returns {Promise<SearchResponse<T>>} A list of document contents.
+   * @returns {Promise<SearchResponse<T>>} A list of document contents for the requested URLs.
    */
   async getContents<T extends ContentsOptions>(
     urls: string | string[] | SearchResult<T>[],
     options?: T,
   ): Promise<SearchResponse<T>> {
-    if (urls.length === 0) {
+    if (!urls || (Array.isArray(urls) && urls.length === 0)) {
       throw new Error("Must provide at least one URL");
     }
+
     let requestUrls: string[];
+
     if (typeof urls === "string") {
       requestUrls = [urls];
     } else if (typeof urls[0] === "string") {
@@ -490,19 +510,20 @@ class Exa {
     } else {
       requestUrls = (urls as SearchResult<T>[]).map((result) => result.url);
     }
+
     const payload = {
       urls: requestUrls,
       ...options,
     };
 
-    return await this.request(`/contents`, "POST", payload);
+    return await this.request("/contents", "POST", payload);
   }
 
   /**
    * Generates an answer to a query using search results as context.
    * @param {string} query - The question or query to answer.
    * @param {AnswerOptions} [options] - Additional options for answer generation.
-   * @param {(chunk: AnswerStreamResponse) => void} [onChunk] - Callback for handling stream chunks.
+   * @param {(chunk: AnswerStreamResponse) => void} [onChunk] - Callback for handling stream chunks (if streaming).
    * @returns {Promise<AnswerResponse | null>} The generated answer and source references, or null if streaming.
    */
   async answer(
@@ -516,6 +537,7 @@ class Exa {
       stream: options?.stream ?? false,
       includeText: options?.includeText ?? false
     };
+
     return await this.request("/answer", "POST", requestBody, options?.stream, onChunk);
   }
 }
