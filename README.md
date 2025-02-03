@@ -74,21 +74,22 @@ const customContentsResults = await exa.getContents(["urls"], {
 });
 
 // Get an answer to a question
-const answerResult = await exa.answer("What is the population of New York City?", {
-  expandedQueriesLimit: 2,
-  includeText: false
-});
+const answerResult = await exa.answer("What is the population of New York City?");
 
-// Get answer with source contents
+// Get answer with citation contents
 const answerWithTextResults = await exa.answer("What is the population of New York City?", {
-  includeText: true,
-  expandedQueriesLimit: 2
+  text: true
 });
 
-// Stream answer response
-const streamingResults = await exa.answer("What is the population of New York City?", {
-  stream: true
-});
+// Get an answer with streaming
+for await (const chunk of exa.streamAnswer("What is the population of New York City?")) {
+  if (chunk.content) {
+    process.stdout.write(chunk.content);
+  }
+  if (chunk.citations) {
+    console.log("\nCitations:", chunk.citations);
+  }
+}
 ```
 
 ### `exa.search(query: string, options?: SearchOptions): Promise<SearchResponse>`
@@ -123,27 +124,31 @@ Generates an answer to a query using search results as context.
 
 ```javascript
 const response = await exa.answer('What is the population of New York City?', {
-  expandedQueriesLimit: 2,
+  text: true
 });
 ```
 
-### Streaming Responses
-The answer endpoint supports streaming responses, where the answer is returned in chunks as it's being generated. This is useful if you'd like to provide users with tokens as they are generated.
+### `exa.streamAnswer(query: string, options?: { text?: boolean }): AsyncGenerator<AnswerStreamChunk>`
+Streams an answer as it's being generated, yielding chunks of text and citations. This is useful for providing real-time updates in chat interfaces or displaying partial results as they become available.
 
 ```javascript
-await exa.answer(
-  'What are the latest developments in AI?',
-  {
-    expandedQueriesLimit: 2,
-    stream: true,
-    includeText: false
-  },
-  (chunk) => {
-    // Process each chunk as it arrives
-    console.log(chunk.answer);
+// Basic streaming example
+for await (const chunk of exa.streamAnswer("What is quantum computing?")) {
+  if (chunk.content) {
+    process.stdout.write(chunk.content);
   }
-);
+  if (chunk.citations) {
+    console.log("\nCitations:", chunk.citations);
+  }
+}
+
+for await (const chunk of exa.streamAnswer("What is quantum computing?", { text: true })) {
+}
 ```
+
+Each chunk contains:
+- `content`: A string containing the next piece of generated text
+- `citations`: An array of citation objects containing source information
 
 # Contributing
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
