@@ -1,6 +1,9 @@
-import Exa from "../src/index";
+import Exa from "../dist";
+const dotenv = require("dotenv");
 
-const exa = new Exa(process.env.EXASEARCH_API_KEY);
+dotenv.config();
+
+const exa = new Exa(process.env.EXA_API_KEY);
 
 /**
  * This example demonstrates how to use Exa's streaming functionality.
@@ -9,20 +12,16 @@ const exa = new Exa(process.env.EXASEARCH_API_KEY);
  */
 async function runStreamingExample() {
   try {
-    console.log("\nStreaming answer example:");
-    await exa.answer(
-      "What are the latest developments in AI?",
-      {
-        expandedQueriesLimit: 2,
-        stream: true,
-        includeText: false
-      },
-      (chunk) => {
-        console.log(chunk);
+    for await (const chunk of exa.streamAnswer("What are the latest developments in AI?")) {
+      if (chunk.content) {
+        process.stdout.write(chunk.content); // Write partial text as it arrives
       }
-    );
+      if (chunk.citations) {
+        console.log("\nCitations:", chunk.citations); // Handle citations when they arrive
+      }
+    }
   } catch (error) {
-    console.error("Error in answer example:", error);
+    console.error("Error in streaming example:", error);
   }
 }
 

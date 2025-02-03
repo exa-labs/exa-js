@@ -1,15 +1,17 @@
-import Exa from "../src/";
+import Exa from "../dist";
+const dotenv = require("dotenv");
 
-const exa = new Exa(process.env.EXASEARCH_API_KEY);
+dotenv.config();
+
+const exa = new Exa(process.env.EXA_API_KEY);
 
 async function runAnswerExample() {
   try {
-    const Answer = await exa.answer("What is the current population of New York City?", {
-      expandedQueriesLimit: 1,
+    const answer = await exa.answer("What is the current population of New York City?", {
       stream: false,
-      includeText: false
+      text: true
     });
-    console.log("Answer result:", JSON.stringify(Answer, null, 2));
+    console.log("Answer result:", JSON.stringify(answer, null, 2));
   } catch (error) {
     console.error("Error in answer example:", error);
   }

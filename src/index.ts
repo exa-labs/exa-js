@@ -228,40 +228,54 @@ export type SearchResponse<T extends ContentsOptions> = {
 /**
  * Options for the answer endpoint
  * @typedef {Object} AnswerOptions
- * @property {number} [expandedQueriesLimit] - Maximum number of query variations (0-4). Default 1.
  * @property {boolean} [stream] - Whether to stream the response. Default false.
- * @property {boolean} [includeText] - Whether to include text in the source results. Default false.
+ * @property {boolean} [text] - Whether to include text in the source results. Default false.
  */
 export type AnswerOptions = {
-  expandedQueriesLimit?: number;
   stream?: boolean;
-  includeText?: boolean;
+  text?: boolean;
 };
 
 /**
  * Represents an answer response object from the /answer endpoint.
  * @typedef {Object} AnswerResponse
  * @property {string} answer - The generated answer text.
- * @property {SearchResult<{}>[]} sources - The sources used to generate the answer.
+ * @property {SearchResult<{}>[]} citations - The sources used to generate the answer.
  * @property {string} [requestId] - Optional request ID for the answer.
  */
 export type AnswerResponse = {
   answer: string;
-  sources: SearchResult<{}>[];
+  citations: SearchResult<{}>[];
   requestId?: string;
+};
+
+export type AnswerStreamChunk = {
+  /**
+   * The partial text content of the answer (if present in this chunk).
+   */
+  content?: string;
+  /**
+   * Citations associated with the current chunk of text (if present).
+   */
+  citations?: Array<{
+    id: string;
+    url: string;
+    title?: string;
+    publishedDate?: string;
+    author?: string;
+    text?: string;
+  }>;
 };
 
 /**
  * Represents a streaming answer response chunk from the /answer endpoint.
  * @typedef {Object} AnswerStreamResponse
  * @property {string} [answer] - A chunk of the generated answer text.
- * @property {SearchResult<{}>[]]} [sources] - The sources used to generate the answer.
- * @property {string} [error] - Error message if something went wrong.
+ * @property {SearchResult<{}>[]]} [citations] - The sources used to generate the answer.
  */
 export type AnswerStreamResponse = {
   answer?: string;
-  sources?: SearchResult<{}>[];
-  error?: string;
+  citations?: SearchResult<{}>[];
 };
 
 /**
@@ -344,16 +358,12 @@ class Exa {
    * @param {string} endpoint - The API endpoint to call.
    * @param {string} method - The HTTP method to use.
    * @param {any} [body] - The request body for POST requests.
-   * @param {boolean} [stream] - Whether to stream the response.
-   * @param {(chunk: AnswerStreamResponse) => void} [onChunk] - Callback for handling stream chunks.
    * @returns {Promise<any>} The response from the API.
    */
   private async request(
     endpoint: string,
     method: string,
     body?: any,
-    stream?: boolean,
-    onChunk?: (chunk: AnswerStreamResponse) => void,
   ): Promise<any> {
     const response = await fetchImpl(this.baseURL + endpoint, {
       method,
@@ -366,50 +376,6 @@ class Exa {
       throw new Error(
         `Request failed with status ${response.status}. ${message}`,
       );
-    }
-
-    // Streaming logic if `stream` is true
-    if (stream && response.body) {
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                onChunk?.(data);
-              } catch (e) {
-                // Could not parse JSON, ignore
-              }
-            }
-          }
-        }
-
-        if (buffer && buffer.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(buffer.slice(6));
-            onChunk?.(data);
-          } catch (e) {
-            // Could not parse JSON, ignore
-          }
-        }
-      } catch (error: any) {
-        throw new Error(`Streaming error: ${error?.message || 'Unknown error'}`);
-      } finally {
-        reader.releaseLock();
-      }
-
-      return null;
     }
 
     return await response.json();
@@ -520,25 +486,167 @@ class Exa {
   }
 
   /**
-   * Generates an answer to a query using search results as context.
+   * Generate an answer to a query.
    * @param {string} query - The question or query to answer.
    * @param {AnswerOptions} [options] - Additional options for answer generation.
-   * @param {(chunk: AnswerStreamResponse) => void} [onChunk] - Callback for handling stream chunks (if streaming).
-   * @returns {Promise<AnswerResponse | null>} The generated answer and source references, or null if streaming.
+   * @returns {Promise<AnswerResponse>} The generated answer and source references.
+   * 
+   * Note: For streaming responses, use the `streamAnswer` method:
+   * ```ts
+   * for await (const chunk of exa.streamAnswer(query)) {
+   *   // Handle chunks
+   * }
+   * ```
    */
   async answer(
     query: string,
     options?: AnswerOptions,
-    onChunk?: (chunk: AnswerStreamResponse) => void,
-  ): Promise<AnswerResponse | null> {
+  ): Promise<AnswerResponse> {
+    if (options?.stream) {
+      throw new Error(
+        "For streaming responses, please use streamAnswer() instead:\n\n" +
+        "for await (const chunk of exa.streamAnswer(query)) {\n" +
+        "  // Handle chunks\n" +
+        "}"
+      );
+    }
+
+    // For non-streaming requests, make a regular API call
     const requestBody = {
       query,
-      expandedQueriesLimit: options?.expandedQueriesLimit ?? 1,
-      stream: options?.stream ?? false,
-      includeText: options?.includeText ?? false
+      stream: false,
+      text: options?.text ?? false
     };
 
-    return await this.request("/answer", "POST", requestBody, options?.stream, onChunk);
+    return await this.request("/answer", "POST", requestBody);
+  }
+
+  /**
+   * Stream an answer as an async generator
+   *
+   * Each iteration yields a chunk with partial text (`content`) or new citations.
+   * Use this if you'd like to read the answer incrementally, e.g. in a chat UI.
+   *
+   * Example usage:
+   * ```ts
+   * for await (const chunk of exa.streamAnswer("What is quantum computing?", { text: false })) {
+   *   if (chunk.content) process.stdout.write(chunk.content);
+   *   if (chunk.citations) {
+   *     console.log("\nCitations: ", chunk.citations);
+   *   }
+   * }
+   * ```
+   */
+  async *streamAnswer(
+    query: string,
+    options?: { text?: boolean }
+  ): AsyncGenerator<AnswerStreamChunk> {
+    // Build the POST body and fetch the streaming response.
+    const body = {
+      query,
+      text: options?.text ?? false,
+      stream: true,
+    };
+
+    const response = await fetchImpl(this.baseURL + "/answer", {
+      method: "POST",
+      headers: this.headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(
+        `Request failed with status ${response.status}. ${message}`,
+      );
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error("No response body available for streaming.");
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.replace(/^data:\s*/, "").trim();
+          if (!jsonStr || jsonStr === "[DONE]") {
+            continue;
+          }
+
+          let chunkData: any;
+          try {
+            chunkData = JSON.parse(jsonStr);
+          } catch (err) {
+            continue;
+          }
+
+          const chunk = this.processChunk(chunkData);
+          if (chunk.content || chunk.citations) {
+            yield chunk;
+          }
+        }
+      }
+
+      if (buffer.startsWith("data: ")) {
+        const leftover = buffer.replace(/^data:\s*/, "").trim();
+        if (leftover && leftover !== "[DONE]") {
+          try {
+            const chunkData = JSON.parse(leftover);
+            const chunk = this.processChunk(chunkData);
+            if (chunk.content || chunk.citations) {
+              yield chunk;
+            }
+          } catch (e) {
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  private processChunk(chunkData: any): AnswerStreamChunk {
+    let content: string | undefined;
+    let citations:
+      | Array<{
+          id: string;
+          url: string;
+          title?: string;
+          publishedDate?: string;
+          author?: string;
+          text?: string;
+        }>
+      | undefined;
+
+    if (chunkData.choices && chunkData.choices[0] && chunkData.choices[0].delta) {
+      content = chunkData.choices[0].delta.content;
+    }
+
+    if (chunkData.citations && chunkData.citations !== "null") {
+      citations = chunkData.citations.map((c: any) => ({
+        id: c.id,
+        url: c.url,
+        title: c.title,
+        publishedDate: c.publishedDate,
+        author: c.author,
+        text: c.text,
+      }));
+    }
+
+    return { content, citations };
   }
 }
 
