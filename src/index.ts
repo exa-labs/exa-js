@@ -230,10 +230,12 @@ export type SearchResponse<T extends ContentsOptions> = {
  * @typedef {Object} AnswerOptions
  * @property {boolean} [stream] - Whether to stream the response. Default false.
  * @property {boolean} [text] - Whether to include text in the source results. Default false.
+ * @property {"exa" | "exa-pro"} [model] - The model to use for generating the answer. Default "exa".
  */
 export type AnswerOptions = {
   stream?: boolean;
   text?: boolean;
+  model?: "exa" | "exa-pro";
 };
 
 /**
@@ -515,7 +517,8 @@ class Exa {
     const requestBody = {
       query,
       stream: false,
-      text: options?.text ?? false
+      text: options?.text ?? false,
+      model: options?.model ?? "exa"
     };
 
     return await this.request("/answer", "POST", requestBody);
@@ -539,13 +542,14 @@ class Exa {
    */
   async *streamAnswer(
     query: string,
-    options?: { text?: boolean }
+    options?: { text?: boolean; model?: "exa" | "exa-pro" }
   ): AsyncGenerator<AnswerStreamChunk> {
     // Build the POST body and fetch the streaming response.
     const body = {
       query,
       text: options?.text ?? false,
       stream: true,
+      model: options?.model ?? "exa"
     };
 
     const response = await fetchImpl(this.baseURL + "/answer", {
