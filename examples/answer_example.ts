@@ -1,5 +1,5 @@
-import Exa from "../dist";
-const dotenv = require("dotenv");
+import Exa from "../dist/index.js";
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -9,7 +9,8 @@ async function runAnswerExample() {
   try {
     const answer = await exa.answer("What is the current population of New York City?", {
       stream: false,
-      text: true
+      text: true,
+      model: "exa-pro"
     });
     console.log("Answer result:", JSON.stringify(answer, null, 2));
   } catch (error) {
