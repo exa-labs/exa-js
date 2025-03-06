@@ -185,7 +185,46 @@ export type ContentsResultComponent<T extends ContentsOptions> = Default<
     (T["subpages"] extends number ? SubpagesResponse<T> : {}) &
     (T["extras"] extends object ? ExtrasResponse : {}),
   TextResponse
->;
+  >;
+
+  /**
+   * Represents the cost breakdown related to contents retrieval. Fields are optional because
+   * only non-zero costs are included.
+   * @typedef {Object} CostDollarsContents
+   * @property {number} [text] - The cost in dollars for retrieving text.
+   * @property {number} [highlights] - The cost in dollars for retrieving highlights.
+   * @property {number} [summary] - The cost in dollars for retrieving summary.
+   */
+export type CostDollarsContents = {
+  text?: number;
+  highlights?: number;
+  summary?: number;
+};
+
+/**
+ * Represents the cost breakdown related to search. Fields are optional because
+ * only non-zero costs are included.
+ * @typedef {Object} CostDollarsSeearch
+ * @property {number} [neural] - The cost in dollars for neural search.
+ * @property {number} [keyword] - The cost in dollars for keyword search.
+ */
+export type CostDollarsSeearch = {
+  neural?: number;
+  keyword?: number;
+};
+
+/**
+ * Represents the total cost breakdown. Only non-zero costs are included.
+ * @typedef {Object} CostDollars
+ * @property {number} total - The total cost in dollars.
+ * @property {CostDollarsSeearch} [search] - The cost breakdown for search.
+ * @property {CostDollarsContents} [contents] - The cost breakdown for contents.
+ */
+export type CostDollars = {
+  total: number;
+  search?: CostDollarsSeearch;
+  contents?: CostDollarsContents;
+};
 
 /**
  * Represents a search result object.
@@ -217,12 +256,14 @@ export type SearchResult<T extends ContentsOptions> = {
  * @property {string} [autopromptString] - The autoprompt string, if applicable.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
+ * @property {CostDollars} [costDollars] - The cost breakdown for this request.
  */
 export type SearchResponse<T extends ContentsOptions> = {
   results: SearchResult<T>[];
   autopromptString?: string;
   autoDate?: string;
   requestId: string;
+  costDollars?: CostDollars;
 };
 
 /**
