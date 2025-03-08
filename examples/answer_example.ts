@@ -1,7 +1,4 @@
-import Exa from "../dist/index.js";
-import dotenv from "dotenv";
-
-dotenv.config();
+import Exa from "../src/index";
 
 const exa = new Exa(process.env.EXA_API_KEY);
 
