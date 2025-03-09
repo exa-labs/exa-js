@@ -1,7 +1,4 @@
-import Exa from "../dist";
-const dotenv = require("dotenv");
-
-dotenv.config();
+import Exa from "../src/index";
 
 const exa = new Exa(process.env.EXA_API_KEY);
 
@@ -14,7 +11,7 @@ async function runStreamingExample() {
   try {
     for await (const chunk of exa.streamAnswer("What are the latest developments in AI?")) {
       if (chunk.content) {
-        process.stdout.write(chunk.content); // Write partial text as it arrives
+        console.log("\nChunk:", chunk.content); // Write partial text as it arrives
       }
       if (chunk.citations) {
         console.log("\nCitations:", chunk.citations); // Handle citations when they arrive

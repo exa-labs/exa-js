@@ -128,9 +128,11 @@ export type HighlightsContentsOptions = {
  * Options for retrieving summary from page.
  * @typedef {Object} SummaryContentsOptions
  * @property {string} [query] - The query string to use for summary generation.
+ * @property {any} [schema] - JSON schema for structured output from summary.
  */
 export type SummaryContentsOptions = {
   query?: string;
+  schema?: any;
 };
 
 /**
