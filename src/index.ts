@@ -126,6 +126,7 @@ export type HighlightsContentsOptions = {
 
 /**
  * Represents a JSON Schema definition used for structured summary output.
+ * To learn more visit https://json-schema.org/overview/what-is-jsonschema.
  */
 export type JSONSchema = {
   $schema?: string;
@@ -150,7 +151,6 @@ export type JSONSchema = {
   anyOf?: JSONSchema[];
   oneOf?: JSONSchema[];
   not?: JSONSchema;
-  [key: string]: any; // For additional schema properties not explicitly typed
 };
 
 /**
