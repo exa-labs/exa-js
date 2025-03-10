@@ -125,14 +125,43 @@ export type HighlightsContentsOptions = {
 };
 
 /**
+ * Represents a JSON Schema definition used for structured summary output.
+ */
+export type JSONSchema = {
+  $schema?: string;
+  title?: string;
+  description?: string;
+  type:
+    | "object"
+    | "array"
+    | "string"
+    | "number"
+    | "boolean"
+    | "null"
+    | "integer";
+  properties?: Record<string, JSONSchema>;
+  items?: JSONSchema | JSONSchema[];
+  required?: string[];
+  enum?: any[];
+  additionalProperties?: boolean | JSONSchema;
+  definitions?: Record<string, JSONSchema>;
+  patternProperties?: Record<string, JSONSchema>;
+  allOf?: JSONSchema[];
+  anyOf?: JSONSchema[];
+  oneOf?: JSONSchema[];
+  not?: JSONSchema;
+  [key: string]: any; // For additional schema properties not explicitly typed
+};
+
+/**
  * Options for retrieving summary from page.
  * @typedef {Object} SummaryContentsOptions
  * @property {string} [query] - The query string to use for summary generation.
- * @property {any} [schema] - JSON schema for structured output from summary.
+ * @property {JSONSchema} [schema] - JSON schema for structured output from summary.
  */
 export type SummaryContentsOptions = {
   query?: string;
-  schema?: any;
+  schema?: JSONSchema;
 };
 
 /**
