@@ -352,12 +352,20 @@ export type AnswerStreamResponse = {
   citations?: SearchResult<{}>[];
 };
 
+// Import the Websets client
+import { WebsetsClient } from "./websets/client";
+
 /**
  * The Exa class encapsulates the API's endpoints.
  */
-class Exa {
+export class Exa {
   private baseURL: string;
   private headers: Headers;
+  
+  /**
+   * Websets API client
+   */
+  websets: WebsetsClient;
 
   /**
    * Helper method to separate out the contents-specific options from the rest.
@@ -425,6 +433,9 @@ class Exa {
       "Content-Type": "application/json",
       "User-Agent": "exa-node 1.4.0",
     });
+    
+    // Initialize the Websets client
+    this.websets = new WebsetsClient(this);
   }
 
   /**
@@ -432,14 +443,32 @@ class Exa {
    * @param {string} endpoint - The API endpoint to call.
    * @param {string} method - The HTTP method to use.
    * @param {any} [body] - The request body for POST requests.
+   * @param {Record<string, any>} [params] - The query parameters.
    * @returns {Promise<any>} The response from the API.
    */
-  private async request(
+  async request(
     endpoint: string,
     method: string,
     body?: any,
+    params?: Record<string, any>,
   ): Promise<any> {
-    const response = await fetchImpl(this.baseURL + endpoint, {
+    // Build URL with query parameters if provided
+    let url = this.baseURL + endpoint;
+    if (params && Object.keys(params).length > 0) {
+      const searchParams = new URLSearchParams();
+      for (const [key, value] of Object.entries(params)) {
+        if (Array.isArray(value)) {
+          for (const item of value) {
+            searchParams.append(key, item);
+          }
+        } else if (value !== undefined) {
+          searchParams.append(key, String(value));
+        }
+      }
+      url += `?${searchParams.toString()}`;
+    }
+
+    const response = await fetchImpl(url, {
       method,
       headers: this.headers,
       body: body ? JSON.stringify(body) : undefined,
@@ -726,4 +755,8 @@ class Exa {
   }
 }
 
+// Export all Websets types and classes
+export * from "./websets";
+
+// Default export
 export default Exa;
