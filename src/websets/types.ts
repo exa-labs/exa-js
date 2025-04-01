@@ -3,6 +3,18 @@
  */
 
 /**
+ * Type for API query parameters
+ */
+export type QueryParams = Record<string, string | number | boolean | string[] | undefined>;
+
+/**
+ * Type for API request body
+ */
+export interface RequestBody {
+  [key: string]: unknown;
+}
+
+/**
  * The possible cancellation reasons for a Webset search
  */
 export enum CanceledReason {

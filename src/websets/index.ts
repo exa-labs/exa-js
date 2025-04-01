@@ -8,4 +8,5 @@ export * from "./items";
 export * from "./searches";
 export * from "./enrichments";
 export * from "./webhooks";
+export * from "./builder";
 export * from "./client";

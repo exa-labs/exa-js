@@ -1,6 +1,7 @@
 /**
  * Main client for Websets API
  */
+import { Exa } from "../index";
 import { WebsetsBaseClient } from "./base";
 import { WebsetItemsClient } from "./items";
 import { WebsetSearchesClient } from "./searches";
@@ -10,6 +11,7 @@ import {
   CreateWebsetParameters,
   GetWebsetResponse,
   ListWebsetsResponse,
+  QueryParams,
   UpdateWebsetRequest,
   Webset,
   WebsetStatus,
@@ -43,7 +45,7 @@ export class WebsetsClient extends WebsetsBaseClient {
    * Initialize a new Websets client
    * @param client The Exa client instance
    */
-  constructor(client: any) {
+  constructor(client: Exa) {
     super(client);
     this.items = new WebsetItemsClient(client);
     this.searches = new WebsetSearchesClient(client);
@@ -57,7 +59,7 @@ export class WebsetsClient extends WebsetsBaseClient {
    * @returns The created Webset
    */
   async create(params: CreateWebsetParameters): Promise<Webset> {
-    return this.request("/v0/websets", "POST", params);
+    return this.request<Webset>("/v0/websets", "POST", params);
   }
 
   /**
@@ -70,29 +72,75 @@ export class WebsetsClient extends WebsetsBaseClient {
     id: string,
     expand?: Array<"items">
   ): Promise<GetWebsetResponse> {
-    const params: Record<string, any> = {};
+    const params: QueryParams = {};
     if (expand && expand.length > 0) {
       params.expand = expand;
     }
 
-    return this.request(`/v0/websets/${id}`, "GET", undefined, params);
+    return this.request<GetWebsetResponse>(`/v0/websets/${id}`, "GET", undefined, params);
   }
 
   /**
    * List all Websets
-   * @param cursor Optional cursor for pagination
-   * @param limit Optional limit for pagination
+   * @param options Pagination and filtering options
    * @returns The list of Websets
    */
-  async list(
-    cursor?: string,
-    limit?: number
-  ): Promise<ListWebsetsResponse> {
-    const params: Record<string, any> = {};
-    if (cursor) params.cursor = cursor;
-    if (limit) params.limit = limit;
+  async list(options?: PaginationParams & {
+    /**
+     * Filter Websets by their status
+     */
+    status?: WebsetStatus;
+    
+    /**
+     * Filter Websets by external ID
+     */
+    externalId?: string;
+  }): Promise<ListWebsetsResponse> {
+    const params = this.buildPaginationParams(options);
+    
+    // Add additional filtering parameters
+    if (options?.status) params.status = options.status;
+    if (options?.externalId) params.externalId = options.externalId;
 
-    return this.request("/v0/websets", "GET", undefined, params);
+    return this.request<ListWebsetsResponse>("/v0/websets", "GET", undefined, params);
+  }
+  
+  /**
+   * Iterate through all Websets, handling pagination automatically
+   * @param options Pagination and filtering options
+   * @returns Async generator of Websets
+   */
+  async *listAll(options?: Parameters<WebsetsClient['list']>[0]): AsyncGenerator<Webset> {
+    let cursor: string | undefined = undefined;
+    const pageOptions = options ? { ...options } : {};
+    
+    while (true) {
+      pageOptions.cursor = cursor;
+      const response = await this.list(pageOptions);
+      
+      for (const webset of response.data) {
+        yield webset;
+      }
+      
+      if (!response.hasMore || !response.nextCursor) {
+        break;
+      }
+      
+      cursor = response.nextCursor;
+    }
+  }
+  
+  /**
+   * Collect all Websets into an array
+   * @param options Pagination and filtering options
+   * @returns Promise resolving to an array of all Websets
+   */
+  async getAll(options?: Parameters<WebsetsClient['list']>[0]): Promise<Webset[]> {
+    const websets: Webset[] = [];
+    for await (const webset of this.listAll(options)) {
+      websets.push(webset);
+    }
+    return websets;
   }
 
   /**
@@ -102,7 +150,7 @@ export class WebsetsClient extends WebsetsBaseClient {
    * @returns The updated Webset
    */
   async update(id: string, params: UpdateWebsetRequest): Promise<Webset> {
-    return this.request(`/v0/websets/${id}`, "POST", params);
+    return this.request<Webset>(`/v0/websets/${id}`, "POST", params);
   }
 
   /**
@@ -111,7 +159,7 @@ export class WebsetsClient extends WebsetsBaseClient {
    * @returns The deleted Webset
    */
   async delete(id: string): Promise<Webset> {
-    return this.request(`/v0/websets/${id}`, "DELETE");
+    return this.request<Webset>(`/v0/websets/${id}`, "DELETE");
   }
 
   /**
@@ -120,31 +168,70 @@ export class WebsetsClient extends WebsetsBaseClient {
    * @returns The canceled Webset
    */
   async cancel(id: string): Promise<Webset> {
-    return this.request(`/v0/websets/${id}/cancel`, "POST");
+    return this.request<Webset>(`/v0/websets/${id}/cancel`, "POST");
   }
 
   /**
    * Wait until a Webset is idle
    * @param id The ID of the Webset
-   * @param timeout Optional timeout in milliseconds
+   * @param options Configuration options
    * @returns The Webset
    * @throws Error if the Webset does not become idle within the timeout
    */
-  async waitUntilIdle(id: string, timeout?: number): Promise<Webset> {
+  async waitUntilIdle(id: string, options?: {
+    /**
+     * Maximum time to wait in milliseconds
+     */
+    timeout?: number;
+    
+    /**
+     * How often to poll in milliseconds (default: 1000ms)
+     */
+    pollInterval?: number;
+    
+    /**
+     * Callback function that will be called on each poll with the current status
+     */
+    onPoll?: (status: WebsetStatus) => void;
+  } | number): Promise<Webset> {
+    // For backward compatibility with the previous API
+    let timeout: number | undefined;
+    let pollInterval = 1000;
+    let onPoll: ((status: WebsetStatus) => void) | undefined;
+    
+    if (typeof options === 'number') {
+      // Legacy usage: waitUntilIdle(id, timeout)
+      timeout = options;
+    } else if (options) {
+      // New options object usage
+      timeout = options.timeout;
+      pollInterval = options.pollInterval || 1000;
+      onPoll = options.onPoll;
+    }
+    
     const startTime = Date.now();
     
     while (true) {
       const webset = await this.get(id);
       
+      // Call the onPoll callback if provided
+      if (onPoll) {
+        onPoll(webset.status);
+      }
+      
       if (webset.status === WebsetStatus.IDLE) {
         return webset;
       }
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Check for timeout before sleeping
       if (timeout && Date.now() - startTime > timeout) {
-        throw new Error("Webset timed out");
+        throw new Error(
+          `Webset ${id} did not reach idle state within ${timeout}ms. ` +
+          `Current status: ${webset.status}`
+        );
       }
+      
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
     }
   }
 }

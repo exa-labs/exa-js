@@ -18,7 +18,7 @@ export class WebsetEnrichmentsClient extends WebsetsBaseClient {
     websetId: string,
     params: CreateEnrichmentParameters
   ): Promise<WebsetEnrichment> {
-    return this.request(`/v0/websets/${websetId}/enrichments`, "POST", params);
+    return this.request<WebsetEnrichment>(`/v0/websets/${websetId}/enrichments`, "POST", params);
   }
 
   /**
@@ -28,7 +28,7 @@ export class WebsetEnrichmentsClient extends WebsetsBaseClient {
    * @returns The Webset Enrichment
    */
   async get(websetId: string, id: string): Promise<WebsetEnrichment> {
-    return this.request(`/v0/websets/${websetId}/enrichments/${id}`, "GET");
+    return this.request<WebsetEnrichment>(`/v0/websets/${websetId}/enrichments/${id}`, "GET");
   }
 
   /**
@@ -38,7 +38,7 @@ export class WebsetEnrichmentsClient extends WebsetsBaseClient {
    * @returns The deleted Webset Enrichment
    */
   async delete(websetId: string, id: string): Promise<WebsetEnrichment> {
-    return this.request(`/v0/websets/${websetId}/enrichments/${id}`, "DELETE");
+    return this.request<WebsetEnrichment>(`/v0/websets/${websetId}/enrichments/${id}`, "DELETE");
   }
 
   /**
@@ -48,7 +48,7 @@ export class WebsetEnrichmentsClient extends WebsetsBaseClient {
    * @returns The canceled Webset Enrichment
    */
   async cancel(websetId: string, id: string): Promise<WebsetEnrichment> {
-    return this.request(
+    return this.request<WebsetEnrichment>(
       `/v0/websets/${websetId}/enrichments/${id}/cancel`,
       "POST"
     );

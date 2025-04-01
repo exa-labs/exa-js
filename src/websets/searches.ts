@@ -18,7 +18,7 @@ export class WebsetSearchesClient extends WebsetsBaseClient {
     websetId: string,
     params: CreateWebsetSearchParameters
   ): Promise<WebsetSearch> {
-    return this.request(`/v0/websets/${websetId}/searches`, "POST", params);
+    return this.request<WebsetSearch>(`/v0/websets/${websetId}/searches`, "POST", params);
   }
 
   /**
@@ -28,7 +28,7 @@ export class WebsetSearchesClient extends WebsetsBaseClient {
    * @returns The Webset Search
    */
   async get(websetId: string, id: string): Promise<WebsetSearch> {
-    return this.request(`/v0/websets/${websetId}/searches/${id}`, "GET");
+    return this.request<WebsetSearch>(`/v0/websets/${websetId}/searches/${id}`, "GET");
   }
 
   /**
@@ -38,6 +38,6 @@ export class WebsetSearchesClient extends WebsetsBaseClient {
    * @returns The canceled Webset Search
    */
   async cancel(websetId: string, id: string): Promise<WebsetSearch> {
-    return this.request(`/v0/websets/${websetId}/searches/${id}/cancel`, "POST");
+    return this.request<WebsetSearch>(`/v0/websets/${websetId}/searches/${id}/cancel`, "POST");
   }
 }
