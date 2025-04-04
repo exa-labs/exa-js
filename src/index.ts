@@ -303,11 +303,13 @@ export type SearchResponse<T extends ContentsOptions> = {
  * @property {boolean} [stream] - Whether to stream the response. Default false.
  * @property {boolean} [text] - Whether to include text in the source results. Default false.
  * @property {"exa" | "exa-pro"} [model] - The model to use for generating the answer. Default "exa".
+ * @property {string} [systemPrompt] - A system prompt to guide the LLM's behavior when generating the answer.
  */
 export type AnswerOptions = {
   stream?: boolean;
   text?: boolean;
   model?: "exa" | "exa-pro";
+  systemPrompt?: string;
 };
 
 /**
@@ -565,6 +567,15 @@ class Exa {
    * @param {AnswerOptions} [options] - Additional options for answer generation.
    * @returns {Promise<AnswerResponse>} The generated answer and source references.
    * 
+   * Example with systemPrompt:
+   * ```ts
+   * const answer = await exa.answer("What is quantum computing?", {
+   *   text: true,
+   *   model: "exa-pro",
+   *   systemPrompt: "Answer in a technical manner suitable for experts."
+   * });
+   * ```
+   * 
    * Note: For streaming responses, use the `streamAnswer` method:
    * ```ts
    * for await (const chunk of exa.streamAnswer(query)) {
@@ -590,7 +601,8 @@ class Exa {
       query,
       stream: false,
       text: options?.text ?? false,
-      model: options?.model ?? "exa"
+      model: options?.model ?? "exa",
+      systemPrompt: options?.systemPrompt
     };
 
     return await this.request("/answer", "POST", requestBody);
@@ -604,7 +616,10 @@ class Exa {
    *
    * Example usage:
    * ```ts
-   * for await (const chunk of exa.streamAnswer("What is quantum computing?", { text: false })) {
+   * for await (const chunk of exa.streamAnswer("What is quantum computing?", { 
+   *   text: false,
+   *   systemPrompt: "Answer in a concise manner suitable for beginners."
+   * })) {
    *   if (chunk.content) process.stdout.write(chunk.content);
    *   if (chunk.citations) {
    *     console.log("\nCitations: ", chunk.citations);
@@ -614,14 +629,15 @@ class Exa {
    */
   async *streamAnswer(
     query: string,
-    options?: { text?: boolean; model?: "exa" | "exa-pro" }
+    options?: { text?: boolean; model?: "exa" | "exa-pro"; systemPrompt?: string }
   ): AsyncGenerator<AnswerStreamChunk> {
     // Build the POST body and fetch the streaming response.
     const body = {
       query,
       text: options?.text ?? false,
       stream: true,
-      model: options?.model ?? "exa"
+      model: options?.model ?? "exa",
+      systemPrompt: options?.systemPrompt
     };
 
     const response = await fetchImpl(this.baseURL + "/answer", {
