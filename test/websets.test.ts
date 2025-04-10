@@ -325,21 +325,17 @@ describe("Websets API", () => {
       );
     });
 
-    try {
-      await websetsClient.request("/v0/websets/nonexistent-id/itemss", "GET");
-      // If we get here, the test should fail
-      expect("This should not be reached").toBe(false);
-    } catch (error: unknown) {
-      // Verify we get an ExaError with the correctly structured properties
-      expect(error).toBeInstanceOf(ExaError);
-      if (error instanceof ExaError) {
-        expect(error.statusCode).toBe(404);
-        expect(error.path).toBe("/websets/cm99fqxpp0008kw0i8eq3glp2/itemss");
-        expect(error.message).toBe(
-          "Cannot GET /websets/cm99fqxpp0008kw0i8eq3glp2/itemss"
-        );
-      }
-    }
+    await expect(
+      websetsClient.request("/v0/websets/nonexistent-id/itemss", "GET")
+    ).rejects.toThrow(ExaError);
+
+    await expect(
+      websetsClient.request("/v0/websets/nonexistent-id/itemss", "GET")
+    ).rejects.toMatchObject({
+      statusCode: 404,
+      path: "/websets/cm99fqxpp0008kw0i8eq3glp2/itemss",
+      message: "Cannot GET /websets/cm99fqxpp0008kw0i8eq3glp2/itemss",
+    });
   });
 
   it("should wait until a Webset is idle", async () => {
