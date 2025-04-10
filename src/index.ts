@@ -1,8 +1,11 @@
 import fetch, { Headers } from "cross-fetch";
+import { ExaError, HttpStatusCode } from "./errors";
 
 // Use native fetch in Node.js environments
-const fetchImpl = typeof global !== "undefined" && global.fetch ? global.fetch : fetch;
-const HeadersImpl = typeof global !== "undefined" && global.Headers ? global.Headers : Headers;
+const fetchImpl =
+  typeof global !== "undefined" && global.fetch ? global.fetch : fetch;
+const HeadersImpl =
+  typeof global !== "undefined" && global.Headers ? global.Headers : Headers;
 
 const isBeta = false;
 
@@ -191,7 +194,9 @@ export type SummaryResponse = { summary: string };
  * @property {string[]} links - The links on the page of a result
  * @property {string[]} imageLinks - The image links on the page of a result
  */
-export type ExtrasResponse = { extras: { links?: string[]; imageLinks?: string[] } };
+export type ExtrasResponse = {
+  extras: { links?: string[]; imageLinks?: string[] };
+};
 
 /**
  * @typedef {Object} SubpagesResponse
@@ -216,16 +221,16 @@ export type ContentsResultComponent<T extends ContentsOptions> = Default<
     (T["subpages"] extends number ? SubpagesResponse<T> : {}) &
     (T["extras"] extends object ? ExtrasResponse : {}),
   TextResponse
-  >;
+>;
 
-  /**
-   * Represents the cost breakdown related to contents retrieval. Fields are optional because
-   * only non-zero costs are included.
-   * @typedef {Object} CostDollarsContents
-   * @property {number} [text] - The cost in dollars for retrieving text.
-   * @property {number} [highlights] - The cost in dollars for retrieving highlights.
-   * @property {number} [summary] - The cost in dollars for retrieving summary.
-   */
+/**
+ * Represents the cost breakdown related to contents retrieval. Fields are optional because
+ * only non-zero costs are included.
+ * @typedef {Object} CostDollarsContents
+ * @property {number} [text] - The cost in dollars for retrieving text.
+ * @property {number} [highlights] - The cost in dollars for retrieving highlights.
+ * @property {number} [summary] - The cost in dollars for retrieving summary.
+ */
 export type CostDollarsContents = {
   text?: number;
   highlights?: number;
@@ -361,7 +366,7 @@ import { WebsetsClient } from "./websets/client";
 export class Exa {
   private baseURL: string;
   private headers: Headers;
-  
+
   /**
    * Websets API client
    */
@@ -370,7 +375,9 @@ export class Exa {
   /**
    * Helper method to separate out the contents-specific options from the rest.
    */
-  private extractContentsOptions<T extends ContentsOptions>(options: T): {
+  private extractContentsOptions<T extends ContentsOptions>(
+    options: T
+  ): {
     contentsOptions: ContentsOptions;
     restOptions: Omit<T, keyof ContentsOptions>;
   } {
@@ -402,10 +409,12 @@ export class Exa {
     if (summary !== undefined) contentsOptions.summary = summary;
     if (highlights !== undefined) contentsOptions.highlights = highlights;
     if (subpages !== undefined) contentsOptions.subpages = subpages;
-    if (subpageTarget !== undefined) contentsOptions.subpageTarget = subpageTarget;
+    if (subpageTarget !== undefined)
+      contentsOptions.subpageTarget = subpageTarget;
     if (extras !== undefined) contentsOptions.extras = extras;
     if (livecrawl !== undefined) contentsOptions.livecrawl = livecrawl;
-    if (livecrawlTimeout !== undefined) contentsOptions.livecrawlTimeout = livecrawlTimeout;
+    if (livecrawlTimeout !== undefined)
+      contentsOptions.livecrawlTimeout = livecrawlTimeout;
 
     return {
       contentsOptions,
@@ -423,8 +432,9 @@ export class Exa {
     if (!apiKey) {
       apiKey = process.env.EXASEARCH_API_KEY;
       if (!apiKey) {
-        throw new Error(
+        throw new ExaError(
           "API key must be provided as an argument or as an environment variable (EXASEARCH_API_KEY)",
+          HttpStatusCode.Unauthorized
         );
       }
     }
@@ -433,7 +443,7 @@ export class Exa {
       "Content-Type": "application/json",
       "User-Agent": "exa-node 1.4.0",
     });
-    
+
     // Initialize the Websets client
     this.websets = new WebsetsClient(this);
   }
@@ -445,13 +455,14 @@ export class Exa {
    * @param {any} [body] - The request body for POST requests.
    * @param {Record<string, any>} [params] - The query parameters.
    * @returns {Promise<any>} The response from the API.
+   * @throws {ExaError} When any API request fails with structured error information
    */
-  async request(
+  async request<T = unknown>(
     endpoint: string,
     method: string,
     body?: any,
-    params?: Record<string, any>,
-  ): Promise<any> {
+    params?: Record<string, any>
+  ): Promise<T> {
     // Build URL with query parameters if provided
     let url = this.baseURL + endpoint;
     if (params && Object.keys(params).length > 0) {
@@ -475,9 +486,25 @@ export class Exa {
     });
 
     if (!response.ok) {
-      const message = (await response.json()).error;
-      throw new Error(
-        `Request failed with status ${response.status}. ${message}`,
+      const errorData = await response.json();
+
+      if (!errorData.statusCode) {
+        errorData.statusCode = response.status;
+      }
+      if (!errorData.timestamp) {
+        errorData.timestamp = new Date().toISOString();
+      }
+      if (!errorData.path) {
+        errorData.path = endpoint;
+      }
+
+      // For other APIs, throw a simple ExaError with just message and status
+      const message = errorData.error || "Unknown error";
+      throw new ExaError(
+        message,
+        response.status,
+        errorData.timestamp,
+        errorData.path
       );
     }
 
@@ -486,28 +513,28 @@ export class Exa {
 
   /**
    * Performs a search with an Exa prompt-engineered query.
-   * 
+   *
    * @param {string} query - The query string.
    * @param {RegularSearchOptions} [options] - Additional search options
    * @returns {Promise<SearchResponse<{}>>} A list of relevant search results.
    */
   async search(
     query: string,
-    options?: RegularSearchOptions,
+    options?: RegularSearchOptions
   ): Promise<SearchResponse<{}>> {
     return await this.request("/search", "POST", { query, ...options });
   }
 
   /**
    * Performs a search with an Exa prompt-engineered query and returns the contents of the documents.
-   * 
+   *
    * @param {string} query - The query string.
    * @param {RegularSearchOptions & T} [options] - Additional search + contents options
    * @returns {Promise<SearchResponse<T>>} A list of relevant search results with requested contents.
    */
   async searchAndContents<T extends ContentsOptions>(
     query: string,
-    options?: RegularSearchOptions & T,
+    options?: RegularSearchOptions & T
   ): Promise<SearchResponse<T>> {
     const { contentsOptions, restOptions } =
       options === undefined
@@ -529,7 +556,7 @@ export class Exa {
    */
   async findSimilar(
     url: string,
-    options?: FindSimilarOptions,
+    options?: FindSimilarOptions
   ): Promise<SearchResponse<{}>> {
     return await this.request("/findSimilar", "POST", { url, ...options });
   }
@@ -542,7 +569,7 @@ export class Exa {
    */
   async findSimilarAndContents<T extends ContentsOptions>(
     url: string,
-    options?: FindSimilarOptions & T,
+    options?: FindSimilarOptions & T
   ): Promise<SearchResponse<T>> {
     const { contentsOptions, restOptions } =
       options === undefined
@@ -564,10 +591,13 @@ export class Exa {
    */
   async getContents<T extends ContentsOptions>(
     urls: string | string[] | SearchResult<T>[],
-    options?: T,
+    options?: T
   ): Promise<SearchResponse<T>> {
     if (!urls || (Array.isArray(urls) && urls.length === 0)) {
-      throw new Error("Must provide at least one URL");
+      throw new ExaError(
+        "Must provide at least one URL",
+        HttpStatusCode.BadRequest
+      );
     }
 
     let requestUrls: string[];
@@ -593,7 +623,7 @@ export class Exa {
    * @param {string} query - The question or query to answer.
    * @param {AnswerOptions} [options] - Additional options for answer generation.
    * @returns {Promise<AnswerResponse>} The generated answer and source references.
-   * 
+   *
    * Note: For streaming responses, use the `streamAnswer` method:
    * ```ts
    * for await (const chunk of exa.streamAnswer(query)) {
@@ -603,14 +633,15 @@ export class Exa {
    */
   async answer(
     query: string,
-    options?: AnswerOptions,
+    options?: AnswerOptions
   ): Promise<AnswerResponse> {
     if (options?.stream) {
-      throw new Error(
+      throw new ExaError(
         "For streaming responses, please use streamAnswer() instead:\n\n" +
-        "for await (const chunk of exa.streamAnswer(query)) {\n" +
-        "  // Handle chunks\n" +
-        "}"
+          "for await (const chunk of exa.streamAnswer(query)) {\n" +
+          "  // Handle chunks\n" +
+          "}",
+        HttpStatusCode.BadRequest
       );
     }
 
@@ -619,7 +650,7 @@ export class Exa {
       query,
       stream: false,
       text: options?.text ?? false,
-      model: options?.model ?? "exa"
+      model: options?.model ?? "exa",
     };
 
     return await this.request("/answer", "POST", requestBody);
@@ -650,7 +681,7 @@ export class Exa {
       query,
       text: options?.text ?? false,
       stream: true,
-      model: options?.model ?? "exa"
+      model: options?.model ?? "exa",
     };
 
     const response = await fetchImpl(this.baseURL + "/answer", {
@@ -661,14 +692,16 @@ export class Exa {
 
     if (!response.ok) {
       const message = await response.text();
-      throw new Error(
-        `Request failed with status ${response.status}. ${message}`,
-      );
+      throw new ExaError(message, response.status, new Date().toISOString());
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      throw new Error("No response body available for streaming.");
+      throw new ExaError(
+        "No response body available for streaming.",
+        500,
+        new Date().toISOString()
+      );
     }
 
     const decoder = new TextDecoder();
@@ -714,8 +747,7 @@ export class Exa {
             if (chunk.content || chunk.citations) {
               yield chunk;
             }
-          } catch (e) {
-          }
+          } catch (e) {}
         }
       }
     } finally {
@@ -736,7 +768,11 @@ export class Exa {
         }>
       | undefined;
 
-    if (chunkData.choices && chunkData.choices[0] && chunkData.choices[0].delta) {
+    if (
+      chunkData.choices &&
+      chunkData.choices[0] &&
+      chunkData.choices[0].delta
+    ) {
       content = chunkData.choices[0].delta.content;
     }
 
@@ -755,8 +791,11 @@ export class Exa {
   }
 }
 
-// Export all Websets types and classes
+// Re-export Websets related types and enums
 export * from "./websets";
 
-// Default export
+// Export the main class
 export default Exa;
+
+// Re-export errors
+export * from "./errors";

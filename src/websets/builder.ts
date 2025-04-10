@@ -1,25 +1,33 @@
 /**
  * Builder pattern helpers for creating complex Webset objects
  */
+import { ExaError, HttpStatusCode } from "../errors";
 import {
   CreateCriterionParameters,
   CreateEnrichmentParameters,
+  CreateEnrichmentParametersFormat,
   CreateWebhookParameters,
   CreateWebsetParameters,
   CreateWebsetSearchParameters,
-  Event,
-  Option,
-  Search,
+  CreateWebsetSearchParametersBehaviour,
+  EventType,
   WebsetEntity,
-  WebsetEnrichmentFormat,
-  WebsetSearchBehaviour,
-} from './types';
+} from "./openapi";
+
+// Define helper types locally
+type Option = { label: string };
+type InternalSearchParameters = {
+  query: string;
+  count: number;
+  entity?: WebsetEntity;
+  criteria?: CreateCriterionParameters[];
+};
 
 /**
- * Builder for creating a Webset search
+ * Builder for creating Webset search parameters object (used internally by WebsetBuilder).
  */
 export class SearchBuilder {
-  private search: Search;
+  private search: InternalSearchParameters;
 
   /**
    * Create a new SearchBuilder
@@ -48,7 +56,7 @@ export class SearchBuilder {
    * @returns The builder instance for chaining
    */
   forCompanies(): SearchBuilder {
-    return this.withEntity({ type: 'company' });
+    return this.withEntity({ type: "company" });
   }
 
   /**
@@ -56,7 +64,7 @@ export class SearchBuilder {
    * @returns The builder instance for chaining
    */
   forPeople(): SearchBuilder {
-    return this.withEntity({ type: 'person' });
+    return this.withEntity({ type: "person" });
   }
 
   /**
@@ -64,7 +72,7 @@ export class SearchBuilder {
    * @returns The builder instance for chaining
    */
   forArticles(): SearchBuilder {
-    return this.withEntity({ type: 'article' });
+    return this.withEntity({ type: "article" });
   }
 
   /**
@@ -72,7 +80,7 @@ export class SearchBuilder {
    * @returns The builder instance for chaining
    */
   forResearchPapers(): SearchBuilder {
-    return this.withEntity({ type: 'research_paper' });
+    return this.withEntity({ type: "research_paper" });
   }
 
   /**
@@ -81,9 +89,9 @@ export class SearchBuilder {
    * @returns The builder instance for chaining
    */
   forCustomEntity(description: string): SearchBuilder {
-    return this.withEntity({ 
-      type: 'custom', 
-      description 
+    return this.withEntity({
+      type: "custom",
+      description,
     });
   }
 
@@ -96,7 +104,7 @@ export class SearchBuilder {
     if (!this.search.criteria) {
       this.search.criteria = [];
     }
-    
+
     this.search.criteria.push({ description });
     return this;
   }
@@ -110,19 +118,19 @@ export class SearchBuilder {
     if (!this.search.criteria) {
       this.search.criteria = [];
     }
-    
+
     for (const description of criteria) {
       this.search.criteria.push({ description });
     }
-    
+
     return this;
   }
 
   /**
-   * Build the Search object
-   * @returns The constructed Search
+   * Build the internal Search parameters object
+   * @returns The constructed Search parameters
    */
-  build(): Search {
+  build(): InternalSearchParameters {
     return { ...this.search };
   }
 }
@@ -135,9 +143,9 @@ export class WebsetBuilder {
 
   /**
    * Create a new WebsetBuilder
-   * @param searchBuilder The SearchBuilder containing search parameters
+   * @param searchBuilder The WebsetSearchBuilder containing search parameters
    */
-  constructor(searchBuilder: SearchBuilder) {
+  constructor(searchBuilder: WebsetSearchBuilder) {
     this.params = {
       search: searchBuilder.build(),
     };
@@ -150,7 +158,7 @@ export class WebsetBuilder {
    * @returns A new WebsetBuilder
    */
   static withSearch(query: string, count: number): WebsetBuilder {
-    return new WebsetBuilder(new SearchBuilder(query, count));
+    return new WebsetBuilder(new WebsetSearchBuilder(query, count));
   }
 
   /**
@@ -161,22 +169,22 @@ export class WebsetBuilder {
    */
   withEnrichment(
     description: string,
-    format: WebsetEnrichmentFormat,
+    format: CreateEnrichmentParametersFormat,
     options?: Option[]
   ): WebsetBuilder {
     if (!this.params.enrichments) {
       this.params.enrichments = [];
     }
-    
+
     const enrichment: CreateEnrichmentParameters = {
       description,
-      format
+      format,
     };
-    
+
     if (options) {
       enrichment.options = options;
     }
-    
+
     this.params.enrichments.push(enrichment);
     return this;
   }
@@ -187,7 +195,10 @@ export class WebsetBuilder {
    * @returns The builder instance for chaining
    */
   withTextEnrichment(description: string): WebsetBuilder {
-    return this.withEnrichment(description, WebsetEnrichmentFormat.TEXT);
+    return this.withEnrichment(
+      description,
+      CreateEnrichmentParametersFormat.text
+    );
   }
 
   /**
@@ -196,7 +207,10 @@ export class WebsetBuilder {
    * @returns The builder instance for chaining
    */
   withNumberEnrichment(description: string): WebsetBuilder {
-    return this.withEnrichment(description, WebsetEnrichmentFormat.NUMBER);
+    return this.withEnrichment(
+      description,
+      CreateEnrichmentParametersFormat.number
+    );
   }
 
   /**
@@ -205,7 +219,34 @@ export class WebsetBuilder {
    * @returns The builder instance for chaining
    */
   withDateEnrichment(description: string): WebsetBuilder {
-    return this.withEnrichment(description, WebsetEnrichmentFormat.DATE);
+    return this.withEnrichment(
+      description,
+      CreateEnrichmentParametersFormat.date
+    );
+  }
+
+  /**
+   * Add an email format enrichment
+   * @param description Description of the enrichment
+   * @returns The builder instance for chaining
+   */
+  withEmailEnrichment(description: string): WebsetBuilder {
+    return this.withEnrichment(
+      description,
+      CreateEnrichmentParametersFormat.email
+    );
+  }
+
+  /**
+   * Add a phone format enrichment
+   * @param description Description of the enrichment
+   * @returns The builder instance for chaining
+   */
+  withPhoneEnrichment(description: string): WebsetBuilder {
+    return this.withEnrichment(
+      description,
+      CreateEnrichmentParametersFormat.phone
+    );
   }
 
   /**
@@ -216,9 +257,9 @@ export class WebsetBuilder {
    */
   withOptionsEnrichment(description: string, options: string[]): WebsetBuilder {
     return this.withEnrichment(
-      description, 
-      WebsetEnrichmentFormat.OPTIONS,
-      options.map(label => ({ label }))
+      description,
+      CreateEnrichmentParametersFormat.options,
+      options.map((label) => ({ label }))
     );
   }
 
@@ -237,10 +278,10 @@ export class WebsetBuilder {
    * @param metadata Key-value metadata
    * @returns The builder instance for chaining
    */
-  withMetadata(metadata: Record<string, any>): WebsetBuilder {
+  withMetadata(metadata: Record<string, string>): WebsetBuilder {
     this.params.metadata = {
-      ...this.params.metadata,
-      ...metadata
+      ...(this.params.metadata || {}),
+      ...metadata,
     };
     return this;
   }
@@ -267,7 +308,7 @@ export class WebhookBuilder {
   constructor(url: string) {
     this.params = {
       url,
-      events: []
+      events: [],
     };
   }
 
@@ -276,7 +317,10 @@ export class WebhookBuilder {
    * @param event The event type
    * @returns The builder instance for chaining
    */
-  withEvent(event: Event): WebhookBuilder {
+  withEvent(event: EventType): WebhookBuilder {
+    if (!this.params.events) {
+      this.params.events = [];
+    }
     if (!this.params.events.includes(event)) {
       this.params.events.push(event);
     }
@@ -288,7 +332,7 @@ export class WebhookBuilder {
    * @param events Array of event types
    * @returns The builder instance for chaining
    */
-  withEvents(events: Event[]): WebhookBuilder {
+  withEvents(events: EventType[]): WebhookBuilder {
     for (const event of events) {
       this.withEvent(event);
     }
@@ -300,7 +344,7 @@ export class WebhookBuilder {
    * @returns The builder instance for chaining
    */
   onWebsetCreated(): WebhookBuilder {
-    return this.withEvent(Event.WEBSET_CREATED);
+    return this.withEvent(EventType.webset_created);
   }
 
   /**
@@ -308,7 +352,15 @@ export class WebhookBuilder {
    * @returns The builder instance for chaining
    */
   onWebsetDeleted(): WebhookBuilder {
-    return this.withEvent(Event.WEBSET_DELETED);
+    return this.withEvent(EventType.webset_deleted);
+  }
+
+  /**
+   * Listen for Webset paused events
+   * @returns The builder instance for chaining
+   */
+  onWebsetPaused(): WebhookBuilder {
+    return this.withEvent(EventType.webset_paused);
   }
 
   /**
@@ -316,7 +368,39 @@ export class WebhookBuilder {
    * @returns The builder instance for chaining
    */
   onWebsetIdle(): WebhookBuilder {
-    return this.withEvent(Event.WEBSET_IDLE);
+    return this.withEvent(EventType.webset_idle);
+  }
+
+  /**
+   * Listen for Webset search created events
+   * @returns The builder instance for chaining
+   */
+  onWebsetSearchCreated(): WebhookBuilder {
+    return this.withEvent(EventType.webset_search_created);
+  }
+
+  /**
+   * Listen for Webset search canceled events
+   * @returns The builder instance for chaining
+   */
+  onWebsetSearchCanceled(): WebhookBuilder {
+    return this.withEvent(EventType.webset_search_canceled);
+  }
+
+  /**
+   * Listen for Webset search completed events
+   * @returns The builder instance for chaining
+   */
+  onWebsetSearchCompleted(): WebhookBuilder {
+    return this.withEvent(EventType.webset_search_completed);
+  }
+
+  /**
+   * Listen for Webset search updated events
+   * @returns The builder instance for chaining
+   */
+  onWebsetSearchUpdated(): WebhookBuilder {
+    return this.withEvent(EventType.webset_search_updated);
   }
 
   /**
@@ -324,7 +408,7 @@ export class WebhookBuilder {
    * @returns The builder instance for chaining
    */
   onItemCreated(): WebhookBuilder {
-    return this.withEvent(Event.WEBSET_ITEM_CREATED);
+    return this.withEvent(EventType.webset_item_created);
   }
 
   /**
@@ -332,7 +416,7 @@ export class WebhookBuilder {
    * @returns The builder instance for chaining
    */
   onItemEnriched(): WebhookBuilder {
-    return this.withEvent(Event.WEBSET_ITEM_ENRICHED);
+    return this.withEvent(EventType.webset_item_enriched);
   }
 
   /**
@@ -340,10 +424,10 @@ export class WebhookBuilder {
    * @param metadata Key-value metadata
    * @returns The builder instance for chaining
    */
-  withMetadata(metadata: Record<string, any>): WebhookBuilder {
+  withMetadata(metadata: Record<string, string>): WebhookBuilder {
     this.params.metadata = {
-      ...this.params.metadata,
-      ...metadata
+      ...(this.params.metadata || {}),
+      ...metadata,
     };
     return this;
   }
@@ -354,7 +438,10 @@ export class WebhookBuilder {
    */
   build(): CreateWebhookParameters {
     if (this.params.events.length === 0) {
-      throw new Error("At least one event must be specified for a webhook");
+      throw new ExaError(
+        "At least one event must be specified for a webhook",
+        HttpStatusCode.BadRequest
+      );
     }
     return { ...this.params };
   }
@@ -374,7 +461,8 @@ export class WebsetSearchBuilder {
   constructor(query: string, count: number) {
     this.params = {
       query,
-      count
+      count,
+      behaviour: CreateWebsetSearchParametersBehaviour.override,
     };
   }
 
@@ -393,7 +481,7 @@ export class WebsetSearchBuilder {
    * @returns The builder instance for chaining
    */
   forCompanies(): WebsetSearchBuilder {
-    return this.withEntity({ type: 'company' });
+    return this.withEntity({ type: "company" });
   }
 
   /**
@@ -401,7 +489,7 @@ export class WebsetSearchBuilder {
    * @returns The builder instance for chaining
    */
   forPeople(): WebsetSearchBuilder {
-    return this.withEntity({ type: 'person' });
+    return this.withEntity({ type: "person" });
   }
 
   /**
@@ -409,7 +497,7 @@ export class WebsetSearchBuilder {
    * @returns The builder instance for chaining
    */
   forArticles(): WebsetSearchBuilder {
-    return this.withEntity({ type: 'article' });
+    return this.withEntity({ type: "article" });
   }
 
   /**
@@ -417,7 +505,7 @@ export class WebsetSearchBuilder {
    * @returns The builder instance for chaining
    */
   forResearchPapers(): WebsetSearchBuilder {
-    return this.withEntity({ type: 'research_paper' });
+    return this.withEntity({ type: "research_paper" });
   }
 
   /**
@@ -426,9 +514,9 @@ export class WebsetSearchBuilder {
    * @returns The builder instance for chaining
    */
   forCustomEntity(description: string): WebsetSearchBuilder {
-    return this.withEntity({ 
-      type: 'custom', 
-      description 
+    return this.withEntity({
+      type: "custom",
+      description,
     });
   }
 
@@ -441,7 +529,7 @@ export class WebsetSearchBuilder {
     if (!this.params.criteria) {
       this.params.criteria = [];
     }
-    
+
     this.params.criteria.push({ description });
     return this;
   }
@@ -455,11 +543,11 @@ export class WebsetSearchBuilder {
     if (!this.params.criteria) {
       this.params.criteria = [];
     }
-    
+
     for (const description of criteria) {
       this.params.criteria.push({ description });
     }
-    
+
     return this;
   }
 
@@ -468,7 +556,9 @@ export class WebsetSearchBuilder {
    * @param behaviour The search behavior
    * @returns The builder instance for chaining
    */
-  withBehaviour(behaviour: WebsetSearchBehaviour): WebsetSearchBuilder {
+  withBehaviour(
+    behaviour: CreateWebsetSearchParametersBehaviour
+  ): WebsetSearchBuilder {
     this.params.behaviour = behaviour;
     return this;
   }
@@ -478,7 +568,7 @@ export class WebsetSearchBuilder {
    * @returns The builder instance for chaining
    */
   shouldOverride(): WebsetSearchBuilder {
-    return this.withBehaviour(WebsetSearchBehaviour.OVERRIDE);
+    return this.withBehaviour(CreateWebsetSearchParametersBehaviour.override);
   }
 
   /**
@@ -486,10 +576,10 @@ export class WebsetSearchBuilder {
    * @param metadata Key-value metadata
    * @returns The builder instance for chaining
    */
-  withMetadata(metadata: Record<string, any>): WebsetSearchBuilder {
+  withMetadata(metadata: Record<string, string>): WebsetSearchBuilder {
     this.params.metadata = {
-      ...this.params.metadata,
-      ...metadata
+      ...(this.params.metadata || {}),
+      ...metadata,
     };
     return this;
   }

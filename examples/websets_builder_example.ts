@@ -1,18 +1,16 @@
 /**
  * Example demonstrating the builder pattern for the Websets API
- * 
+ *
  * This example shows how to use the builder classes to create complex
  * Webset objects in a more readable and maintainable way.
  */
 
-import Exa, { 
-  WebsetBuilder,
-  WebhookBuilder,
-  WebsetSearchBuilder,
-  WebsetEnrichmentFormat,
-  Event
-} from "../src";
 import * as dotenv from "dotenv";
+import Exa, {
+  WebhookBuilder,
+  WebsetBuilder,
+  WebsetSearchBuilder,
+} from "../src";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -22,95 +20,107 @@ async function main() {
   const exa = new Exa(process.env.EXASEARCH_API_KEY);
 
   try {
-    // Creating a Webset using the builder pattern
     console.log("Creating a Webset using the builder pattern...");
-    
-    // Create a Webset for AI research labs
-    const websetParams = WebsetBuilder.withSearch("Top AI research labs", 5)
+
+    // 1. Build the search parameters first
+    const searchBuilder = new WebsetSearchBuilder("Top AI research labs", 5)
       .forCompanies()
-      // Add criteria for filtering results
       .withCriteria([
         "Must focus on large language models research",
-        "Must have published research in the last two years"
-      ])
-      // Add two enrichments
+        "Must have published research in the last two years",
+      ]);
+
+    // 2. Build the Webset parameters, passing the SearchBuilder
+    const websetParams = new WebsetBuilder(searchBuilder)
       .withNumberEnrichment("Estimate the company's founding year")
       .withOptionsEnrichment("Primary focus area", [
         "Language models",
         "Computer vision",
         "Robotics",
         "Multi-modal AI",
-        "Other"
+        "Other",
       ])
-      // Add metadata
+      .withEmailEnrichment("Extract the contact email for the research lab")
+      .withPhoneEnrichment("Find the phone number of the main office")
       .withMetadata({
         purpose: "Market research",
         created_by: "builder-example",
-        category: "AI Research"
+        category: "AI Research",
       })
       .build();
-    
-    console.log("Built Webset parameters:", JSON.stringify(websetParams, null, 2));
-    
-    // Create the Webset
+
+    console.log(
+      "Built Webset parameters:",
+      JSON.stringify(websetParams, null, 2)
+    );
+
     const webset = await exa.websets.create(websetParams);
     console.log(`Created Webset with ID: ${webset.id}`);
-    
-    // Create a webhook to get notified when the Webset is idle
+
+    // Create a webhook
     const webhookParams = new WebhookBuilder("https://example.com/webhook")
       .onWebsetIdle()
       .onItemCreated()
       .onItemEnriched()
-      .withMetadata({
-        source: "builder-example"
-      })
+      .onWebsetSearchCreated()
+      .onWebsetSearchCompleted()
+      .withMetadata({ source: "builder-example" })
       .build();
-    
-    console.log("Built webhook parameters:", JSON.stringify(webhookParams, null, 2));
-    
-    // Create the webhook
+
+    console.log(
+      "Built webhook parameters:",
+      JSON.stringify(webhookParams, null, 2)
+    );
+
     const webhook = await exa.websets.webhooks.create(webhookParams);
     console.log(`Created webhook with ID: ${webhook.id}`);
-    
+
     // Wait for the Webset to be idle
     console.log("Waiting for Webset to be idle...");
     await exa.websets.waitUntilIdle(webset.id, {
       timeout: 60000,
-      onPoll: (status) => console.log(`Current status: ${status}`)
+      onPoll: (currentStatus) =>
+        console.log(`Current status: ${currentStatus}`),
     });
-    
+
     // Add another search using the builder
     console.log("Adding another search to the Webset...");
-    const searchParams = new WebsetSearchBuilder("AI research labs in Europe", 3)
+    const newSearchBuilder = new WebsetSearchBuilder(
+      "AI research labs in Europe",
+      3
+    )
       .forCompanies()
       .withCriterion("Must be headquartered in Europe")
-      .shouldOverride()
-      .build();
-    
-    console.log("Built search parameters:", JSON.stringify(searchParams, null, 2));
-    
-    // Create the search
+      .shouldOverride();
+
+    const searchParams = newSearchBuilder.build();
+
+    console.log(
+      "Built search parameters:",
+      JSON.stringify(searchParams, null, 2)
+    );
+
     const search = await exa.websets.searches.create(webset.id, searchParams);
     console.log(`Created search with ID: ${search.id}`);
-    
+
     // Wait for the Webset to be idle again
     console.log("Waiting for Webset to be idle again...");
     await exa.websets.waitUntilIdle(webset.id, {
       timeout: 60000,
-      onPoll: (status) => console.log(`Current status: ${status}`)
+      onPoll: (currentStatus) =>
+        console.log(`Current status: ${currentStatus}`),
     });
-    
+
     // Get all items at once
     console.log("Getting all items...");
     const items = await exa.websets.items.getAll(webset.id);
     console.log(`Found ${items.length} items in the Webset`);
-    
+
     // Clean up
     console.log("Cleaning up...");
     await exa.websets.webhooks.delete(webhook.id);
     await exa.websets.delete(webset.id);
     console.log("Cleanup complete");
-    
   } catch (error) {
     console.error("Error:", error);
   }

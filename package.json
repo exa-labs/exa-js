@@ -25,6 +25,7 @@
     "build": "tsup",
     "test": "vitest run",
     "generate-docs": "typedoc --plugin typedoc-plugin-markdown --out docs src/index.ts",
+    "generate:types:websets": "openapi-typescript https://raw.githubusercontent.com/exa-labs/openapi-spec/refs/heads/master/exa-websets-spec.yaml  --enum --root-types --alphabetize --root-types-no-schema-prefix --output ./src/websets/openapi.ts",
     "build:beta": "cross-env NPM_CONFIG_TAG=beta npm run build",
     "version:beta": "npm version prerelease --preid=beta",
     "version:stable": "npm version patch",
@@ -42,7 +43,8 @@
     "typedoc": "^0.25.4",
     "typedoc-plugin-markdown": "^3.17.1",
     "typescript": "^4.9.5",
-    "vitest": "0.28.5"
+    "vitest": "0.28.5",
+    "openapi-typescript": "~7.6.1"
   },
   "dependencies": {
     "cross-fetch": "^4.0.0",

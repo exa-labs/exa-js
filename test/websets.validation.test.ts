@@ -1,28 +1,39 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Exa } from "../src";
-import { 
-  CreateWebsetParameters, 
-  WebsetStatus, 
-  WebsetEnrichmentFormat,
-  QueryParams,
-  WebsetSearchStatus,
-  WebsetsClient,
-  WebsetItemsClient,
-  WebsetSearchesClient,
+import {
+  CreateWebsetParameters,
+  GetWebsetResponse,
   WebsetEnrichmentsClient,
-  WebsetWebhooksClient
+  WebsetItemsClient,
+  WebsetsClient,
+  WebsetSearchesClient,
+  WebsetStatus,
+  WebsetWebhooksClient,
 } from "../src/websets";
+import { getProtectedClient } from "./helpers";
 
-// These tests don't make actual API calls - they just validate that the TypeScript types work correctly
-describe("Websets API Type Validation", () => {
-  // Create a mock Exa client with a mocked request method
-  const mockExa = {
-    request: (endpoint: string, method: string, data?: any, params?: any) => {
-      return Promise.resolve({ success: true });
+type RequestParams = Record<string, string | string[] | number | undefined>;
+
+describe("Websets Client Method Validation", () => {
+  class MockExa implements Partial<Exa> {
+    request<T = unknown>(
+      endpoint: string,
+      method: string,
+      data?: Record<string, unknown>,
+      params?: RequestParams
+    ) {
+      return Promise.resolve({ success: true } as T);
     }
-  } as unknown as Exa;
+  }
 
-  const websets = new WebsetsClient(mockExa);
+  const mockExa = new MockExa();
+  const websets = new WebsetsClient(mockExa as Exa);
+  const websetsWithAccess = getProtectedClient(websets);
+  const originalRequest = websetsWithAccess.request;
+
+  beforeEach(() => {
+    websetsWithAccess.request = originalRequest;
+  });
 
   it("should have properly typed client instances", () => {
     expect(websets.items).toBeInstanceOf(WebsetItemsClient);
@@ -36,99 +47,96 @@ describe("Websets API Type Validation", () => {
       search: {
         query: "Test query",
         count: 10,
-        entity: {
-          type: "company"
-        }
+        entity: { type: "company" },
       },
-      metadata: {
-        test: "value"
-      }
+      metadata: { test: "value" },
     };
 
-    // We're not testing the actual API call, just that the types match correctly
-    const spyCreate = vi.spyOn(websets, 'create');
+    const spyCreate = vi.spyOn(websets, "create");
     await websets.create(params);
-    
+
     expect(spyCreate).toHaveBeenCalledWith(params);
   });
 
-  it("should handle query parameters correctly", async () => {
-    const queryParams: QueryParams = {
-      cursor: "test-cursor",
-      limit: 10,
-      expand: ["items"]
-    };
-
-    // Mock the request to return consistent data
-    const spyRequest = vi.spyOn(websets as any, 'request').mockResolvedValue({
+  it("should handle get parameters correctly", async () => {
+    websetsWithAccess.request = vi.fn().mockResolvedValue({
       id: "test-id",
-      status: WebsetStatus.IDLE,
-      items: []
+      object: "webset",
+      status: WebsetStatus.idle,
+      externalId: null,
+      searches: [],
+      enrichments: [],
+      metadata: {},
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      items: [],
     });
 
-    // Test with explicit params
+    // Test with expand parameter
     await websets.get("test-id", ["items"]);
-    expect(spyRequest).toHaveBeenCalledWith(
-      "/v0/websets/test-id", 
-      "GET", 
-      undefined, 
-      expect.objectContaining({ expand: ["items"] })
+    expect(websetsWithAccess.request).toHaveBeenCalledWith(
+      "/v0/websets/test-id",
+      "GET",
+      undefined,
+      { expand: ["items"] }
+    );
+
+    // Test without expand parameter
+    await websets.get("test-id");
+    expect(websetsWithAccess.request).toHaveBeenCalledWith(
+      "/v0/websets/test-id",
+      "GET",
+      undefined,
+      {}
     );
   });
 
-  it("should handle pagination parameters correctly", async () => {
-    const spyRequest = vi.spyOn(websets as any, 'request').mockResolvedValue({
+  it("should handle list pagination parameters correctly", async () => {
+    websetsWithAccess.request = vi.fn().mockResolvedValue({
       data: [],
       hasMore: false,
-      nextCursor: null
+      nextCursor: null,
     });
 
-    await websets.list("cursor-value", 20);
-    expect(spyRequest).toHaveBeenCalledWith(
-      "/v0/websets", 
-      "GET", 
-      undefined, 
-      expect.objectContaining({ 
+    await websets.list({ cursor: "cursor-value", limit: 20 });
+    expect(websetsWithAccess.request).toHaveBeenCalledWith(
+      "/v0/websets",
+      "GET",
+      undefined,
+      {
         cursor: "cursor-value",
-        limit: 20 
-      })
+        limit: 20,
+      }
     );
-  });
 
-  it("should use correct enum values", () => {
-    // Test that enum values match the expected string values
-    expect(WebsetStatus.IDLE).toBe("idle");
-    expect(WebsetStatus.RUNNING).toBe("running");
-    expect(WebsetStatus.PAUSED).toBe("paused");
-
-    expect(WebsetSearchStatus.CREATED).toBe("created");
-    expect(WebsetSearchStatus.RUNNING).toBe("running");
-    expect(WebsetSearchStatus.COMPLETED).toBe("completed");
-    expect(WebsetSearchStatus.CANCELED).toBe("canceled");
-
-    expect(WebsetEnrichmentFormat.TEXT).toBe("text");
-    expect(WebsetEnrichmentFormat.DATE).toBe("date");
-    expect(WebsetEnrichmentFormat.NUMBER).toBe("number");
-    expect(WebsetEnrichmentFormat.OPTIONS).toBe("options");
-    expect(WebsetEnrichmentFormat.EMAIL).toBe("email");
-    expect(WebsetEnrichmentFormat.PHONE).toBe("phone");
+    await websets.list();
+    expect(websetsWithAccess.request).toHaveBeenCalledWith(
+      "/v0/websets",
+      "GET",
+      undefined,
+      {}
+    );
   });
 
   it("should properly type the waitUntilIdle method", async () => {
-    const mockGet = vi.spyOn(websets, 'get').mockImplementation(async () => {
-      return {
-        id: "test-id",
-        object: "webset",
-        status: WebsetStatus.IDLE,
-        searches: [],
-        enrichments: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-    });
+    const mockWebsetResponse: GetWebsetResponse = {
+      id: "test-id",
+      object: "webset",
+      status: WebsetStatus.idle,
+      externalId: null,
+      searches: [],
+      enrichments: [],
+      metadata: {},
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-    const result = await websets.waitUntilIdle("test-id", 1000);
-    expect(result.status).toBe(WebsetStatus.IDLE);
+    const mockGet = vi
+      .spyOn(websets, "get")
+      .mockResolvedValue(mockWebsetResponse);
+
+    const result = await websets.waitUntilIdle("test-id", { pollInterval: 10 });
+    expect(result.status).toBe(WebsetStatus.idle);
     expect(mockGet).toHaveBeenCalledWith("test-id");
   });
 });

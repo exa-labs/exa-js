@@ -4,27 +4,15 @@
 import { PaginationParams, WebsetsBaseClient } from "./base";
 import {
   CreateWebhookParameters,
-  Event,
   ListWebhooksResponse,
   UpdateWebhookParameters,
   Webhook,
-  WebhookStatus,
-} from "./types";
+} from "./openapi";
 
 /**
- * Options for listing webhooks
+ * Options for listing webhooks (only pagination is supported by API)
  */
-export interface ListWebhooksOptions extends PaginationParams {
-  /**
-   * Filter webhooks by status
-   */
-  status?: WebhookStatus;
-  
-  /**
-   * Filter webhooks that listen for a specific event
-   */
-  event?: Event;
-}
+export interface ListWebhooksOptions extends PaginationParams {}
 
 /**
  * Client for managing Webset Webhooks
@@ -50,47 +38,47 @@ export class WebsetWebhooksClient extends WebsetsBaseClient {
 
   /**
    * List all Webhooks
-   * @param options Pagination and filtering options
+   * @param options Pagination options
    * @returns The list of Webhooks
    */
   async list(options?: ListWebhooksOptions): Promise<ListWebhooksResponse> {
     const params = this.buildPaginationParams(options);
-    
-    // Add additional filtering parameters
-    if (options?.status) params.status = options.status;
-    if (options?.event) params.event = options.event;
-
-    return this.request<ListWebhooksResponse>("/v0/webhooks", "GET", undefined, params);
+    return this.request<ListWebhooksResponse>(
+      "/v0/webhooks",
+      "GET",
+      undefined,
+      params
+    );
   }
-  
+
   /**
    * Iterate through all Webhooks, handling pagination automatically
-   * @param options Pagination and filtering options
+   * @param options Pagination options
    * @returns Async generator of Webhooks
    */
   async *listAll(options?: ListWebhooksOptions): AsyncGenerator<Webhook> {
     let cursor: string | undefined = undefined;
     const pageOptions = options ? { ...options } : {};
-    
+
     while (true) {
       pageOptions.cursor = cursor;
       const response = await this.list(pageOptions);
-      
+
       for (const webhook of response.data) {
         yield webhook;
       }
-      
+
       if (!response.hasMore || !response.nextCursor) {
         break;
       }
-      
+
       cursor = response.nextCursor;
     }
   }
-  
+
   /**
    * Collect all Webhooks into an array
-   * @param options Pagination and filtering options
+   * @param options Pagination options
    * @returns Promise resolving to an array of all Webhooks
    */
   async getAll(options?: ListWebhooksOptions): Promise<Webhook[]> {
@@ -104,32 +92,11 @@ export class WebsetWebhooksClient extends WebsetsBaseClient {
   /**
    * Update a Webhook
    * @param id The ID of the Webhook
-   * @param params The webhook update parameters
+   * @param params The webhook update parameters (events, metadata, url)
    * @returns The updated Webhook
    */
-  async update(
-    id: string,
-    params: UpdateWebhookParameters
-  ): Promise<Webhook> {
+  async update(id: string, params: UpdateWebhookParameters): Promise<Webhook> {
     return this.request<Webhook>(`/v0/webhooks/${id}`, "PATCH", params);
-  }
-  
-  /**
-   * Activate a Webhook
-   * @param id The ID of the Webhook
-   * @returns The activated Webhook
-   */
-  async activate(id: string): Promise<Webhook> {
-    return this.update(id, { status: WebhookStatus.ACTIVE });
-  }
-  
-  /**
-   * Deactivate a Webhook
-   * @param id The ID of the Webhook
-   * @returns The deactivated Webhook
-   */
-  async deactivate(id: string): Promise<Webhook> {
-    return this.update(id, { status: WebhookStatus.INACTIVE });
   }
 
   /**
