@@ -9,7 +9,9 @@ const exa = new Exa(process.env.EXA_API_KEY);
  */
 async function runStreamingExample() {
   try {
-    for await (const chunk of exa.streamAnswer("What are the latest developments in AI?")) {
+    for await (const chunk of exa.streamAnswer("What are the latest developments in AI?", {
+      systemPrompt: "Respond in a concise, bullet-point format."
+    })) {
       if (chunk.content) {
         console.log("\nChunk:", chunk.content); // Write partial text as it arrives
       }
