@@ -1,6 +1,7 @@
 import { WebsetsBaseClient } from "../src/websets/base";
 import { WebsetsClient } from "../src/websets/client";
 import { WebsetEnrichmentsClient } from "../src/websets/enrichments";
+import { EventsClient } from "../src/websets/events";
 import { WebsetItemsClient } from "../src/websets/items";
 import { WebsetSearchesClient } from "../src/websets/searches";
 import { WebsetWebhooksClient } from "../src/websets/webhooks";
@@ -24,6 +25,22 @@ export function getProtectedClient<
     | WebsetSearchesClient
     | WebsetEnrichmentsClient
     | WebsetWebhooksClient
+    | EventsClient,
 >(client: T): WithProtectedAccess<T> {
   return client as WithProtectedAccess<T>;
+}
+
+/**
+ * Helper function to get the protected client instance for testing
+ */
+export function getProtectedClientInstance(
+  client:
+    | WebsetsClient
+    | WebsetItemsClient
+    | WebsetSearchesClient
+    | WebsetEnrichmentsClient
+    | WebsetWebhooksClient
+    | EventsClient
+) {
+  return client;
 }

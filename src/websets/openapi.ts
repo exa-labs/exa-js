@@ -85,6 +85,26 @@ export interface paths {
     patch: operations["webhooks-update"];
     trace?: never;
   };
+  "/v0/webhooks/{id}/attempts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List webhook attempts
+     * @description List all attempts made by a Webhook ordered in descending order.
+     */
+    get: operations["webhooks-attempts-list"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/v0/websets": {
     parameters: {
       query?: never;
@@ -674,6 +694,14 @@ export interface components {
       /** @description The cursor to paginate through the next set of results */
       nextCursor: string | null;
     };
+    ListWebhookAttemptsResponse: {
+      /** @description The list of webhook attempts */
+      data: components["schemas"]["WebhookAttempt"][];
+      /** @description Whether there are more results to paginate through */
+      hasMore: boolean;
+      /** @description The cursor to paginate through the next set of results */
+      nextCursor: string | null;
+    };
     ListWebhooksResponse: {
       /** @description The list of webhooks */
       data: components["schemas"]["Webhook"][];
@@ -757,6 +785,43 @@ export interface components {
        * @description The URL to send the webhook to
        */
       url: string;
+    };
+    WebhookAttempt: {
+      /** @description The attempt number of the webhook */
+      attempt: number;
+      /**
+       * Format: date-time
+       * @description The date and time the webhook attempt was made
+       */
+      attemptedAt: string;
+      /** @description The unique identifier for the event */
+      eventId: string;
+      /**
+       * @description The type of event
+       * @enum {string}
+       */
+      eventType: EventType;
+      /** @description The unique identifier for the webhook attempt */
+      id: string;
+      /**
+       * @default webhook_attempt
+       * @constant
+       */
+      object: "webhook_attempt";
+      /** @description The body of the response */
+      responseBody: string | null;
+      /** @description The headers of the response */
+      responseHeaders: {
+        [key: string]: string;
+      };
+      /** @description The status code of the response */
+      responseStatusCode: number;
+      /** @description Whether the attempt was successful */
+      successful: boolean;
+      /** @description The URL that was used during the attempt */
+      url: string;
+      /** @description The unique identifier for the webhook */
+      webhookId: string;
     };
     Webset: {
       /**
@@ -1009,17 +1074,18 @@ export interface components {
       criterion: string;
       /** @description The reasoning for the result of the evaluation */
       reasoning: string;
-      /** @description The references used to generate the result. `null` if the evaluation is not yet completed. */
-      references:
-        | {
-            /** @description The relevant snippet of the reference content */
-            snippet: string | null;
-            /** @description The title of the reference */
-            title: string | null;
-            /** @description The URL of the reference */
-            url: string;
-          }[]
-        | null;
+      /**
+       * @description The references used to generate the result.
+       * @default []
+       */
+      references: {
+        /** @description The relevant snippet of the reference content */
+        snippet: string | null;
+        /** @description The title of the reference */
+        title: string | null;
+        /** @description The URL of the reference */
+        url: string;
+      }[];
       /**
        * @description The satisfaction of the criterion
        * @enum {string}
@@ -1176,6 +1242,8 @@ export type EnrichmentResult = components["schemas"]["EnrichmentResult"];
 export type Event = components["schemas"]["Event"];
 export type GetWebsetResponse = components["schemas"]["GetWebsetResponse"];
 export type ListEventsResponse = components["schemas"]["ListEventsResponse"];
+export type ListWebhookAttemptsResponse =
+  components["schemas"]["ListWebhookAttemptsResponse"];
 export type ListWebhooksResponse =
   components["schemas"]["ListWebhooksResponse"];
 export type ListWebsetItemResponse =
@@ -1185,6 +1253,7 @@ export type UpdateWebhookParameters =
   components["schemas"]["UpdateWebhookParameters"];
 export type UpdateWebsetRequest = components["schemas"]["UpdateWebsetRequest"];
 export type Webhook = components["schemas"]["Webhook"];
+export type WebhookAttempt = components["schemas"]["WebhookAttempt"];
 export type Webset = components["schemas"]["Webset"];
 export type WebsetArticleEntity = components["schemas"]["WebsetArticleEntity"];
 export type WebsetCompanyEntity = components["schemas"]["WebsetCompanyEntity"];
@@ -1218,7 +1287,7 @@ export interface operations {
         /** @description The number of results to return */
         limit?: number;
         /** @description The types of events to filter by */
-        types?: PathsV0EventsGetParametersQueryTypes[];
+        types?: EventType[];
       };
       header?: never;
       path?: never;
@@ -1461,6 +1530,41 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+    };
+  };
+  "webhooks-attempts-list": {
+    parameters: {
+      query?: {
+        /** @description The cursor to paginate through the results */
+        cursor?: string;
+        /** @description The type of event to filter by */
+        eventType?: EventType;
+        /** @description The number of results to return */
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        /** @description The ID of the webhook */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List of webhook attempts */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListWebhookAttemptsResponse"];
+        };
       };
     };
   };
@@ -1994,20 +2098,6 @@ export interface operations {
       };
     };
   };
-}
-export enum PathsV0EventsGetParametersQueryTypes {
-  webset_created = "webset.created",
-  webset_deleted = "webset.deleted",
-  webset_paused = "webset.paused",
-  webset_idle = "webset.idle",
-  webset_search_created = "webset.search.created",
-  webset_search_canceled = "webset.search.canceled",
-  webset_search_completed = "webset.search.completed",
-  webset_search_updated = "webset.search.updated",
-  webset_export_created = "webset.export.created",
-  webset_export_completed = "webset.export.completed",
-  webset_item_created = "webset.item.created",
-  webset_item_enriched = "webset.item.enriched",
 }
 export enum PathsV0WebsetsIdGetParametersQueryExpand {
   items = "items",

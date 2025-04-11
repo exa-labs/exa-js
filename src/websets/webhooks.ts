@@ -4,15 +4,28 @@
 import { PaginationParams, WebsetsBaseClient } from "./base";
 import {
   CreateWebhookParameters,
+  EventType,
+  ListWebhookAttemptsResponse,
   ListWebhooksResponse,
   UpdateWebhookParameters,
   Webhook,
+  WebhookAttempt,
 } from "./openapi";
 
 /**
  * Options for listing webhooks (only pagination is supported by API)
  */
 export interface ListWebhooksOptions extends PaginationParams {}
+
+/**
+ * Options for listing webhook attempts
+ */
+export interface ListWebhookAttemptsOptions extends PaginationParams {
+  /**
+   * The type of event to filter by
+   */
+  eventType?: EventType;
+}
 
 /**
  * Client for managing Webset Webhooks
@@ -106,5 +119,75 @@ export class WebsetWebhooksClient extends WebsetsBaseClient {
    */
   async delete(id: string): Promise<Webhook> {
     return this.request<Webhook>(`/v0/webhooks/${id}`, "DELETE");
+  }
+
+  /**
+   * List all attempts for a Webhook
+   * @param id The ID of the Webhook
+   * @param options Pagination and filtering options
+   * @returns The list of Webhook attempts
+   */
+  async listAttempts(
+    id: string,
+    options?: ListWebhookAttemptsOptions
+  ): Promise<ListWebhookAttemptsResponse> {
+    const params = {
+      cursor: options?.cursor,
+      limit: options?.limit,
+      eventType: options?.eventType,
+    };
+
+    return this.request<ListWebhookAttemptsResponse>(
+      `/v0/webhooks/${id}/attempts`,
+      "GET",
+      undefined,
+      params
+    );
+  }
+
+  /**
+   * Iterate through all attempts for a Webhook, handling pagination automatically
+   * @param id The ID of the Webhook
+   * @param options Pagination and filtering options
+   * @returns Async generator of Webhook attempts
+   */
+  async *listAllAttempts(
+    id: string,
+    options?: ListWebhookAttemptsOptions
+  ): AsyncGenerator<WebhookAttempt> {
+    let cursor: string | undefined = undefined;
+    const pageOptions = options ? { ...options } : {};
+
+    while (true) {
+      pageOptions.cursor = cursor;
+      const response = await this.listAttempts(id, pageOptions);
+
+      for (const attempt of response.data) {
+        yield attempt;
+      }
+
+      if (!response.hasMore || !response.nextCursor) {
+        break;
+      }
+
+      cursor = response.nextCursor;
+    }
+  }
+
+  /**
+   * Collect all attempts for a Webhook into an array
+   * @param id The ID of the Webhook
+   * @param options Pagination and filtering options
+   * @returns Promise resolving to an array of all Webhook attempts
+   */
+  async getAllAttempts(
+    id: string,
+    options?: ListWebhookAttemptsOptions
+  ): Promise<WebhookAttempt[]> {
+    const attempts: WebhookAttempt[] = [];
+    for await (const attempt of this.listAllAttempts(id, options)) {
+      attempts.push(attempt);
+    }
+    return attempts;
   }
 }

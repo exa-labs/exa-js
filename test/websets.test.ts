@@ -4,6 +4,9 @@ import { ExaError } from "../src/errors";
 import {
   CreateEnrichmentParametersFormat,
   CreateWebsetSearchParametersBehaviour,
+  Event,
+  EventType,
+  ListEventsResponse,
   ListWebsetItemResponse,
   ListWebsetsResponse,
   Webset,
@@ -393,5 +396,79 @@ describe("Websets API", () => {
 
     // Restore setTimeout
     global.setTimeout = originalSetTimeout;
+  });
+
+  it("should list events", async () => {
+    const mockEventData: Event = {
+      id: "ev_123456",
+      object: "event",
+      type: EventType.webset_created,
+      createdAt: "2023-01-01T00:00:00Z",
+      data: {
+        id: "ws_123456",
+        object: "webset",
+        status: WebsetStatus.idle,
+        searches: [],
+        enrichments: [],
+        createdAt: "2023-01-01T00:00:00Z",
+        updatedAt: "2023-01-01T00:00:00Z",
+        externalId: null,
+        metadata: {},
+      },
+    };
+    const mockResponse: ListEventsResponse = {
+      data: [mockEventData],
+      hasMore: false,
+      nextCursor: null,
+    };
+
+    const eventsClient = getProtectedClient(exa.websets.events);
+    const requestSpy = vi
+      .spyOn(eventsClient, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const listOptions = {
+      limit: 10,
+      types: [EventType.webset_created, EventType.webset_deleted],
+    };
+    const result = await exa.websets.events.list(listOptions);
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/v0/events",
+      "GET",
+      undefined,
+      listOptions
+    );
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should get an event by ID", async () => {
+    const mockResponse: Event = {
+      id: "ev_123456",
+      object: "event",
+      type: EventType.webset_created,
+      createdAt: "2023-01-01T00:00:00Z",
+      data: {
+        id: "ws_123456",
+        object: "webset",
+        status: WebsetStatus.idle,
+        searches: [],
+        enrichments: [],
+        createdAt: "2023-01-01T00:00:00Z",
+        updatedAt: "2023-01-01T00:00:00Z",
+        externalId: null,
+        metadata: {},
+      },
+    };
+
+    const eventsClient = getProtectedClient(exa.websets.events);
+    const requestSpy = vi
+      .spyOn(eventsClient, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.websets.events.get("ev_123456");
+
+    expect(requestSpy).toHaveBeenCalledWith("/v0/events/ev_123456", "GET");
+    expect(result).toEqual(mockResponse);
   });
 });

@@ -4,6 +4,7 @@
 import { Exa, ExaError, HttpStatusCode } from "../index";
 import { PaginationParams, WebsetsBaseClient } from "./base";
 import { WebsetEnrichmentsClient } from "./enrichments";
+import { EventsClient } from "./events";
 import { WebsetItemsClient } from "./items";
 import {
   CreateWebsetParameters,
@@ -25,6 +26,11 @@ export interface ListWebsetsOptions extends PaginationParams {}
  * Client for managing Websets
  */
 export class WebsetsClient extends WebsetsBaseClient {
+  /**
+   * Client for managing Events
+   */
+  events: EventsClient;
+
   /**
    * Client for managing Webset Items
    */
@@ -51,6 +57,7 @@ export class WebsetsClient extends WebsetsBaseClient {
    */
   constructor(client: Exa) {
     super(client);
+    this.events = new EventsClient(client);
     this.items = new WebsetItemsClient(client);
     this.searches = new WebsetSearchesClient(client);
     this.enrichments = new WebsetEnrichmentsClient(client);
