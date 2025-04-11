@@ -55,7 +55,7 @@ async function main() {
   // Wait for the Webset to be idle
   console.log("Waiting for Webset to be idle...");
   await exa.websets.waitUntilIdle(webset.id, {
-    timeout: 60000,
+    timeout: 300000,
     onPoll: (currentStatus) => console.log(`Current status: ${currentStatus}`),
   });
 
