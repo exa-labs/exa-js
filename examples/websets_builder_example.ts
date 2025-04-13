@@ -13,7 +13,7 @@ dotenv.config();
 
 async function main() {
   // Initialize the client
-  const exa = new Exa(process.env.EXASEARCH_API_KEY);
+  const exa = new Exa(process.env.EXA_API_KEY);
 
   console.log("Creating a Webset using the builder pattern...");
 

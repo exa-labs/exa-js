@@ -26,7 +26,7 @@ dotenv.config();
 
 async function main() {
   // Initialize the client with the API key
-  const exa = new Exa(process.env.EXASEARCH_API_KEY);
+  const exa = new Exa(process.env.EXA_API_KEY);
 
   console.log("Creating a new Webset...");
   const createParams: CreateWebsetParameters = {
