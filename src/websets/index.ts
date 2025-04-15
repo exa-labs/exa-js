@@ -47,6 +47,5 @@ export { WebsetSearchesClient } from "./searches";
 export { WebsetWebhooksClient } from "./webhooks";
 
 // Export helper types/interfaces
-export { WebhookBuilder, WebsetBuilder, WebsetSearchBuilder } from "./builder";
 export type { ListWebsetsOptions } from "./client";
 export type { ListWebhooksOptions } from "./webhooks";
