@@ -2,7 +2,7 @@ name: Test SDK and Run Examples
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 
 jobs:
@@ -10,33 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Build SDK
-      run: npm run build
+      - name: Build SDK
+        run: npm run build
 
-    - name: Run tests
-      run: npm test
+      - name: Run tests
+        run: npm test
 
-    - name: Run Node.js example
-      working-directory: ./examples/node
-      run: |
-        npm ci
-        npm run build
-        node dist/server.js &
-        sleep 10
-        curl http://localhost:8000
-        kill %1
-      env:
-        EXASEARCH_API_KEY: ${{ secrets.EXA_API_KEY }}
+      - name: Run Node.js example
+        working-directory: ./examples/node
+        run: |
+          npm ci
+          npm run build
+          node dist/server.js &
+          sleep 10
+          curl -s -o /tmp/curl_output.txt http://localhost:8000 || cat /tmp/curl_output.txt
+          kill %1
+        env:
+          EXASEARCH_API_KEY: ${{ secrets.EXA_API_KEY }}
 
     # Optional: Add steps to publish the package if on main branch
     # - name: Publish to npm
@@ -49,35 +49,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Install TypeScript
-      run: npm install -g typescript
+      - name: Install TypeScript
+        run: npm install -g typescript
 
-    - name: Compile TypeScript files
-      run: |
-        cd examples
-        for file in *.ts; do
-          echo "Compiling $file"
-          tsc $file
-        done
+      - name: Compile TypeScript files
+        run: |
+          cd examples
+          for file in *.ts; do
+            echo "Compiling $file"
+            tsc $file
+          done
 
-    - name: List compiled files
-      run: ls -R examples/*.js
+      - name: List compiled files
+        run: ls -R examples/*.js
 
-    - name: Run JavaScript files
-      run: |
-        for file in examples/*.js; do
-          echo "Running $file"
-          node $file || echo "Failed to run $file"
-        done
-      env:
-        EXASEARCH_API_KEY: ${{ secrets.EXA_API_KEY }}
+      - name: Run JavaScript files
+        run: |
+          for file in examples/*.js; do
+            echo "Running $file"
+            node $file || echo "Failed to run $file"
+          done
+        env:
+          EXASEARCH_API_KEY: ${{ secrets.EXA_API_KEY }}

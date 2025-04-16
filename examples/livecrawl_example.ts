@@ -1,6 +1,6 @@
 import Exa from "../src/index";
 
-const exa = new Exa(process.env.EXASEARCH_API_KEY);
+const exa = new Exa(process.env.EXA_API_KEY);
 
 async function runLivecrawlExample() {
   try {
