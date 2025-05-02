@@ -26,9 +26,6 @@ const exa = new Exa(process.env.EXA_API_KEY)
 // Basic search
 const basicResults = await exa.search("This is a Exa query:");
 
-// Autoprompted search
-const autoPromptedResults = await exa.search("autopromptable query", { useAutoprompt: true });
-
 // Search with date filters
 const dateFilteredResults = await exa.search("This is a Exa query:", {
   startPublishedDate: "2019-01-01",
@@ -43,13 +40,9 @@ const domainFilteredResults = await exa.search("This is a Exa query:", {
 // Search and get text contents
 const searchAndTextResults = await exa.searchAndContents("This is a Exa query:", { text: true });
 
-// Search and get highlights
-const searchAndHighlightsResults = await exa.searchAndContents("This is a Exa query:", { highlights: true });
-
 // Search and get contents with contents options
 const searchAndCustomContentsResults = await exa.searchAndContents("This is a Exa query:", {
-  text: { includeHtmlTags: true, maxCharacters: 1000 },
-  highlights: { highlightsPerUrl: 2, numSentences: 1, query: "This is the highlight query:" }
+  text: { maxCharacters: 3000 }
 });
 
 // Find similar documents
@@ -59,18 +52,14 @@ const similarResults = await exa.findSimilar("https://example.com");
 const similarExcludingSourceResults = await exa.findSimilar("https://example.com", { excludeSourceDomain: true });
 
 // Find similar with contents
-const similarWithContentsResults = await exa.findSimilarAndContents("https://example.com", { text: true, highlights: true });
+const similarWithContentsResults = await exa.findSimilarAndContents("https://example.com", { text: true });
 
 // Get text contents
 const textContentsResults = await exa.getContents(["urls"], { text: true });
 
-// Get highlights
-const highlightsContentsResults = await exa.getContents(["urls"], { highlights: true });
-
 // Get contents with contents options
 const customContentsResults = await exa.getContents(["urls"], {
-  text: { includeHtmlTags: true, maxCharacters: 1000 },
-  highlights: { highlightsPerUrl: 2, numSentences: 1, query: "This is the highlight query:" }
+  text: { includeHtmlTags: true, maxCharacters: 3000 }
 });
 
 // Get an answer to a question
@@ -117,7 +106,7 @@ const response = await exa.findSimilar('https://waitbutwhy.com/2014/05/fermi-par
 Retrieves the contents of the specified documents.
 
 ```javascript
-const response = await exa.getContents(['8U71IlQ5DUTdsZFherhhYA', 'X3wd0PbJmAvhu_DQjDKA7A']);
+const response = await exa.getContents(['https://blog.samaltman.com/how-to-be-successful']);
 ```
 
 ### `exa.answer(query: string, options?: AnswerOptions): Promise<AnswerResponse>`
