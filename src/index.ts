@@ -359,6 +359,34 @@ export type AnswerStreamResponse = {
   citations?: SearchResult<{}>[];
 };
 
+/**
+ * Enum representing the status of a research request.
+ */
+export enum ResearchStatus {
+  /** The research request has been accepted and is currently running. */
+  running = "running",
+  /** The research request has finished successfully. */
+  completed = "completed",
+  /** The research request has been canceled. */
+  canceled = "canceled",
+  /** The research request failed. */
+  failed = "failed",
+}
+
+/**
+ * @typedef {Object} ResearchResponse
+ * @property {string} id - The unique identifier of the research request.
+ * @property {ResearchStatus | string} status - The current status of the research request.
+ * @property {Record<string, any> | null} output - The structured output, if the research has completed.
+ * @property {SearchResult<{}>[]} citations - References used for the research.
+ */
+export type ResearchResponse = {
+  id: string;
+  status: ResearchStatus | string;
+  output: Record<string, any> | null;
+  citations: SearchResult<{}>[];
+};
+
 // Import the Websets client
 import { WebsetsClient } from "./websets/client";
 
@@ -808,6 +836,40 @@ export class Exa {
     }
 
     return { content, citations };
+  }
+
+  /**
+   * Submit a research request.
+   *
+   * @param {string} query - The research question to be answered.
+   * @param {JSONSchema} [outputSchema] - Optional JSON schema describing the desired structure of the answer.
+   * @returns {Promise<ResearchResponse>} The response containing the request ID, status, and any available data.
+   *
+   * Example:
+   * ```ts
+   * const { id, status } = await exa.research("How does photosynthesis work?", {
+   *   outputSchema: {
+   *     type: "object",
+   *     required: ["answer"],
+   *     properties: {
+   *       answer: { type: "string" },
+   *     },
+   *   },
+   * });
+   * ```
+   */
+  async research(
+    query: string,
+    options?: { outputSchema?: JSONSchema }
+  ): Promise<ResearchResponse> {
+    const body: Record<string, any> = { query };
+
+    const outputSchema = options?.outputSchema;
+    if (outputSchema && Object.keys(outputSchema).length > 0) {
+      body.outputSchema = outputSchema;
+    }
+
+    return await this.request<ResearchResponse>("/research", "POST", body);
   }
 }
 
