@@ -13,6 +13,6 @@
     "outDir": "dist",
     "resolveJsonModule": true,
 
-    "types": ["vitest", "node"]
+    "types": ["vitest/globals"]
   }
 }
