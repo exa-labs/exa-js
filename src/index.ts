@@ -322,6 +322,7 @@ export type AnswerOptions = {
  * @typedef {Object} AnswerResponse
  * @property {string} answer - The generated answer text.
  * @property {SearchResult<{}>[]} citations - The sources used to generate the answer.
+ * @property {CostDollars} [costDollars] - The cost breakdown for this request.
  * @property {string} [requestId] - Optional request ID for the answer.
  */
 export type AnswerResponse = {
