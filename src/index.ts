@@ -328,6 +328,7 @@ export type AnswerResponse = {
   answer: string;
   citations: SearchResult<{}>[];
   requestId?: string;
+  costDollars?: CostDollars;
 };
 
 export type AnswerStreamChunk = {
