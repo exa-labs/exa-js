@@ -38,9 +38,9 @@ describe("Research API", () => {
 
     const result = await exa.researchTask(input, { schema });
 
-    expect(requestSpy).toHaveBeenCalledWith("/research", "POST", {
-      ...input,
-      outputSchema: schema,
+    expect(requestSpy).toHaveBeenCalledWith("/research/tasks", "POST", {
+      input,
+      output: { schema },
     });
     expect(result).toEqual(mockResponse);
   });
@@ -72,9 +72,11 @@ describe("Research API", () => {
 
     const result = await exa.researchTask(input, { schema });
 
-    expect(requestSpy).toHaveBeenCalledWith("/research", "POST", {
-      ...input,
-      outputSchema: schema,
+    expect(requestSpy).toHaveBeenCalledWith("/research/tasks", "POST", {
+      input,
+      output: {
+        schema,
+      },
     });
     expect(result).toEqual(mockResponse);
   });
