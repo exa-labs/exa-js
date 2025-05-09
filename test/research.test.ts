@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import Exa, { ResearchStatus, type JSONSchema } from "../src";
 
 /**
- * Test suite for the simplified /research endpoint.
+ * Test suite for the /research endpoint.
  *
  * These tests only ensure that the Exa client constructs the correct
  * internal request payload. They do **not** make any real HTTP calls.
@@ -16,12 +16,18 @@ describe("Research API", () => {
     exa = new Exa("test-api-key", "https://api.exa.ai");
   });
 
-  it("should submit a research request with query only", async () => {
-    const query = "What is quantum computing?";
+  it("should submit a research request with a minimal schema", async () => {
+    const input = {
+      instructions: "General research",
+      query: "What is quantum computing?",
+    };
+
+    // Minimal (but valid) JSON schema
+    const schema: JSONSchema = { type: "object" };
 
     const mockResponse = {
       id: "research_123",
-      status: ResearchStatus.running,
+      status: "running", // string allowed by ResearchTaskResponse
       output: null,
       citations: [],
     };
@@ -30,15 +36,22 @@ describe("Research API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
-    const result = await exa.research(query);
+    const result = await exa.researchTask(input, { schema });
 
-    expect(requestSpy).toHaveBeenCalledWith("/research", "POST", { query });
+    expect(requestSpy).toHaveBeenCalledWith("/research", "POST", {
+      ...input,
+      outputSchema: schema,
+    });
     expect(result).toEqual(mockResponse);
   });
 
-  it("should submit a research request with an output schema", async () => {
-    const query = "Explain photosynthesis.";
-    const outputSchema: JSONSchema = {
+  it("should submit a research request with an explicit output schema", async () => {
+    const input = {
+      instructions: "Explain photosynthesis in simple terms.",
+      query: "Explain photosynthesis.",
+    };
+
+    const schema: JSONSchema = {
       type: "object",
       required: ["answer"],
       properties: {
@@ -57,11 +70,11 @@ describe("Research API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
-    const result = await exa.research(query, { outputSchema });
+    const result = await exa.researchTask(input, { schema });
 
     expect(requestSpy).toHaveBeenCalledWith("/research", "POST", {
-      query,
-      outputSchema,
+      ...input,
+      outputSchema: schema,
     });
     expect(result).toEqual(mockResponse);
   });
