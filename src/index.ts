@@ -309,24 +309,26 @@ export type SearchResponse<T extends ContentsOptions> = {
  * @property {boolean} [text] - Whether to include text in the source results. Default false.
  * @property {"exa" | "exa-pro"} [model] - The model to use for generating the answer. Default "exa".
  * @property {string} [systemPrompt] - A system prompt to guide the LLM's behavior when generating the answer.
+ * @property {Object} [outputSchema] - A JSON Schema specification for the structure you expect the output to take
  */
 export type AnswerOptions = {
   stream?: boolean;
   text?: boolean;
   model?: "exa" | "exa-pro";
   systemPrompt?: string;
+  outputSchema?: Record<string, unknown>;
 };
 
 /**
  * Represents an answer response object from the /answer endpoint.
  * @typedef {Object} AnswerResponse
- * @property {string} answer - The generated answer text.
+ * @property {string | Object} answer - The generated answer text (or an object matching `outputSchema`, if provided)
  * @property {SearchResult<{}>[]} citations - The sources used to generate the answer.
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
  * @property {string} [requestId] - Optional request ID for the answer.
  */
 export type AnswerResponse = {
-  answer: string;
+  answer: string | Record<string, unknown>;
   citations: SearchResult<{}>[];
   requestId?: string;
   costDollars?: CostDollars;
@@ -689,6 +691,7 @@ export class Exa {
       text: options?.text ?? false,
       model: options?.model ?? "exa",
       systemPrompt: options?.systemPrompt,
+      outputSchema: options?.outputSchema,
     };
 
     return await this.request("/answer", "POST", requestBody);
@@ -719,6 +722,7 @@ export class Exa {
       text?: boolean;
       model?: "exa" | "exa-pro";
       systemPrompt?: string;
+      outputSchema?: Record<string, unknown>;
     }
   ): AsyncGenerator<AnswerStreamChunk> {
     // Build the POST body and fetch the streaming response.
@@ -728,6 +732,7 @@ export class Exa {
       stream: true,
       model: options?.model ?? "exa",
       systemPrompt: options?.systemPrompt,
+      outputSchema: options?.outputSchema,
     };
 
     const response = await fetchImpl(this.baseURL + "/answer", {
