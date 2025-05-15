@@ -1,5 +1,7 @@
 import fetch, { Headers } from "cross-fetch";
 import { ExaError, HttpStatusCode } from "./errors";
+import { WebsetsClient } from "./websets/client";
+import { ResearchClient } from "./research/client";
 
 // Use native fetch in Node.js environments
 const fetchImpl =
@@ -387,9 +389,6 @@ export type ResearchTaskResponse = {
   citations: SearchResult<{}>[];
 };
 
-// Import the Websets client
-import { WebsetsClient } from "./websets/client";
-
 /**
  * The Exa class encapsulates the API's endpoints.
  */
@@ -401,6 +400,11 @@ export class Exa {
    * Websets API client
    */
   websets: WebsetsClient;
+
+  /**
+   * Research API client
+   */
+  research: ResearchClient;
 
   /**
    * Helper method to separate out the contents-specific options from the rest.
@@ -476,6 +480,8 @@ export class Exa {
 
     // Initialize the Websets client
     this.websets = new WebsetsClient(this);
+    // Initialize the Research client
+    this.research = new ResearchClient(this);
   }
 
   /**
@@ -851,7 +857,7 @@ export class Exa {
    * 2. `output`
    *    defines the exact structure you expect back, and guides the research conducted by the agent.
    *      `{ schema: JSONSchema }`.
-   *    The agent’s response will be validated against this schema.
+   *    The agent's response will be validated against this schema.
    *
    * @param {{ instructions: string }} input   The research prompt.
    * @param {{ schema: JSONSchema }}                output  The desired output schema.
@@ -876,21 +882,16 @@ export class Exa {
     input: { instructions: string },
     output: { schema: JSONSchema }
   ): Promise<ResearchTaskResponse> {
-    const body = {
-      input,
-      output,
-    };
-
-    return await this.request<ResearchTaskResponse>(
-      "/research/tasks",
-      "POST",
-      body
-    );
+    // Delegate to the newer, namespaced client while keeping the legacy
+    // signature intact for backwards-compatibility.
+    return this.research.createTask(input, output);
   }
 }
 
 // Re-export Websets related types and enums
 export * from "./websets";
+// Re-export Research related clients (types are already in this file)
+export * from "./research";
 
 // Export the main class
 export default Exa;

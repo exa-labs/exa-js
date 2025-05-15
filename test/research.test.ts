@@ -36,12 +36,17 @@ describe("Research API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
-    const result = await exa.researchTask(input, { schema });
+    const result = await exa.research.createTask(input, { schema });
 
-    expect(requestSpy).toHaveBeenCalledWith("/research/tasks", "POST", {
-      input,
-      output: { schema },
-    });
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/research/tasks",
+      "POST",
+      {
+        input,
+        output: { schema },
+      },
+      undefined
+    );
     expect(result).toEqual(mockResponse);
   });
 
@@ -70,14 +75,19 @@ describe("Research API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
-    const result = await exa.researchTask(input, { schema });
+    const result = await exa.research.createTask(input, { schema });
 
-    expect(requestSpy).toHaveBeenCalledWith("/research/tasks", "POST", {
-      input,
-      output: {
-        schema,
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/research/tasks",
+      "POST",
+      {
+        input,
+        output: {
+          schema,
+        },
       },
-    });
+      undefined
+    );
     expect(result).toEqual(mockResponse);
   });
 });
