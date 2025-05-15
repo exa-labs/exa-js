@@ -1,4 +1,6 @@
-import { Exa, JSONSchema, ResearchTaskResponse } from "../index";
+import { Exa } from "../index";
+import type { JSONSchema } from "../index";
+import type { ResearchTaskResponse } from "./types";
 import { ResearchBaseClient } from "./base";
 
 /**
@@ -11,7 +13,15 @@ export class ResearchClient extends ResearchBaseClient {
 
   /**
    * Create and run a research task (blocking call).
-   * Mirrors the legacy `exa.researchTask` helper.
+   *
+   * Both parameters are required and have fixed shapes:
+   * 1. `input`
+   *      `{ instructions: string }`
+   *     • `instructions` – High-level guidance that tells the research agent what to do.
+   * 2. `output`
+   *    defines the exact structure you expect back, and guides the research conducted by the agent.
+   *      `{ schema: JSONSchema }`.
+   *    The agent's response will be validated against this schema.
    *
    * @param input  Object containing high-level research instructions.
    * @param output Object containing the expected output schema.

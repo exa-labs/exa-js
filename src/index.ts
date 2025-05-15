@@ -366,30 +366,6 @@ export type AnswerStreamResponse = {
 };
 
 /**
- * Enum representing the status of a research task.
- */
-export enum ResearchStatus {
-  /** The research request has finished successfully. */
-  completed = "completed",
-  /** The research request failed. */
-  failed = "failed",
-}
-
-/**
- * @typedef {Object} ResearchTaskResponse
- * @property {string} id - The unique identifier of the research request.
- * @property {ResearchStatus | string} status - The current status of the research request.
- * @property {Record<string, any> | null} output - The structured output, if the research has completed.
- * @property {SearchResult<{}>[]} citations - References used for the research.
- */
-export type ResearchTaskResponse = {
-  id: string;
-  status: ResearchStatus | string;
-  output: Record<string, any> | null;
-  citations: SearchResult<{}>[];
-};
-
-/**
  * The Exa class encapsulates the API's endpoints.
  */
 export class Exa {
@@ -845,46 +821,6 @@ export class Exa {
     }
 
     return { content, citations };
-  }
-
-  /**
-   * Creates and runs a research task in a blocking manner.
-   *
-   * Both parameters are required and have fixed shapes:
-   * 1. `input`
-   *      `{ instructions: string }`
-   *     • `instructions` – High-level guidance that tells the research agent what to do.
-   * 2. `output`
-   *    defines the exact structure you expect back, and guides the research conducted by the agent.
-   *      `{ schema: JSONSchema }`.
-   *    The agent's response will be validated against this schema.
-   *
-   * @param {{ instructions: string }} input   The research prompt.
-   * @param {{ schema: JSONSchema }}                output  The desired output schema.
-   * @returns {Promise<ResearchTaskResponse>}                     The research response.
-   *
-   * @example
-   * const response = await exa.researchTask(
-   *   { instructions: "I need a few key facts about honey pot ants." },
-   *   {
-   *     schema: {
-   *       type: "object",
-   *       required: ["scientificName", "primaryRegions"],
-   *       properties: {
-   *         scientificName: { type: "string" },
-   *         primaryRegions:  { type: "string" },
-   *       },
-   *     },
-   *   },
-   * );
-   */
-  async researchTask(
-    input: { instructions: string },
-    output: { schema: JSONSchema }
-  ): Promise<ResearchTaskResponse> {
-    // Delegate to the newer, namespaced client while keeping the legacy
-    // signature intact for backwards-compatibility.
-    return this.research.createTask(input, output);
   }
 }
 
