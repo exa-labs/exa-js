@@ -29,19 +29,24 @@ describe("Research API", () => {
       id: "research_123",
       status: "running", // string allowed by ResearchTaskResponse
       output: null,
-      citations: [],
+      citations: {},
     };
 
     const requestSpy = vi
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
-    const result = await exa.researchTask(input, { schema });
+    const result = await exa.research.createTask(input, { schema });
 
-    expect(requestSpy).toHaveBeenCalledWith("/research/tasks", "POST", {
-      input,
-      output: { schema },
-    });
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/research/tasks",
+      "POST",
+      {
+        input,
+        output: { schema },
+      },
+      undefined
+    );
     expect(result).toEqual(mockResponse);
   });
 
@@ -63,21 +68,26 @@ describe("Research API", () => {
       id: "research_456",
       status: ResearchStatus.completed,
       output: { answer: "Photosynthesis is ..." },
-      citations: [],
+      citations: {},
     };
 
     const requestSpy = vi
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
-    const result = await exa.researchTask(input, { schema });
+    const result = await exa.research.createTask(input, { schema });
 
-    expect(requestSpy).toHaveBeenCalledWith("/research/tasks", "POST", {
-      input,
-      output: {
-        schema,
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/research/tasks",
+      "POST",
+      {
+        input,
+        output: {
+          schema,
+        },
       },
-    });
+      undefined
+    );
     expect(result).toEqual(mockResponse);
   });
 });

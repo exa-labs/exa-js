@@ -1,5 +1,7 @@
 import fetch, { Headers } from "cross-fetch";
 import { ExaError, HttpStatusCode } from "./errors";
+import { WebsetsClient } from "./websets/client";
+import { ResearchClient } from "./research/client";
 
 // Use native fetch in Node.js environments
 const fetchImpl =
@@ -364,33 +366,6 @@ export type AnswerStreamResponse = {
 };
 
 /**
- * Enum representing the status of a research task.
- */
-export enum ResearchStatus {
-  /** The research request has finished successfully. */
-  completed = "completed",
-  /** The research request failed. */
-  failed = "failed",
-}
-
-/**
- * @typedef {Object} ResearchTaskResponse
- * @property {string} id - The unique identifier of the research request.
- * @property {ResearchStatus | string} status - The current status of the research request.
- * @property {Record<string, any> | null} output - The structured output, if the research has completed.
- * @property {SearchResult<{}>[]} citations - References used for the research.
- */
-export type ResearchTaskResponse = {
-  id: string;
-  status: ResearchStatus | string;
-  output: Record<string, any> | null;
-  citations: SearchResult<{}>[];
-};
-
-// Import the Websets client
-import { WebsetsClient } from "./websets/client";
-
-/**
  * The Exa class encapsulates the API's endpoints.
  */
 export class Exa {
@@ -401,6 +376,11 @@ export class Exa {
    * Websets API client
    */
   websets: WebsetsClient;
+
+  /**
+   * Research API client
+   */
+  research: ResearchClient;
 
   /**
    * Helper method to separate out the contents-specific options from the rest.
@@ -476,6 +456,8 @@ export class Exa {
 
     // Initialize the Websets client
     this.websets = new WebsetsClient(this);
+    // Initialize the Research client
+    this.research = new ResearchClient(this);
   }
 
   /**
@@ -538,7 +520,13 @@ export class Exa {
       );
     }
 
-    return await response.json();
+    // If the server responded with an SSE stream, parse it and return the final payload.
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("text/event-stream")) {
+      return (await this.parseSSEStream<T>(response)) as T;
+    }
+
+    return (await response.json()) as T;
   }
 
   /**
@@ -841,56 +829,93 @@ export class Exa {
     return { content, citations };
   }
 
-  /**
-   * Creates and runs a research task in a blocking manner.
-   *
-   * Both parameters are required and have fixed shapes:
-   * 1. `input`
-   *      `{ instructions: string }`
-   *     • `instructions` – High-level guidance that tells the research agent what to do.
-   * 2. `output`
-   *    defines the exact structure you expect back, and guides the research conducted by the agent.
-   *      `{ schema: JSONSchema }`.
-   *    The agent’s response will be validated against this schema.
-   *
-   * @param {{ instructions: string }} input   The research prompt.
-   * @param {{ schema: JSONSchema }}                output  The desired output schema.
-   * @returns {Promise<ResearchTaskResponse>}                     The research response.
-   *
-   * @example
-   * const response = await exa.researchTask(
-   *   { instructions: "I need a few key facts about honey pot ants." },
-   *   {
-   *     schema: {
-   *       type: "object",
-   *       required: ["scientificName", "primaryRegions"],
-   *       properties: {
-   *         scientificName: { type: "string" },
-   *         primaryRegions:  { type: "string" },
-   *       },
-   *     },
-   *   },
-   * );
-   */
-  async researchTask(
-    input: { instructions: string },
-    output: { schema: JSONSchema }
-  ): Promise<ResearchTaskResponse> {
-    const body = {
-      input,
-      output,
-    };
+  private async parseSSEStream<T>(response: Response): Promise<T> {
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new ExaError(
+        "No response body available for streaming.",
+        500,
+        new Date().toISOString()
+      );
+    }
 
-    return await this.request<ResearchTaskResponse>(
-      "/research/tasks",
-      "POST",
-      body
-    );
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    return new Promise<T>(async (resolve, reject) => {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+
+            const jsonStr = line.replace(/^data:\s*/, "").trim();
+            if (!jsonStr || jsonStr === "[DONE]") {
+              continue;
+            }
+
+            let chunk: any;
+            try {
+              chunk = JSON.parse(jsonStr);
+            } catch {
+              continue; // Ignore malformed JSON lines
+            }
+
+            switch (chunk.tag) {
+              case "complete":
+                reader.releaseLock();
+                resolve(chunk.data as T);
+                return;
+              case "error": {
+                const message = chunk.error?.message || "Unknown error";
+                reader.releaseLock();
+                reject(
+                  new ExaError(
+                    message,
+                    HttpStatusCode.InternalServerError,
+                    new Date().toISOString()
+                  )
+                );
+                return;
+              }
+              // 'progress' and any other tags are ignored for the blocking variant
+              default:
+                break;
+            }
+          }
+        }
+
+        // If we exit the loop without receiving a completion event
+        reject(
+          new ExaError(
+            "Stream ended without a completion event.",
+            HttpStatusCode.InternalServerError,
+            new Date().toISOString()
+          )
+        );
+      } catch (err) {
+        reject(err as Error);
+      } finally {
+        try {
+          reader.releaseLock();
+        } catch {
+          /* ignore */
+        }
+      }
+    });
   }
 }
 
 // Re-export Websets related types and enums
 export * from "./websets";
+// Re-export Research related clients
+export * from "./research";
 
 // Export the main class
 export default Exa;
