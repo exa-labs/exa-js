@@ -520,7 +520,13 @@ export class Exa {
       );
     }
 
-    return await response.json();
+    // If the server responded with an SSE stream, parse it and return the final payload.
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("text/event-stream")) {
+      return (await this.parseSSEStream<T>(response)) as T;
+    }
+
+    return (await response.json()) as T;
   }
 
   /**
@@ -821,6 +827,88 @@ export class Exa {
     }
 
     return { content, citations };
+  }
+
+  private async parseSSEStream<T>(response: Response): Promise<T> {
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new ExaError(
+        "No response body available for streaming.",
+        500,
+        new Date().toISOString()
+      );
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    return new Promise<T>(async (resolve, reject) => {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+
+            const jsonStr = line.replace(/^data:\s*/, "").trim();
+            if (!jsonStr || jsonStr === "[DONE]") {
+              continue;
+            }
+
+            let chunk: any;
+            try {
+              chunk = JSON.parse(jsonStr);
+            } catch {
+              continue; // Ignore malformed JSON lines
+            }
+
+            switch (chunk.tag) {
+              case "complete":
+                reader.releaseLock();
+                resolve(chunk.data as T);
+                return;
+              case "error": {
+                const message = chunk.error?.message || "Unknown error";
+                reader.releaseLock();
+                reject(
+                  new ExaError(
+                    message,
+                    HttpStatusCode.InternalServerError,
+                    new Date().toISOString()
+                  )
+                );
+                return;
+              }
+              // 'progress' and any other tags are ignored for the blocking variant
+              default:
+                break;
+            }
+          }
+        }
+
+        // If we exit the loop without receiving a completion event
+        reject(
+          new ExaError(
+            "Stream ended without a completion event.",
+            HttpStatusCode.InternalServerError,
+            new Date().toISOString()
+          )
+        );
+      } catch (err) {
+        reject(err as Error);
+      } finally {
+        try {
+          reader.releaseLock();
+        } catch {
+          /* ignore */
+        }
+      }
+    });
   }
 }
 

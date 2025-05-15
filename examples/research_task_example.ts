@@ -6,14 +6,30 @@ const exa = new Exa(process.env.EXA_API_KEY);
 async function runResearchExample() {
   const schema: JSONSchema = {
     type: "object",
-    required: ["answer"],
+    required: ["timeline"],
     properties: {
-      answer: { type: "string" },
+      timeline: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["decade", "notableEvents"],
+          properties: {
+            decade: {
+              type: "string",
+              description: 'Decade label e.g. "1850s"',
+            },
+            notableEvents: {
+              type: "string",
+              description: "A summary of notable events.",
+            },
+          },
+        },
+      },
     },
   };
-
   const input = {
-    instructions: "In ≤3 sentences, explain quantum computing.",
+    instructions:
+      "Summarize the history of San Francisco highlighting one or two major events for each decade from 1850 to 1950",
   };
 
   const response = await exa.research.createTask(input, { schema });
