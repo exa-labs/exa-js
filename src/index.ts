@@ -826,7 +826,7 @@ export class Exa {
 
 // Re-export Websets related types and enums
 export * from "./websets";
-// Re-export Research related clients (types are already in this file)
+// Re-export Research related clients
 export * from "./research";
 
 // Export the main class

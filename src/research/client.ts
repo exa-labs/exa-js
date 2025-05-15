@@ -44,8 +44,6 @@ export class ResearchClient extends ResearchBaseClient {
    * available.
    */
   async getTask(/* id: string */): Promise<ResearchTaskResponse> {
-    throw new Error(
-      "getTask is not implemented yet. Follow along at https://github.com/exa-ai/exa/issues/XYZ"
-    );
+    throw new Error("getTask is not implemented yet.");
   }
 }

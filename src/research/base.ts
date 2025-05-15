@@ -1,16 +1,10 @@
 import { Exa } from "../index";
 
-/**
- * Type for API query parameters
- */
 type QueryParams = Record<
   string,
   string | number | boolean | string[] | undefined
 >;
 
-/**
- * Type for API request body
- */
 interface RequestBody {
   [key: string]: unknown;
 }

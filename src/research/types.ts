@@ -20,6 +20,10 @@ export type ResearchTaskResponse = {
   status: ResearchStatus | string;
   /** Structured output that follows the user-provided schema (null while running). */
   output: Record<string, any> | null;
-  /** Citations collected during the research process. */
-  citations: SearchResult<{}>[];
+  /**
+   * Citations collected while deriving each top-level field in `output`.
+   * The key is the field name, the value is the list of `SearchResult`s that
+   * were used to compute that field.
+   */
+  citations: Record<string, SearchResult<{}>[]>;
 };

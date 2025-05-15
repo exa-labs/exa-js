@@ -29,7 +29,7 @@ describe("Research API", () => {
       id: "research_123",
       status: "running", // string allowed by ResearchTaskResponse
       output: null,
-      citations: [],
+      citations: {},
     };
 
     const requestSpy = vi
@@ -68,7 +68,7 @@ describe("Research API", () => {
       id: "research_456",
       status: ResearchStatus.completed,
       output: { answer: "Photosynthesis is ..." },
-      citations: [],
+      citations: {},
     };
 
     const requestSpy = vi
