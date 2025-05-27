@@ -1,6 +1,5 @@
 import { Exa } from "../index";
-import type { JSONSchema } from "../index";
-import type { ResearchTaskResponse } from "./types";
+import type { JSONSchema, ResearchTask } from "../index";
 import { ResearchBaseClient } from "./base";
 
 /**
@@ -12,7 +11,7 @@ export class ResearchClient extends ResearchBaseClient {
   }
 
   /**
-   * Create and run a research task (blocking call).
+   * Create a research task.
    *
    * Both parameters are required and have fixed shapes:
    * 1. `input`
@@ -30,8 +29,8 @@ export class ResearchClient extends ResearchBaseClient {
   async createTask(
     input: { instructions: string },
     output: { schema: JSONSchema }
-  ): Promise<ResearchTaskResponse> {
-    return this.request<ResearchTaskResponse>("/tasks", "POST", {
+  ): Promise<{ id: string }> {
+    return this.request<{ id: string }>("/tasks", "POST", {
       input,
       output,
     });
@@ -39,11 +38,36 @@ export class ResearchClient extends ResearchBaseClient {
 
   /**
    * Retrieve a research task by ID.
-   *
-   * Not yet implemented server-side. Calling this will throw until the API is
-   * available.
    */
-  async getTask(/* id: string */): Promise<ResearchTaskResponse> {
-    throw new Error("getTask is not implemented yet.");
+  async getTask(id: string): Promise<ResearchTask> {
+    return this.request<ResearchTask>(`/tasks/${id}`, "GET");
+  }
+
+  /**
+   * Poll a research task until completion or failure.
+   * Polls every 1 second with a maximum timeout of 10 minutes.
+   */
+  async pollTask(id: string): Promise<ResearchTask> {
+    const pollingInterval = 1000; // 1 second
+    const maxPollingTime = 10 * 60 * 1000; // 10 minutes
+    const startTime = Date.now();
+
+    while (true) {
+      const task = await this.request<ResearchTask>(`/tasks/${id}`, "GET");
+
+      if (task.status === "completed" || task.status === "failed") {
+        return task;
+      }
+
+      // Check if we've exceeded the maximum polling time
+      if (Date.now() - startTime > maxPollingTime) {
+        throw new Error(
+          `Polling timeout: Task ${id} did not complete within 10 minutes`
+        );
+      }
+
+      // Wait before next poll
+      await new Promise((resolve) => setTimeout(resolve, pollingInterval));
+    }
   }
 }
