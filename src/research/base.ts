@@ -39,6 +39,11 @@ export class ResearchBaseClient {
   ): Promise<T> {
     // Delegate to the root Exa client. Internally this handles error mapping and
     // query-string construction.
-    return this.client.request<T>(`/research${endpoint}`, method, data, params);
+    return this.client.request<T>(
+      `/v0/research${endpoint}`,
+      method,
+      data,
+      params
+    );
   }
 }
