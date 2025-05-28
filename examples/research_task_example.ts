@@ -37,19 +37,7 @@ async function runResearchExample() {
 
   console.log("Task ID:", taskId);
 
-  // Poll for task completion
-  let response;
-  while (true) {
-    response = await exa.research.getTask(taskId);
-    console.log("Status:", response.status);
-
-    if (response.status === "completed" || response.status === "failed") {
-      break;
-    }
-
-    // Wait 500ms before next poll
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
+  const response = await exa.research.pollTask(taskId);
 
   console.log("Final Task State:", JSON.stringify(response, null, 2));
 }

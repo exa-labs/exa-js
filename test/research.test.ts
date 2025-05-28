@@ -39,7 +39,7 @@ describe("Research API", () => {
     const result = await exa.research.createTask(input, { schema });
 
     expect(requestSpy).toHaveBeenCalledWith(
-      "/research/tasks",
+      "/v0/research/tasks",
       "POST",
       {
         input,
@@ -78,7 +78,7 @@ describe("Research API", () => {
     const result = await exa.research.createTask(input, { schema });
 
     expect(requestSpy).toHaveBeenCalledWith(
-      "/research/tasks",
+      "/v0/research/tasks",
       "POST",
       {
         input,
