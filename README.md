@@ -190,7 +190,7 @@ Each chunk contains:
 - `content`: A string containing the next piece of generated text
 - `citations`: An array of citation objects containing source information
 
-### `exa.research.createTask(input: object, options?: { schema?: object }): Promise<ResearchTaskResponse>`
+### `exa.research.createTask(input: object, options?: { schema?: object }): Promise<{id: string}>`
 
 Exa's research agent can autonomously gather information and return a structured JSON object that conforms to a schema you provide.
 
@@ -207,12 +207,13 @@ const schema = {
   },
 };
 
-const response = await exa.research.createTask(
+const { id: taskId } = await exa.research.createTask(
   {
     instructions: "In ≤3 sentences, explain quantum computing.",
   },
   { schema }
 );
+const result = await exa.research.pollTask(taskId);
 ```
 
 Use the `status` field to poll long-running tasks if needed (a future `getTask` helper will be added when the async API is released).
