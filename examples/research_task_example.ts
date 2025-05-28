@@ -1,7 +1,7 @@
 import "dotenv/config";
 import Exa, { JSONSchema } from "../src/index";
 
-const exa = new Exa(process.env.EXA_API_KEY, "http://localhost:3002");
+const exa = new Exa(process.env.EXA_API_KEY);
 
 async function runResearchExample() {
   const schema: JSONSchema = {
