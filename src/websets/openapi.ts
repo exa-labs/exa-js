@@ -48,6 +48,104 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v0/streams": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Streams
+     * @description Lists all streams for the Webset.
+     */
+    get: operations["streams-list"];
+    put?: never;
+    /**
+     * Create a Stream
+     * @description Creates a new `Stream` to continuously keep your Websets updated with fresh data.
+     *
+     *     Streams automatically run on your defined schedule to ensure your Websets stay current without manual intervention:
+     *
+     *     - **Find new content**: Execute `search` operations to discover fresh items matching your criteria
+     *     - **Update existing content**: Run `refresh` operations to update items contents and enrichments
+     *     - **Automated scheduling**: Configure `frequency`, `timezone`, and execution times
+     */
+    post: operations["streams-create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v0/streams/{stream}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Stream
+     * @description Gets a specific stream.
+     */
+    get: operations["streams-get"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete Stream
+     * @description Deletes a stream.
+     */
+    delete: operations["streams-delete"];
+    options?: never;
+    head?: never;
+    /**
+     * Update Stream
+     * @description Updates a stream configuration.
+     */
+    patch: operations["streams-update"];
+    trace?: never;
+  };
+  "/v0/streams/{stream}/runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Stream Runs
+     * @description Lists all runs for the Stream.
+     */
+    get: operations["streams-runs-list"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v0/streams/{stream}/runs/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Stream Run
+     * @description Gets a specific stream run.
+     */
+    get: operations["streams-runs-get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/v0/webhooks": {
     parameters: {
       query?: never;
@@ -296,7 +394,7 @@ export interface paths {
      * Create a Search
      * @description Creates a new Search for the Webset.
      *
-     *     The default behaviour is to reuse the previous Search results and evaluate them against the new criteria.
+     *     The default behavior is to reuse the previous Search results and evaluate them against the new criteria.
      */
     post: operations["websets-searches-create"];
     delete?: never;
@@ -375,6 +473,27 @@ export interface components {
         label: string;
       }[];
     };
+    CreateStreamParameters: {
+      /** @description Behavior to perform when stream runs */
+      behavior:
+        | components["schemas"]["StreamBehaviorSearch"]
+        | components["schemas"]["StreamBehaviorRefresh"];
+      /** @description How often the stream will run */
+      cadence: {
+        /** @description Cron expression for stream cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
+        cron: string;
+        /**
+         * @description IANA timezone (e.g., "America/New_York")
+         * @default Etc/UTC
+         */
+        timezone: string;
+      };
+      metadata?: {
+        [key: string]: string;
+      };
+      /** @description The id of the Webset */
+      websetId: string;
+    };
     CreateWebhookParameters: {
       /** @description The events to trigger the webhook */
       events: components["schemas"]["EventType"][];
@@ -426,14 +545,13 @@ export interface components {
     };
     CreateWebsetSearchParameters: {
       /**
-       * WebsetSearchBehaviour
-       * @description The behaviour of the Search when it is added to a Webset.
+       * @description The behavior of the Search when it is added to a Webset.
        *
-       *     - `override`: the search will reuse the existing Items found in the Webset and evaluate them against the new criteria. Any Items that don't match the new criteria will be discarded.
+       *     - `override`: the search will replace the existing Items found in the Webset and evaluate them against the new criteria. Any Items that don't match the new criteria will be discarded.
+       *     - `append`: the search will add the new Items found to the existing Webset. Any Items that don't match the new criteria will be discarded.
        * @default override
-       * @enum {string}
        */
-      behaviour: CreateWebsetSearchParametersBehaviour;
+      behavior: WebsetSearchBehavior;
       /** @description Number of Items the Search will attempt to find.
        *
        *     The actual number of Items found may be less than this number depending on the query complexity. */
@@ -458,7 +576,7 @@ export interface components {
     EnrichmentResult: {
       /** @description The id of the Enrichment that generated the result */
       enrichmentId: string;
-      format: components["schemas"]["WebsetEnrichmentFormat"];
+      format: WebsetEnrichmentFormat;
       /**
        * @default enrichment_result
        * @constant
@@ -694,6 +812,22 @@ export interface components {
       /** @description The cursor to paginate through the next set of results */
       nextCursor: string | null;
     };
+    ListStreamRunsResponse: {
+      /** @description The list of stream runs */
+      data: components["schemas"]["StreamRun"][];
+      /** @description Whether there are more results to paginate through */
+      hasMore: boolean;
+      /** @description The cursor to paginate through the next set of results */
+      nextCursor: string | null;
+    };
+    ListStreamsResponse: {
+      /** @description The list of streams */
+      data: components["schemas"]["Stream"][];
+      /** @description Whether there are more results to paginate through */
+      hasMore: boolean;
+      /** @description The cursor to paginate through the next set of results */
+      nextCursor: string | null;
+    };
     ListWebhookAttemptsResponse: {
       /** @description The list of webhook attempts */
       data: components["schemas"]["WebhookAttempt"][];
@@ -725,6 +859,176 @@ export interface components {
       hasMore: boolean;
       /** @description The cursor to paginate through the next set of results */
       nextCursor: string | null;
+    };
+    Stream: {
+      /** @description Behavior to perform when stream runs */
+      behavior:
+        | components["schemas"]["StreamBehaviorSearch"]
+        | components["schemas"]["StreamBehaviorRefresh"];
+      /** @description How often the stream will run */
+      cadence: {
+        /** @description Cron expression for stream cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
+        cron: string;
+        /**
+         * @description IANA timezone (e.g., "America/New_York")
+         * @default Etc/UTC
+         */
+        timezone: string;
+      };
+      /**
+       * Format: date-time
+       * @description When the stream was created
+       */
+      createdAt: string;
+      /** @description The unique identifier for the Stream */
+      id: string;
+      /**
+       * StreamRun
+       * @description The last run of the stream
+       */
+      lastRun: components["schemas"]["StreamRun"];
+      /** @description Set of key-value pairs you want to associate with this object. */
+      metadata: {
+        [key: string]: string;
+      };
+      /**
+       * Format: date-time
+       * @description When the next run will occur
+       */
+      nextRunAt: string | null;
+      /**
+       * @description The type of object
+       * @enum {string}
+       */
+      object: StreamObject;
+      /**
+       * @description The status of the Stream
+       * @enum {string}
+       */
+      status: StreamStatus;
+      /**
+       * Format: date-time
+       * @description When the stream was last updated
+       */
+      updatedAt: string;
+      /** @description The id of the Webset the Stream belongs to */
+      websetId: string;
+    };
+    StreamBehaviorRefresh: {
+      /** @description Specify the target of the refresh */
+      config:
+        | components["schemas"]["StreamRefreshBehaviorEnrichmentsConfig"]
+        | components["schemas"]["StreamRefreshBehaviorContentsConfig"];
+      /**
+       * @default refresh
+       * @constant
+       */
+      type: "refresh";
+    };
+    StreamBehaviorSearch: {
+      config: {
+        /**
+         * @description The behaviour of the Search when it is added to a Webset.
+         * @default append
+         */
+        behavior?: WebsetSearchBehavior;
+        /** @description The maximum number of results to find */
+        count: number;
+        criteria: {
+          description: string;
+        }[];
+        /** WebsetEntity */
+        entity: components["schemas"]["WebsetEntity"];
+        query: string;
+      };
+      /**
+       * @default search
+       * @constant
+       */
+      type: "search";
+    };
+    StreamCadence: {
+      /** @description Cron expression for stream cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
+      cron: string;
+      /**
+       * @description IANA timezone (e.g., "America/New_York")
+       * @default Etc/UTC
+       */
+      timezone: string;
+    };
+    StreamRefreshBehaviorContentsConfig: {
+      /**
+       * @default contents
+       * @constant
+       */
+      target: "contents";
+    };
+    StreamRefreshBehaviorEnrichmentsConfig: {
+      /** @description Only refresh specific enrichments */
+      enrichments?: {
+        ids?: string[];
+      };
+      /**
+       * @default enrichments
+       * @constant
+       */
+      target: "enrichments";
+    };
+    StreamRun: {
+      /**
+       * Format: date-time
+       * @description When the run was canceled
+       */
+      canceledAt: string | null;
+      /**
+       * Format: date-time
+       * @description When the run completed
+       */
+      completedAt: string | null;
+      /**
+       * Format: date-time
+       * @description When the run was created
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description When the run failed
+       */
+      failedAt: string | null;
+      /** @description The unique identifier for the Stream Run */
+      id: string;
+      /**
+       * @description The type of object
+       * @enum {string}
+       */
+      object: StreamRunObject;
+      /**
+       * @description The status of the Stream Run
+       * @enum {string}
+       */
+      status: StreamRunStatus;
+      /** @description The stream that the run is associated with */
+      streamId: string;
+      /**
+       * @description The type of the Stream Run
+       * @enum {string}
+       */
+      type: StreamRunType;
+      /**
+       * Format: date-time
+       * @description When the run was last updated
+       */
+      updatedAt: string;
+    };
+    UpdateStream: {
+      metadata?: {
+        [key: string]: string;
+      };
+      /**
+       * @description The status of the stream.
+       * @enum {string}
+       */
+      status?: UpdateStreamStatus;
     };
     UpdateWebhookParameters: {
       /** @description The events to trigger the webhook */
@@ -855,6 +1159,8 @@ export interface components {
        * @enum {string}
        */
       status: WebsetStatus;
+      /** @description The Streams for the Webset. */
+      streams: components["schemas"]["Stream"][];
       /**
        * Format: date-time
        * @description The date and time the webset was updated
@@ -895,7 +1201,7 @@ export interface components {
       /** @description The description of the enrichment task provided during the creation of the enrichment. */
       description: string;
       /** @description The format of the enrichment response. */
-      format: components["schemas"]["WebsetEnrichmentFormat"];
+      format: WebsetEnrichmentFormat;
       /** @description The unique identifier for the enrichment */
       id: string;
       /** @description The instructions for the enrichment Agent.
@@ -943,7 +1249,6 @@ export interface components {
       websetId: string;
     };
     /** @enum {string} */
-    WebsetEnrichmentFormat: WebsetEnrichmentFormat;
     WebsetEntity:
       | components["schemas"]["WebsetCompanyEntity"]
       | components["schemas"]["WebsetPersonEntity"]
@@ -1159,15 +1464,20 @@ export interface components {
     };
     WebsetSearch: {
       /**
+       * @description The behavior of the search when it is added to a Webset.
+       *
+       *     - `override`: the search will replace the existing Items found in the Webset and evaluate them against the new criteria. Any Items that don't match the new criteria will be discarded.
+       *     - `append`: the search will add the new Items found to the existing Webset. Any Items that don't match the new criteria will be discarded.
+       * @default override
+       */
+      behavior: WebsetSearchBehavior;
+      /**
        * Format: date-time
        * @description The date and time the search was canceled
        */
       canceledAt: string | null;
-      /**
-       * @description The reason the search was canceled
-       * @enum {string|null}
-       */
-      canceledReason: WebsetSearchCanceledReason;
+      /** @description The reason the search was canceled */
+      canceledReason: WebsetSearchCanceledReason | null;
       /** @description The number of results the search will attempt to find. The actual number of results may be less than this number depending on the search complexity. */
       count: number;
       /**
@@ -1232,6 +1542,8 @@ export type CreateCriterionParameters =
   components["schemas"]["CreateCriterionParameters"];
 export type CreateEnrichmentParameters =
   components["schemas"]["CreateEnrichmentParameters"];
+export type CreateStreamParameters =
+  components["schemas"]["CreateStreamParameters"];
 export type CreateWebhookParameters =
   components["schemas"]["CreateWebhookParameters"];
 export type CreateWebsetParameters =
@@ -1242,6 +1554,9 @@ export type EnrichmentResult = components["schemas"]["EnrichmentResult"];
 export type Event = components["schemas"]["Event"];
 export type GetWebsetResponse = components["schemas"]["GetWebsetResponse"];
 export type ListEventsResponse = components["schemas"]["ListEventsResponse"];
+export type ListStreamRunsResponse =
+  components["schemas"]["ListStreamRunsResponse"];
+export type ListStreamsResponse = components["schemas"]["ListStreamsResponse"];
 export type ListWebhookAttemptsResponse =
   components["schemas"]["ListWebhookAttemptsResponse"];
 export type ListWebhooksResponse =
@@ -1249,6 +1564,18 @@ export type ListWebhooksResponse =
 export type ListWebsetItemResponse =
   components["schemas"]["ListWebsetItemResponse"];
 export type ListWebsetsResponse = components["schemas"]["ListWebsetsResponse"];
+export type Stream = components["schemas"]["Stream"];
+export type StreamBehaviorRefresh =
+  components["schemas"]["StreamBehaviorRefresh"];
+export type StreamBehaviorSearch =
+  components["schemas"]["StreamBehaviorSearch"];
+export type StreamCadence = components["schemas"]["StreamCadence"];
+export type StreamRefreshBehaviorContentsConfig =
+  components["schemas"]["StreamRefreshBehaviorContentsConfig"];
+export type StreamRefreshBehaviorEnrichmentsConfig =
+  components["schemas"]["StreamRefreshBehaviorEnrichmentsConfig"];
+export type StreamRun = components["schemas"]["StreamRun"];
+export type UpdateStream = components["schemas"]["UpdateStream"];
 export type UpdateWebhookParameters =
   components["schemas"]["UpdateWebhookParameters"];
 export type UpdateWebsetRequest = components["schemas"]["UpdateWebsetRequest"];
@@ -1347,6 +1674,212 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+    };
+  };
+  "streams-list": {
+    parameters: {
+      query?: {
+        /** @description The cursor to paginate through the results */
+        cursor?: string;
+        /** @description The number of results to return */
+        limit?: number;
+        /** @description The id of the Webset to list streams for */
+        websetId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List of streams */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListStreamsResponse"];
+        };
+      };
+    };
+  };
+  "streams-create": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateStreamParameters"];
+      };
+    };
+    responses: {
+      /** @description Stream created successfully */
+      201: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Stream"];
+        };
+      };
+    };
+  };
+  "streams-get": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The id of the Stream */
+        stream: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Stream details */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Stream"];
+        };
+      };
+    };
+  };
+  "streams-delete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The id of the Stream */
+        stream: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Stream deleted successfully */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Stream"];
+        };
+      };
+    };
+  };
+  "streams-update": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The id of the Stream */
+        stream: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateStream"];
+      };
+    };
+    responses: {
+      /** @description Stream updated successfully */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Stream"];
+        };
+      };
+    };
+  };
+  "streams-runs-list": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The id of the Stream to list runs for */
+        stream: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List of stream runs */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListStreamRunsResponse"];
+        };
+      };
+    };
+  };
+  "streams-runs-get": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        /** @description The id of the Stream to get the run for */
+        stream: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Stream run details */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StreamRun"];
+        };
       };
     };
   };
@@ -2110,9 +2643,6 @@ export enum CreateEnrichmentParametersFormat {
   email = "email",
   phone = "phone",
 }
-export enum CreateWebsetSearchParametersBehaviour {
-  override = "override",
-}
 export enum EventType {
   webset_created = "webset.created",
   webset_deleted = "webset.deleted",
@@ -2126,6 +2656,30 @@ export enum EventType {
   webset_export_completed = "webset.export.completed",
   webset_item_created = "webset.item.created",
   webset_item_enriched = "webset.item.enriched",
+}
+export enum StreamObject {
+  stream = "stream",
+}
+export enum StreamStatus {
+  open = "open",
+  closed = "closed",
+}
+export enum StreamRunObject {
+  stream_run = "stream_run",
+}
+export enum StreamRunStatus {
+  created = "created",
+  running = "running",
+  completed = "completed",
+  canceled = "canceled",
+}
+export enum StreamRunType {
+  search = "search",
+  refresh = "refresh",
+}
+export enum UpdateStreamStatus {
+  open = "open",
+  closed = "closed",
 }
 export enum WebhookStatus {
   active = "active",
@@ -2151,19 +2705,24 @@ export enum WebsetEnrichmentFormat {
 }
 export enum WebsetItemSource {
   search = "search",
+  import = "import",
 }
 export enum WebsetItemEvaluationSatisfied {
   yes = "yes",
   no = "no",
   unclear = "unclear",
 }
-export enum WebsetSearchCanceledReason {
-  webset_deleted = "webset_deleted",
-  webset_canceled = "webset_canceled",
-}
 export enum WebsetSearchStatus {
   created = "created",
   running = "running",
   completed = "completed",
   canceled = "canceled",
+}
+export enum WebsetSearchBehavior {
+  override = "override",
+  append = "append",
+}
+export enum WebsetSearchCanceledReason {
+  webset_deleted = "webset_deleted",
+  webset_canceled = "webset_canceled",
 }

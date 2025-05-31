@@ -7,6 +7,7 @@ export { WebsetsClient } from "./client";
 // Export common types and enums
 export type {
   CreateEnrichmentParameters,
+  CreateStreamParameters,
   CreateWebhookParameters,
   CreateWebsetParameters,
   CreateWebsetSearchParameters,
@@ -14,9 +15,14 @@ export type {
   Event,
   GetWebsetResponse,
   ListEventsResponse,
+  ListStreamRunsResponse,
+  ListStreamsResponse,
   ListWebhooksResponse,
   ListWebsetItemResponse,
   ListWebsetsResponse,
+  Stream,
+  StreamRun,
+  UpdateStream,
   UpdateWebhookParameters,
   UpdateWebsetRequest,
   Webhook,
@@ -28,13 +34,14 @@ export type {
 
 export {
   CreateEnrichmentParametersFormat,
-  CreateWebsetSearchParametersBehaviour,
   EventType,
+  UpdateStreamStatus,
   WebhookStatus,
   WebsetEnrichmentFormat,
   WebsetEnrichmentStatus,
   WebsetItemEvaluationSatisfied,
   WebsetItemSource,
+  WebsetSearchBehavior,
   WebsetSearchCanceledReason,
   WebsetSearchStatus,
   WebsetStatus,
@@ -44,8 +51,10 @@ export {
 export { WebsetEnrichmentsClient } from "./enrichments";
 export { WebsetItemsClient } from "./items";
 export { WebsetSearchesClient } from "./searches";
+export { WebsetStreamsClient } from "./streams";
 export { WebsetWebhooksClient } from "./webhooks";
 
 // Export helper types/interfaces
 export type { ListWebsetsOptions } from "./client";
+export type { ListStreamsOptions } from "./streams";
 export type { ListWebhooksOptions } from "./webhooks";

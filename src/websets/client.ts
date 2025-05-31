@@ -15,6 +15,7 @@ import {
   WebsetStatus,
 } from "./openapi";
 import { WebsetSearchesClient } from "./searches";
+import { WebsetStreamsClient } from "./streams";
 import { WebsetWebhooksClient } from "./webhooks";
 
 /**
@@ -47,6 +48,11 @@ export class WebsetsClient extends WebsetsBaseClient {
   enrichments: WebsetEnrichmentsClient;
 
   /**
+   * Client for managing Webset Streams
+   */
+  streams: WebsetStreamsClient;
+
+  /**
    * Client for managing Webset Webhooks
    */
   webhooks: WebsetWebhooksClient;
@@ -61,6 +67,7 @@ export class WebsetsClient extends WebsetsBaseClient {
     this.items = new WebsetItemsClient(client);
     this.searches = new WebsetSearchesClient(client);
     this.enrichments = new WebsetEnrichmentsClient(client);
+    this.streams = new WebsetStreamsClient(client);
     this.webhooks = new WebsetWebhooksClient(client);
   }
 
