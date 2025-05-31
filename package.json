@@ -36,16 +36,17 @@
   "devDependencies": {
     "@types/node": "~22.14.0",
     "cross-env": "~7.0.3",
+    "openapi-typescript": "~7.6.1",
     "prettier": "~3.5.3",
     "ts-node": "~10.9.2",
     "tsup": "~8.4.0",
     "typescript": "~5.8.3",
-    "vitest": "~3.1.1",
-    "openapi-typescript": "~7.6.1"
+    "vitest": "~3.1.1"
   },
   "dependencies": {
     "cross-fetch": "~4.1.0",
-    "dotenv": "~16.4.7"
+    "dotenv": "~16.4.7",
+    "openai": "^5.0.1"
   },
   "directories": {
     "test": "test"
