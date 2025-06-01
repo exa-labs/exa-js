@@ -1,35 +1,35 @@
-import type { SearchResult } from "../index";
+// (No external type imports required)
 
-/**
- * Enum representing the status of a research task.
- */
-export enum ResearchStatus {
-  /** The research task is still in progress. */
-  in_progress = "in_progress",
-  /** The research request has finished successfully. */
-  completed = "completed",
-  /** The research task request failed. */
-  failed = "failed",
+import type { SchemaResearchTaskDto as _ResearchTask } from "./openapi";
+
+export type ResearchTask = _ResearchTask;
+
+export {
+  ResearchCreateTaskRequestDtoModel as ResearchModel,
+  ResearchTaskDtoStatus as ResearchStatus,
+} from "./openapi";
+
+// Add common pagination parameters for list endpoints
+export interface PaginationParams {
+  /** Cursor for pagination */
+  cursor?: string;
+  /** Maximum number of items per page */
+  limit?: number;
 }
 
 /**
- * Response object returned from the research API.
+ * Response object for listing research tasks.
  */
-export type ResearchTask = {
-  /** Unique identifier for the task. */
-  id: string;
-  /** Current status. */
-  status: ResearchStatus;
-  /** The original instructions provided along with the task. */
-  instructions: string;
-  /** The original schema defining the task */
-  schema: Record<string, any>;
-  /** Structured output that follows the user-provided schema (null while running or if failed). */
-  data: Record<string, any> | null;
-  /**
-   * Citations collected while deriving each top-level field in `output`.
-   * The key is the field name, the value is the list of `SearchResult`s that
-   * were used to compute that field.
-   */
-  citations: Record<string, SearchResult<{}>[]>;
-};
+export interface ListResearchTasksResponse {
+  /** The list of research tasks returned by the API */
+  data: ResearchTask[];
+  /** Whether there are more results to paginate through */
+  hasMore: boolean;
+  /** The cursor to paginate through the next set of results */
+  nextCursor: string | null;
+}
+
+/**
+ * Options for listing research tasks (API only supports pagination)
+ */
+export type ListResearchTasksOptions = PaginationParams;

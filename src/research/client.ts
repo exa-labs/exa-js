@@ -1,6 +1,14 @@
 import { Exa } from "../index";
-import type { JSONSchema, ResearchTask } from "../index";
+import type { JSONSchema } from "../index";
 import { ResearchBaseClient } from "./base";
+import type { ListResearchTasksOptions } from "./types";
+import {
+  ResearchCreateTaskRequestDtoModel as ResearchModel,
+  SchemaResearchTaskDto as ResearchTask,
+  SchemaListResearchTasksResponseDto as ListResearchTasksResponse,
+  SchemaResearchCreateTaskRequestDto,
+  SchemaResearchCreateTaskResponseDto,
+} from "./openapi";
 
 /**
  * Client for interacting with the Research Tasks API.
@@ -11,29 +19,32 @@ export class ResearchClient extends ResearchBaseClient {
   }
 
   /**
-   * Create a research task.
+   * Create a new research task.
    *
-   * Both parameters are required and have fixed shapes:
-   * 1. `input`
-   *      `{ instructions: string }`
-   *     • `instructions` – High-level guidance that tells the research agent what to do.
-   * 2. `output`
-   *    defines the exact structure you expect back, and guides the research conducted by the agent.
-   *      `{ schema: JSONSchema }`.
-   *    The agent's response will be validated against this schema.
+   * @param params Object containing:
+   *   - model: The research model to use (e.g., ResearchModel.ExaResearch).
+   *   - instructions: High-level guidance for the research agent.
+   *   - output: An object with a `schema` property (JSONSchema) that defines the expected output structure.
    *
-   * @param input  Object containing high-level research instructions.
-   * @param output Object containing the expected output schema.
-   * @returns The ResearchTaskResponse returned by the API.
+   * @returns An object containing the unique ID of the created research task.
    */
-  async createTask(
-    input: { instructions: string },
-    output: { schema: JSONSchema }
-  ): Promise<{ id: string }> {
-    return this.request<{ id: string }>("/tasks", "POST", {
-      input,
-      output,
-    });
+  async createTask(params: {
+    instructions: string;
+    model?: ResearchModel;
+    output: { schema: JSONSchema };
+  }): Promise<SchemaResearchCreateTaskResponseDto> {
+    // Ensure we have a model (default to exa_research)
+    const { model, ...rest } = params;
+    const payload: SchemaResearchCreateTaskRequestDto = {
+      model: model ?? ResearchModel.exa_research,
+      ...rest,
+    } as SchemaResearchCreateTaskRequestDto;
+
+    return this.request<SchemaResearchCreateTaskResponseDto>(
+      "/tasks",
+      "POST",
+      payload
+    );
   }
 
   /**
@@ -46,17 +57,30 @@ export class ResearchClient extends ResearchBaseClient {
   /**
    * Poll a research task until completion or failure.
    * Polls every 1 second with a maximum timeout of 10 minutes.
+   * Resilient to up to 10 consecutive polling failures.
    */
   async pollTask(id: string): Promise<ResearchTask> {
     const pollingInterval = 1000; // 1 second
     const maxPollingTime = 10 * 60 * 1000; // 10 minutes
+    const maxConsecutiveFailures = 10;
     const startTime = Date.now();
+    let consecutiveFailures = 0;
 
     while (true) {
-      const task = await this.request<ResearchTask>(`/tasks/${id}`, "GET");
+      try {
+        const task = await this.request<ResearchTask>(`/tasks/${id}`, "GET");
+        consecutiveFailures = 0; // Reset on success
 
-      if (task.status === "completed" || task.status === "failed") {
-        return task;
+        if (task.status === "completed" || task.status === "failed") {
+          return task;
+        }
+      } catch (err) {
+        consecutiveFailures += 1;
+        if (consecutiveFailures >= maxConsecutiveFailures) {
+          throw new Error(
+            `Polling failed ${maxConsecutiveFailures} times in a row for task ${id}: ${err}`
+          );
+        }
       }
 
       // Check if we've exceeded the maximum polling time
@@ -69,5 +93,22 @@ export class ResearchClient extends ResearchBaseClient {
       // Wait before next poll
       await new Promise((resolve) => setTimeout(resolve, pollingInterval));
     }
+  }
+
+  /**
+   * List research tasks
+   * @param options Pagination options
+   * @returns The paginated list of research tasks
+   */
+  async listTasks(
+    options?: ListResearchTasksOptions
+  ): Promise<ListResearchTasksResponse> {
+    const params = this.buildPaginationParams(options);
+    return this.request<ListResearchTasksResponse>(
+      "/tasks",
+      "GET",
+      undefined,
+      params
+    );
   }
 }

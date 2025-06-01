@@ -1,4 +1,5 @@
 import { Exa } from "../index";
+import type { PaginationParams } from "./types";
 
 type QueryParams = Record<
   string,
@@ -40,10 +41,25 @@ export class ResearchBaseClient {
     // Delegate to the root Exa client. Internally this handles error mapping and
     // query-string construction.
     return this.client.request<T>(
-      `/v0/research${endpoint}`,
+      `/research/v0${endpoint}`,
       method,
       data,
       params
     );
+  }
+
+  /**
+   * Helper to build pagination parameters.
+   * @param pagination The pagination parameters
+   * @returns QueryParams object with pagination parameters
+   */
+  protected buildPaginationParams(pagination?: PaginationParams): QueryParams {
+    const params: QueryParams = {};
+    if (!pagination) return params;
+
+    if (pagination.cursor) params.cursor = pagination.cursor;
+    if (pagination.limit) params.limit = pagination.limit;
+
+    return params;
   }
 }

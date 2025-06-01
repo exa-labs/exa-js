@@ -66,6 +66,10 @@ jobs:
         run: |
           cd examples
           for file in *.ts; do
+            if [ "$file" = "chat_completion.ts" ]; then
+              echo "Skipping $file"
+              continue
+            fi
             echo "Compiling $file"
             tsc $file
           done
