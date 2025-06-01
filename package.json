@@ -1,6 +1,6 @@
 {
   "name": "exa-js",
-  "version": "1.7.5",
+  "version": "1.8.0",
   "description": "Exa SDK for Node.js and the browser",
   "publishConfig": {
     "access": "public"
