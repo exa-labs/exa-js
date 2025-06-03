@@ -511,7 +511,10 @@ export class Exa {
       }
 
       // For other APIs, throw a simple ExaError with just message and status
-      const message = errorData.error || "Unknown error";
+      let message = errorData.error || "Unknown error";
+      if (errorData.message) {
+        message += (message.length > 0 ? ". " : "") + errorData.message;
+      }
       throw new ExaError(
         message,
         response.status,
