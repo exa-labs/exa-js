@@ -31,14 +31,20 @@ export class ResearchClient extends ResearchBaseClient {
   async createTask(params: {
     instructions: string;
     model?: ResearchModel;
-    output: { schema: JSONSchema };
+    output?: { inferSchema?: boolean; schema?: JSONSchema };
   }): Promise<SchemaResearchCreateTaskResponseDto> {
     // Ensure we have a model (default to exa_research)
-    const { model, ...rest } = params;
+    const { instructions, model, output } = params;
     const payload: SchemaResearchCreateTaskRequestDto = {
+      instructions,
       model: model ?? ResearchModel.exa_research,
-      ...rest,
-    } as SchemaResearchCreateTaskRequestDto;
+      output: output
+        ? {
+            schema: output.schema,
+            inferSchema: output.inferSchema ?? true,
+          }
+        : { inferSchema: true },
+    };
 
     return this.request<SchemaResearchCreateTaskResponseDto>(
       "/tasks",
