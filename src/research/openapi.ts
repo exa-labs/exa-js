@@ -30,7 +30,7 @@ export interface paths {
       cookie?: never;
     };
     /** Get a research task by id */
-    get: operations["ResearchControllerV0_getResearchTask"];
+    get: operations["ResearchControllerV0_getResearchTask[0]"];
     put?: never;
     post?: never;
     delete?: never;
@@ -61,14 +61,22 @@ export interface components {
       nextCursor: string | null;
     };
     ResearchCreateTaskRequestDto: {
+      input?: {
+        instructions: string;
+      };
       /** @description Instructions for what the research task should accomplish */
-      instructions: string;
+      instructions?: string;
       /**
        * @default exa-research
        * @enum {string}
        */
       model: ResearchCreateTaskRequestDtoModel;
       output?: {
+        /**
+         * @description When true and an output schema is omitted, an output schema will be intelligently generated. Otherwise, if this is false and there is no output schema, a generic markdown report will be generated.
+         * @default true
+         */
+        inferSchema: boolean;
         /** @description A JsonSchema specification of the desired output. See https://json-schema.org/draft-07. */
         schema?: unknown;
       };
@@ -76,6 +84,9 @@ export interface components {
     ResearchCreateTaskResponseDto: {
       /** @description The unique identifier for the research task */
       id: string;
+      outputSchema: {
+        [key: string]: unknown;
+      };
     };
     ResearchTaskDto: {
       /** @description Citations grouped by the root field they were used in */
@@ -172,7 +183,28 @@ export interface operations {
       };
     };
   };
-  ResearchControllerV0_getResearchTask: {
+  "ResearchControllerV0_getResearchTask[1]": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ResearchTaskDto"];
+        };
+      };
+    };
+  };
+  "ResearchControllerV0_getResearchTask[0]": {
     parameters: {
       query?: never;
       header?: never;
@@ -196,7 +228,7 @@ export interface operations {
 }
 export enum ResearchCreateTaskRequestDtoModel {
   exa_research = "exa-research",
-  exa_ultra = "exa-ultra",
+  exa_research_pro = "exa-research-pro",
 }
 export enum ResearchTaskDtoStatus {
   running = "running",

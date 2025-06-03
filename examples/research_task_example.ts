@@ -2,7 +2,7 @@ import "dotenv/config";
 import Exa, { JSONSchema } from "../src/index";
 import { ResearchCreateTaskRequestDtoModel as ResearchModel } from "../src/research/openapi";
 
-const exa = new Exa(process.env.EXA_API_KEY);
+const exa = new Exa(process.env.EXA_API_KEY, "https://api.exa.sh");
 
 type ExampleDefinition = {
   instructions: string;
