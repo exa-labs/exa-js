@@ -47,7 +47,7 @@ describe("Research API", () => {
       {
         instructions,
         model,
-        output: { schema },
+        output: { inferSchema: true, schema },
       },
       undefined
     );
@@ -88,6 +88,7 @@ describe("Research API", () => {
         instructions,
         model: ResearchModel.exa_research,
         output: {
+          inferSchema: true,
           schema,
         },
       },
