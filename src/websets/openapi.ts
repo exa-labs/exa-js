@@ -48,7 +48,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/v0/streams": {
+  "/v0/monitors": {
     parameters: {
       query?: never;
       header?: never;
@@ -56,29 +56,29 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * List Streams
-     * @description Lists all streams for the Webset.
+     * List Monitors
+     * @description Lists all monitors for the Webset.
      */
-    get: operations["streams-list"];
+    get: operations["monitors-list"];
     put?: never;
     /**
-     * Create a Stream
-     * @description Creates a new `Stream` to continuously keep your Websets updated with fresh data.
+     * Create a Monitor
+     * @description Creates a new `Monitor` to continuously keep your Websets updated with fresh data.
      *
-     *     Streams automatically run on your defined schedule to ensure your Websets stay current without manual intervention:
+     *     Monitors automatically run on your defined schedule to ensure your Websets stay current without manual intervention:
      *
      *     - **Find new content**: Execute `search` operations to discover fresh items matching your criteria
      *     - **Update existing content**: Run `refresh` operations to update items contents and enrichments
      *     - **Automated scheduling**: Configure `frequency`, `timezone`, and execution times
      */
-    post: operations["streams-create"];
+    post: operations["monitors-create"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/v0/streams/{stream}": {
+  "/v0/monitors/{monitor}": {
     parameters: {
       query?: never;
       header?: never;
@@ -86,27 +86,27 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Stream
-     * @description Gets a specific stream.
+     * Get Monitor
+     * @description Gets a specific monitor.
      */
-    get: operations["streams-get"];
+    get: operations["monitors-get"];
     put?: never;
     post?: never;
     /**
-     * Delete Stream
-     * @description Deletes a stream.
+     * Delete Monitor
+     * @description Deletes a monitor.
      */
-    delete: operations["streams-delete"];
+    delete: operations["monitors-delete"];
     options?: never;
     head?: never;
     /**
-     * Update Stream
-     * @description Updates a stream configuration.
+     * Update Monitor
+     * @description Updates a monitor configuration.
      */
-    patch: operations["streams-update"];
+    patch: operations["monitors-update"];
     trace?: never;
   };
-  "/v0/streams/{stream}/runs": {
+  "/v0/monitors/{monitor}/runs": {
     parameters: {
       query?: never;
       header?: never;
@@ -114,10 +114,10 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * List Stream Runs
-     * @description Lists all runs for the Stream.
+     * List Monitor Runs
+     * @description Lists all runs for the Monitor.
      */
-    get: operations["streams-runs-list"];
+    get: operations["monitors-runs-list"];
     put?: never;
     post?: never;
     delete?: never;
@@ -126,7 +126,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/v0/streams/{stream}/runs/{id}": {
+  "/v0/monitors/{monitor}/runs/{id}": {
     parameters: {
       query?: never;
       header?: never;
@@ -134,10 +134,10 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Stream Run
-     * @description Gets a specific stream run.
+     * Get Monitor Run
+     * @description Gets a specific monitor run.
      */
-    get: operations["streams-runs-get"];
+    get: operations["monitors-runs-get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -473,14 +473,14 @@ export interface components {
         label: string;
       }[];
     };
-    CreateStreamParameters: {
-      /** @description Behavior to perform when stream runs */
+    CreateMonitorParameters: {
+      /** @description Behavior to perform when monitor runs */
       behavior:
-        | components["schemas"]["StreamBehaviorSearch"]
-        | components["schemas"]["StreamBehaviorRefresh"];
-      /** @description How often the stream will run */
+        | components["schemas"]["MonitorBehaviorSearch"]
+        | components["schemas"]["MonitorBehaviorRefresh"];
+      /** @description How often the monitor will run */
       cadence: {
-        /** @description Cron expression for stream cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
+        /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
         cron: string;
         /**
          * @description IANA timezone (e.g., "America/New_York")
@@ -551,7 +551,7 @@ export interface components {
        *     - `append`: the search will add the new Items found to the existing Webset. Any Items that don't match the new criteria will be discarded.
        * @default override
        */
-      behavior: WebsetSearchBehavior;
+      behavior: components["schemas"]["WebsetSearchBehavior"];
       /** @description Number of Items the Search will attempt to find.
        *
        *     The actual number of Items found may be less than this number depending on the query complexity. */
@@ -812,17 +812,17 @@ export interface components {
       /** @description The cursor to paginate through the next set of results */
       nextCursor: string | null;
     };
-    ListStreamRunsResponse: {
-      /** @description The list of stream runs */
-      data: components["schemas"]["StreamRun"][];
+    ListMonitorRunsResponse: {
+      /** @description The list of monitor runs */
+      data: components["schemas"]["MonitorRun"][];
       /** @description Whether there are more results to paginate through */
       hasMore: boolean;
       /** @description The cursor to paginate through the next set of results */
       nextCursor: string | null;
     };
-    ListStreamsResponse: {
-      /** @description The list of streams */
-      data: components["schemas"]["Stream"][];
+    ListMonitorsResponse: {
+      /** @description The list of monitors */
+      data: components["schemas"]["Monitor"][];
       /** @description Whether there are more results to paginate through */
       hasMore: boolean;
       /** @description The cursor to paginate through the next set of results */
@@ -860,14 +860,14 @@ export interface components {
       /** @description The cursor to paginate through the next set of results */
       nextCursor: string | null;
     };
-    Stream: {
-      /** @description Behavior to perform when stream runs */
+    Monitor: {
+      /** @description Behavior to perform when monitor runs */
       behavior:
-        | components["schemas"]["StreamBehaviorSearch"]
-        | components["schemas"]["StreamBehaviorRefresh"];
-      /** @description How often the stream will run */
+        | components["schemas"]["MonitorBehaviorSearch"]
+        | components["schemas"]["MonitorBehaviorRefresh"];
+      /** @description How often the monitor will run */
       cadence: {
-        /** @description Cron expression for stream cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
+        /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
         cron: string;
         /**
          * @description IANA timezone (e.g., "America/New_York")
@@ -877,16 +877,16 @@ export interface components {
       };
       /**
        * Format: date-time
-       * @description When the stream was created
+       * @description When the monitor was created
        */
       createdAt: string;
-      /** @description The unique identifier for the Stream */
+      /** @description The unique identifier for the Monitor */
       id: string;
       /**
-       * StreamRun
-       * @description The last run of the stream
+       * MonitorRun
+       * @description The last run of the monitor
        */
-      lastRun: components["schemas"]["StreamRun"];
+      lastRun: components["schemas"]["MonitorRun"];
       /** @description Set of key-value pairs you want to associate with this object. */
       metadata: {
         [key: string]: string;
@@ -900,38 +900,38 @@ export interface components {
        * @description The type of object
        * @enum {string}
        */
-      object: StreamObject;
+      object: MonitorObject;
       /**
-       * @description The status of the Stream
+       * @description The status of the Monitor
        * @enum {string}
        */
-      status: StreamStatus;
+      status: MonitorStatus;
       /**
        * Format: date-time
-       * @description When the stream was last updated
+       * @description When the monitor was last updated
        */
       updatedAt: string;
-      /** @description The id of the Webset the Stream belongs to */
+      /** @description The id of the Webset the Monitor belongs to */
       websetId: string;
     };
-    StreamBehaviorRefresh: {
+    MonitorBehaviorRefresh: {
       /** @description Specify the target of the refresh */
       config:
-        | components["schemas"]["StreamRefreshBehaviorEnrichmentsConfig"]
-        | components["schemas"]["StreamRefreshBehaviorContentsConfig"];
+        | components["schemas"]["MonitorRefreshBehaviorEnrichmentsConfig"]
+        | components["schemas"]["MonitorRefreshBehaviorContentsConfig"];
       /**
        * @default refresh
        * @constant
        */
       type: "refresh";
     };
-    StreamBehaviorSearch: {
+    MonitorBehaviorSearch: {
       config: {
         /**
          * @description The behaviour of the Search when it is added to a Webset.
          * @default append
          */
-        behavior?: WebsetSearchBehavior;
+        behavior: components["schemas"]["WebsetSearchBehavior"];
         /** @description The maximum number of results to find */
         count: number;
         criteria: {
@@ -947,8 +947,8 @@ export interface components {
        */
       type: "search";
     };
-    StreamCadence: {
-      /** @description Cron expression for stream cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
+    MonitorCadence: {
+      /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
       cron: string;
       /**
        * @description IANA timezone (e.g., "America/New_York")
@@ -956,14 +956,14 @@ export interface components {
        */
       timezone: string;
     };
-    StreamRefreshBehaviorContentsConfig: {
+    MonitorRefreshBehaviorContentsConfig: {
       /**
        * @default contents
        * @constant
        */
       target: "contents";
     };
-    StreamRefreshBehaviorEnrichmentsConfig: {
+    MonitorRefreshBehaviorEnrichmentsConfig: {
       /** @description Only refresh specific enrichments */
       enrichments?: {
         ids?: string[];
@@ -974,7 +974,7 @@ export interface components {
        */
       target: "enrichments";
     };
-    StreamRun: {
+    MonitorRun: {
       /**
        * Format: date-time
        * @description When the run was canceled
@@ -995,40 +995,40 @@ export interface components {
        * @description When the run failed
        */
       failedAt: string | null;
-      /** @description The unique identifier for the Stream Run */
+      /** @description The unique identifier for the Monitor Run */
       id: string;
+      /** @description The monitor that the run is associated with */
+      monitorId: string;
       /**
        * @description The type of object
        * @enum {string}
        */
-      object: StreamRunObject;
+      object: MonitorRunObject;
       /**
-       * @description The status of the Stream Run
+       * @description The status of the Monitor Run
        * @enum {string}
        */
-      status: StreamRunStatus;
-      /** @description The stream that the run is associated with */
-      streamId: string;
+      status: MonitorRunStatus;
       /**
-       * @description The type of the Stream Run
+       * @description The type of the Monitor Run
        * @enum {string}
        */
-      type: StreamRunType;
+      type: MonitorRunType;
       /**
        * Format: date-time
        * @description When the run was last updated
        */
       updatedAt: string;
     };
-    UpdateStream: {
+    UpdateMonitor: {
       metadata?: {
         [key: string]: string;
       };
       /**
-       * @description The status of the stream.
+       * @description The status of the monitor.
        * @enum {string}
        */
-      status?: UpdateStreamStatus;
+      status?: UpdateMonitorStatus;
     };
     UpdateWebhookParameters: {
       /** @description The events to trigger the webhook */
@@ -1104,7 +1104,7 @@ export interface components {
        * @description The type of event
        * @enum {string}
        */
-      eventType: EventType;
+      eventType: WebhookAttemptEventType;
       /** @description The unique identifier for the webhook attempt */
       id: string;
       /**
@@ -1146,6 +1146,8 @@ export interface components {
       metadata: {
         [key: string]: string;
       };
+      /** @description The Monitors for the Webset. */
+      monitors: components["schemas"]["Monitor"][];
       /**
        * @default webset
        * @constant
@@ -1159,8 +1161,6 @@ export interface components {
        * @enum {string}
        */
       status: WebsetStatus;
-      /** @description The Streams for the Webset. */
-      streams: components["schemas"]["Stream"][];
       /**
        * Format: date-time
        * @description The date and time the webset was updated
@@ -1470,14 +1470,14 @@ export interface components {
        *     - `append`: the search will add the new Items found to the existing Webset. Any Items that don't match the new criteria will be discarded.
        * @default override
        */
-      behavior: WebsetSearchBehavior;
+      behavior: components["schemas"]["WebsetSearchBehavior"];
       /**
        * Format: date-time
        * @description The date and time the search was canceled
        */
       canceledAt: string | null;
       /** @description The reason the search was canceled */
-      canceledReason: WebsetSearchCanceledReason | null;
+      canceledReason: components["schemas"]["WebsetSearchCanceledReason"];
       /** @description The number of results the search will attempt to find. The actual number of results may be less than this number depending on the search complexity. */
       count: number;
       /**
@@ -1531,6 +1531,10 @@ export interface components {
        */
       updatedAt: string;
     };
+    /** @enum {string} */
+    WebsetSearchBehavior: WebsetSearchBehavior;
+    /** @enum {string} */
+    WebsetSearchCanceledReason: WebsetSearchCanceledReason;
   };
   responses: never;
   parameters: never;
@@ -1542,8 +1546,8 @@ export type CreateCriterionParameters =
   components["schemas"]["CreateCriterionParameters"];
 export type CreateEnrichmentParameters =
   components["schemas"]["CreateEnrichmentParameters"];
-export type CreateStreamParameters =
-  components["schemas"]["CreateStreamParameters"];
+export type CreateMonitorParameters =
+  components["schemas"]["CreateMonitorParameters"];
 export type CreateWebhookParameters =
   components["schemas"]["CreateWebhookParameters"];
 export type CreateWebsetParameters =
@@ -1554,9 +1558,10 @@ export type EnrichmentResult = components["schemas"]["EnrichmentResult"];
 export type Event = components["schemas"]["Event"];
 export type GetWebsetResponse = components["schemas"]["GetWebsetResponse"];
 export type ListEventsResponse = components["schemas"]["ListEventsResponse"];
-export type ListStreamRunsResponse =
-  components["schemas"]["ListStreamRunsResponse"];
-export type ListStreamsResponse = components["schemas"]["ListStreamsResponse"];
+export type ListMonitorRunsResponse =
+  components["schemas"]["ListMonitorRunsResponse"];
+export type ListMonitorsResponse =
+  components["schemas"]["ListMonitorsResponse"];
 export type ListWebhookAttemptsResponse =
   components["schemas"]["ListWebhookAttemptsResponse"];
 export type ListWebhooksResponse =
@@ -1564,18 +1569,18 @@ export type ListWebhooksResponse =
 export type ListWebsetItemResponse =
   components["schemas"]["ListWebsetItemResponse"];
 export type ListWebsetsResponse = components["schemas"]["ListWebsetsResponse"];
-export type Stream = components["schemas"]["Stream"];
-export type StreamBehaviorRefresh =
-  components["schemas"]["StreamBehaviorRefresh"];
-export type StreamBehaviorSearch =
-  components["schemas"]["StreamBehaviorSearch"];
-export type StreamCadence = components["schemas"]["StreamCadence"];
-export type StreamRefreshBehaviorContentsConfig =
-  components["schemas"]["StreamRefreshBehaviorContentsConfig"];
-export type StreamRefreshBehaviorEnrichmentsConfig =
-  components["schemas"]["StreamRefreshBehaviorEnrichmentsConfig"];
-export type StreamRun = components["schemas"]["StreamRun"];
-export type UpdateStream = components["schemas"]["UpdateStream"];
+export type Monitor = components["schemas"]["Monitor"];
+export type MonitorBehaviorRefresh =
+  components["schemas"]["MonitorBehaviorRefresh"];
+export type MonitorBehaviorSearch =
+  components["schemas"]["MonitorBehaviorSearch"];
+export type MonitorCadence = components["schemas"]["MonitorCadence"];
+export type MonitorRefreshBehaviorContentsConfig =
+  components["schemas"]["MonitorRefreshBehaviorContentsConfig"];
+export type MonitorRefreshBehaviorEnrichmentsConfig =
+  components["schemas"]["MonitorRefreshBehaviorEnrichmentsConfig"];
+export type MonitorRun = components["schemas"]["MonitorRun"];
+export type UpdateMonitor = components["schemas"]["UpdateMonitor"];
 export type UpdateWebhookParameters =
   components["schemas"]["UpdateWebhookParameters"];
 export type UpdateWebsetRequest = components["schemas"]["UpdateWebsetRequest"];
@@ -1614,7 +1619,7 @@ export interface operations {
         /** @description The number of results to return */
         limit?: number;
         /** @description The types of events to filter by */
-        types?: EventType[];
+        types?: PathsV0EventsGetParametersQueryTypes[];
       };
       header?: never;
       path?: never;
@@ -1677,14 +1682,14 @@ export interface operations {
       };
     };
   };
-  "streams-list": {
+  "monitors-list": {
     parameters: {
       query?: {
         /** @description The cursor to paginate through the results */
         cursor?: string;
         /** @description The number of results to return */
         limit?: number;
-        /** @description The id of the Webset to list streams for */
+        /** @description The id of the Webset to list monitors for */
         websetId?: string;
       };
       header?: never;
@@ -1693,7 +1698,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description List of streams */
+      /** @description List of monitors */
       200: {
         headers: {
           /**
@@ -1704,12 +1709,12 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ListStreamsResponse"];
+          "application/json": components["schemas"]["ListMonitorsResponse"];
         };
       };
     };
   };
-  "streams-create": {
+  "monitors-create": {
     parameters: {
       query?: never;
       header?: never;
@@ -1718,11 +1723,11 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["CreateStreamParameters"];
+        "application/json": components["schemas"]["CreateMonitorParameters"];
       };
     };
     responses: {
-      /** @description Stream created successfully */
+      /** @description Monitor created successfully */
       201: {
         headers: {
           /**
@@ -1733,24 +1738,24 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["Stream"];
+          "application/json": components["schemas"]["Monitor"];
         };
       };
     };
   };
-  "streams-get": {
+  "monitors-get": {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description The id of the Stream */
-        stream: string;
+        /** @description The id of the Monitor */
+        monitor: string;
       };
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description Stream details */
+      /** @description Monitor details */
       200: {
         headers: {
           /**
@@ -1761,24 +1766,24 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["Stream"];
+          "application/json": components["schemas"]["Monitor"];
         };
       };
     };
   };
-  "streams-delete": {
+  "monitors-delete": {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description The id of the Stream */
-        stream: string;
+        /** @description The id of the Monitor */
+        monitor: string;
       };
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description Stream deleted successfully */
+      /** @description Monitor deleted successfully */
       200: {
         headers: {
           /**
@@ -1789,28 +1794,28 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["Stream"];
+          "application/json": components["schemas"]["Monitor"];
         };
       };
     };
   };
-  "streams-update": {
+  "monitors-update": {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description The id of the Stream */
-        stream: string;
+        /** @description The id of the Monitor */
+        monitor: string;
       };
       cookie?: never;
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["UpdateStream"];
+        "application/json": components["schemas"]["UpdateMonitor"];
       };
     };
     responses: {
-      /** @description Stream updated successfully */
+      /** @description Monitor updated successfully */
       200: {
         headers: {
           /**
@@ -1821,24 +1826,24 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["Stream"];
+          "application/json": components["schemas"]["Monitor"];
         };
       };
     };
   };
-  "streams-runs-list": {
+  "monitors-runs-list": {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description The id of the Stream to list runs for */
-        stream: string;
+        /** @description The id of the Monitor to list runs for */
+        monitor: string;
       };
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description List of stream runs */
+      /** @description List of monitor runs */
       200: {
         headers: {
           /**
@@ -1849,25 +1854,25 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ListStreamRunsResponse"];
+          "application/json": components["schemas"]["ListMonitorRunsResponse"];
         };
       };
     };
   };
-  "streams-runs-get": {
+  "monitors-runs-get": {
     parameters: {
       query?: never;
       header?: never;
       path: {
         id: string;
-        /** @description The id of the Stream to get the run for */
-        stream: string;
+        /** @description The id of the Monitor to get the run for */
+        monitor: string;
       };
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description Stream run details */
+      /** @description Monitor run details */
       200: {
         headers: {
           /**
@@ -1878,7 +1883,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["StreamRun"];
+          "application/json": components["schemas"]["MonitorRun"];
         };
       };
     };
@@ -2072,7 +2077,7 @@ export interface operations {
         /** @description The cursor to paginate through the results */
         cursor?: string;
         /** @description The type of event to filter by */
-        eventType?: EventType;
+        eventType?: PathsV0WebhooksIdAttemptsGetParametersQueryEventType;
         /** @description The number of results to return */
         limit?: number;
       };
@@ -2632,6 +2637,34 @@ export interface operations {
     };
   };
 }
+export enum PathsV0EventsGetParametersQueryTypes {
+  webset_created = "webset.created",
+  webset_deleted = "webset.deleted",
+  webset_paused = "webset.paused",
+  webset_idle = "webset.idle",
+  webset_search_created = "webset.search.created",
+  webset_search_canceled = "webset.search.canceled",
+  webset_search_completed = "webset.search.completed",
+  webset_search_updated = "webset.search.updated",
+  webset_export_created = "webset.export.created",
+  webset_export_completed = "webset.export.completed",
+  webset_item_created = "webset.item.created",
+  webset_item_enriched = "webset.item.enriched",
+}
+export enum PathsV0WebhooksIdAttemptsGetParametersQueryEventType {
+  webset_created = "webset.created",
+  webset_deleted = "webset.deleted",
+  webset_paused = "webset.paused",
+  webset_idle = "webset.idle",
+  webset_search_created = "webset.search.created",
+  webset_search_canceled = "webset.search.canceled",
+  webset_search_completed = "webset.search.completed",
+  webset_search_updated = "webset.search.updated",
+  webset_export_created = "webset.export.created",
+  webset_export_completed = "webset.export.completed",
+  webset_item_created = "webset.item.created",
+  webset_item_enriched = "webset.item.enriched",
+}
 export enum PathsV0WebsetsIdGetParametersQueryExpand {
   items = "items",
 }
@@ -2657,33 +2690,47 @@ export enum EventType {
   webset_item_created = "webset.item.created",
   webset_item_enriched = "webset.item.enriched",
 }
-export enum StreamObject {
-  stream = "stream",
+export enum MonitorObject {
+  monitor = "monitor",
 }
-export enum StreamStatus {
-  open = "open",
-  closed = "closed",
+export enum MonitorStatus {
+  enabled = "enabled",
+  disabled = "disabled",
 }
-export enum StreamRunObject {
-  stream_run = "stream_run",
+export enum MonitorRunObject {
+  monitor_run = "monitor_run",
 }
-export enum StreamRunStatus {
+export enum MonitorRunStatus {
   created = "created",
   running = "running",
   completed = "completed",
   canceled = "canceled",
 }
-export enum StreamRunType {
+export enum MonitorRunType {
   search = "search",
   refresh = "refresh",
 }
-export enum UpdateStreamStatus {
-  open = "open",
-  closed = "closed",
+export enum UpdateMonitorStatus {
+  enabled = "enabled",
+  disabled = "disabled",
 }
 export enum WebhookStatus {
   active = "active",
   inactive = "inactive",
+}
+export enum WebhookAttemptEventType {
+  webset_created = "webset.created",
+  webset_deleted = "webset.deleted",
+  webset_paused = "webset.paused",
+  webset_idle = "webset.idle",
+  webset_search_created = "webset.search.created",
+  webset_search_canceled = "webset.search.canceled",
+  webset_search_completed = "webset.search.completed",
+  webset_search_updated = "webset.search.updated",
+  webset_export_created = "webset.export.created",
+  webset_export_completed = "webset.export.completed",
+  webset_item_created = "webset.item.created",
+  webset_item_enriched = "webset.item.enriched",
 }
 export enum WebsetStatus {
   idle = "idle",

@@ -3,11 +3,11 @@ import { WebsetsClient } from "../src/websets/client";
 import { WebsetEnrichmentsClient } from "../src/websets/enrichments";
 import { EventsClient } from "../src/websets/events";
 import { WebsetItemsClient } from "../src/websets/items";
-import { WebsetSearchesClient } from "../src/websets/searches";
 import {
-  WebsetStreamRunsClient,
-  WebsetStreamsClient,
-} from "../src/websets/streams";
+  WebsetMonitorRunsClient,
+  WebsetMonitorsClient,
+} from "../src/websets/monitors";
+import { WebsetSearchesClient } from "../src/websets/searches";
 import { WebsetWebhooksClient } from "../src/websets/webhooks";
 
 /**
@@ -28,8 +28,8 @@ export function getProtectedClient<
     | WebsetItemsClient
     | WebsetSearchesClient
     | WebsetEnrichmentsClient
-    | WebsetStreamsClient
-    | WebsetStreamRunsClient
+    | WebsetMonitorsClient
+    | WebsetMonitorRunsClient
     | WebsetWebhooksClient
     | EventsClient,
 >(client: T): WithProtectedAccess<T> {
@@ -45,8 +45,8 @@ export function getProtectedClientInstance(
     | WebsetItemsClient
     | WebsetSearchesClient
     | WebsetEnrichmentsClient
-    | WebsetStreamsClient
-    | WebsetStreamRunsClient
+    | WebsetMonitorsClient
+    | WebsetMonitorRunsClient
     | WebsetWebhooksClient
     | EventsClient
 ) {
