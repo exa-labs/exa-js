@@ -1,13 +1,19 @@
 /**
- * Barrel file for the Websets module
+ * Websets API client
  */
 
 export { WebsetsClient } from "./client";
+export { WebsetEnrichmentsClient } from "./enrichments";
+export { EventsClient } from "./events";
+export { WebsetItemsClient } from "./items";
+export { WebsetSearchesClient } from "./searches";
+export { WebsetWebhooksClient } from "./webhooks";
 
-// Export common types and enums
+// Export OpenAPI types
 export type {
+  CreateCriterionParameters,
   CreateEnrichmentParameters,
-  CreateStreamParameters,
+  CreateMonitorParameters,
   CreateWebhookParameters,
   CreateWebsetParameters,
   CreateWebsetSearchParameters,
@@ -15,27 +21,52 @@ export type {
   Event,
   GetWebsetResponse,
   ListEventsResponse,
-  ListStreamRunsResponse,
-  ListStreamsResponse,
+  ListMonitorRunsResponse,
+  ListMonitorsResponse,
+  ListWebhookAttemptsResponse,
   ListWebhooksResponse,
   ListWebsetItemResponse,
   ListWebsetsResponse,
-  Stream,
-  StreamRun,
-  UpdateStream,
+  Monitor,
+  MonitorBehaviorRefresh,
+  MonitorBehaviorSearch,
+  MonitorCadence,
+  MonitorRefreshBehaviorContentsConfig,
+  MonitorRefreshBehaviorEnrichmentsConfig,
+  MonitorRun,
+  UpdateMonitor,
   UpdateWebhookParameters,
   UpdateWebsetRequest,
   Webhook,
+  WebhookAttempt,
   Webset,
+  WebsetArticleEntity,
+  WebsetCompanyEntity,
+  WebsetCustomEntity,
   WebsetEnrichment,
+  WebsetEntity,
   WebsetItem,
+  WebsetItemArticleProperties,
+  WebsetItemCompanyProperties,
+  WebsetItemCustomProperties,
+  WebsetItemEvaluation,
+  WebsetItemPersonProperties,
+  WebsetItemResearchPaperProperties,
+  WebsetPersonEntity,
+  WebsetResearchPaperEntity,
   WebsetSearch,
 } from "./openapi";
 
+// Export enums
 export {
   CreateEnrichmentParametersFormat,
   EventType,
-  UpdateStreamStatus,
+  MonitorObject,
+  MonitorRunObject,
+  MonitorRunStatus,
+  MonitorRunType,
+  MonitorStatus,
+  UpdateMonitorStatus,
   WebhookStatus,
   WebsetEnrichmentFormat,
   WebsetEnrichmentStatus,
@@ -48,13 +79,7 @@ export {
 } from "./openapi";
 
 // Export client classes
-export { WebsetEnrichmentsClient } from "./enrichments";
-export { WebsetItemsClient } from "./items";
-export { WebsetSearchesClient } from "./searches";
-export { WebsetStreamsClient } from "./streams";
-export { WebsetWebhooksClient } from "./webhooks";
+export { WebsetMonitorsClient } from "./monitors";
 
-// Export helper types/interfaces
-export type { ListWebsetsOptions } from "./client";
-export type { ListStreamsOptions } from "./streams";
-export type { ListWebhooksOptions } from "./webhooks";
+// Export types from specific modules
+export type { ListMonitorsOptions } from "./monitors";
