@@ -927,51 +927,6 @@ export class Exa {
         }
       }
     });
-  /**
-   * Creates and runs a research task in a blocking manner.
-   *
-   * Both parameters are required and have fixed shapes:
-   * 1. `input`
-   *      `{ instructions: string }`
-   *     • `instructions` – High-level guidance that tells the research agent what to do.
-   * 2. `output`
-   *    defines the exact structure you expect back, and guides the research conducted by the agent.
-   *      `{ schema: JSONSchema }`.
-   *    The agent's response will be validated against this schema.
-   *
-   * @param {{ instructions: string }} input   The research prompt.
-   * @param {{ schema: JSONSchema }}                output  The desired output schema.
-   * @returns {Promise<ResearchTaskResponse>}                     The research response.
-   *
-   * @example
-   * const response = await exa.researchTask(
-   *   { instructions: "I need a few key facts about honey pot ants." },
-   *   {
-   *     schema: {
-   *       type: "object",
-   *       required: ["scientificName", "primaryRegions"],
-   *       properties: {
-   *         scientificName: { type: "string" },
-   *         primaryRegions:  { type: "string" },
-   *       },
-   *     },
-   *   },
-   * );
-   */
-  async researchTask(
-    input: { instructions: string },
-    output: { schema: JSONSchema }
-  ): Promise<ResearchTaskResponse> {
-    const body = {
-      input,
-      output,
-    };
-
-    return await this.request<ResearchTaskResponse>(
-      "/research/tasks",
-      "POST",
-      body
-    );
   }
 }
 
