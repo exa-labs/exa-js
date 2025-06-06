@@ -90,6 +90,8 @@ export type ContentsOptions = {
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
   livecrawl?: LivecrawlOptions;
+  // TODO: figure out where to put this s.t. it does not show up in the search results
+  context?: ContextOptions | true;
   livecrawlTimeout?: number;
   filterEmptyResults?: boolean;
   subpages?: number;
@@ -128,6 +130,17 @@ export type HighlightsContentsOptions = {
 };
 
 /**
+ * Options for retrieving summary from page.
+ * @typedef {Object} SummaryContentsOptions
+ * @property {string} [query] - The query string to use for summary generation.
+ * @property {JSONSchema} [schema] - JSON schema for structured output from summary.
+ */
+export type SummaryContentsOptions = {
+  query?: string;
+  schema?: JSONSchema;
+};
+
+/**
  * Represents a JSON Schema definition used for structured summary output.
  * To learn more visit https://json-schema.org/overview/what-is-jsonschema.
  */
@@ -157,14 +170,13 @@ export type JSONSchema = {
 };
 
 /**
- * Options for retrieving summary from page.
- * @typedef {Object} SummaryContentsOptions
- * @property {string} [query] - The query string to use for summary generation.
- * @property {JSONSchema} [schema] - JSON schema for structured output from summary.
+ * Options for retrieving the context from a list of search results. The context is a string
+ * representation of all the search results.
+ * @typedef {Object} ContextOptions
+ * @property {number} [maxCharacters] - The maximum number of characters.
  */
-export type SummaryContentsOptions = {
-  query?: string;
-  schema?: JSONSchema;
+export type ContextOptions = {
+  maxCharacters?: number;
 };
 
 /**
@@ -289,6 +301,7 @@ export type SearchResult<T extends ContentsOptions> = {
  * Represents a search response object.
  * @typedef {Object} SearchResponse
  * @property {Result[]} results - The list of search results.
+ * @property {string} [context] - The context for the search.
  * @property {string} [autopromptString] - The autoprompt string, if applicable.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
@@ -296,6 +309,7 @@ export type SearchResult<T extends ContentsOptions> = {
  */
 export type SearchResponse<T extends ContentsOptions> = {
   results: SearchResult<T>[];
+  context?: string;
   autopromptString?: string;
   autoDate?: string;
   requestId: string;
@@ -420,6 +434,7 @@ export class Exa {
       extras,
       livecrawl,
       livecrawlTimeout,
+      context,
       ...rest
     } = options;
 
@@ -445,6 +460,7 @@ export class Exa {
     if (livecrawl !== undefined) contentsOptions.livecrawl = livecrawl;
     if (livecrawlTimeout !== undefined)
       contentsOptions.livecrawlTimeout = livecrawlTimeout;
+    if (context !== undefined) contentsOptions.context = context;
 
     return {
       contentsOptions,
@@ -851,7 +867,7 @@ export class Exa {
    * 2. `output`
    *    defines the exact structure you expect back, and guides the research conducted by the agent.
    *      `{ schema: JSONSchema }`.
-   *    The agent’s response will be validated against this schema.
+   *    The agent's response will be validated against this schema.
    *
    * @param {{ instructions: string }} input   The research prompt.
    * @param {{ schema: JSONSchema }}                output  The desired output schema.
