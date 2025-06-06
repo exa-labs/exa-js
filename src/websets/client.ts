@@ -6,6 +6,7 @@ import { PaginationParams, WebsetsBaseClient } from "./base";
 import { WebsetEnrichmentsClient } from "./enrichments";
 import { EventsClient } from "./events";
 import { WebsetItemsClient } from "./items";
+import { WebsetMonitorsClient } from "./monitors";
 import {
   CreateWebsetParameters,
   GetWebsetResponse,
@@ -47,6 +48,11 @@ export class WebsetsClient extends WebsetsBaseClient {
   enrichments: WebsetEnrichmentsClient;
 
   /**
+   * Client for managing Webset Monitors
+   */
+  monitors: WebsetMonitorsClient;
+
+  /**
    * Client for managing Webset Webhooks
    */
   webhooks: WebsetWebhooksClient;
@@ -61,6 +67,7 @@ export class WebsetsClient extends WebsetsBaseClient {
     this.items = new WebsetItemsClient(client);
     this.searches = new WebsetSearchesClient(client);
     this.enrichments = new WebsetEnrichmentsClient(client);
+    this.monitors = new WebsetMonitorsClient(client);
     this.webhooks = new WebsetWebhooksClient(client);
   }
 
