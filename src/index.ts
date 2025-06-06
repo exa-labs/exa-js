@@ -90,7 +90,6 @@ export type ContentsOptions = {
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
   livecrawl?: LivecrawlOptions;
-  // TODO: figure out where to put this s.t. it does not show up in the search results
   context?: ContextOptions | true;
   livecrawlTimeout?: number;
   filterEmptyResults?: boolean;
