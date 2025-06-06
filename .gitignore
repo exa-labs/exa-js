@@ -5,4 +5,8 @@ dist
 
 tests
 
+
 .aider*
+
+.env
+.env.local
