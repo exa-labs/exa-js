@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Exa, { ResearchStatus, type JSONSchema } from "../src";
+import { ResearchCreateTaskRequestDtoModel as ResearchModel } from "../src/research/openapi";
 
 /**
  * Test suite for the /research endpoint.
@@ -17,10 +18,8 @@ describe("Research API", () => {
   });
 
   it("should submit a research request with a minimal schema", async () => {
-    const input = {
-      instructions: "General research",
-      query: "What is quantum computing?",
-    };
+    const instructions = "General research";
+    const model = ResearchModel.exa_research;
 
     // Minimal (but valid) JSON schema
     const schema: JSONSchema = { type: "object" };
@@ -29,27 +28,34 @@ describe("Research API", () => {
       id: "research_123",
       status: "running", // string allowed by ResearchTaskResponse
       output: null,
-      citations: [],
+      citations: {},
     };
 
     const requestSpy = vi
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
-    const result = await exa.researchTask(input, { schema });
-
-    expect(requestSpy).toHaveBeenCalledWith("/research/tasks", "POST", {
-      input,
+    const result = await exa.research.createTask({
+      instructions,
+      model,
       output: { schema },
     });
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/research/v0/tasks",
+      "POST",
+      {
+        instructions,
+        model,
+        output: { inferSchema: true, schema },
+      },
+      undefined
+    );
     expect(result).toEqual(mockResponse);
   });
 
   it("should submit a research request with an explicit output schema", async () => {
-    const input = {
-      instructions: "Explain photosynthesis in simple terms.",
-      query: "Explain photosynthesis.",
-    };
+    const instructions = "Explain photosynthesis in simple terms.";
 
     const schema: JSONSchema = {
       type: "object",
@@ -63,21 +69,77 @@ describe("Research API", () => {
       id: "research_456",
       status: ResearchStatus.completed,
       output: { answer: "Photosynthesis is ..." },
-      citations: [],
+      citations: {},
     };
 
     const requestSpy = vi
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
-    const result = await exa.researchTask(input, { schema });
-
-    expect(requestSpy).toHaveBeenCalledWith("/research/tasks", "POST", {
-      input,
-      output: {
-        schema,
-      },
+    const result = await exa.research.createTask({
+      instructions,
+      output: { schema },
     });
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/research/v0/tasks",
+      "POST",
+      {
+        instructions,
+        model: ResearchModel.exa_research,
+        output: {
+          inferSchema: true,
+          schema,
+        },
+      },
+      undefined
+    );
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should list research tasks without options", async () => {
+    const mockResponse = {
+      data: [],
+      hasMore: false,
+      nextCursor: null,
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.research.listTasks();
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/research/v0/tasks",
+      "GET",
+      undefined,
+      {}
+    );
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should list research tasks with pagination options", async () => {
+    const pagination = { cursor: "abc123", limit: 25 } as const;
+
+    const mockResponse = {
+      data: [],
+      hasMore: true,
+      nextCursor: "def456",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.research.listTasks(pagination);
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/research/v0/tasks",
+      "GET",
+      undefined,
+      pagination
+    );
     expect(result).toEqual(mockResponse);
   });
 });

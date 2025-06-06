@@ -190,6 +190,33 @@ Each chunk contains:
 - `content`: A string containing the next piece of generated text
 - `citations`: An array of citation objects containing source information
 
+### `exa.research.createTask({ instructions, schema }: { instructions: string, output?: { schema?: object }}): Promise<{id: string}>`
+
+Exa's research agent can autonomously gather information and return a structured JSON object that conforms to a schema you provide.
+
+```javascript
+import Exa from "exa-js";
+
+const exa = new Exa(process.env.EXA_API_KEY);
+
+const schema = {
+  type: "object",
+  required: ["answer"],
+  properties: {
+    answer: { type: "string" },
+  },
+  additionalProperties: false,
+};
+
+const { id: taskId } = await exa.research.createTask({
+  instructions: "In ≤3 sentences, explain quantum computing.",
+  output: { schema },
+});
+const result = await exa.research.pollTask(taskId);
+```
+
+Use the `status` field to poll long-running tasks if needed.
+
 # Contributing
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.

@@ -48,6 +48,104 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v0/monitors": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Monitors
+     * @description Lists all monitors for the Webset.
+     */
+    get: operations["monitors-list"];
+    put?: never;
+    /**
+     * Create a Monitor
+     * @description Creates a new `Monitor` to continuously keep your Websets updated with fresh data.
+     *
+     *     Monitors automatically run on your defined schedule to ensure your Websets stay current without manual intervention:
+     *
+     *     - **Find new content**: Execute `search` operations to discover fresh items matching your criteria
+     *     - **Update existing content**: Run `refresh` operations to update items contents and enrichments
+     *     - **Automated scheduling**: Configure `frequency`, `timezone`, and execution times
+     */
+    post: operations["monitors-create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v0/monitors/{monitor}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Monitor
+     * @description Gets a specific monitor.
+     */
+    get: operations["monitors-get"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete Monitor
+     * @description Deletes a monitor.
+     */
+    delete: operations["monitors-delete"];
+    options?: never;
+    head?: never;
+    /**
+     * Update Monitor
+     * @description Updates a monitor configuration.
+     */
+    patch: operations["monitors-update"];
+    trace?: never;
+  };
+  "/v0/monitors/{monitor}/runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Monitor Runs
+     * @description Lists all runs for the Monitor.
+     */
+    get: operations["monitors-runs-list"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v0/monitors/{monitor}/runs/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Monitor Run
+     * @description Gets a specific monitor run.
+     */
+    get: operations["monitors-runs-get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/v0/webhooks": {
     parameters: {
       query?: never;
@@ -296,7 +394,7 @@ export interface paths {
      * Create a Search
      * @description Creates a new Search for the Webset.
      *
-     *     The default behaviour is to reuse the previous Search results and evaluate them against the new criteria.
+     *     The default behavior is to reuse the previous Search results and evaluate them against the new criteria.
      */
     post: operations["websets-searches-create"];
     delete?: never;
@@ -375,6 +473,27 @@ export interface components {
         label: string;
       }[];
     };
+    CreateMonitorParameters: {
+      /** @description Behavior to perform when monitor runs */
+      behavior:
+        | components["schemas"]["MonitorBehaviorSearch"]
+        | components["schemas"]["MonitorBehaviorRefresh"];
+      /** @description How often the monitor will run */
+      cadence: {
+        /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
+        cron: string;
+        /**
+         * @description IANA timezone (e.g., "America/New_York")
+         * @default Etc/UTC
+         */
+        timezone: string;
+      };
+      metadata?: {
+        [key: string]: string;
+      };
+      /** @description The id of the Webset */
+      websetId: string;
+    };
     CreateWebhookParameters: {
       /** @description The events to trigger the webhook */
       events: components["schemas"]["EventType"][];
@@ -426,14 +545,13 @@ export interface components {
     };
     CreateWebsetSearchParameters: {
       /**
-       * WebsetSearchBehaviour
-       * @description The behaviour of the Search when it is added to a Webset.
+       * @description The behavior of the Search when it is added to a Webset.
        *
-       *     - `override`: the search will reuse the existing Items found in the Webset and evaluate them against the new criteria. Any Items that don't match the new criteria will be discarded.
+       *     - `override`: the search will replace the existing Items found in the Webset and evaluate them against the new criteria. Any Items that don't match the new criteria will be discarded.
+       *     - `append`: the search will add the new Items found to the existing Webset. Any Items that don't match the new criteria will be discarded.
        * @default override
-       * @enum {string}
        */
-      behaviour: CreateWebsetSearchParametersBehaviour;
+      behavior: components["schemas"]["WebsetSearchBehavior"];
       /** @description Number of Items the Search will attempt to find.
        *
        *     The actual number of Items found may be less than this number depending on the query complexity. */
@@ -458,7 +576,7 @@ export interface components {
     EnrichmentResult: {
       /** @description The id of the Enrichment that generated the result */
       enrichmentId: string;
-      format: components["schemas"]["WebsetEnrichmentFormat"];
+      format: WebsetEnrichmentFormat;
       /**
        * @default enrichment_result
        * @constant
@@ -694,6 +812,22 @@ export interface components {
       /** @description The cursor to paginate through the next set of results */
       nextCursor: string | null;
     };
+    ListMonitorRunsResponse: {
+      /** @description The list of monitor runs */
+      data: components["schemas"]["MonitorRun"][];
+      /** @description Whether there are more results to paginate through */
+      hasMore: boolean;
+      /** @description The cursor to paginate through the next set of results */
+      nextCursor: string | null;
+    };
+    ListMonitorsResponse: {
+      /** @description The list of monitors */
+      data: components["schemas"]["Monitor"][];
+      /** @description Whether there are more results to paginate through */
+      hasMore: boolean;
+      /** @description The cursor to paginate through the next set of results */
+      nextCursor: string | null;
+    };
     ListWebhookAttemptsResponse: {
       /** @description The list of webhook attempts */
       data: components["schemas"]["WebhookAttempt"][];
@@ -725,6 +859,176 @@ export interface components {
       hasMore: boolean;
       /** @description The cursor to paginate through the next set of results */
       nextCursor: string | null;
+    };
+    Monitor: {
+      /** @description Behavior to perform when monitor runs */
+      behavior:
+        | components["schemas"]["MonitorBehaviorSearch"]
+        | components["schemas"]["MonitorBehaviorRefresh"];
+      /** @description How often the monitor will run */
+      cadence: {
+        /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
+        cron: string;
+        /**
+         * @description IANA timezone (e.g., "America/New_York")
+         * @default Etc/UTC
+         */
+        timezone: string;
+      };
+      /**
+       * Format: date-time
+       * @description When the monitor was created
+       */
+      createdAt: string;
+      /** @description The unique identifier for the Monitor */
+      id: string;
+      /**
+       * MonitorRun
+       * @description The last run of the monitor
+       */
+      lastRun: components["schemas"]["MonitorRun"];
+      /** @description Set of key-value pairs you want to associate with this object. */
+      metadata: {
+        [key: string]: string;
+      };
+      /**
+       * Format: date-time
+       * @description When the next run will occur
+       */
+      nextRunAt: string | null;
+      /**
+       * @description The type of object
+       * @enum {string}
+       */
+      object: MonitorObject;
+      /**
+       * @description The status of the Monitor
+       * @enum {string}
+       */
+      status: MonitorStatus;
+      /**
+       * Format: date-time
+       * @description When the monitor was last updated
+       */
+      updatedAt: string;
+      /** @description The id of the Webset the Monitor belongs to */
+      websetId: string;
+    };
+    MonitorBehaviorRefresh: {
+      /** @description Specify the target of the refresh */
+      config:
+        | components["schemas"]["MonitorRefreshBehaviorEnrichmentsConfig"]
+        | components["schemas"]["MonitorRefreshBehaviorContentsConfig"];
+      /**
+       * @default refresh
+       * @constant
+       */
+      type: "refresh";
+    };
+    MonitorBehaviorSearch: {
+      config: {
+        /**
+         * @description The behaviour of the Search when it is added to a Webset.
+         * @default append
+         */
+        behavior: components["schemas"]["WebsetSearchBehavior"];
+        /** @description The maximum number of results to find */
+        count: number;
+        criteria: {
+          description: string;
+        }[];
+        /** WebsetEntity */
+        entity: components["schemas"]["WebsetEntity"];
+        query: string;
+      };
+      /**
+       * @default search
+       * @constant
+       */
+      type: "search";
+    };
+    MonitorCadence: {
+      /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
+      cron: string;
+      /**
+       * @description IANA timezone (e.g., "America/New_York")
+       * @default Etc/UTC
+       */
+      timezone: string;
+    };
+    MonitorRefreshBehaviorContentsConfig: {
+      /**
+       * @default contents
+       * @constant
+       */
+      target: "contents";
+    };
+    MonitorRefreshBehaviorEnrichmentsConfig: {
+      /** @description Only refresh specific enrichments */
+      enrichments?: {
+        ids?: string[];
+      };
+      /**
+       * @default enrichments
+       * @constant
+       */
+      target: "enrichments";
+    };
+    MonitorRun: {
+      /**
+       * Format: date-time
+       * @description When the run was canceled
+       */
+      canceledAt: string | null;
+      /**
+       * Format: date-time
+       * @description When the run completed
+       */
+      completedAt: string | null;
+      /**
+       * Format: date-time
+       * @description When the run was created
+       */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description When the run failed
+       */
+      failedAt: string | null;
+      /** @description The unique identifier for the Monitor Run */
+      id: string;
+      /** @description The monitor that the run is associated with */
+      monitorId: string;
+      /**
+       * @description The type of object
+       * @enum {string}
+       */
+      object: MonitorRunObject;
+      /**
+       * @description The status of the Monitor Run
+       * @enum {string}
+       */
+      status: MonitorRunStatus;
+      /**
+       * @description The type of the Monitor Run
+       * @enum {string}
+       */
+      type: MonitorRunType;
+      /**
+       * Format: date-time
+       * @description When the run was last updated
+       */
+      updatedAt: string;
+    };
+    UpdateMonitor: {
+      metadata?: {
+        [key: string]: string;
+      };
+      /**
+       * @description The status of the monitor.
+       * @enum {string}
+       */
+      status?: UpdateMonitorStatus;
     };
     UpdateWebhookParameters: {
       /** @description The events to trigger the webhook */
@@ -800,7 +1104,7 @@ export interface components {
        * @description The type of event
        * @enum {string}
        */
-      eventType: EventType;
+      eventType: WebhookAttemptEventType;
       /** @description The unique identifier for the webhook attempt */
       id: string;
       /**
@@ -842,6 +1146,8 @@ export interface components {
       metadata: {
         [key: string]: string;
       };
+      /** @description The Monitors for the Webset. */
+      monitors: components["schemas"]["Monitor"][];
       /**
        * @default webset
        * @constant
@@ -895,7 +1201,7 @@ export interface components {
       /** @description The description of the enrichment task provided during the creation of the enrichment. */
       description: string;
       /** @description The format of the enrichment response. */
-      format: components["schemas"]["WebsetEnrichmentFormat"];
+      format: WebsetEnrichmentFormat;
       /** @description The unique identifier for the enrichment */
       id: string;
       /** @description The instructions for the enrichment Agent.
@@ -943,7 +1249,6 @@ export interface components {
       websetId: string;
     };
     /** @enum {string} */
-    WebsetEnrichmentFormat: WebsetEnrichmentFormat;
     WebsetEntity:
       | components["schemas"]["WebsetCompanyEntity"]
       | components["schemas"]["WebsetPersonEntity"]
@@ -1159,15 +1464,20 @@ export interface components {
     };
     WebsetSearch: {
       /**
+       * @description The behavior of the search when it is added to a Webset.
+       *
+       *     - `override`: the search will replace the existing Items found in the Webset and evaluate them against the new criteria. Any Items that don't match the new criteria will be discarded.
+       *     - `append`: the search will add the new Items found to the existing Webset. Any Items that don't match the new criteria will be discarded.
+       * @default override
+       */
+      behavior: components["schemas"]["WebsetSearchBehavior"];
+      /**
        * Format: date-time
        * @description The date and time the search was canceled
        */
       canceledAt: string | null;
-      /**
-       * @description The reason the search was canceled
-       * @enum {string|null}
-       */
-      canceledReason: WebsetSearchCanceledReason;
+      /** @description The reason the search was canceled */
+      canceledReason: components["schemas"]["WebsetSearchCanceledReason"];
       /** @description The number of results the search will attempt to find. The actual number of results may be less than this number depending on the search complexity. */
       count: number;
       /**
@@ -1221,6 +1531,10 @@ export interface components {
        */
       updatedAt: string;
     };
+    /** @enum {string} */
+    WebsetSearchBehavior: WebsetSearchBehavior;
+    /** @enum {string} */
+    WebsetSearchCanceledReason: WebsetSearchCanceledReason;
   };
   responses: never;
   parameters: never;
@@ -1232,6 +1546,8 @@ export type CreateCriterionParameters =
   components["schemas"]["CreateCriterionParameters"];
 export type CreateEnrichmentParameters =
   components["schemas"]["CreateEnrichmentParameters"];
+export type CreateMonitorParameters =
+  components["schemas"]["CreateMonitorParameters"];
 export type CreateWebhookParameters =
   components["schemas"]["CreateWebhookParameters"];
 export type CreateWebsetParameters =
@@ -1242,6 +1558,10 @@ export type EnrichmentResult = components["schemas"]["EnrichmentResult"];
 export type Event = components["schemas"]["Event"];
 export type GetWebsetResponse = components["schemas"]["GetWebsetResponse"];
 export type ListEventsResponse = components["schemas"]["ListEventsResponse"];
+export type ListMonitorRunsResponse =
+  components["schemas"]["ListMonitorRunsResponse"];
+export type ListMonitorsResponse =
+  components["schemas"]["ListMonitorsResponse"];
 export type ListWebhookAttemptsResponse =
   components["schemas"]["ListWebhookAttemptsResponse"];
 export type ListWebhooksResponse =
@@ -1249,6 +1569,18 @@ export type ListWebhooksResponse =
 export type ListWebsetItemResponse =
   components["schemas"]["ListWebsetItemResponse"];
 export type ListWebsetsResponse = components["schemas"]["ListWebsetsResponse"];
+export type Monitor = components["schemas"]["Monitor"];
+export type MonitorBehaviorRefresh =
+  components["schemas"]["MonitorBehaviorRefresh"];
+export type MonitorBehaviorSearch =
+  components["schemas"]["MonitorBehaviorSearch"];
+export type MonitorCadence = components["schemas"]["MonitorCadence"];
+export type MonitorRefreshBehaviorContentsConfig =
+  components["schemas"]["MonitorRefreshBehaviorContentsConfig"];
+export type MonitorRefreshBehaviorEnrichmentsConfig =
+  components["schemas"]["MonitorRefreshBehaviorEnrichmentsConfig"];
+export type MonitorRun = components["schemas"]["MonitorRun"];
+export type UpdateMonitor = components["schemas"]["UpdateMonitor"];
 export type UpdateWebhookParameters =
   components["schemas"]["UpdateWebhookParameters"];
 export type UpdateWebsetRequest = components["schemas"]["UpdateWebsetRequest"];
@@ -1287,7 +1619,7 @@ export interface operations {
         /** @description The number of results to return */
         limit?: number;
         /** @description The types of events to filter by */
-        types?: EventType[];
+        types?: PathsV0EventsGetParametersQueryTypes[];
       };
       header?: never;
       path?: never;
@@ -1347,6 +1679,212 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+    };
+  };
+  "monitors-list": {
+    parameters: {
+      query?: {
+        /** @description The cursor to paginate through the results */
+        cursor?: string;
+        /** @description The number of results to return */
+        limit?: number;
+        /** @description The id of the Webset to list monitors for */
+        websetId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List of monitors */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListMonitorsResponse"];
+        };
+      };
+    };
+  };
+  "monitors-create": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateMonitorParameters"];
+      };
+    };
+    responses: {
+      /** @description Monitor created successfully */
+      201: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Monitor"];
+        };
+      };
+    };
+  };
+  "monitors-get": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The id of the Monitor */
+        monitor: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Monitor details */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Monitor"];
+        };
+      };
+    };
+  };
+  "monitors-delete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The id of the Monitor */
+        monitor: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Monitor deleted successfully */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Monitor"];
+        };
+      };
+    };
+  };
+  "monitors-update": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The id of the Monitor */
+        monitor: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateMonitor"];
+      };
+    };
+    responses: {
+      /** @description Monitor updated successfully */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Monitor"];
+        };
+      };
+    };
+  };
+  "monitors-runs-list": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The id of the Monitor to list runs for */
+        monitor: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List of monitor runs */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListMonitorRunsResponse"];
+        };
+      };
+    };
+  };
+  "monitors-runs-get": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        /** @description The id of the Monitor to get the run for */
+        monitor: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Monitor run details */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MonitorRun"];
+        };
       };
     };
   };
@@ -1539,7 +2077,7 @@ export interface operations {
         /** @description The cursor to paginate through the results */
         cursor?: string;
         /** @description The type of event to filter by */
-        eventType?: EventType;
+        eventType?: PathsV0WebhooksIdAttemptsGetParametersQueryEventType;
         /** @description The number of results to return */
         limit?: number;
       };
@@ -2099,6 +2637,34 @@ export interface operations {
     };
   };
 }
+export enum PathsV0EventsGetParametersQueryTypes {
+  webset_created = "webset.created",
+  webset_deleted = "webset.deleted",
+  webset_paused = "webset.paused",
+  webset_idle = "webset.idle",
+  webset_search_created = "webset.search.created",
+  webset_search_canceled = "webset.search.canceled",
+  webset_search_completed = "webset.search.completed",
+  webset_search_updated = "webset.search.updated",
+  webset_export_created = "webset.export.created",
+  webset_export_completed = "webset.export.completed",
+  webset_item_created = "webset.item.created",
+  webset_item_enriched = "webset.item.enriched",
+}
+export enum PathsV0WebhooksIdAttemptsGetParametersQueryEventType {
+  webset_created = "webset.created",
+  webset_deleted = "webset.deleted",
+  webset_paused = "webset.paused",
+  webset_idle = "webset.idle",
+  webset_search_created = "webset.search.created",
+  webset_search_canceled = "webset.search.canceled",
+  webset_search_completed = "webset.search.completed",
+  webset_search_updated = "webset.search.updated",
+  webset_export_created = "webset.export.created",
+  webset_export_completed = "webset.export.completed",
+  webset_item_created = "webset.item.created",
+  webset_item_enriched = "webset.item.enriched",
+}
 export enum PathsV0WebsetsIdGetParametersQueryExpand {
   items = "items",
 }
@@ -2109,9 +2675,6 @@ export enum CreateEnrichmentParametersFormat {
   options = "options",
   email = "email",
   phone = "phone",
-}
-export enum CreateWebsetSearchParametersBehaviour {
-  override = "override",
 }
 export enum EventType {
   webset_created = "webset.created",
@@ -2127,9 +2690,47 @@ export enum EventType {
   webset_item_created = "webset.item.created",
   webset_item_enriched = "webset.item.enriched",
 }
+export enum MonitorObject {
+  monitor = "monitor",
+}
+export enum MonitorStatus {
+  enabled = "enabled",
+  disabled = "disabled",
+}
+export enum MonitorRunObject {
+  monitor_run = "monitor_run",
+}
+export enum MonitorRunStatus {
+  created = "created",
+  running = "running",
+  completed = "completed",
+  canceled = "canceled",
+}
+export enum MonitorRunType {
+  search = "search",
+  refresh = "refresh",
+}
+export enum UpdateMonitorStatus {
+  enabled = "enabled",
+  disabled = "disabled",
+}
 export enum WebhookStatus {
   active = "active",
   inactive = "inactive",
+}
+export enum WebhookAttemptEventType {
+  webset_created = "webset.created",
+  webset_deleted = "webset.deleted",
+  webset_paused = "webset.paused",
+  webset_idle = "webset.idle",
+  webset_search_created = "webset.search.created",
+  webset_search_canceled = "webset.search.canceled",
+  webset_search_completed = "webset.search.completed",
+  webset_search_updated = "webset.search.updated",
+  webset_export_created = "webset.export.created",
+  webset_export_completed = "webset.export.completed",
+  webset_item_created = "webset.item.created",
+  webset_item_enriched = "webset.item.enriched",
 }
 export enum WebsetStatus {
   idle = "idle",
@@ -2151,19 +2752,24 @@ export enum WebsetEnrichmentFormat {
 }
 export enum WebsetItemSource {
   search = "search",
+  import = "import",
 }
 export enum WebsetItemEvaluationSatisfied {
   yes = "yes",
   no = "no",
   unclear = "unclear",
 }
-export enum WebsetSearchCanceledReason {
-  webset_deleted = "webset_deleted",
-  webset_canceled = "webset_canceled",
-}
 export enum WebsetSearchStatus {
   created = "created",
   running = "running",
   completed = "completed",
   canceled = "canceled",
+}
+export enum WebsetSearchBehavior {
+  override = "override",
+  append = "append",
+}
+export enum WebsetSearchCanceledReason {
+  webset_deleted = "webset_deleted",
+  webset_canceled = "webset_canceled",
 }
