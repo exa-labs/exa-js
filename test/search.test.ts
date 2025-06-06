@@ -213,4 +213,40 @@ describe("Search API", () => {
     });
     expect(result).toEqual(mockResponse);
   });
+
+  it("should handle livecrawl preferred option in contents", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://example.com",
+          id: "test-id",
+          text: "Livecrawled content",
+        },
+      ],
+      requestId: "req-789",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.searchAndContents("latest AI developments", {
+      text: true,
+      livecrawl: "preferred",
+      livecrawlTimeout: 8000,
+      numResults: 3,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "latest AI developments",
+      contents: {
+        text: true,
+        livecrawl: "preferred",
+        livecrawlTimeout: 8000,
+      },
+      numResults: 3,
+    });
+    expect(result).toEqual(mockResponse);
+  });
 }); 
