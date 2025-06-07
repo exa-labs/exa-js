@@ -314,7 +314,14 @@ export type SearchResponse<T extends ContentsOptions> = {
   autopromptString?: string;
   autoDate?: string;
   requestId: string;
+  statuses?: Array<Status>;
   costDollars?: CostDollars;
+};
+
+export type Status = {
+  id: string;
+  status: string;
+  source: string;
 };
 
 /**
