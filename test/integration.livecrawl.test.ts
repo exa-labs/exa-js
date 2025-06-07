@@ -1,10 +1,8 @@
 import { describe, it, expect } from "vitest";
 import Exa from "../src";
 
-// Prefer EXASEARCH_API_KEY (SDK default), but also allow EXA_API_KEY for convenience
 const apiKey = process.env.EXASEARCH_API_KEY || process.env.EXA_API_KEY;
 
-// If no key is provided, skip this integration suite to avoid failures in CI
 const integrationDescribe = apiKey ? describe : describe.skip;
 
 integrationDescribe("Integration: getContents livecrawl", () => {
@@ -13,7 +11,7 @@ integrationDescribe("Integration: getContents livecrawl", () => {
     async () => {
       const exa = new Exa(apiKey as string);
 
-      const url = "https://openai.com"; // Simple, well-behaved URL
+      const url = "https://openai.com";
 
       const response = await exa.getContents(url, {
         text: true,
