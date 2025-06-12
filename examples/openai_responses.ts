@@ -4,13 +4,14 @@ import { OpenAI } from "openai";
 async function main() {
   const openai = new OpenAI({
     apiKey: process.env.EXA_API_KEY,
-    baseURL: "https://api.exa.ai",
+    // baseURL: "https://api.exa.ai",
+    baseURL: "http://localhost:3002",
   });
 
   const stream = await openai.responses.create({
     model: "exa-research",
-    input: "Tell me about recent market trends in the U.S.",
-    instructions: "You must answer in all caps.",
+    input: "I just want you to tell me what state minneapolis is in",
+    instructions: "do not overthink it. answer fast if you can",
     stream: true,
   });
 
