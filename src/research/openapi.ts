@@ -189,6 +189,7 @@ export interface components {
             data: {
               [key: string]: unknown;
             };
+            stepId: string;
             /** @enum {string} */
             type: ResearchTaskDtoOperationsType;
           }
@@ -205,17 +206,20 @@ export interface components {
               /** @enum {number} */
               version: ResearchTaskDtoOperationsResultsVersion;
             }[];
+            stepId: string;
             /** @enum {string} */
             type: ResearchTaskDtoOperationsType;
           }
         | {
             /** @description What the agent hopes to find with this crawl */
             goal?: string;
+            stepId: string;
             /** @enum {string} */
             type: ResearchTaskDtoOperationsType;
             url: string;
           }
         | {
+            stepId: string;
             /** @description Intermediate chain-of-thought style reasoning output */
             thought: string;
             /** @enum {string} */
@@ -246,6 +250,7 @@ export interface components {
           data: {
             [key: string]: unknown;
           };
+          stepId: string;
           /** @enum {string} */
           type: ResearchTaskDtoOperationsType;
         }
@@ -262,17 +267,20 @@ export interface components {
             /** @enum {number} */
             version: ResearchTaskDtoOperationsResultsVersion;
           }[];
+          stepId: string;
           /** @enum {string} */
           type: ResearchTaskDtoOperationsType;
         }
       | {
           /** @description What the agent hopes to find with this crawl */
           goal?: string;
+          stepId: string;
           /** @enum {string} */
           type: ResearchTaskDtoOperationsType;
           url: string;
         }
       | {
+          stepId: string;
           /** @description Intermediate chain-of-thought style reasoning output */
           thought: string;
           /** @enum {string} */
@@ -322,6 +330,7 @@ export interface components {
                   data: {
                     [key: string]: unknown;
                   };
+                  stepId: string;
                   /** @enum {string} */
                   type: ResearchTaskDtoOperationsType;
                 }
@@ -338,17 +347,20 @@ export interface components {
                     /** @enum {number} */
                     version: ResearchTaskDtoOperationsResultsVersion;
                   }[];
+                  stepId: string;
                   /** @enum {string} */
                   type: ResearchTaskDtoOperationsType;
                 }
               | {
                   /** @description What the agent hopes to find with this crawl */
                   goal?: string;
+                  stepId: string;
                   /** @enum {string} */
                   type: ResearchTaskDtoOperationsType;
                   url: string;
                 }
               | {
+                  stepId: string;
                   /** @description Intermediate chain-of-thought style reasoning output */
                   thought: string;
                   /** @enum {string} */
