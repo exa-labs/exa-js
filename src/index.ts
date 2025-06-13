@@ -394,7 +394,7 @@ export type AnswerStreamResponse = {
  * The Exa class encapsulates the API's endpoints.
  */
 export class Exa {
-  baseURL: string;
+  private baseURL: string;
   private headers: Headers;
 
   /**
