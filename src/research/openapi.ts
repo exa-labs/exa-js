@@ -98,13 +98,13 @@ export interface components {
       input: string;
       instructions?: string;
       /** @enum {string} */
-      model: ResearchCreateOpenAIResponseDtoModel;
+      model: "exa-research" | "exa-research-pro";
       stream?: boolean;
       text?: {
         format?:
           | {
               /** @enum {string} */
-              type: ResearchCreateOpenAIResponseDtoTextFormatType;
+              type: "text";
             }
           | {
               description?: string;
@@ -114,7 +114,7 @@ export interface components {
               };
               strict?: boolean;
               /** @enum {string} */
-              type: ResearchCreateOpenAIResponseDtoTextFormatType;
+              type: "json_schema";
             };
       };
     };
@@ -128,7 +128,7 @@ export interface components {
        * @default exa-research
        * @enum {string}
        */
-      model: ResearchCreateOpenAIResponseDtoModel;
+      model: "exa-research" | "exa-research-pro";
       output?: {
         /**
          * @description When true and an output schema is omitted, an output schema will be intelligently generated. Otherwise, if this is false and there is no output schema, a generic markdown report will be generated.
@@ -175,14 +175,14 @@ export interface components {
       /** @description The instructions or query for the research task */
       instructions: string;
       /** @enum {string} */
-      model?: ResearchCreateOpenAIResponseDtoModel;
+      model?: "exa-research" | "exa-research-pro";
       operations: (
         | {
             stepId: string;
             /** @description Agent generated plan or reasoning for upcoming actions. */
             text: string;
             /** @enum {string} */
-            type: ResearchTaskDtoOperationsType;
+            type: "step-plan";
           }
         | {
             /** @description A completed subfield */
@@ -191,7 +191,7 @@ export interface components {
             };
             stepId: string;
             /** @enum {string} */
-            type: ResearchTaskDtoOperationsType;
+            type: "step-data";
           }
         | {
             /** @description What the agent hopes to find with this search query */
@@ -204,18 +204,18 @@ export interface components {
               title?: string;
               url: string;
               /** @enum {number} */
-              version: ResearchTaskDtoOperationsResultsVersion;
+              version: 1;
             }[];
             stepId: string;
             /** @enum {string} */
-            type: ResearchTaskDtoOperationsType;
+            type: "search";
           }
         | {
             /** @description What the agent hopes to find with this crawl */
             goal?: string;
             stepId: string;
             /** @enum {string} */
-            type: ResearchTaskDtoOperationsType;
+            type: "crawl";
             url: string;
           }
         | {
@@ -223,7 +223,7 @@ export interface components {
             /** @description Intermediate chain-of-thought style reasoning output */
             thought: string;
             /** @enum {string} */
-            type: ResearchTaskDtoOperationsType;
+            type: "think";
           }
       )[];
       /** @description The JSON schema specification for the expected output format */
@@ -234,7 +234,7 @@ export interface components {
        * @description The current status of the research task
        * @enum {string}
        */
-      status: ResearchTaskDtoStatus;
+      status: "running" | "completed" | "failed";
       timeMs?: number;
     };
     ResearchTaskEventDto:
@@ -245,7 +245,7 @@ export interface components {
                 /** @description Agent generated plan or reasoning for upcoming actions. */
                 text: string;
                 /** @enum {string} */
-                type: ResearchTaskDtoOperationsType;
+                type: "step-plan";
               }
             | {
                 /** @description A completed subfield */
@@ -254,7 +254,7 @@ export interface components {
                 };
                 stepId: string;
                 /** @enum {string} */
-                type: ResearchTaskDtoOperationsType;
+                type: "step-data";
               }
             | {
                 /** @description What the agent hopes to find with this search query */
@@ -267,18 +267,18 @@ export interface components {
                   title?: string;
                   url: string;
                   /** @enum {number} */
-                  version: ResearchTaskDtoOperationsResultsVersion;
+                  version: 1;
                 }[];
                 stepId: string;
                 /** @enum {string} */
-                type: ResearchTaskDtoOperationsType;
+                type: "search";
               }
             | {
                 /** @description What the agent hopes to find with this crawl */
                 goal?: string;
                 stepId: string;
                 /** @enum {string} */
-                type: ResearchTaskDtoOperationsType;
+                type: "crawl";
                 url: string;
               }
             | {
@@ -286,10 +286,10 @@ export interface components {
                 /** @description Intermediate chain-of-thought style reasoning output */
                 thought: string;
                 /** @enum {string} */
-                type: ResearchTaskDtoOperationsType;
+                type: "think";
               };
           /** @enum {string} */
-          type: ResearchTaskEventDtoType;
+          type: "operation";
         }
       | {
           task: {
@@ -321,14 +321,14 @@ export interface components {
             /** @description The instructions or query for the research task */
             instructions: string;
             /** @enum {string} */
-            model?: ResearchCreateOpenAIResponseDtoModel;
+            model?: "exa-research" | "exa-research-pro";
             operations: (
               | {
                   stepId: string;
                   /** @description Agent generated plan or reasoning for upcoming actions. */
                   text: string;
                   /** @enum {string} */
-                  type: ResearchTaskDtoOperationsType;
+                  type: "step-plan";
                 }
               | {
                   /** @description A completed subfield */
@@ -337,7 +337,7 @@ export interface components {
                   };
                   stepId: string;
                   /** @enum {string} */
-                  type: ResearchTaskDtoOperationsType;
+                  type: "step-data";
                 }
               | {
                   /** @description What the agent hopes to find with this search query */
@@ -350,18 +350,18 @@ export interface components {
                     title?: string;
                     url: string;
                     /** @enum {number} */
-                    version: ResearchTaskDtoOperationsResultsVersion;
+                    version: 1;
                   }[];
                   stepId: string;
                   /** @enum {string} */
-                  type: ResearchTaskDtoOperationsType;
+                  type: "search";
                 }
               | {
                   /** @description What the agent hopes to find with this crawl */
                   goal?: string;
                   stepId: string;
                   /** @enum {string} */
-                  type: ResearchTaskDtoOperationsType;
+                  type: "crawl";
                   url: string;
                 }
               | {
@@ -369,7 +369,7 @@ export interface components {
                   /** @description Intermediate chain-of-thought style reasoning output */
                   thought: string;
                   /** @enum {string} */
-                  type: ResearchTaskDtoOperationsType;
+                  type: "think";
                 }
             )[];
             /** @description The JSON schema specification for the expected output format */
@@ -380,11 +380,11 @@ export interface components {
              * @description The current status of the research task
              * @enum {string}
              */
-            status: ResearchTaskDtoStatus;
+            status: "running" | "completed" | "failed";
             timeMs?: number;
           };
           /** @enum {string} */
-          type: ResearchTaskEventDtoType;
+          type: "completed";
         };
     ResearchTaskOperationDto:
       | {
@@ -392,7 +392,7 @@ export interface components {
           /** @description Agent generated plan or reasoning for upcoming actions. */
           text: string;
           /** @enum {string} */
-          type: ResearchTaskDtoOperationsType;
+          type: "step-plan";
         }
       | {
           /** @description A completed subfield */
@@ -401,7 +401,7 @@ export interface components {
           };
           stepId: string;
           /** @enum {string} */
-          type: ResearchTaskDtoOperationsType;
+          type: "step-data";
         }
       | {
           /** @description What the agent hopes to find with this search query */
@@ -414,18 +414,18 @@ export interface components {
             title?: string;
             url: string;
             /** @enum {number} */
-            version: ResearchTaskDtoOperationsResultsVersion;
+            version: 1;
           }[];
           stepId: string;
           /** @enum {string} */
-          type: ResearchTaskDtoOperationsType;
+          type: "search";
         }
       | {
           /** @description What the agent hopes to find with this crawl */
           goal?: string;
           stepId: string;
           /** @enum {string} */
-          type: ResearchTaskDtoOperationsType;
+          type: "crawl";
           url: string;
         }
       | {
@@ -433,7 +433,7 @@ export interface components {
           /** @description Intermediate chain-of-thought style reasoning output */
           thought: string;
           /** @enum {string} */
-          type: ResearchTaskDtoOperationsType;
+          type: "think";
         };
   };
   responses: never;
@@ -569,43 +569,4 @@ export interface operations {
       };
     };
   };
-}
-export enum ResearchCreateOpenAIResponseDtoModel {
-  exa_research = "exa-research",
-  exa_research_pro = "exa-research-pro",
-}
-export enum ResearchCreateOpenAIResponseDtoTextFormatType {
-  text = "text",
-}
-export enum ResearchCreateOpenAIResponseDtoTextFormatType {
-  json_schema = "json_schema",
-}
-export enum ResearchTaskDtoOperationsType {
-  step_plan = "step-plan",
-}
-export enum ResearchTaskDtoOperationsType {
-  step_data = "step-data",
-}
-export enum ResearchTaskDtoOperationsResultsVersion {
-  Value1 = 1,
-}
-export enum ResearchTaskDtoOperationsType {
-  search = "search",
-}
-export enum ResearchTaskDtoOperationsType {
-  crawl = "crawl",
-}
-export enum ResearchTaskDtoOperationsType {
-  think = "think",
-}
-export enum ResearchTaskDtoStatus {
-  running = "running",
-  completed = "completed",
-  failed = "failed",
-}
-export enum ResearchTaskEventDtoType {
-  operation = "operation",
-}
-export enum ResearchTaskEventDtoType {
-  completed = "completed",
 }
