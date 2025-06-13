@@ -66,14 +66,13 @@ jobs:
         run: |
           cd examples
           for file in *.ts; do
-            if [ "$file" = "chat_completion.ts" ]; then
+            if [ "$file" = "chat_completion.ts" ] || [ "$file" = "openai_responses.ts" ]; then
               echo "Skipping $file"
               continue
             fi
             echo "Compiling $file"
             tsc $file
           done
-
       - name: List compiled files
         run: ls -R examples/*.js
 

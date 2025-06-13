@@ -7,18 +7,9 @@ async function main() {
     baseURL: "https://api.exa.ai",
   });
 
-  const stream = await openai.chat.completions.create({
+  const stream = await openai.responses.create({
     model: "exa-research",
-    messages: [
-      {
-        role: "system",
-        content: "You must answer in all caps",
-      },
-      {
-        role: "user",
-        content: "Tell me about recent market trends in the U.S.",
-      },
-    ],
+    input: "Tell me about AI market trends over the next 10 years",
     stream: true,
   });
 
