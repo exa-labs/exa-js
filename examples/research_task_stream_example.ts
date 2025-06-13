@@ -1,5 +1,5 @@
 import "dotenv/config";
-import Exa, { JSONSchema, ResearchModel } from "../src/index";
+import Exa, { JSONSchema } from "../src/index";
 
 const exa = new Exa(process.env.EXA_API_KEY);
 
@@ -33,7 +33,7 @@ const schema: JSONSchema = {
 async function runResearchExample() {
   // Create a single research task
   const createdTask = await exa.research.createTask({
-    model: ResearchModel.exa_research,
+    model: "exa-research",
     instructions,
     output: { schema },
   });

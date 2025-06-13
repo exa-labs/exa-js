@@ -1,5 +1,5 @@
 import "dotenv/config";
-import Exa, { JSONSchema, ResearchModel } from "../src/index";
+import Exa, { JSONSchema } from "../src/index";
 
 const exa = new Exa(process.env.EXA_API_KEY);
 
@@ -79,7 +79,7 @@ async function runResearchExample() {
   const createdTasks = await Promise.all(
     examples.map(({ instructions, schema }) =>
       exa.research.createTask({
-        model: ResearchModel.exa_research,
+        model: "exa-research",
         instructions,
         output: { schema },
       })

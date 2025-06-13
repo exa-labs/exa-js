@@ -2,14 +2,14 @@ import {
   Exa,
   ListResearchTasksRequest,
   ListResearchTasksResponse,
-  ResearchEvent,
+  ResearchTaskEvent,
   ResearchTask,
 } from "../index";
 import {
   JSONSchema,
   ResearchCreateTaskRequest,
   ResearchCreateTaskResponse,
-  ResearchModel,
+  ResearchTaskModel,
 } from "../index";
 import { ResearchBaseClient } from "./base";
 
@@ -33,14 +33,14 @@ export class ResearchClient extends ResearchBaseClient {
    */
   async createTask(params: {
     instructions: string;
-    model?: ResearchModel;
+    model?: "exa-research" | "exa-research-pro" | ResearchTaskModel;
     output?: { inferSchema?: boolean; schema?: JSONSchema };
   }): Promise<ResearchCreateTaskResponse> {
     // Ensure we have a model (default to exa_research)
     const { instructions, model, output } = params;
     const payload: ResearchCreateTaskRequest = {
       instructions,
-      model: model ?? ResearchModel.exa_research,
+      model: (model as ResearchTaskModel) ?? ResearchTaskModel.exa_research,
       output: output
         ? {
             schema: output.schema,
@@ -67,11 +67,11 @@ export class ResearchClient extends ResearchBaseClient {
   getTask(
     id: string,
     options: { stream: true }
-  ): Promise<AsyncGenerator<ResearchEvent, any, any>>;
+  ): Promise<AsyncGenerator<ResearchTaskEvent, any, any>>;
   getTask(
     id: string,
     options?: { stream?: boolean }
-  ): Promise<ResearchTask> | Promise<AsyncGenerator<ResearchEvent>> {
+  ): Promise<ResearchTask> | Promise<AsyncGenerator<ResearchTaskEvent>> {
     if (options?.stream) {
       const promise = async () => {
         const resp = await this.rawRequest(`/tasks/${id}?stream=true`, "GET");
@@ -82,7 +82,7 @@ export class ResearchClient extends ResearchBaseClient {
         const decoder = new TextDecoder();
         let buffer = "";
 
-        function processPart(part: string): ResearchEvent | null {
+        function processPart(part: string): ResearchTaskEvent | null {
           const lines = part.split("\n");
           let data = lines.slice(1).join("\n");
           if (data.startsWith("data:")) {
@@ -123,12 +123,12 @@ export class ResearchClient extends ResearchBaseClient {
       };
       return promise() as
         | Promise<ResearchTask>
-        | Promise<AsyncGenerator<ResearchEvent>>;
+        | Promise<AsyncGenerator<ResearchTaskEvent>>;
     } else {
       // Non-streaming: just fetch the task as before
       return this.request<ResearchTask>(`/tasks/${id}`, "GET") as
         | Promise<ResearchTask>
-        | Promise<AsyncGenerator<ResearchEvent>>;
+        | Promise<AsyncGenerator<ResearchTaskEvent>>;
     }
   }
 

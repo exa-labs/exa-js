@@ -239,52 +239,57 @@ export interface components {
     };
     ResearchTaskEventDto:
       | {
-          stepId: string;
-          /** @description Agent generated plan or reasoning for upcoming actions. */
-          text: string;
+          operation:
+            | {
+                stepId: string;
+                /** @description Agent generated plan or reasoning for upcoming actions. */
+                text: string;
+                /** @enum {string} */
+                type: ResearchTaskDtoOperationsType;
+              }
+            | {
+                /** @description A completed subfield */
+                data: {
+                  [key: string]: unknown;
+                };
+                stepId: string;
+                /** @enum {string} */
+                type: ResearchTaskDtoOperationsType;
+              }
+            | {
+                /** @description What the agent hopes to find with this search query */
+                goal?: string;
+                /** @description Search query used */
+                query: string;
+                results?: {
+                  id: string;
+                  snippet: string;
+                  title?: string;
+                  url: string;
+                  /** @enum {number} */
+                  version: ResearchTaskDtoOperationsResultsVersion;
+                }[];
+                stepId: string;
+                /** @enum {string} */
+                type: ResearchTaskDtoOperationsType;
+              }
+            | {
+                /** @description What the agent hopes to find with this crawl */
+                goal?: string;
+                stepId: string;
+                /** @enum {string} */
+                type: ResearchTaskDtoOperationsType;
+                url: string;
+              }
+            | {
+                stepId: string;
+                /** @description Intermediate chain-of-thought style reasoning output */
+                thought: string;
+                /** @enum {string} */
+                type: ResearchTaskDtoOperationsType;
+              };
           /** @enum {string} */
-          type: ResearchTaskDtoOperationsType;
-        }
-      | {
-          /** @description A completed subfield */
-          data: {
-            [key: string]: unknown;
-          };
-          stepId: string;
-          /** @enum {string} */
-          type: ResearchTaskDtoOperationsType;
-        }
-      | {
-          /** @description What the agent hopes to find with this search query */
-          goal?: string;
-          /** @description Search query used */
-          query: string;
-          results?: {
-            id: string;
-            snippet: string;
-            title?: string;
-            url: string;
-            /** @enum {number} */
-            version: ResearchTaskDtoOperationsResultsVersion;
-          }[];
-          stepId: string;
-          /** @enum {string} */
-          type: ResearchTaskDtoOperationsType;
-        }
-      | {
-          /** @description What the agent hopes to find with this crawl */
-          goal?: string;
-          stepId: string;
-          /** @enum {string} */
-          type: ResearchTaskDtoOperationsType;
-          url: string;
-        }
-      | {
-          stepId: string;
-          /** @description Intermediate chain-of-thought style reasoning output */
-          thought: string;
-          /** @enum {string} */
-          type: ResearchTaskDtoOperationsType;
+          type: ResearchTaskEventDtoType;
         }
       | {
           task: {
@@ -381,6 +386,55 @@ export interface components {
           /** @enum {string} */
           type: ResearchTaskEventDtoType;
         };
+    ResearchTaskOperationDto:
+      | {
+          stepId: string;
+          /** @description Agent generated plan or reasoning for upcoming actions. */
+          text: string;
+          /** @enum {string} */
+          type: ResearchTaskDtoOperationsType;
+        }
+      | {
+          /** @description A completed subfield */
+          data: {
+            [key: string]: unknown;
+          };
+          stepId: string;
+          /** @enum {string} */
+          type: ResearchTaskDtoOperationsType;
+        }
+      | {
+          /** @description What the agent hopes to find with this search query */
+          goal?: string;
+          /** @description Search query used */
+          query: string;
+          results?: {
+            id: string;
+            snippet: string;
+            title?: string;
+            url: string;
+            /** @enum {number} */
+            version: ResearchTaskDtoOperationsResultsVersion;
+          }[];
+          stepId: string;
+          /** @enum {string} */
+          type: ResearchTaskDtoOperationsType;
+        }
+      | {
+          /** @description What the agent hopes to find with this crawl */
+          goal?: string;
+          stepId: string;
+          /** @enum {string} */
+          type: ResearchTaskDtoOperationsType;
+          url: string;
+        }
+      | {
+          stepId: string;
+          /** @description Intermediate chain-of-thought style reasoning output */
+          thought: string;
+          /** @enum {string} */
+          type: ResearchTaskDtoOperationsType;
+        };
   };
   responses: never;
   parameters: never;
@@ -401,6 +455,8 @@ export type SchemaResearchCreateTaskResponseDto =
 export type SchemaResearchTaskDto = components["schemas"]["ResearchTaskDto"];
 export type SchemaResearchTaskEventDto =
   components["schemas"]["ResearchTaskEventDto"];
+export type SchemaResearchTaskOperationDto =
+  components["schemas"]["ResearchTaskOperationDto"];
 export type $defs = Record<string, never>;
 export interface operations {
   "research-responses-create": {
@@ -546,6 +602,9 @@ export enum ResearchTaskDtoStatus {
   running = "running",
   completed = "completed",
   failed = "failed",
+}
+export enum ResearchTaskEventDtoType {
+  operation = "operation",
 }
 export enum ResearchTaskEventDtoType {
   completed = "completed",
