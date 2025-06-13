@@ -1,7 +1,7 @@
 import "dotenv/config";
-import Exa, { JSONSchema, ResearchModel } from "../src/index";
+import Exa, { JSONSchema } from "../src/index";
 
-const exa = new Exa(process.env.EXA_API_KEY, "http://localhost:3002");
+const exa = new Exa(process.env.EXA_API_KEY);
 
 const instructions =
   "Summarize the history of San Francisco highlighting one or two major events for each decade from 1850 to 1950";
@@ -33,7 +33,7 @@ const schema: JSONSchema = {
 async function runResearchExample() {
   // Create a single research task
   const createdTask = await exa.research.createTask({
-    model: ResearchModel.exa_research,
+    model: "exa-research",
     instructions,
     output: { schema },
   });
