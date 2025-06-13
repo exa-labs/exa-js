@@ -1,16 +1,21 @@
+import { components, SchemaResearchTaskDto } from "./openapi";
+
 export { ResearchClient } from "./client";
 
-// Re-export common enums and types from the generated OpenAPI spec
 export {
-  ResearchCreateOpenAIResponseDtoModel as ResearchModel,
-  ResearchTaskDtoStatus as ResearchStatus,
+  ResearchCreateOpenAIResponseDtoModel as ResearchTaskModel,
+  ResearchTaskDtoStatus as ResearchTaskStatus,
+  ResearchTaskDtoOperationsType as ResearchTaskOperationType,
+  ResearchTaskEventDtoType as ResearchTaskEventType,
 } from "./openapi";
+
+export type ResearchTaskEvent = components["schemas"]["ResearchTaskEventDto"];
+export type ResearchTaskOperation = SchemaResearchTaskDto["operations"][0];
 
 export type {
   SchemaResearchTaskDto as ResearchTask,
   SchemaListResearchTasksRequestDto as ListResearchTasksRequest,
   SchemaListResearchTasksResponseDto as ListResearchTasksResponse,
-  ResearchTaskEventDtoType as ResearchEvent,
   SchemaResearchCreateTaskResponseDto as ResearchCreateTaskResponse,
   SchemaResearchCreateTaskRequestDto as ResearchCreateTaskRequest,
 } from "./openapi";
