@@ -104,7 +104,12 @@ export type ContentsOptions = {
  * Options for livecrawling contents
  * @typedef {string} LivecrawlOptions
  */
-export type LivecrawlOptions = "never" | "fallback" | "always" | "auto" | "preferred";
+export type LivecrawlOptions =
+  | "never"
+  | "fallback"
+  | "always"
+  | "auto"
+  | "preferred";
 
 /**
  * Options for retrieving text from page.
@@ -389,7 +394,7 @@ export type AnswerStreamResponse = {
  * The Exa class encapsulates the API's endpoints.
  */
 export class Exa {
-  private baseURL: string;
+  baseURL: string;
   private headers: Headers;
 
   /**
@@ -552,6 +557,40 @@ export class Exa {
     }
 
     return (await response.json()) as T;
+  }
+
+  async rawRequest(
+    endpoint: string,
+    method: string = "POST",
+    body?: Record<string, unknown>,
+    queryParams?: Record<
+      string,
+      string | number | boolean | string[] | undefined
+    >
+  ): Promise<Response> {
+    let url = this.baseURL + endpoint;
+
+    if (queryParams) {
+      const searchParams = new URLSearchParams();
+      for (const [key, value] of Object.entries(queryParams)) {
+        if (Array.isArray(value)) {
+          for (const item of value) {
+            searchParams.append(key, String(item));
+          }
+        } else if (value !== undefined) {
+          searchParams.append(key, String(value));
+        }
+      }
+      url += `?${searchParams.toString()}`;
+    }
+
+    const response = await fetchImpl(url, {
+      method,
+      headers: this.headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    return response;
   }
 
   /**

@@ -4,6 +4,40 @@
  */
 
 export interface paths {
+  "/research/v0/responses": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create a research task using OpenAI response types and semantics */
+    post: operations["research-responses-create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/research/v0/responses/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a research task by id using OpenAI response types and semantics */
+    get: operations["ResearchControllerV0_getResearchOpenAIResponse"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/research/v0/tasks": {
     parameters: {
       query?: never;
@@ -30,7 +64,7 @@ export interface paths {
       cookie?: never;
     };
     /** Get a research task by id */
-    get: operations["ResearchControllerV0_getResearchTask[0]"];
+    get: operations["ResearchControllerV0_getResearchTask"];
     put?: never;
     post?: never;
     delete?: never;
@@ -48,7 +82,7 @@ export interface components {
       cursor?: string;
       /**
        * @description The number of results to return
-       * @default 25
+       * @default 10
        */
       limit: number;
     };
@@ -60,6 +94,30 @@ export interface components {
       /** @description The cursor to paginate through the next set of results */
       nextCursor: string | null;
     };
+    ResearchCreateOpenAIResponseDto: {
+      input: string;
+      instructions?: string;
+      /** @enum {string} */
+      model: ResearchCreateOpenAIResponseDtoModel;
+      stream?: boolean;
+      text?: {
+        format?:
+          | {
+              /** @enum {string} */
+              type: ResearchCreateOpenAIResponseDtoTextFormatType;
+            }
+          | {
+              description?: string;
+              name?: string;
+              schema: {
+                [key: string]: unknown;
+              };
+              strict?: boolean;
+              /** @enum {string} */
+              type: ResearchCreateOpenAIResponseDtoTextFormatType;
+            };
+      };
+    };
     ResearchCreateTaskRequestDto: {
       input?: {
         instructions: string;
@@ -70,7 +128,7 @@ export interface components {
        * @default exa-research
        * @enum {string}
        */
-      model: ResearchCreateTaskRequestDtoModel;
+      model: ResearchCreateOpenAIResponseDtoModel;
       output?: {
         /**
          * @description When true and an output schema is omitted, an output schema will be intelligently generated. Otherwise, if this is false and there is no output schema, a generic markdown report will be generated.
@@ -98,6 +156,16 @@ export interface components {
           url: string;
         }[];
       };
+      costDollars?: {
+        research: {
+          pages: number;
+          reasoningTokens: number;
+          searches: number;
+        };
+        total: number;
+      };
+      /** @description The creation time of the research task in milliseconds since the Unix epoch */
+      createdAt: number;
       /** @description The research results data conforming to the specified schema */
       data?: {
         [key: string]: unknown;
@@ -106,6 +174,54 @@ export interface components {
       id: string;
       /** @description The instructions or query for the research task */
       instructions: string;
+      /** @enum {string} */
+      model?: ResearchCreateOpenAIResponseDtoModel;
+      operations: (
+        | {
+            stepId: string;
+            /** @description Agent generated plan or reasoning for upcoming actions. */
+            text: string;
+            /** @enum {string} */
+            type: ResearchTaskDtoOperationsType;
+          }
+        | {
+            /** @description A completed subfield */
+            data: {
+              [key: string]: unknown;
+            };
+            /** @enum {string} */
+            type: ResearchTaskDtoOperationsType;
+          }
+        | {
+            /** @description What the agent hopes to find with this search query */
+            goal?: string;
+            /** @description Search query used */
+            query: string;
+            results?: {
+              id: string;
+              snippet: string;
+              title?: string;
+              url: string;
+              /** @enum {number} */
+              version: ResearchTaskDtoOperationsResultsVersion;
+            }[];
+            /** @enum {string} */
+            type: ResearchTaskDtoOperationsType;
+          }
+        | {
+            /** @description What the agent hopes to find with this crawl */
+            goal?: string;
+            /** @enum {string} */
+            type: ResearchTaskDtoOperationsType;
+            url: string;
+          }
+        | {
+            /** @description Intermediate chain-of-thought style reasoning output */
+            thought: string;
+            /** @enum {string} */
+            type: ResearchTaskDtoOperationsType;
+          }
+      )[];
       /** @description The JSON schema specification for the expected output format */
       schema?: {
         [key: string]: unknown;
@@ -115,7 +231,144 @@ export interface components {
        * @enum {string}
        */
       status: ResearchTaskDtoStatus;
+      timeMs?: number;
     };
+    ResearchTaskEventDto:
+      | {
+          stepId: string;
+          /** @description Agent generated plan or reasoning for upcoming actions. */
+          text: string;
+          /** @enum {string} */
+          type: ResearchTaskDtoOperationsType;
+        }
+      | {
+          /** @description A completed subfield */
+          data: {
+            [key: string]: unknown;
+          };
+          /** @enum {string} */
+          type: ResearchTaskDtoOperationsType;
+        }
+      | {
+          /** @description What the agent hopes to find with this search query */
+          goal?: string;
+          /** @description Search query used */
+          query: string;
+          results?: {
+            id: string;
+            snippet: string;
+            title?: string;
+            url: string;
+            /** @enum {number} */
+            version: ResearchTaskDtoOperationsResultsVersion;
+          }[];
+          /** @enum {string} */
+          type: ResearchTaskDtoOperationsType;
+        }
+      | {
+          /** @description What the agent hopes to find with this crawl */
+          goal?: string;
+          /** @enum {string} */
+          type: ResearchTaskDtoOperationsType;
+          url: string;
+        }
+      | {
+          /** @description Intermediate chain-of-thought style reasoning output */
+          thought: string;
+          /** @enum {string} */
+          type: ResearchTaskDtoOperationsType;
+        }
+      | {
+          task: {
+            /** @description Citations grouped by the root field they were used in */
+            citations?: {
+              [key: string]: {
+                id: string;
+                snippet: string;
+                title?: string;
+                url: string;
+              }[];
+            };
+            costDollars?: {
+              research: {
+                pages: number;
+                reasoningTokens: number;
+                searches: number;
+              };
+              total: number;
+            };
+            /** @description The creation time of the research task in milliseconds since the Unix epoch */
+            createdAt: number;
+            /** @description The research results data conforming to the specified schema */
+            data?: {
+              [key: string]: unknown;
+            };
+            /** @description The unique identifier for the research task */
+            id: string;
+            /** @description The instructions or query for the research task */
+            instructions: string;
+            /** @enum {string} */
+            model?: ResearchCreateOpenAIResponseDtoModel;
+            operations: (
+              | {
+                  stepId: string;
+                  /** @description Agent generated plan or reasoning for upcoming actions. */
+                  text: string;
+                  /** @enum {string} */
+                  type: ResearchTaskDtoOperationsType;
+                }
+              | {
+                  /** @description A completed subfield */
+                  data: {
+                    [key: string]: unknown;
+                  };
+                  /** @enum {string} */
+                  type: ResearchTaskDtoOperationsType;
+                }
+              | {
+                  /** @description What the agent hopes to find with this search query */
+                  goal?: string;
+                  /** @description Search query used */
+                  query: string;
+                  results?: {
+                    id: string;
+                    snippet: string;
+                    title?: string;
+                    url: string;
+                    /** @enum {number} */
+                    version: ResearchTaskDtoOperationsResultsVersion;
+                  }[];
+                  /** @enum {string} */
+                  type: ResearchTaskDtoOperationsType;
+                }
+              | {
+                  /** @description What the agent hopes to find with this crawl */
+                  goal?: string;
+                  /** @enum {string} */
+                  type: ResearchTaskDtoOperationsType;
+                  url: string;
+                }
+              | {
+                  /** @description Intermediate chain-of-thought style reasoning output */
+                  thought: string;
+                  /** @enum {string} */
+                  type: ResearchTaskDtoOperationsType;
+                }
+            )[];
+            /** @description The JSON schema specification for the expected output format */
+            schema?: {
+              [key: string]: unknown;
+            };
+            /**
+             * @description The current status of the research task
+             * @enum {string}
+             */
+            status: ResearchTaskDtoStatus;
+            timeMs?: number;
+          };
+          /** @enum {string} */
+          type: ResearchTaskEventDtoType;
+        };
   };
   responses: never;
   parameters: never;
@@ -127,13 +380,57 @@ export type SchemaListResearchTasksRequestDto =
   components["schemas"]["ListResearchTasksRequestDto"];
 export type SchemaListResearchTasksResponseDto =
   components["schemas"]["ListResearchTasksResponseDto"];
+export type SchemaResearchCreateOpenAiResponseDto =
+  components["schemas"]["ResearchCreateOpenAIResponseDto"];
 export type SchemaResearchCreateTaskRequestDto =
   components["schemas"]["ResearchCreateTaskRequestDto"];
 export type SchemaResearchCreateTaskResponseDto =
   components["schemas"]["ResearchCreateTaskResponseDto"];
 export type SchemaResearchTaskDto = components["schemas"]["ResearchTaskDto"];
+export type SchemaResearchTaskEventDto =
+  components["schemas"]["ResearchTaskEventDto"];
 export type $defs = Record<string, never>;
 export interface operations {
+  "research-responses-create": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ResearchCreateOpenAIResponseDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ResearchControllerV0_getResearchOpenAIResponse: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   "research-tasks-list": {
     parameters: {
       query?: {
@@ -183,28 +480,7 @@ export interface operations {
       };
     };
   };
-  "ResearchControllerV0_getResearchTask[1]": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ResearchTaskDto"];
-        };
-      };
-    };
-  };
-  "ResearchControllerV0_getResearchTask[0]": {
+  ResearchControllerV0_getResearchTask: {
     parameters: {
       query?: never;
       header?: never;
@@ -226,12 +502,39 @@ export interface operations {
     };
   };
 }
-export enum ResearchCreateTaskRequestDtoModel {
+export enum ResearchCreateOpenAIResponseDtoModel {
   exa_research = "exa-research",
   exa_research_pro = "exa-research-pro",
+}
+export enum ResearchCreateOpenAIResponseDtoTextFormatType {
+  text = "text",
+}
+export enum ResearchCreateOpenAIResponseDtoTextFormatType {
+  json_schema = "json_schema",
+}
+export enum ResearchTaskDtoOperationsType {
+  step_plan = "step-plan",
+}
+export enum ResearchTaskDtoOperationsType {
+  step_data = "step-data",
+}
+export enum ResearchTaskDtoOperationsResultsVersion {
+  Value1 = 1,
+}
+export enum ResearchTaskDtoOperationsType {
+  search = "search",
+}
+export enum ResearchTaskDtoOperationsType {
+  crawl = "crawl",
+}
+export enum ResearchTaskDtoOperationsType {
+  think = "think",
 }
 export enum ResearchTaskDtoStatus {
   running = "running",
   completed = "completed",
   failed = "failed",
+}
+export enum ResearchTaskEventDtoType {
+  completed = "completed",
 }

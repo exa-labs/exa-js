@@ -1,5 +1,4 @@
-import { Exa } from "../index";
-import type { PaginationParams } from "./types";
+import { Exa, ListResearchTasksRequest } from "../index";
 
 type QueryParams = Record<
   string,
@@ -49,11 +48,37 @@ export class ResearchBaseClient {
   }
 
   /**
+   * Make a request to the Research API (prefixes all paths with `/research`).
+   * @param endpoint The endpoint path, beginning with a slash (e.g. "/tasks").
+   * @param method The HTTP method. Defaults to "POST".
+   * @param data Optional request body
+   * @param params Optional query parameters
+   * @returns The parsed JSON response
+   */
+  protected async rawRequest<T = unknown>(
+    endpoint: string,
+    method: string = "POST",
+    data?: RequestBody,
+    params?: QueryParams
+  ): Promise<Response> {
+    // Delegate to the root Exa client. Internally this handles error mapping and
+    // query-string construction.
+    return this.client.rawRequest<T>(
+      `/research/v0${endpoint}`,
+      method,
+      data,
+      params
+    );
+  }
+
+  /**
    * Helper to build pagination parameters.
    * @param pagination The pagination parameters
    * @returns QueryParams object with pagination parameters
    */
-  protected buildPaginationParams(pagination?: PaginationParams): QueryParams {
+  protected buildPaginationParams(
+    pagination?: ListResearchTasksRequest
+  ): QueryParams {
     const params: QueryParams = {};
     if (!pagination) return params;
 
