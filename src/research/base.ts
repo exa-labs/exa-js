@@ -55,7 +55,7 @@ export class ResearchBaseClient {
    * @param params Optional query parameters
    * @returns The parsed JSON response
    */
-  protected async rawRequest<T = unknown>(
+  protected async rawRequest(
     endpoint: string,
     method: string = "POST",
     data?: RequestBody,
@@ -63,7 +63,7 @@ export class ResearchBaseClient {
   ): Promise<Response> {
     // Delegate to the root Exa client. Internally this handles error mapping and
     // query-string construction.
-    return this.client.rawRequest<T>(
+    return this.client.rawRequest(
       `/research/v0${endpoint}`,
       method,
       data,

@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Exa, { ResearchStatus, type JSONSchema } from "../src";
-import { ResearchCreateTaskRequestDtoModel as ResearchModel } from "../src/research/openapi";
+import Exa, { ResearchStatus, type JSONSchema, ResearchModel } from "../src";
 
 /**
  * Test suite for the /research endpoint.

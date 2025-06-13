@@ -1,6 +1,5 @@
 import "dotenv/config";
-import Exa, { JSONSchema } from "../src/index";
-import { ResearchCreateTaskRequestDtoModel as ResearchModel } from "../src/research/openapi";
+import Exa, { JSONSchema, ResearchModel } from "../src/index";
 
 const exa = new Exa(process.env.EXA_API_KEY);
 
