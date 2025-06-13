@@ -9,7 +9,6 @@ import {
   JSONSchema,
   ResearchCreateTaskRequest,
   ResearchCreateTaskResponse,
-  ResearchTaskModel,
 } from "../index";
 import { ResearchBaseClient } from "./base";
 
@@ -33,14 +32,14 @@ export class ResearchClient extends ResearchBaseClient {
    */
   async createTask(params: {
     instructions: string;
-    model?: "exa-research" | "exa-research-pro" | ResearchTaskModel;
+    model?: "exa-research" | "exa-research-pro";
     output?: { inferSchema?: boolean; schema?: JSONSchema };
   }): Promise<ResearchCreateTaskResponse> {
     // Ensure we have a model (default to exa_research)
     const { instructions, model, output } = params;
     const payload: ResearchCreateTaskRequest = {
       instructions,
-      model: (model as ResearchTaskModel) ?? ResearchTaskModel.exa_research,
+      model: model ?? "exa-research",
       output: output
         ? {
             schema: output.schema,

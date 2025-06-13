@@ -1,9 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Exa, {
-  ResearchTaskStatus,
-  type JSONSchema,
-  ResearchTaskModel,
-} from "../src";
+import Exa, { type JSONSchema } from "../src";
 
 /**
  * Test suite for the /research endpoint.
@@ -22,7 +18,7 @@ describe("Research API", () => {
 
   it("should submit a research request with a minimal schema", async () => {
     const instructions = "General research";
-    const model = ResearchTaskModel.exa_research;
+    const model = "exa-research";
 
     // Minimal (but valid) JSON schema
     const schema: JSONSchema = { type: "object" };
@@ -70,7 +66,7 @@ describe("Research API", () => {
 
     const mockResponse = {
       id: "research_456",
-      status: ResearchTaskStatus.completed,
+      status: "completed",
       output: { answer: "Photosynthesis is ..." },
       citations: {},
     };
@@ -89,7 +85,7 @@ describe("Research API", () => {
       "POST",
       {
         instructions,
-        model: ResearchTaskModel.exa_research,
+        model: "exa-research",
         output: {
           inferSchema: true,
           schema,
