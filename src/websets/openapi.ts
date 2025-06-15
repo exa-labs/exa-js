@@ -48,6 +48,64 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v0/imports": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Imports
+     * @description Lists all imports for the Webset.
+     */
+    get: operations["imports-list"];
+    put?: never;
+    /**
+     * Create an Import
+     * @description Creates a new import to upload your data into Websets. Imports can be used to:
+     *
+     *     - **Enrich**: Enhance your data with additional information using our AI-powered enrichment engine
+     *     - **Search**: Query your data using Websets' agentic search with natural language filters
+     *     - **Exclude**: Prevent duplicate or already known results from appearing in your searches
+     *
+     *     Once the import is created, you can upload your data to the returned `uploadUrl` until `uploadValidUntil` (by default 1 hour).
+     */
+    post: operations["imports-create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v0/imports/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Import
+     * @description Gets a specific import.
+     */
+    get: operations["imports-get"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete Import
+     * @description Deletes a import.
+     */
+    delete: operations["imports-delete"];
+    options?: never;
+    head?: never;
+    /**
+     * Update Import
+     * @description Updates a import configuration.
+     */
+    patch: operations["imports-update"];
+    trace?: never;
+  };
   "/v0/monitors": {
     parameters: {
       query?: never;
@@ -69,7 +127,7 @@ export interface paths {
      *
      *     - **Find new content**: Execute `search` operations to discover fresh items matching your criteria
      *     - **Update existing content**: Run `refresh` operations to update items contents and enrichments
-     *     - **Automated scheduling**: Configure `frequency`, `timezone`, and execution times
+     *     - **Automated scheduling**: Configure `cron` expressions and `timezone` for precise scheduling control
      */
     post: operations["monitors-create"];
     delete?: never;
@@ -78,7 +136,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/v0/monitors/{monitor}": {
+  "/v0/monitors/{id}": {
     parameters: {
       query?: never;
       header?: never;
@@ -218,7 +276,12 @@ export interface paths {
      */
     get: operations["websets-list"];
     put?: never;
-    /** Create a Webset */
+    /**
+     * Create a Webset
+     * @description Creates a new Webset with optional search, import, and enrichment configurations. The Webset will automatically begin processing once created.
+     *
+     *     You can specify an `externalId` to reference the Webset with your own identifiers for easier integration.
+     */
     post: operations["websets-create"];
     delete?: never;
     options?: never;
@@ -449,6 +512,22 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /** Article */
+    ArticleEntity: {
+      /**
+       * @default article
+       * @constant
+       */
+      type: "article";
+    };
+    /** Company */
+    CompanyEntity: {
+      /**
+       * @default company
+       * @constant
+       */
+      type: "company";
+    };
     CreateCriterionParameters: {
       /** @description The description of the criterion */
       description: string;
@@ -473,11 +552,124 @@ export interface components {
         label: string;
       }[];
     };
+    CreateImportParameters: {
+      /** @description The number of records to import */
+      count: number;
+      /** @description When format is `csv`, these are the specific import parameters. */
+      csv?: {
+        /** @description Column containing the key identifier for the entity (e.g. URL, Name, etc.). If not provided, we will try to infer it from the file. */
+        identifier?: number;
+      };
+      /** @description What type of entity the import contains (e.g. People, Companies, etc.), and thus should be attempted to be resolved as. */
+      entity:
+        | components["schemas"]["CompanyEntity"]
+        | components["schemas"]["PersonEntity"]
+        | components["schemas"]["ArticleEntity"]
+        | components["schemas"]["ResearchPaperEntity"]
+        | components["schemas"]["CustomEntity"];
+      /**
+       * @description When the import is in CSV format, we expect a column containing the key identifier for the entity - for now URL. If not provided, import will fail to be processed.
+       * @enum {string}
+       */
+      format: CreateImportParametersFormat;
+      /** @description Set of key-value pairs you want to associate with this object. */
+      metadata?: {
+        [key: string]: string;
+      };
+      /** @description The size of the file in megabytes. Maximum size is 50 MB. */
+      size: number;
+      /** @description The title of the import */
+      title?: string;
+    };
+    /** @description The response to a successful import. Includes the upload URL and the upload valid until date. */
+    CreateImportResponse: {
+      /** @description The number of entities in the import */
+      count: number;
+      /**
+       * Format: date-time
+       * @description When the import was created
+       */
+      createdAt: string;
+      /** @description The type of entity the import contains. */
+      entity: components["schemas"]["Entity"];
+      /**
+       * Format: date-time
+       * @description When the import failed
+       */
+      failedAt: string | null;
+      /** @description A human readable message of the import failure */
+      failedMessage: string | null;
+      /**
+       * @description The reason the import failed
+       * @enum {string|null}
+       */
+      failedReason: CreateImportResponseFailedReason;
+      /**
+       * @description The format of the import.
+       * @enum {string}
+       */
+      format: CreateImportResponseFormat;
+      /** @description The unique identifier for the Import */
+      id: string;
+      /** @description Set of key-value pairs you want to associate with this object. */
+      metadata: {
+        [key: string]: string;
+      };
+      /**
+       * @description The type of object
+       * @enum {string}
+       */
+      object: CreateImportResponseObject;
+      /**
+       * @description The status of the Import
+       * @enum {string}
+       */
+      status: CreateImportResponseStatus;
+      /** @description The title of the import */
+      title: string;
+      /**
+       * Format: date-time
+       * @description When the import was last updated
+       */
+      updatedAt: string;
+      /** @description The URL to upload the file to */
+      uploadUrl: string;
+      /** @description The date and time until the upload URL is valid. The upload URL will be valid for 1 hour. */
+      uploadValidUntil: string;
+    };
     CreateMonitorParameters: {
       /** @description Behavior to perform when monitor runs */
-      behavior:
-        | components["schemas"]["MonitorBehaviorSearch"]
-        | components["schemas"]["MonitorBehaviorRefresh"];
+      behavior: {
+        /** @description Specify the search parameters for the Monitor.
+         *
+         *     By default, the search parameters (query, entity and criteria) from the last search are used when no parameters are provided. */
+        config: {
+          /**
+           * @description The behaviour of the Search when it is added to a Webset.
+           * @default append
+           * @enum {string}
+           */
+          behavior: WebsetSearchBehavior;
+          /** @description The maximum number of results to find */
+          count: number;
+          /** @description The criteria to search for. By default, the criteria from the last search is used. */
+          criteria?: {
+            description: string;
+          }[];
+          /**
+           * Entity
+           * @description The entity to search for. By default, the entity from the last search/import is used.
+           */
+          entity?: components["schemas"]["Entity"];
+          /** @description The query to search for. By default, the query from the last search is used. */
+          query?: string;
+        };
+        /**
+         * @default search
+         * @constant
+         */
+        type: "search";
+      };
       /** @description How often the monitor will run */
       cadence: {
         /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
@@ -496,7 +688,7 @@ export interface components {
     };
     CreateWebhookParameters: {
       /** @description The events to trigger the webhook */
-      events: components["schemas"]["EventType"][];
+      events: EventType[];
       /** @description Set of key-value pairs you want to associate with this object. */
       metadata?: {
         [key: string]: string;
@@ -508,18 +700,27 @@ export interface components {
       url: string;
     };
     CreateWebsetParameters: {
-      /** @description Add Enrichments for the Webset. */
+      /** @description Add enrichments to extract additional data from found items.
+       *
+       *     Enrichments automatically search for and extract specific information (like contact details, funding data, employee counts, etc.) from each item added to your Webset. */
       enrichments?: components["schemas"]["CreateEnrichmentParameters"][];
       /** @description The external identifier for the webset.
        *
        *     You can use this to reference the Webset by your own internal identifiers. */
       externalId?: string;
+      /** @description Import data from existing Websets and Imports into this Webset. */
+      import?: {
+        /** @description The ID of the source to search. */
+        id: string;
+        /** @enum {string} */
+        source: CreateWebsetParametersImportSource;
+      }[];
       /** @description Set of key-value pairs you want to associate with this object. */
       metadata?: {
         [key: string]: string;
       };
       /** @description Create initial search for the Webset. */
-      search: {
+      search?: {
         /**
          * @description Number of Items the Webset will attempt to find.
          *
@@ -534,21 +735,28 @@ export interface components {
         /** @description Entity the Webset will return results for.
          *
          *     It is not required to provide it, we automatically detect the entity from all the information provided in the query. Only use this when you need more fine control. */
-        entity?: components["schemas"]["WebsetEntity"];
-        /** @description Your search query.
+        entity?: components["schemas"]["Entity"];
+        /** @description Sources (existing imports or websets) to exclude from search results. Any results found within these sources will be omitted to prevent finding them during search. */
+        exclude?: {
+          /** @description The ID of the source to exclude. */
+          id: string;
+          /** @enum {string} */
+          source: CreateWebsetParametersSearchExcludeSource;
+        }[];
+        /** @description Natural language search query describing what you are looking for.
          *
-         *     Use this to describe what you are looking for.
+         *     Be specific and descriptive about your requirements, characteristics, and any constraints that help narrow down the results.
          *
-         *     Any URL provided will be crawled and used as context for the search. */
+         *     Any URLs provided will be crawled and used as additional context for the search. */
         query: string;
       };
     };
     CreateWebsetSearchParameters: {
       /**
-       * @description The behavior of the Search when it is added to a Webset.
+       * @description How this search interacts with existing items in the Webset:
        *
-       *     - `override`: the search will replace the existing Items found in the Webset and evaluate them against the new criteria. Any Items that don't match the new criteria will be discarded.
-       *     - `append`: the search will add the new Items found to the existing Webset. Any Items that don't match the new criteria will be discarded.
+       *     - **override**: Replace existing items and evaluate all items against new criteria
+       *     - **append**: Add new items to existing ones, keeping items that match the new criteria
        * @default override
        */
       behavior: components["schemas"]["WebsetSearchBehavior"];
@@ -558,25 +766,46 @@ export interface components {
       count: number;
       /** @description Criteria every item is evaluated against.
        *
-       *     It's not required to provide your own criteria, we automatically detect the criteria from all the information provided in the query. */
+       *     It's not required to provide your own criteria, we automatically detect the criteria from all the information provided in the query. Only use this when you need more fine control. */
       criteria?: components["schemas"]["CreateCriterionParameters"][];
-      /** @description Entity the Webset will return results for.
+      /** @description Entity the search will return results for.
        *
-       *     It is not required to provide it, we automatically detect the entity from all the information provided in the query. */
-      entity?: components["schemas"]["WebsetEntity"];
+       *     It is not required to provide it, we automatically detect the entity from all the information provided in the query. Only use this when you need more fine control. */
+      entity?: components["schemas"]["Entity"];
+      /** @description Sources (existing imports or websets) to exclude from search results. Any results found within these sources will be omitted to prevent finding them during search. */
+      exclude?: {
+        /** @description The ID of the source to exclude. */
+        id: string;
+        /** @enum {string} */
+        source: CreateWebsetSearchParametersExcludeSource;
+      }[];
       /** @description Set of key-value pairs you want to associate with this object. */
       metadata?: {
         [key: string]: string;
       };
-      /** @description Query describing what you are looking for.
+      /** @description Natural language search query describing what you are looking for.
        *
-       *     Any URL provided will be crawled and used as context for the search. */
+       *     Be specific and descriptive about your requirements, characteristics, and any constraints that help narrow down the results.
+       *
+       *     Any URLs provided will be crawled and used as additional context for the search. */
       query: string;
+    };
+    /** Custom */
+    CustomEntity: {
+      /** @description When you decide to use a custom entity, this is the description of the entity.
+       *
+       *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
+      description: string;
+      /**
+       * @default custom
+       * @constant
+       */
+      type: "custom";
     };
     EnrichmentResult: {
       /** @description The id of the Enrichment that generated the result */
       enrichmentId: string;
-      format: WebsetEnrichmentFormat;
+      format: components["schemas"]["WebsetEnrichmentFormat"];
       /**
        * @default enrichment_result
        * @constant
@@ -596,6 +825,12 @@ export interface components {
       /** @description The result of the enrichment. */
       result: string[] | null;
     };
+    Entity:
+      | components["schemas"]["CompanyEntity"]
+      | components["schemas"]["PersonEntity"]
+      | components["schemas"]["ArticleEntity"]
+      | components["schemas"]["ResearchPaperEntity"]
+      | components["schemas"]["CustomEntity"];
     /** Event */
     Event:
       | {
@@ -799,14 +1034,72 @@ export interface components {
           type: "webset.search.completed";
         };
     /** @enum {string} */
-    EventType: EventType;
     GetWebsetResponse: components["schemas"]["Webset"] & {
       /** @description When expand query parameter contains `items`, this will contain the items in the webset */
       items?: components["schemas"]["WebsetItem"][];
     };
+    Import: {
+      /** @description The number of entities in the import */
+      count: number;
+      /**
+       * Format: date-time
+       * @description When the import was created
+       */
+      createdAt: string;
+      /** @description The type of entity the import contains. */
+      entity: components["schemas"]["Entity"];
+      /**
+       * Format: date-time
+       * @description When the import failed
+       */
+      failedAt: string | null;
+      /** @description A human readable message of the import failure */
+      failedMessage: string | null;
+      /**
+       * @description The reason the import failed
+       * @enum {string|null}
+       */
+      failedReason: ImportFailedReason;
+      /**
+       * @description The format of the import.
+       * @enum {string}
+       */
+      format: ImportFormat;
+      /** @description The unique identifier for the Import */
+      id: string;
+      /** @description Set of key-value pairs you want to associate with this object. */
+      metadata: {
+        [key: string]: string;
+      };
+      /**
+       * @description The type of object
+       * @enum {string}
+       */
+      object: ImportObject;
+      /**
+       * @description The status of the Import
+       * @enum {string}
+       */
+      status: ImportStatus;
+      /** @description The title of the import */
+      title: string;
+      /**
+       * Format: date-time
+       * @description When the import was last updated
+       */
+      updatedAt: string;
+    };
     ListEventsResponse: {
       /** @description The list of events */
       data: components["schemas"]["Event"][];
+      /** @description Whether there are more results to paginate through */
+      hasMore: boolean;
+      /** @description The cursor to paginate through the next set of results */
+      nextCursor: string | null;
+    };
+    ListImportsResponse: {
+      /** @description The list of imports */
+      data: components["schemas"]["Import"][];
       /** @description Whether there are more results to paginate through */
       hasMore: boolean;
       /** @description The cursor to paginate through the next set of results */
@@ -862,9 +1155,37 @@ export interface components {
     };
     Monitor: {
       /** @description Behavior to perform when monitor runs */
-      behavior:
-        | components["schemas"]["MonitorBehaviorSearch"]
-        | components["schemas"]["MonitorBehaviorRefresh"];
+      behavior: {
+        /** @description Specify the search parameters for the Monitor.
+         *
+         *     By default, the search parameters (query, entity and criteria) from the last search are used when no parameters are provided. */
+        config: {
+          /**
+           * @description The behaviour of the Search when it is added to a Webset.
+           * @default append
+           * @enum {string}
+           */
+          behavior: MonitorBehaviorConfigBehavior;
+          /** @description The maximum number of results to find */
+          count: number;
+          /** @description The criteria to search for. By default, the criteria from the last search is used. */
+          criteria?: {
+            description: string;
+          }[];
+          /**
+           * Entity
+           * @description The entity to search for. By default, the entity from the last search/import is used.
+           */
+          entity?: components["schemas"]["Entity"];
+          /** @description The query to search for. By default, the query from the last search is used. */
+          query?: string;
+        };
+        /**
+         * @default search
+         * @constant
+         */
+        type: "search";
+      };
       /** @description How often the monitor will run */
       cadence: {
         /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
@@ -893,7 +1214,7 @@ export interface components {
       };
       /**
        * Format: date-time
-       * @description When the next run will occur
+       * @description Date and time when the next run will occur in
        */
       nextRunAt: string | null;
       /**
@@ -914,32 +1235,30 @@ export interface components {
       /** @description The id of the Webset the Monitor belongs to */
       websetId: string;
     };
-    MonitorBehaviorRefresh: {
-      /** @description Specify the target of the refresh */
-      config:
-        | components["schemas"]["MonitorRefreshBehaviorEnrichmentsConfig"]
-        | components["schemas"]["MonitorRefreshBehaviorContentsConfig"];
-      /**
-       * @default refresh
-       * @constant
-       */
-      type: "refresh";
-    };
-    MonitorBehaviorSearch: {
+    MonitorBehavior: {
+      /** @description Specify the search parameters for the Monitor.
+       *
+       *     By default, the search parameters (query, entity and criteria) from the last search are used when no parameters are provided. */
       config: {
         /**
          * @description The behaviour of the Search when it is added to a Webset.
          * @default append
+         * @enum {string}
          */
-        behavior: components["schemas"]["WebsetSearchBehavior"];
+        behavior: MonitorBehaviorConfigBehavior;
         /** @description The maximum number of results to find */
         count: number;
-        criteria: {
+        /** @description The criteria to search for. By default, the criteria from the last search is used. */
+        criteria?: {
           description: string;
         }[];
-        /** WebsetEntity */
-        entity: components["schemas"]["WebsetEntity"];
-        query: string;
+        /**
+         * Entity
+         * @description The entity to search for. By default, the entity from the last search/import is used.
+         */
+        entity?: components["schemas"]["Entity"];
+        /** @description The query to search for. By default, the query from the last search is used. */
+        query?: string;
       };
       /**
        * @default search
@@ -955,24 +1274,6 @@ export interface components {
        * @default Etc/UTC
        */
       timezone: string;
-    };
-    MonitorRefreshBehaviorContentsConfig: {
-      /**
-       * @default contents
-       * @constant
-       */
-      target: "contents";
-    };
-    MonitorRefreshBehaviorEnrichmentsConfig: {
-      /** @description Only refresh specific enrichments */
-      enrichments?: {
-        ids?: string[];
-      };
-      /**
-       * @default enrichments
-       * @constant
-       */
-      target: "enrichments";
     };
     MonitorRun: {
       /**
@@ -1020,7 +1321,31 @@ export interface components {
        */
       updatedAt: string;
     };
+    /** Person */
+    PersonEntity: {
+      /**
+       * @default person
+       * @constant
+       */
+      type: "person";
+    };
+    /** Research Paper */
+    ResearchPaperEntity: {
+      /**
+       * @default research_paper
+       * @constant
+       */
+      type: "research_paper";
+    };
+    UpdateImport: {
+      metadata?: {
+        [key: string]: string;
+      };
+      title?: string;
+    };
     UpdateMonitor: {
+      behavior?: components["schemas"]["MonitorBehavior"];
+      cadence?: components["schemas"]["MonitorCadence"];
       metadata?: {
         [key: string]: string;
       };
@@ -1032,7 +1357,7 @@ export interface components {
     };
     UpdateWebhookParameters: {
       /** @description The events to trigger the webhook */
-      events?: components["schemas"]["EventType"][];
+      events?: EventType[];
       /** @description Set of key-value pairs you want to associate with this object. */
       metadata?: {
         [key: string]: string;
@@ -1056,7 +1381,7 @@ export interface components {
        */
       createdAt: string;
       /** @description The events to trigger the webhook */
-      events: components["schemas"]["EventType"][];
+      events: EventType[];
       /** @description The unique identifier for the webhook */
       id: string;
       /**
@@ -1139,6 +1464,419 @@ export interface components {
       externalId: string | null;
       /** @description The unique identifier for the webset */
       id: string;
+      /** @description Imports that have been performed on the webset. */
+      imports?: (
+        | {
+            count: number;
+            /** Format: date-time */
+            createdAt: string;
+            entity?:
+              | {
+                  /**
+                   * @default A homepage of a company
+                   * @constant
+                   */
+                  description: "A homepage of a company";
+                  /**
+                   * @default company
+                   * @constant
+                   */
+                  type: "company";
+                }
+              | {
+                  /**
+                   * @default A LinkedIn profile
+                   * @constant
+                   */
+                  description: "A LinkedIn profile";
+                  /**
+                   * @default person
+                   * @constant
+                   */
+                  type: "person";
+                }
+              | {
+                  /**
+                   * @default A blog post or article
+                   * @constant
+                   */
+                  description: "A blog post or article";
+                  /**
+                   * @default article
+                   * @constant
+                   */
+                  type: "article";
+                }
+              | {
+                  /**
+                   * @default A research paper
+                   * @constant
+                   */
+                  description: "A research paper";
+                  /**
+                   * @default research_paper
+                   * @constant
+                   */
+                  type: "research_paper";
+                }
+              | {
+                  /** @description When you decide to use a custom entity, this is the description of the entity.
+                   *
+                   *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
+                  description: string;
+                  /**
+                   * @default custom
+                   * @constant
+                   */
+                  type: "custom";
+                };
+            /** @enum {string} */
+            format: WebsetImportsFormat;
+            id: string;
+            metadata?: {
+              [key: string]: string;
+            };
+            /** @enum {string} */
+            status: WebsetImportsStatus;
+            teamId: string;
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** @description The URI of the import when format is CSV */
+            uri?: string;
+            /** @description The ID of the webset when format is WEBSET */
+            websetId?: string;
+          }
+        | {
+            count: number;
+            /** Format: date-time */
+            createdAt: string;
+            entity:
+              | {
+                  /**
+                   * @default A homepage of a company
+                   * @constant
+                   */
+                  description: "A homepage of a company";
+                  /**
+                   * @default company
+                   * @constant
+                   */
+                  type: "company";
+                }
+              | {
+                  /**
+                   * @default A LinkedIn profile
+                   * @constant
+                   */
+                  description: "A LinkedIn profile";
+                  /**
+                   * @default person
+                   * @constant
+                   */
+                  type: "person";
+                }
+              | {
+                  /**
+                   * @default A blog post or article
+                   * @constant
+                   */
+                  description: "A blog post or article";
+                  /**
+                   * @default article
+                   * @constant
+                   */
+                  type: "article";
+                }
+              | {
+                  /**
+                   * @default A research paper
+                   * @constant
+                   */
+                  description: "A research paper";
+                  /**
+                   * @default research_paper
+                   * @constant
+                   */
+                  type: "research_paper";
+                }
+              | {
+                  /** @description When you decide to use a custom entity, this is the description of the entity.
+                   *
+                   *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
+                  description: string;
+                  /**
+                   * @default custom
+                   * @constant
+                   */
+                  type: "custom";
+                };
+            /** @enum {string} */
+            format: WebsetImportsFormat;
+            id: string;
+            metadata?: {
+              [key: string]: string;
+            };
+            /** @enum {string} */
+            status: WebsetImportsStatus;
+            teamId: string;
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** @description The URI of the import when format is CSV */
+            uri?: string;
+            /** @description The ID of the webset when format is WEBSET */
+            websetId?: string;
+          }
+        | {
+            count: number;
+            /** Format: date-time */
+            createdAt: string;
+            entity:
+              | {
+                  /**
+                   * @default A homepage of a company
+                   * @constant
+                   */
+                  description: "A homepage of a company";
+                  /**
+                   * @default company
+                   * @constant
+                   */
+                  type: "company";
+                }
+              | {
+                  /**
+                   * @default A LinkedIn profile
+                   * @constant
+                   */
+                  description: "A LinkedIn profile";
+                  /**
+                   * @default person
+                   * @constant
+                   */
+                  type: "person";
+                }
+              | {
+                  /**
+                   * @default A blog post or article
+                   * @constant
+                   */
+                  description: "A blog post or article";
+                  /**
+                   * @default article
+                   * @constant
+                   */
+                  type: "article";
+                }
+              | {
+                  /**
+                   * @default A research paper
+                   * @constant
+                   */
+                  description: "A research paper";
+                  /**
+                   * @default research_paper
+                   * @constant
+                   */
+                  type: "research_paper";
+                }
+              | {
+                  /** @description When you decide to use a custom entity, this is the description of the entity.
+                   *
+                   *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
+                  description: string;
+                  /**
+                   * @default custom
+                   * @constant
+                   */
+                  type: "custom";
+                };
+            /** @enum {string} */
+            format: WebsetImportsFormat;
+            id: string;
+            metadata?: {
+              [key: string]: string;
+            };
+            /** @enum {string} */
+            status: WebsetImportsStatus;
+            teamId: string;
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** @description The URI of the import when format is CSV */
+            uri?: string;
+            /** @description The ID of the webset when format is WEBSET */
+            websetId?: string;
+          }
+        | {
+            count: number;
+            /** Format: date-time */
+            createdAt: string;
+            entity:
+              | {
+                  /**
+                   * @default A homepage of a company
+                   * @constant
+                   */
+                  description: "A homepage of a company";
+                  /**
+                   * @default company
+                   * @constant
+                   */
+                  type: "company";
+                }
+              | {
+                  /**
+                   * @default A LinkedIn profile
+                   * @constant
+                   */
+                  description: "A LinkedIn profile";
+                  /**
+                   * @default person
+                   * @constant
+                   */
+                  type: "person";
+                }
+              | {
+                  /**
+                   * @default A blog post or article
+                   * @constant
+                   */
+                  description: "A blog post or article";
+                  /**
+                   * @default article
+                   * @constant
+                   */
+                  type: "article";
+                }
+              | {
+                  /**
+                   * @default A research paper
+                   * @constant
+                   */
+                  description: "A research paper";
+                  /**
+                   * @default research_paper
+                   * @constant
+                   */
+                  type: "research_paper";
+                }
+              | {
+                  /** @description When you decide to use a custom entity, this is the description of the entity.
+                   *
+                   *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
+                  description: string;
+                  /**
+                   * @default custom
+                   * @constant
+                   */
+                  type: "custom";
+                };
+            /** Format: date-time */
+            failedAt: string;
+            failedMessage: string;
+            /** @enum {string} */
+            failedReason: WebsetImportsFailedReason;
+            /** @enum {string} */
+            format: WebsetImportsFormat;
+            id: string;
+            metadata?: {
+              [key: string]: string;
+            };
+            /** @enum {string} */
+            status: WebsetImportsStatus;
+            teamId: string;
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** @description The URI of the import when format is CSV */
+            uri?: string;
+            /** @description The ID of the webset when format is WEBSET */
+            websetId?: string;
+          }
+        | {
+            count: number;
+            /** Format: date-time */
+            createdAt: string;
+            entity:
+              | {
+                  /**
+                   * @default A homepage of a company
+                   * @constant
+                   */
+                  description: "A homepage of a company";
+                  /**
+                   * @default company
+                   * @constant
+                   */
+                  type: "company";
+                }
+              | {
+                  /**
+                   * @default A LinkedIn profile
+                   * @constant
+                   */
+                  description: "A LinkedIn profile";
+                  /**
+                   * @default person
+                   * @constant
+                   */
+                  type: "person";
+                }
+              | {
+                  /**
+                   * @default A blog post or article
+                   * @constant
+                   */
+                  description: "A blog post or article";
+                  /**
+                   * @default article
+                   * @constant
+                   */
+                  type: "article";
+                }
+              | {
+                  /**
+                   * @default A research paper
+                   * @constant
+                   */
+                  description: "A research paper";
+                  /**
+                   * @default research_paper
+                   * @constant
+                   */
+                  type: "research_paper";
+                }
+              | {
+                  /** @description When you decide to use a custom entity, this is the description of the entity.
+                   *
+                   *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
+                  description: string;
+                  /**
+                   * @default custom
+                   * @constant
+                   */
+                  type: "custom";
+                };
+            /** @enum {string} */
+            format: WebsetImportsFormat;
+            id: string;
+            metadata?: {
+              [key: string]: string;
+            };
+            /** @enum {string} */
+            status: WebsetImportsStatus;
+            teamId: string;
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** @description The URI of the import when format is CSV */
+            uri?: string;
+            /** @description The ID of the webset when format is WEBSET */
+            websetId?: string;
+          }
+      )[];
       /**
        * @description Set of key-value pairs you want to associate with this object.
        * @default {}
@@ -1161,36 +1899,13 @@ export interface components {
        * @enum {string}
        */
       status: WebsetStatus;
+      /** @description The Streams for the Webset. */
+      streams: unknown[];
       /**
        * Format: date-time
        * @description The date and time the webset was updated
        */
       updatedAt: string;
-    };
-    WebsetArticleEntity: {
-      /**
-       * @default article
-       * @constant
-       */
-      type: "article";
-    };
-    WebsetCompanyEntity: {
-      /**
-       * @default company
-       * @constant
-       */
-      type: "company";
-    };
-    WebsetCustomEntity: {
-      /** @description When you decide to use a custom entity, this is the description of the entity.
-       *
-       *     The entity represents what type of results the Webset will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
-      description: string;
-      /**
-       * @default custom
-       * @constant
-       */
-      type: "custom";
     };
     WebsetEnrichment: {
       /**
@@ -1201,7 +1916,7 @@ export interface components {
       /** @description The description of the enrichment task provided during the creation of the enrichment. */
       description: string;
       /** @description The format of the enrichment response. */
-      format: WebsetEnrichmentFormat;
+      format: components["schemas"]["WebsetEnrichmentFormat"];
       /** @description The unique identifier for the enrichment */
       id: string;
       /** @description The instructions for the enrichment Agent.
@@ -1249,12 +1964,7 @@ export interface components {
       websetId: string;
     };
     /** @enum {string} */
-    WebsetEntity:
-      | components["schemas"]["WebsetCompanyEntity"]
-      | components["schemas"]["WebsetPersonEntity"]
-      | components["schemas"]["WebsetArticleEntity"]
-      | components["schemas"]["WebsetResearchPaperEntity"]
-      | components["schemas"]["WebsetCustomEntity"];
+    WebsetEnrichmentFormat: WebsetEnrichmentFormat;
     WebsetItem: {
       /**
        * Format: date-time
@@ -1301,6 +2011,8 @@ export interface components {
         author: string | null;
         /** @description The date and time the article was published */
         publishedAt: string | null;
+        /** @description The title of the article */
+        title: string | null;
       };
       /** @description The text content for the article */
       content: string | null;
@@ -1360,6 +2072,8 @@ export interface components {
         author: string | null;
         /** @description The date and time the website was published */
         publishedAt: string | null;
+        /** @description The title of the website */
+        title: string | null;
       };
       /** @description Short description of the Item */
       description: string;
@@ -1436,6 +2150,8 @@ export interface components {
         author: string | null;
         /** @description The date and time the research paper was published */
         publishedAt: string | null;
+        /** @description The title of the research paper */
+        title: string | null;
       };
       /**
        * @default research_paper
@@ -1447,20 +2163,6 @@ export interface components {
        * @description The URL of the research paper
        */
       url: string;
-    };
-    WebsetPersonEntity: {
-      /**
-       * @default person
-       * @constant
-       */
-      type: "person";
-    };
-    WebsetResearchPaperEntity: {
-      /**
-       * @default research_paper
-       * @constant
-       */
-      type: "research_paper";
     };
     WebsetSearch: {
       /**
@@ -1495,7 +2197,13 @@ export interface components {
       /** @description The entity the search will return results for.
        *
        *     When no entity is provided during creation, we will automatically select the best entity based on the query. */
-      entity: components["schemas"]["WebsetEntity"];
+      entity: components["schemas"]["Entity"];
+      /** @description Sources (existing imports or websets) used to omit certain results to be found during the search. */
+      exclude: {
+        id: string;
+        /** @enum {string} */
+        source: WebsetSearchExcludeSource;
+      }[];
       /** @description The unique identifier for the search */
       id: string;
       /**
@@ -1542,10 +2250,16 @@ export interface components {
   headers: never;
   pathItems: never;
 }
+export type ArticleEntity = components["schemas"]["ArticleEntity"];
+export type CompanyEntity = components["schemas"]["CompanyEntity"];
 export type CreateCriterionParameters =
   components["schemas"]["CreateCriterionParameters"];
 export type CreateEnrichmentParameters =
   components["schemas"]["CreateEnrichmentParameters"];
+export type CreateImportParameters =
+  components["schemas"]["CreateImportParameters"];
+export type CreateImportResponse =
+  components["schemas"]["CreateImportResponse"];
 export type CreateMonitorParameters =
   components["schemas"]["CreateMonitorParameters"];
 export type CreateWebhookParameters =
@@ -1554,10 +2268,14 @@ export type CreateWebsetParameters =
   components["schemas"]["CreateWebsetParameters"];
 export type CreateWebsetSearchParameters =
   components["schemas"]["CreateWebsetSearchParameters"];
+export type CustomEntity = components["schemas"]["CustomEntity"];
 export type EnrichmentResult = components["schemas"]["EnrichmentResult"];
+export type Entity = components["schemas"]["Entity"];
 export type Event = components["schemas"]["Event"];
 export type GetWebsetResponse = components["schemas"]["GetWebsetResponse"];
+export type Import = components["schemas"]["Import"];
 export type ListEventsResponse = components["schemas"]["ListEventsResponse"];
+export type ListImportsResponse = components["schemas"]["ListImportsResponse"];
 export type ListMonitorRunsResponse =
   components["schemas"]["ListMonitorRunsResponse"];
 export type ListMonitorsResponse =
@@ -1570,16 +2288,12 @@ export type ListWebsetItemResponse =
   components["schemas"]["ListWebsetItemResponse"];
 export type ListWebsetsResponse = components["schemas"]["ListWebsetsResponse"];
 export type Monitor = components["schemas"]["Monitor"];
-export type MonitorBehaviorRefresh =
-  components["schemas"]["MonitorBehaviorRefresh"];
-export type MonitorBehaviorSearch =
-  components["schemas"]["MonitorBehaviorSearch"];
+export type MonitorBehavior = components["schemas"]["MonitorBehavior"];
 export type MonitorCadence = components["schemas"]["MonitorCadence"];
-export type MonitorRefreshBehaviorContentsConfig =
-  components["schemas"]["MonitorRefreshBehaviorContentsConfig"];
-export type MonitorRefreshBehaviorEnrichmentsConfig =
-  components["schemas"]["MonitorRefreshBehaviorEnrichmentsConfig"];
 export type MonitorRun = components["schemas"]["MonitorRun"];
+export type PersonEntity = components["schemas"]["PersonEntity"];
+export type ResearchPaperEntity = components["schemas"]["ResearchPaperEntity"];
+export type UpdateImport = components["schemas"]["UpdateImport"];
 export type UpdateMonitor = components["schemas"]["UpdateMonitor"];
 export type UpdateWebhookParameters =
   components["schemas"]["UpdateWebhookParameters"];
@@ -1587,11 +2301,7 @@ export type UpdateWebsetRequest = components["schemas"]["UpdateWebsetRequest"];
 export type Webhook = components["schemas"]["Webhook"];
 export type WebhookAttempt = components["schemas"]["WebhookAttempt"];
 export type Webset = components["schemas"]["Webset"];
-export type WebsetArticleEntity = components["schemas"]["WebsetArticleEntity"];
-export type WebsetCompanyEntity = components["schemas"]["WebsetCompanyEntity"];
-export type WebsetCustomEntity = components["schemas"]["WebsetCustomEntity"];
 export type WebsetEnrichment = components["schemas"]["WebsetEnrichment"];
-export type WebsetEntity = components["schemas"]["WebsetEntity"];
 export type WebsetItem = components["schemas"]["WebsetItem"];
 export type WebsetItemArticleProperties =
   components["schemas"]["WebsetItemArticleProperties"];
@@ -1605,9 +2315,6 @@ export type WebsetItemPersonProperties =
   components["schemas"]["WebsetItemPersonProperties"];
 export type WebsetItemResearchPaperProperties =
   components["schemas"]["WebsetItemResearchPaperProperties"];
-export type WebsetPersonEntity = components["schemas"]["WebsetPersonEntity"];
-export type WebsetResearchPaperEntity =
-  components["schemas"]["WebsetResearchPaperEntity"];
 export type WebsetSearch = components["schemas"]["WebsetSearch"];
 export type $defs = Record<string, never>;
 export interface operations {
@@ -1619,7 +2326,7 @@ export interface operations {
         /** @description The number of results to return */
         limit?: number;
         /** @description The types of events to filter by */
-        types?: PathsV0EventsGetParametersQueryTypes[];
+        types?: EventType[];
       };
       header?: never;
       path?: never;
@@ -1679,6 +2386,153 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+    };
+  };
+  "imports-list": {
+    parameters: {
+      query?: {
+        /** @description The cursor to paginate through the results */
+        cursor?: string;
+        /** @description The number of results to return */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List of imports */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListImportsResponse"];
+        };
+      };
+    };
+  };
+  "imports-create": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateImportParameters"];
+      };
+    };
+    responses: {
+      /** @description Import created successfully */
+      201: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CreateImportResponse"];
+        };
+      };
+    };
+  };
+  "imports-get": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The id of the Import */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Import details */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Import"];
+        };
+      };
+    };
+  };
+  "imports-delete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The id of the Import */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Import deleted successfully */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Import"];
+        };
+      };
+    };
+  };
+  "imports-update": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The id of the Import */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateImport"];
+      };
+    };
+    responses: {
+      /** @description Import updated successfully */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Import"];
+        };
       };
     };
   };
@@ -1749,7 +2603,7 @@ export interface operations {
       header?: never;
       path: {
         /** @description The id of the Monitor */
-        monitor: string;
+        id: string;
       };
       cookie?: never;
     };
@@ -1777,7 +2631,7 @@ export interface operations {
       header?: never;
       path: {
         /** @description The id of the Monitor */
-        monitor: string;
+        id: string;
       };
       cookie?: never;
     };
@@ -1805,7 +2659,7 @@ export interface operations {
       header?: never;
       path: {
         /** @description The id of the Monitor */
-        monitor: string;
+        id: string;
       };
       cookie?: never;
     };
@@ -2077,7 +2931,7 @@ export interface operations {
         /** @description The cursor to paginate through the results */
         cursor?: string;
         /** @description The type of event to filter by */
-        eventType?: PathsV0WebhooksIdAttemptsGetParametersQueryEventType;
+        eventType?: EventType;
         /** @description The number of results to return */
         limit?: number;
       };
@@ -2637,34 +3491,6 @@ export interface operations {
     };
   };
 }
-export enum PathsV0EventsGetParametersQueryTypes {
-  webset_created = "webset.created",
-  webset_deleted = "webset.deleted",
-  webset_paused = "webset.paused",
-  webset_idle = "webset.idle",
-  webset_search_created = "webset.search.created",
-  webset_search_canceled = "webset.search.canceled",
-  webset_search_completed = "webset.search.completed",
-  webset_search_updated = "webset.search.updated",
-  webset_export_created = "webset.export.created",
-  webset_export_completed = "webset.export.completed",
-  webset_item_created = "webset.item.created",
-  webset_item_enriched = "webset.item.enriched",
-}
-export enum PathsV0WebhooksIdAttemptsGetParametersQueryEventType {
-  webset_created = "webset.created",
-  webset_deleted = "webset.deleted",
-  webset_paused = "webset.paused",
-  webset_idle = "webset.idle",
-  webset_search_created = "webset.search.created",
-  webset_search_canceled = "webset.search.canceled",
-  webset_search_completed = "webset.search.completed",
-  webset_search_updated = "webset.search.updated",
-  webset_export_created = "webset.export.created",
-  webset_export_completed = "webset.export.completed",
-  webset_item_created = "webset.item.created",
-  webset_item_enriched = "webset.item.enriched",
-}
 export enum PathsV0WebsetsIdGetParametersQueryExpand {
   items = "items",
 }
@@ -2676,6 +3502,43 @@ export enum CreateEnrichmentParametersFormat {
   email = "email",
   phone = "phone",
 }
+export enum CreateImportParametersFormat {
+  csv = "csv",
+}
+export enum CreateImportResponseFailedReason {
+  invalid_format = "invalid_format",
+  invalid_file_content = "invalid_file_content",
+  missing_identifier = "missing_identifier",
+}
+export enum CreateImportResponseFormat {
+  csv = "csv",
+  webset = "webset",
+}
+export enum CreateImportResponseObject {
+  import = "import",
+}
+export enum CreateImportResponseStatus {
+  pending = "pending",
+  processing = "processing",
+  completed = "completed",
+  failed = "failed",
+}
+export enum CreateMonitorParametersBehaviorConfigBehavior {
+  override = "override",
+  append = "append",
+}
+export enum CreateWebsetParametersImportSource {
+  import = "import",
+  webset = "webset",
+}
+export enum CreateWebsetParametersSearchExcludeSource {
+  import = "import",
+  webset = "webset",
+}
+export enum CreateWebsetSearchParametersExcludeSource {
+  import = "import",
+  webset = "webset",
+}
 export enum EventType {
   webset_created = "webset.created",
   webset_deleted = "webset.deleted",
@@ -2685,10 +3548,31 @@ export enum EventType {
   webset_search_canceled = "webset.search.canceled",
   webset_search_completed = "webset.search.completed",
   webset_search_updated = "webset.search.updated",
-  webset_export_created = "webset.export.created",
-  webset_export_completed = "webset.export.completed",
+  import_created = "import.created",
+  import_completed = "import.completed",
+  import_processing = "import.processing",
   webset_item_created = "webset.item.created",
   webset_item_enriched = "webset.item.enriched",
+  webset_export_created = "webset.export.created",
+  webset_export_completed = "webset.export.completed",
+}
+export enum ImportFailedReason {
+  invalid_format = "invalid_format",
+  invalid_file_content = "invalid_file_content",
+  missing_identifier = "missing_identifier",
+}
+export enum ImportFormat {
+  csv = "csv",
+  webset = "webset",
+}
+export enum ImportObject {
+  import = "import",
+}
+export enum ImportStatus {
+  pending = "pending",
+  processing = "processing",
+  completed = "completed",
+  failed = "failed",
 }
 export enum MonitorObject {
   monitor = "monitor",
@@ -2696,6 +3580,10 @@ export enum MonitorObject {
 export enum MonitorStatus {
   enabled = "enabled",
   disabled = "disabled",
+}
+export enum MonitorBehaviorConfigBehavior {
+  override = "override",
+  append = "append",
 }
 export enum MonitorRunObject {
   monitor_run = "monitor_run",
@@ -2727,10 +3615,30 @@ export enum WebhookAttemptEventType {
   webset_search_canceled = "webset.search.canceled",
   webset_search_completed = "webset.search.completed",
   webset_search_updated = "webset.search.updated",
-  webset_export_created = "webset.export.created",
-  webset_export_completed = "webset.export.completed",
+  import_created = "import.created",
+  import_completed = "import.completed",
+  import_processing = "import.processing",
   webset_item_created = "webset.item.created",
   webset_item_enriched = "webset.item.enriched",
+  webset_export_created = "webset.export.created",
+  webset_export_completed = "webset.export.completed",
+}
+export enum WebsetImportsFormat {
+  csv = "csv",
+  webset = "webset",
+}
+export enum WebsetImportsFailedReason {
+  file_not_uploaded = "file_not_uploaded",
+  invalid_format = "invalid_format",
+  invalid_file_content = "invalid_file_content",
+  missing_identifier = "missing_identifier",
+}
+export enum WebsetImportsStatus {
+  created = "created",
+  failed = "failed",
+  processing = "processing",
+  scheduled = "scheduled",
+  completed = "completed",
 }
 export enum WebsetStatus {
   idle = "idle",
@@ -2758,6 +3666,10 @@ export enum WebsetItemEvaluationSatisfied {
   yes = "yes",
   no = "no",
   unclear = "unclear",
+}
+export enum WebsetSearchExcludeSource {
+  import = "import",
+  webset = "webset",
 }
 export enum WebsetSearchStatus {
   created = "created",

@@ -5,22 +5,31 @@
 export { WebsetsClient } from "./client";
 export { WebsetEnrichmentsClient } from "./enrichments";
 export { EventsClient } from "./events";
+export { ImportsClient } from "./imports";
 export { WebsetItemsClient } from "./items";
 export { WebsetSearchesClient } from "./searches";
 export { WebsetWebhooksClient } from "./webhooks";
 
 // Export OpenAPI types
 export type {
+  ArticleEntity,
+  CompanyEntity,
   CreateCriterionParameters,
   CreateEnrichmentParameters,
+  CreateImportParameters,
+  CreateImportResponse,
   CreateMonitorParameters,
   CreateWebhookParameters,
   CreateWebsetParameters,
   CreateWebsetSearchParameters,
+  CustomEntity,
   EnrichmentResult,
+  Entity,
   Event,
   GetWebsetResponse,
+  Import,
   ListEventsResponse,
+  ListImportsResponse,
   ListMonitorRunsResponse,
   ListMonitorsResponse,
   ListWebhookAttemptsResponse,
@@ -28,23 +37,19 @@ export type {
   ListWebsetItemResponse,
   ListWebsetsResponse,
   Monitor,
-  MonitorBehaviorRefresh,
-  MonitorBehaviorSearch,
+  MonitorBehavior,
   MonitorCadence,
-  MonitorRefreshBehaviorContentsConfig,
-  MonitorRefreshBehaviorEnrichmentsConfig,
   MonitorRun,
+  PersonEntity,
+  ResearchPaperEntity,
+  UpdateImport,
   UpdateMonitor,
   UpdateWebhookParameters,
   UpdateWebsetRequest,
   Webhook,
   WebhookAttempt,
   Webset,
-  WebsetArticleEntity,
-  WebsetCompanyEntity,
-  WebsetCustomEntity,
   WebsetEnrichment,
-  WebsetEntity,
   WebsetItem,
   WebsetItemArticleProperties,
   WebsetItemCompanyProperties,
@@ -52,15 +57,21 @@ export type {
   WebsetItemEvaluation,
   WebsetItemPersonProperties,
   WebsetItemResearchPaperProperties,
-  WebsetPersonEntity,
-  WebsetResearchPaperEntity,
   WebsetSearch,
 } from "./openapi";
 
 // Export enums
 export {
   CreateEnrichmentParametersFormat,
+  CreateImportParametersFormat,
+  CreateWebsetParametersImportSource,
+  CreateWebsetParametersSearchExcludeSource,
+  CreateWebsetSearchParametersExcludeSource,
   EventType,
+  ImportFailedReason,
+  ImportFormat,
+  ImportObject,
+  ImportStatus,
   MonitorObject,
   MonitorRunObject,
   MonitorRunStatus,
@@ -82,4 +93,5 @@ export {
 export { WebsetMonitorsClient } from "./monitors";
 
 // Export types from specific modules
+export type { WaitUntilCompletedOptions } from "./imports";
 export type { ListMonitorsOptions } from "./monitors";
