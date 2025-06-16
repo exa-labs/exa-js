@@ -93,5 +93,9 @@ export {
 export { WebsetMonitorsClient } from "./monitors";
 
 // Export types from specific modules
-export type { WaitUntilCompletedOptions } from "./imports";
+export type {
+  CreateImportWithCsvParameters,
+  CsvDataInput,
+  WaitUntilCompletedOptions,
+} from "./imports";
 export type { ListMonitorsOptions } from "./monitors";
