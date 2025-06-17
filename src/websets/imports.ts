@@ -70,7 +70,7 @@ export class ImportsClient extends WebsetsBaseClient {
   async create(params: CreateImportParameters): Promise<CreateImportResponse>;
 
   /**
-   * Create a new Import with CSV data (convenient version - handles upload)
+   * Create a new Import with CSV data (handles upload)
    * @param params The import creation parameters (without size/count - calculated automatically)
    * @param csv CSV data as string or Buffer
    * @returns The Import after upload (not waited for completion)
@@ -84,7 +84,6 @@ export class ImportsClient extends WebsetsBaseClient {
     params: CreateImportParameters | CreateImportWithCsvParameters,
     csv?: CsvDataInput
   ): Promise<CreateImportResponse | Import> {
-    // If no CSV data provided, use the original behavior
     if (csv === undefined) {
       return this.request<CreateImportResponse>(
         "/v0/imports",
@@ -93,7 +92,6 @@ export class ImportsClient extends WebsetsBaseClient {
       );
     }
 
-    // Convert CSV data to Buffer and calculate metrics
     let csvBuffer: Buffer;
     if (typeof csv === "string") {
       csvBuffer = Buffer.from(csv, "utf8");
@@ -106,18 +104,14 @@ export class ImportsClient extends WebsetsBaseClient {
       );
     }
 
-    // Calculate size in bytes (for S3 ContentLength)
     const sizeInBytes = csvBuffer.length;
     const sizeInMB = Math.max(1, Math.ceil(sizeInBytes / (1024 * 1024)));
 
-    // Calculate record count (number of lines minus header)
     const csvText = csvBuffer.toString("utf8");
     const lines = csvText.split("\n").filter((line) => line.trim().length > 0);
     const recordCount = Math.max(0, lines.length - 1); // Subtract 1 for header
 
-    // Validate reasonable limits
     if (sizeInMB > 50) {
-      // 50MB limit
       throw new ExaError(
         `CSV file too large: ${sizeInMB}MB. Maximum size is 50MB.`,
         HttpStatusCode.BadRequest
@@ -131,12 +125,11 @@ export class ImportsClient extends WebsetsBaseClient {
       );
     }
 
-    // Create the import with calculated parameters
     const createParams: CreateImportParameters = {
       title: params.title,
       format: CreateImportParametersFormat.csv,
       entity: params.entity,
-      size: sizeInBytes, // Send bytes, not MB!
+      size: sizeInBytes,
       count: recordCount,
       metadata: params.metadata,
       csv: (params as CreateImportWithCsvParameters).csv,
@@ -148,7 +141,6 @@ export class ImportsClient extends WebsetsBaseClient {
       createParams
     );
 
-    // Upload the CSV data
     try {
       const uploadResponse = await fetch(importResponse.uploadUrl, {
         method: "PUT",
@@ -163,13 +155,6 @@ export class ImportsClient extends WebsetsBaseClient {
         );
       }
     } catch (error) {
-      // Clean up the created import if upload fails
-      try {
-        await this.delete(importResponse.id);
-      } catch (deleteError) {
-        // Ignore cleanup errors
-      }
-
       if (error instanceof ExaError) {
         throw error;
       }
@@ -179,8 +164,7 @@ export class ImportsClient extends WebsetsBaseClient {
       );
     }
 
-    // Return the import status after upload
-    return this.get(importResponse.id);
+    return importResponse;
   }
 
   /**
@@ -237,8 +221,8 @@ export class ImportsClient extends WebsetsBaseClient {
     id: string,
     options?: WaitUntilCompletedOptions
   ): Promise<Import> {
-    const timeout = options?.timeout || 300000; // 5 minutes default
-    const pollInterval = options?.pollInterval || 2000; // 2 seconds default
+    const timeout = options?.timeout ?? 30 * 60 * 1000;
+    const pollInterval = options?.pollInterval ?? 2_000;
     const onPoll = options?.onPoll;
 
     const startTime = Date.now();
@@ -250,7 +234,6 @@ export class ImportsClient extends WebsetsBaseClient {
         onPoll(importItem.status);
       }
 
-      // Check if import reached a final state
       if (importItem.status === ImportStatus.completed) {
         return importItem;
       }
@@ -262,7 +245,6 @@ export class ImportsClient extends WebsetsBaseClient {
         );
       }
 
-      // Check timeout
       if (Date.now() - startTime > timeout) {
         throw new ExaError(
           `Import ${id} did not complete within ${timeout}ms. Current status: ${importItem.status}`,
@@ -270,7 +252,6 @@ export class ImportsClient extends WebsetsBaseClient {
         );
       }
 
-      // Wait before next poll
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
   }
