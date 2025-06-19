@@ -80,6 +80,7 @@ export type ExtrasOptions = { links?: number; imageLinks?: number };
  * @property {TextContentsOptions | boolean} [text] - Options for retrieving text contents.
  * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights.
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
+ * @property {ContextContentsOptions | boolean} [context] - Options for retrieving a combined context string.
  * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
  * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
@@ -91,6 +92,7 @@ export type ContentsOptions = {
   text?: TextContentsOptions | true;
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
+  context?: ContextContentsOptions | true;
   livecrawl?: LivecrawlOptions;
   context?: ContextOptions | true;
   livecrawlTimeout?: number;
@@ -186,6 +188,15 @@ export type ContextOptions = {
 };
 
 /**
+ * Options for retrieving a combined context string.
+ * @typedef {Object} ContextContentsOptions
+ * @property {number} [maxCharacters] - Maximum character limit for the context string.
+ */
+export type ContextContentsOptions = {
+  maxCharacters?: number;
+};
+
+/**
  * @typedef {Object} TextResponse
  * @property {string} text - Text from page
  */
@@ -206,6 +217,7 @@ export type HighlightsResponse = {
  * @property {string} summary - The generated summary of the page content.
  */
 export type SummaryResponse = { summary: string };
+
 
 /**
  * @typedef {Object} ExtrasResponse
@@ -310,6 +322,7 @@ export type SearchResult<T extends ContentsOptions> = {
  * @property {string} [context] - The context for the search.
  * @property {string} [autopromptString] - The autoprompt string, if applicable.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
+ * @property {string} [context] - Combined context string of the search result and any subpages.
  * @property {string} requestId - The request ID for the search.
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
  */
@@ -318,6 +331,7 @@ export type SearchResponse<T extends ContentsOptions> = {
   context?: string;
   autopromptString?: string;
   autoDate?: string;
+  context?: string;
   requestId: string;
   statuses?: Array<Status>;
   costDollars?: CostDollars;
@@ -420,6 +434,7 @@ export class Exa {
       text,
       highlights,
       summary,
+      context,
       subpages,
       subpageTarget,
       extras,
@@ -436,7 +451,8 @@ export class Exa {
       text === undefined &&
       summary === undefined &&
       highlights === undefined &&
-      extras === undefined
+      extras === undefined &&
+      context === undefined
     ) {
       contentsOptions.text = true;
     }
@@ -444,6 +460,7 @@ export class Exa {
     if (text !== undefined) contentsOptions.text = text;
     if (summary !== undefined) contentsOptions.summary = summary;
     if (highlights !== undefined) contentsOptions.highlights = highlights;
+    if (context !== undefined) contentsOptions.context = context;
     if (subpages !== undefined) contentsOptions.subpages = subpages;
     if (subpageTarget !== undefined)
       contentsOptions.subpageTarget = subpageTarget;
