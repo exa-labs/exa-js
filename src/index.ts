@@ -334,14 +334,14 @@ export type Status = {
  * @typedef {Object} AnswerOptions
  * @property {boolean} [stream] - Whether to stream the response. Default false.
  * @property {boolean} [text] - Whether to include text in the source results. Default false.
- * @property {"exa" | "exa-pro"} [model] - The model to use for generating the answer. Default "exa".
+ * @property {"exa"} [model] - The model to use for generating the answer. Default "exa".
  * @property {string} [systemPrompt] - A system prompt to guide the LLM's behavior when generating the answer.
  * @property {Object} [outputSchema] - A JSON Schema specification for the structure you expect the output to take
  */
 export type AnswerOptions = {
   stream?: boolean;
   text?: boolean;
-  model?: "exa" | "exa-pro";
+  model?: "exa";
   systemPrompt?: string;
   outputSchema?: Record<string, unknown>;
 };
@@ -710,7 +710,7 @@ export class Exa {
    * ```ts
    * const answer = await exa.answer("What is quantum computing?", {
    *   text: true,
-   *   model: "exa-pro",
+   *   model: "exa",
    *   systemPrompt: "Answer in a technical manner suitable for experts."
    * });
    * ```
