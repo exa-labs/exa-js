@@ -80,15 +80,6 @@ const answerResult = await exa.answer(
   "What is the population of New York City?"
 );
 
-// Get answer with citation contents and use the exa-pro model, which passes 2 extra queries to exa to increase coverage of the search space.
-const answerWithTextResults = await exa.answer(
-  "What is the population of New York City?",
-  {
-    text: true,
-    model: "exa-pro",
-  }
-);
-
 // Get an answer with streaming
 for await (const chunk of exa.streamAnswer(
   "What is the population of New York City?"
