@@ -644,7 +644,7 @@ export interface components {
                      * @default append
                      * @enum {string}
                      */
-                    behavior: CreateMonitorParametersBehaviorConfigBehavior;
+                    behavior: WebsetSearchBehavior;
                     /** @description The maximum number of results to find */
                     count: number;
                     /** @description The criteria to search for. By default, the criteria from the last search is used. */
@@ -683,7 +683,7 @@ export interface components {
         };
         CreateWebhookParameters: {
             /** @description The events to trigger the webhook */
-            events: components["schemas"]["EventType"][];
+            events: EventType[];
             /** @description Set of key-value pairs you want to associate with this object. */
             metadata?: {
                 [key: string]: string;
@@ -754,7 +754,7 @@ export interface components {
              *     - **append**: Add new items to existing ones, keeping items that match the new criteria
              * @default override
              */
-            behavior: components["schemas"]["WebsetSearchBehavior"];
+            behavior: WebsetSearchBehavior;
             /** @description Number of Items the Search will attempt to find.
              *
              *     The actual number of Items found may be less than this number depending on the query complexity. */
@@ -787,6 +787,9 @@ export interface components {
         };
         /** Custom */
         CustomEntity: {
+            /** @description When you decide to use a custom entity, this is the description of the entity.
+             *
+             *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
             description: string;
             /**
              * @default custom
@@ -1011,7 +1014,6 @@ export interface components {
             type: "webset.search.completed";
         };
         /** @enum {string} */
-        EventType: EventType;
         GetWebsetResponse: components["schemas"]["Webset"] & {
             /** @description When expand query parameter contains `items`, this will contain the items in the webset */
             items?: components["schemas"]["WebsetItem"][];
@@ -1335,7 +1337,7 @@ export interface components {
         };
         UpdateWebhookParameters: {
             /** @description The events to trigger the webhook */
-            events?: components["schemas"]["EventType"][];
+            events?: EventType[];
             /** @description Set of key-value pairs you want to associate with this object. */
             metadata?: {
                 [key: string]: string;
@@ -1359,7 +1361,7 @@ export interface components {
              */
             createdAt: string;
             /** @description The events to trigger the webhook */
-            events: components["schemas"]["EventType"][];
+            events: EventType[];
             /** @description The unique identifier for the webhook */
             id: string;
             /**
@@ -1806,10 +1808,6 @@ export interface components {
              */
             updatedAt: string;
         };
-        /** @enum {string} */
-        WebsetSearchBehavior: WebsetSearchBehavior;
-        /** @enum {string} */
-        WebsetSearchCanceledReason: WebsetSearchCanceledReason;
     };
     responses: never;
     parameters: never;
@@ -1831,7 +1829,6 @@ export type CustomEntity = components['schemas']['CustomEntity'];
 export type EnrichmentResult = components['schemas']['EnrichmentResult'];
 export type Entity = components['schemas']['Entity'];
 export type Event = components['schemas']['Event'];
-export type EventType = components['schemas']['EventType'];
 export type GetWebsetResponse = components['schemas']['GetWebsetResponse'];
 export type Import = components['schemas']['Import'];
 export type ListEventsResponse = components['schemas']['ListEventsResponse'];
@@ -1856,7 +1853,6 @@ export type Webhook = components['schemas']['Webhook'];
 export type WebhookAttempt = components['schemas']['WebhookAttempt'];
 export type Webset = components['schemas']['Webset'];
 export type WebsetEnrichment = components['schemas']['WebsetEnrichment'];
-export type WebsetEnrichmentFormat = components['schemas']['WebsetEnrichmentFormat'];
 export type WebsetItem = components['schemas']['WebsetItem'];
 export type WebsetItemArticleProperties = components['schemas']['WebsetItemArticleProperties'];
 export type WebsetItemCompanyProperties = components['schemas']['WebsetItemCompanyProperties'];
@@ -1865,8 +1861,6 @@ export type WebsetItemEvaluation = components['schemas']['WebsetItemEvaluation']
 export type WebsetItemPersonProperties = components['schemas']['WebsetItemPersonProperties'];
 export type WebsetItemResearchPaperProperties = components['schemas']['WebsetItemResearchPaperProperties'];
 export type WebsetSearch = components['schemas']['WebsetSearch'];
-export type WebsetSearchBehavior = components['schemas']['WebsetSearchBehavior'];
-export type WebsetSearchCanceledReason = components['schemas']['WebsetSearchCanceledReason'];
 export type $defs = Record<string, never>;
 export interface operations {
     "events-list": {
@@ -1877,7 +1871,7 @@ export interface operations {
                 /** @description The number of results to return */
                 limit?: number;
                 /** @description The types of events to filter by */
-                types?: PathsV0EventsGetParametersQueryTypes[];
+                types?: EventType[];
             };
             header?: never;
             path?: never;
@@ -2482,7 +2476,7 @@ export interface operations {
                 /** @description The cursor to paginate through the results */
                 cursor?: string;
                 /** @description The type of event to filter by */
-                eventType?: PathsV0WebhooksIdAttemptsGetParametersQueryEventType;
+                eventType?: EventType;
                 /** @description The number of results to return */
                 limit?: number;
             };
@@ -3042,40 +3036,6 @@ export interface operations {
         };
     };
 }
-export enum PathsV0EventsGetParametersQueryTypes {
-    webset_created = "webset.created",
-    webset_deleted = "webset.deleted",
-    webset_paused = "webset.paused",
-    webset_idle = "webset.idle",
-    webset_search_created = "webset.search.created",
-    webset_search_canceled = "webset.search.canceled",
-    webset_search_completed = "webset.search.completed",
-    webset_search_updated = "webset.search.updated",
-    import_created = "import.created",
-    import_completed = "import.completed",
-    import_processing = "import.processing",
-    webset_item_created = "webset.item.created",
-    webset_item_enriched = "webset.item.enriched",
-    webset_export_created = "webset.export.created",
-    webset_export_completed = "webset.export.completed"
-}
-export enum PathsV0WebhooksIdAttemptsGetParametersQueryEventType {
-    webset_created = "webset.created",
-    webset_deleted = "webset.deleted",
-    webset_paused = "webset.paused",
-    webset_idle = "webset.idle",
-    webset_search_created = "webset.search.created",
-    webset_search_canceled = "webset.search.canceled",
-    webset_search_completed = "webset.search.completed",
-    webset_search_updated = "webset.search.updated",
-    import_created = "import.created",
-    import_completed = "import.completed",
-    import_processing = "import.processing",
-    webset_item_created = "webset.item.created",
-    webset_item_enriched = "webset.item.enriched",
-    webset_export_created = "webset.export.created",
-    webset_export_completed = "webset.export.completed"
-}
 export enum PathsV0WebsetsIdGetParametersQueryExpand {
     items = "items"
 }
@@ -3169,10 +3129,6 @@ export enum MonitorObject {
 export enum MonitorStatus {
     enabled = "enabled",
     disabled = "disabled"
-}
-export enum MonitorBehaviorConfigBehavior {
-    override = "override",
-    append = "append"
 }
 export enum MonitorRunObject {
     monitor_run = "monitor_run"
