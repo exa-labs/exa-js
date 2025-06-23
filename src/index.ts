@@ -416,46 +416,46 @@ export class Exa {
     contentsOptions: ContentsOptions;
     restOptions: Omit<T, keyof ContentsOptions>;
   } {
-    const {
-      text,
-      highlights,
-      summary,
-      subpages,
-      subpageTarget,
-      extras,
-      livecrawl,
-      livecrawlTimeout,
-      context,
-      ...rest
-    } = options;
-
     const contentsOptions: ContentsOptions = {};
 
     // Default: if none of text, summary, or highlights is provided, we retrieve text
     if (
-      text === undefined &&
-      summary === undefined &&
-      highlights === undefined &&
-      extras === undefined
+      options.text === undefined &&
+      options.summary === undefined &&
+      options.highlights === undefined &&
+      options.extras === undefined
     ) {
       contentsOptions.text = true;
     }
 
-    if (text !== undefined) contentsOptions.text = text;
-    if (summary !== undefined) contentsOptions.summary = summary;
-    if (highlights !== undefined) contentsOptions.highlights = highlights;
-    if (subpages !== undefined) contentsOptions.subpages = subpages;
-    if (subpageTarget !== undefined)
-      contentsOptions.subpageTarget = subpageTarget;
-    if (extras !== undefined) contentsOptions.extras = extras;
-    if (livecrawl !== undefined) contentsOptions.livecrawl = livecrawl;
-    if (livecrawlTimeout !== undefined)
-      contentsOptions.livecrawlTimeout = livecrawlTimeout;
-    if (context !== undefined) contentsOptions.context = context;
+    if (options.text !== undefined) contentsOptions.text = options.text;
+    if (options.summary !== undefined) contentsOptions.summary = options.summary;
+    if (options.highlights !== undefined) contentsOptions.highlights = options.highlights;
+    if (options.subpages !== undefined) contentsOptions.subpages = options.subpages;
+    if (options.subpageTarget !== undefined)
+      contentsOptions.subpageTarget = options.subpageTarget;
+    if (options.extras !== undefined) contentsOptions.extras = options.extras;
+    if (options.livecrawl !== undefined) contentsOptions.livecrawl = options.livecrawl;
+    if (options.livecrawlTimeout !== undefined)
+      contentsOptions.livecrawlTimeout = options.livecrawlTimeout;
+    if (options.context !== undefined) contentsOptions.context = options.context;
+
+    // Manually build restOptions by excluding the contents-specific properties
+    const restOptions: any = {};
+    const contentKeys = new Set([
+      'text', 'highlights', 'summary', 'subpages', 'subpageTarget', 
+      'extras', 'livecrawl', 'livecrawlTimeout', 'context'
+    ]);
+    
+    for (const key in options) {
+      if (options.hasOwnProperty(key) && !contentKeys.has(key)) {
+        restOptions[key] = options[key];
+      }
+    }
 
     return {
       contentsOptions,
-      restOptions: rest as Omit<T, keyof ContentsOptions>,
+      restOptions: restOptions as Omit<T, keyof ContentsOptions>,
     };
   }
 
@@ -604,7 +604,23 @@ export class Exa {
     query: string,
     options?: RegularSearchOptions
   ): Promise<SearchResponse<{}>> {
-    return await this.request("/search", "POST", { query, ...options });
+    const payload: any = { query };
+    if (options?.numResults !== undefined) payload.numResults = options.numResults;
+    if (options?.includeDomains !== undefined) payload.includeDomains = options.includeDomains;
+    if (options?.excludeDomains !== undefined) payload.excludeDomains = options.excludeDomains;
+    if (options?.startCrawlDate !== undefined) payload.startCrawlDate = options.startCrawlDate;
+    if (options?.endCrawlDate !== undefined) payload.endCrawlDate = options.endCrawlDate;
+    if (options?.startPublishedDate !== undefined) payload.startPublishedDate = options.startPublishedDate;
+    if (options?.endPublishedDate !== undefined) payload.endPublishedDate = options.endPublishedDate;
+    if (options?.category !== undefined) payload.category = options.category;
+    if (options?.includeText !== undefined) payload.includeText = options.includeText;
+    if (options?.excludeText !== undefined) payload.excludeText = options.excludeText;
+    if (options?.flags !== undefined) payload.flags = options.flags;
+    if (options?.moderation !== undefined) payload.moderation = options.moderation;
+    if (options?.useAutoprompt !== undefined) payload.useAutoprompt = options.useAutoprompt;
+    if (options?.type !== undefined) payload.type = options.type;
+    
+    return await this.request("/search", "POST", payload);
   }
 
   /**
@@ -623,11 +639,27 @@ export class Exa {
         ? { contentsOptions: { text: true }, restOptions: {} }
         : this.extractContentsOptions(options);
 
-    return await this.request("/search", "POST", {
+    const payload: any = {
       query,
       contents: contentsOptions,
-      ...restOptions,
-    });
+    };
+    
+    if (restOptions.numResults !== undefined) payload.numResults = restOptions.numResults;
+    if (restOptions.includeDomains !== undefined) payload.includeDomains = restOptions.includeDomains;
+    if (restOptions.excludeDomains !== undefined) payload.excludeDomains = restOptions.excludeDomains;
+    if (restOptions.startCrawlDate !== undefined) payload.startCrawlDate = restOptions.startCrawlDate;
+    if (restOptions.endCrawlDate !== undefined) payload.endCrawlDate = restOptions.endCrawlDate;
+    if (restOptions.startPublishedDate !== undefined) payload.startPublishedDate = restOptions.startPublishedDate;
+    if (restOptions.endPublishedDate !== undefined) payload.endPublishedDate = restOptions.endPublishedDate;
+    if (restOptions.category !== undefined) payload.category = restOptions.category;
+    if (restOptions.includeText !== undefined) payload.includeText = restOptions.includeText;
+    if (restOptions.excludeText !== undefined) payload.excludeText = restOptions.excludeText;
+    if (restOptions.flags !== undefined) payload.flags = restOptions.flags;
+    if (restOptions.moderation !== undefined) payload.moderation = restOptions.moderation;
+    if (restOptions.useAutoprompt !== undefined) payload.useAutoprompt = restOptions.useAutoprompt;
+    if (restOptions.type !== undefined) payload.type = restOptions.type;
+
+    return await this.request("/search", "POST", payload);
   }
 
   /**
@@ -640,7 +672,21 @@ export class Exa {
     url: string,
     options?: FindSimilarOptions
   ): Promise<SearchResponse<{}>> {
-    return await this.request("/findSimilar", "POST", { url, ...options });
+    const payload: any = { url };
+    if (options?.numResults !== undefined) payload.numResults = options.numResults;
+    if (options?.includeDomains !== undefined) payload.includeDomains = options.includeDomains;
+    if (options?.excludeDomains !== undefined) payload.excludeDomains = options.excludeDomains;
+    if (options?.startCrawlDate !== undefined) payload.startCrawlDate = options.startCrawlDate;
+    if (options?.endCrawlDate !== undefined) payload.endCrawlDate = options.endCrawlDate;
+    if (options?.startPublishedDate !== undefined) payload.startPublishedDate = options.startPublishedDate;
+    if (options?.endPublishedDate !== undefined) payload.endPublishedDate = options.endPublishedDate;
+    if (options?.category !== undefined) payload.category = options.category;
+    if (options?.includeText !== undefined) payload.includeText = options.includeText;
+    if (options?.excludeText !== undefined) payload.excludeText = options.excludeText;
+    if (options?.flags !== undefined) payload.flags = options.flags;
+    if (options?.excludeSourceDomain !== undefined) payload.excludeSourceDomain = options.excludeSourceDomain;
+    
+    return await this.request("/findSimilar", "POST", payload);
   }
 
   /**
@@ -658,11 +704,25 @@ export class Exa {
         ? { contentsOptions: { text: true }, restOptions: {} }
         : this.extractContentsOptions(options);
 
-    return await this.request("/findSimilar", "POST", {
+    const payload: any = {
       url,
       contents: contentsOptions,
-      ...restOptions,
-    });
+    };
+    
+    if (restOptions.numResults !== undefined) payload.numResults = restOptions.numResults;
+    if (restOptions.includeDomains !== undefined) payload.includeDomains = restOptions.includeDomains;
+    if (restOptions.excludeDomains !== undefined) payload.excludeDomains = restOptions.excludeDomains;
+    if (restOptions.startCrawlDate !== undefined) payload.startCrawlDate = restOptions.startCrawlDate;
+    if (restOptions.endCrawlDate !== undefined) payload.endCrawlDate = restOptions.endCrawlDate;
+    if (restOptions.startPublishedDate !== undefined) payload.startPublishedDate = restOptions.startPublishedDate;
+    if (restOptions.endPublishedDate !== undefined) payload.endPublishedDate = restOptions.endPublishedDate;
+    if (restOptions.category !== undefined) payload.category = restOptions.category;
+    if (restOptions.includeText !== undefined) payload.includeText = restOptions.includeText;
+    if (restOptions.excludeText !== undefined) payload.excludeText = restOptions.excludeText;
+    if (restOptions.flags !== undefined) payload.flags = restOptions.flags;
+    if (restOptions.excludeSourceDomain !== undefined) payload.excludeSourceDomain = restOptions.excludeSourceDomain;
+
+    return await this.request("/findSimilar", "POST", payload);
   }
 
   /**
@@ -692,10 +752,20 @@ export class Exa {
       requestUrls = (urls as SearchResult<T>[]).map((result) => result.url);
     }
 
-    const payload = {
+    const payload: any = {
       urls: requestUrls,
-      ...options,
     };
+
+    if (options?.text !== undefined) payload.text = options.text;
+    if (options?.highlights !== undefined) payload.highlights = options.highlights;
+    if (options?.summary !== undefined) payload.summary = options.summary;
+    if (options?.livecrawl !== undefined) payload.livecrawl = options.livecrawl;
+    if (options?.context !== undefined) payload.context = options.context;
+    if (options?.livecrawlTimeout !== undefined) payload.livecrawlTimeout = options.livecrawlTimeout;
+    if (options?.filterEmptyResults !== undefined) payload.filterEmptyResults = options.filterEmptyResults;
+    if (options?.subpages !== undefined) payload.subpages = options.subpages;
+    if (options?.subpageTarget !== undefined) payload.subpageTarget = options.subpageTarget;
+    if (options?.extras !== undefined) payload.extras = options.extras;
 
     return await this.request("/contents", "POST", payload);
   }

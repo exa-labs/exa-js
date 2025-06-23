@@ -38,7 +38,10 @@ export class WebsetItemsClient extends WebsetsBaseClient {
     options?: PaginationParams
   ): AsyncGenerator<WebsetItem> {
     let cursor: string | undefined = undefined;
-    const pageOptions = options ? { ...options } : {};
+    const pageOptions: any = {};
+    
+    if (options?.cursor !== undefined) pageOptions.cursor = options.cursor;
+    if (options?.limit !== undefined) pageOptions.limit = options.limit;
 
     while (true) {
       pageOptions.cursor = cursor;
