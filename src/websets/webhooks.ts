@@ -71,7 +71,10 @@ export class WebsetWebhooksClient extends WebsetsBaseClient {
    */
   async *listAll(options?: ListWebhooksOptions): AsyncGenerator<Webhook> {
     let cursor: string | undefined = undefined;
-    const pageOptions = options ? { ...options } : {};
+    const pageOptions: any = {};
+    
+    if (options?.cursor !== undefined) pageOptions.cursor = options.cursor;
+    if (options?.limit !== undefined) pageOptions.limit = options.limit;
 
     while (true) {
       pageOptions.cursor = cursor;
@@ -156,7 +159,11 @@ export class WebsetWebhooksClient extends WebsetsBaseClient {
     options?: ListWebhookAttemptsOptions
   ): AsyncGenerator<WebhookAttempt> {
     let cursor: string | undefined = undefined;
-    const pageOptions = options ? { ...options } : {};
+    const pageOptions: any = {};
+    
+    if (options?.cursor !== undefined) pageOptions.cursor = options.cursor;
+    if (options?.limit !== undefined) pageOptions.limit = options.limit;
+    if (options?.eventType !== undefined) pageOptions.eventType = options.eventType;
 
     while (true) {
       pageOptions.cursor = cursor;
