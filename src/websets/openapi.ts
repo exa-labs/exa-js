@@ -3219,6 +3219,23 @@ export enum WebhookAttemptEventType {
   webset_export_created = "webset.export.created",
   webset_export_completed = "webset.export.completed",
 }
+export enum WebsetImportsFormat {
+  csv = "csv",
+  webset = "webset",
+}
+export enum WebsetImportsFailedReason {
+  file_not_uploaded = "file_not_uploaded",
+  invalid_format = "invalid_format",
+  invalid_file_content = "invalid_file_content",
+  missing_identifier = "missing_identifier",
+}
+export enum WebsetImportsStatus {
+  created = "created",
+  failed = "failed",
+  processing = "processing",
+  scheduled = "scheduled",
+  completed = "completed",
+}
 export enum WebsetStatus {
   idle = "idle",
   running = "running",
