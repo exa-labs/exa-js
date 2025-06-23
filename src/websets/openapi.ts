@@ -4,3684 +4,3256 @@
  */
 
 export interface paths {
-  "/v0/events": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all Events
+         * @description List all events that have occurred in the system.
+         *
+         *     You can paginate through the results using the `cursor` parameter.
+         */
+        get: operations["events-list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * List all Events
-     * @description List all events that have occurred in the system.
-     *
-     *     You can paginate through the results using the `cursor` parameter.
-     */
-    get: operations["events-list"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/events/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/events/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get an Event
+         * @description Get a single Event by id.
+         *
+         *     You can subscribe to Events by creating a Webhook.
+         */
+        get: operations["events-get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get an Event
-     * @description Get a single Event by id.
-     *
-     *     You can subscribe to Events by creating a Webhook.
-     */
-    get: operations["events-get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/imports": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Imports
+         * @description Lists all imports for the Webset.
+         */
+        get: operations["imports-list"];
+        put?: never;
+        /**
+         * Create an Import
+         * @description Creates a new import to upload your data into Websets. Imports can be used to:
+         *
+         *     - **Enrich**: Enhance your data with additional information using our AI-powered enrichment engine
+         *     - **Search**: Query your data using Websets' agentic search with natural language filters
+         *     - **Exclude**: Prevent duplicate or already known results from appearing in your searches
+         *
+         *     Once the import is created, you can upload your data to the returned `uploadUrl` until `uploadValidUntil` (by default 1 hour).
+         */
+        post: operations["imports-create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * List Imports
-     * @description Lists all imports for the Webset.
-     */
-    get: operations["imports-list"];
-    put?: never;
-    /**
-     * Create an Import
-     * @description Creates a new import to upload your data into Websets. Imports can be used to:
-     *
-     *     - **Enrich**: Enhance your data with additional information using our AI-powered enrichment engine
-     *     - **Search**: Query your data using Websets' agentic search with natural language filters
-     *     - **Exclude**: Prevent duplicate or already known results from appearing in your searches
-     *
-     *     Once the import is created, you can upload your data to the returned `uploadUrl` until `uploadValidUntil` (by default 1 hour).
-     */
-    post: operations["imports-create"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/imports/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/imports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Import
+         * @description Gets a specific import.
+         */
+        get: operations["imports-get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Import
+         * @description Deletes a import.
+         */
+        delete: operations["imports-delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Import
+         * @description Updates a import configuration.
+         */
+        patch: operations["imports-update"];
+        trace?: never;
     };
-    /**
-     * Get Import
-     * @description Gets a specific import.
-     */
-    get: operations["imports-get"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete Import
-     * @description Deletes a import.
-     */
-    delete: operations["imports-delete"];
-    options?: never;
-    head?: never;
-    /**
-     * Update Import
-     * @description Updates a import configuration.
-     */
-    patch: operations["imports-update"];
-    trace?: never;
-  };
-  "/v0/monitors": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/monitors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Monitors
+         * @description Lists all monitors for the Webset.
+         */
+        get: operations["monitors-list"];
+        put?: never;
+        /**
+         * Create a Monitor
+         * @description Creates a new `Monitor` to continuously keep your Websets updated with fresh data.
+         *
+         *     Monitors automatically run on your defined schedule to ensure your Websets stay current without manual intervention:
+         *
+         *     - **Find new content**: Execute `search` operations to discover fresh items matching your criteria
+         *     - **Update existing content**: Run `refresh` operations to update items contents and enrichments
+         *     - **Automated scheduling**: Configure `cron` expressions and `timezone` for precise scheduling control
+         */
+        post: operations["monitors-create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * List Monitors
-     * @description Lists all monitors for the Webset.
-     */
-    get: operations["monitors-list"];
-    put?: never;
-    /**
-     * Create a Monitor
-     * @description Creates a new `Monitor` to continuously keep your Websets updated with fresh data.
-     *
-     *     Monitors automatically run on your defined schedule to ensure your Websets stay current without manual intervention:
-     *
-     *     - **Find new content**: Execute `search` operations to discover fresh items matching your criteria
-     *     - **Update existing content**: Run `refresh` operations to update items contents and enrichments
-     *     - **Automated scheduling**: Configure `cron` expressions and `timezone` for precise scheduling control
-     */
-    post: operations["monitors-create"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/monitors/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/monitors/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Monitor
+         * @description Gets a specific monitor.
+         */
+        get: operations["monitors-get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Monitor
+         * @description Deletes a monitor.
+         */
+        delete: operations["monitors-delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Monitor
+         * @description Updates a monitor configuration.
+         */
+        patch: operations["monitors-update"];
+        trace?: never;
     };
-    /**
-     * Get Monitor
-     * @description Gets a specific monitor.
-     */
-    get: operations["monitors-get"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete Monitor
-     * @description Deletes a monitor.
-     */
-    delete: operations["monitors-delete"];
-    options?: never;
-    head?: never;
-    /**
-     * Update Monitor
-     * @description Updates a monitor configuration.
-     */
-    patch: operations["monitors-update"];
-    trace?: never;
-  };
-  "/v0/monitors/{monitor}/runs": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/monitors/{monitor}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Monitor Runs
+         * @description Lists all runs for the Monitor.
+         */
+        get: operations["monitors-runs-list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * List Monitor Runs
-     * @description Lists all runs for the Monitor.
-     */
-    get: operations["monitors-runs-list"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/monitors/{monitor}/runs/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/monitors/{monitor}/runs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Monitor Run
+         * @description Gets a specific monitor run.
+         */
+        get: operations["monitors-runs-get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Monitor Run
-     * @description Gets a specific monitor run.
-     */
-    get: operations["monitors-runs-get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/webhooks": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/webhooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List webhooks */
+        get: operations["webhooks-list"];
+        put?: never;
+        /** Create a Webhook */
+        post: operations["webhooks-create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** List webhooks */
-    get: operations["webhooks-list"];
-    put?: never;
-    /** Create a Webhook */
-    post: operations["webhooks-create"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/webhooks/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/webhooks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a Webhook */
+        get: operations["webhooks-get"];
+        put?: never;
+        post?: never;
+        /** Delete a Webhook */
+        delete: operations["webhooks-delete"];
+        options?: never;
+        head?: never;
+        /** Update a Webhook */
+        patch: operations["webhooks-update"];
+        trace?: never;
     };
-    /** Get a Webhook */
-    get: operations["webhooks-get"];
-    put?: never;
-    post?: never;
-    /** Delete a Webhook */
-    delete: operations["webhooks-delete"];
-    options?: never;
-    head?: never;
-    /** Update a Webhook */
-    patch: operations["webhooks-update"];
-    trace?: never;
-  };
-  "/v0/webhooks/{id}/attempts": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/webhooks/{id}/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List webhook attempts
+         * @description List all attempts made by a Webhook ordered in descending order.
+         */
+        get: operations["webhooks-attempts-list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * List webhook attempts
-     * @description List all attempts made by a Webhook ordered in descending order.
-     */
-    get: operations["webhooks-attempts-list"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/websets": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/websets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all Websets
+         * @description Returns a list of Websets.
+         *
+         *     You can paginate through the results using the `cursor` parameter.
+         */
+        get: operations["websets-list"];
+        put?: never;
+        /**
+         * Create a Webset
+         * @description Creates a new Webset with optional search, import, and enrichment configurations. The Webset will automatically begin processing once created.
+         *
+         *     You can specify an `externalId` to reference the Webset with your own identifiers for easier integration.
+         */
+        post: operations["websets-create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * List all Websets
-     * @description Returns a list of Websets.
-     *
-     *     You can paginate through the results using the `cursor` parameter.
-     */
-    get: operations["websets-list"];
-    put?: never;
-    /**
-     * Create a Webset
-     * @description Creates a new Webset with optional search, import, and enrichment configurations. The Webset will automatically begin processing once created.
-     *
-     *     You can specify an `externalId` to reference the Webset with your own identifiers for easier integration.
-     */
-    post: operations["websets-create"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/websets/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/websets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a Webset */
+        get: operations["websets-get"];
+        put?: never;
+        /** Update a Webset */
+        post: operations["websets-update"];
+        /**
+         * Delete a Webset
+         * @description Deletes a Webset.
+         *
+         *     Once deleted, the Webset and all its Items will no longer be available.
+         */
+        delete: operations["websets-delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get a Webset */
-    get: operations["websets-get"];
-    put?: never;
-    /** Update a Webset */
-    post: operations["websets-update"];
-    /**
-     * Delete a Webset
-     * @description Deletes a Webset.
-     *
-     *     Once deleted, the Webset and all its Items will no longer be available.
-     */
-    delete: operations["websets-delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/websets/{id}/cancel": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/websets/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a running Webset
+         * @description Cancels all operations being performed on a Webset.
+         *
+         *     Any enrichment or search will be stopped and the Webset will be marked as `idle`.
+         */
+        post: operations["websets-cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Cancel a running Webset
-     * @description Cancels all operations being performed on a Webset.
-     *
-     *     Any enrichment or search will be stopped and the Webset will be marked as `idle`.
-     */
-    post: operations["websets-cancel"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/websets/{webset}/enrichments": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/websets/{webset}/enrichments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an Enrichment
+         * @description Create an Enrichment for a Webset.
+         */
+        post: operations["websets-enrichments-create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Create an Enrichment
-     * @description Create an Enrichment for a Webset.
-     */
-    post: operations["websets-enrichments-create"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/websets/{webset}/enrichments/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/websets/{webset}/enrichments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get an Enrichment */
+        get: operations["websets-enrichments-get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete an Enrichment
+         * @description When deleting an Enrichment, any running enrichments will be canceled and all existing `enrichment_result` generated by this Enrichment will no longer be available.
+         */
+        delete: operations["websets-enrichments-delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get an Enrichment */
-    get: operations["websets-enrichments-get"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete an Enrichment
-     * @description When deleting an Enrichment, any running enrichments will be canceled and all existing `enrichment_result` generated by this Enrichment will no longer be available.
-     */
-    delete: operations["websets-enrichments-delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/websets/{webset}/enrichments/{id}/cancel": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/websets/{webset}/enrichments/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a running Enrichment
+         * @description All running enrichments will be canceled. You can not resume an Enrichment after it has been canceled.
+         */
+        post: operations["websets-enrichments-cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Cancel a running Enrichment
-     * @description All running enrichments will be canceled. You can not resume an Enrichment after it has been canceled.
-     */
-    post: operations["websets-enrichments-cancel"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/websets/{webset}/items": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/websets/{webset}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all Items for a Webset
+         * @description Returns a list of Webset Items.
+         *
+         *     You can paginate through the Items using the `cursor` parameter.
+         */
+        get: operations["websets-items-list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * List all Items for a Webset
-     * @description Returns a list of Webset Items.
-     *
-     *     You can paginate through the Items using the `cursor` parameter.
-     */
-    get: operations["websets-items-list"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/websets/{webset}/items/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/websets/{webset}/items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get an Item
+         * @description Returns a Webset Item.
+         */
+        get: operations["websets-items-get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete an Item
+         * @description Deletes an Item from the Webset.
+         *
+         *     This will cancel any enrichment process for it.
+         */
+        delete: operations["websets-items-delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get an Item
-     * @description Returns a Webset Item.
-     */
-    get: operations["websets-items-get"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete an Item
-     * @description Deletes an Item from the Webset.
-     *
-     *     This will cancel any enrichment process for it.
-     */
-    delete: operations["websets-items-delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/websets/{webset}/searches": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/websets/{webset}/searches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a Search
+         * @description Creates a new Search for the Webset.
+         *
+         *     The default behavior is to reuse the previous Search results and evaluate them against the new criteria.
+         */
+        post: operations["websets-searches-create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Create a Search
-     * @description Creates a new Search for the Webset.
-     *
-     *     The default behavior is to reuse the previous Search results and evaluate them against the new criteria.
-     */
-    post: operations["websets-searches-create"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/websets/{webset}/searches/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/websets/{webset}/searches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a Search
+         * @description Gets a Search by id
+         */
+        get: operations["websets-searches-get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get a Search
-     * @description Gets a Search by id
-     */
-    get: operations["websets-searches-get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/v0/websets/{webset}/searches/{id}/cancel": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/v0/websets/{webset}/searches/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a running Search
+         * @description Cancels a currently running Search.
+         *
+         *     You can cancel all searches at once by using the `websets/:webset/cancel` endpoint.
+         */
+        post: operations["websets-searches-cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Cancel a running Search
-     * @description Cancels a currently running Search.
-     *
-     *     You can cancel all searches at once by using the `websets/:webset/cancel` endpoint.
-     */
-    post: operations["websets-searches-cancel"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /** Article */
-    ArticleEntity: {
-      /**
-       * @default article
-       * @constant
-       */
-      type: "article";
-    };
-    /** Company */
-    CompanyEntity: {
-      /**
-       * @default company
-       * @constant
-       */
-      type: "company";
-    };
-    CreateCriterionParameters: {
-      /** @description The description of the criterion */
-      description: string;
-    };
-    CreateEnrichmentParameters: {
-      /** @description Provide a description of the enrichment task you want to perform to each Webset Item. */
-      description: string;
-      /**
-       * @description Format of the enrichment response.
-       *
-       *     We automatically select the best format based on the description. If you want to explicitly specify the format, you can do so here.
-       * @enum {string}
-       */
-      format?: CreateEnrichmentParametersFormat;
-      /** @description Set of key-value pairs you want to associate with this object. */
-      metadata?: {
-        [key: string]: string;
-      };
-      /** @description When the format is options, the different options for the enrichment agent to choose from. */
-      options?: {
-        /** @description The label of the option */
-        label: string;
-      }[];
-    };
-    CreateImportParameters: {
-      /** @description The number of records to import */
-      count: number;
-      /** @description When format is `csv`, these are the specific import parameters. */
-      csv?: {
-        /** @description Column containing the key identifier for the entity (e.g. URL, Name, etc.). If not provided, we will try to infer it from the file. */
-        identifier?: number;
-      };
-      /** @description What type of entity the import contains (e.g. People, Companies, etc.), and thus should be attempted to be resolved as. */
-      entity:
-        | components["schemas"]["CompanyEntity"]
-        | components["schemas"]["PersonEntity"]
-        | components["schemas"]["ArticleEntity"]
-        | components["schemas"]["ResearchPaperEntity"]
-        | components["schemas"]["CustomEntity"];
-      /**
-       * @description When the import is in CSV format, we expect a column containing the key identifier for the entity - for now URL. If not provided, import will fail to be processed.
-       * @enum {string}
-       */
-      format: CreateImportParametersFormat;
-      /** @description Set of key-value pairs you want to associate with this object. */
-      metadata?: {
-        [key: string]: string;
-      };
-      /** @description The size of the file in megabytes. Maximum size is 50 MB. */
-      size: number;
-      /** @description The title of the import */
-      title?: string;
-    };
-    /** @description The response to a successful import. Includes the upload URL and the upload valid until date. */
-    CreateImportResponse: {
-      /** @description The number of entities in the import */
-      count: number;
-      /**
-       * Format: date-time
-       * @description When the import was created
-       */
-      createdAt: string;
-      /** @description The type of entity the import contains. */
-      entity: components["schemas"]["Entity"];
-      /**
-       * Format: date-time
-       * @description When the import failed
-       */
-      failedAt: string | null;
-      /** @description A human readable message of the import failure */
-      failedMessage: string | null;
-      /**
-       * @description The reason the import failed
-       * @enum {string|null}
-       */
-      failedReason: CreateImportResponseFailedReason;
-      /**
-       * @description The format of the import.
-       * @enum {string}
-       */
-      format: CreateImportResponseFormat;
-      /** @description The unique identifier for the Import */
-      id: string;
-      /** @description Set of key-value pairs you want to associate with this object. */
-      metadata: {
-        [key: string]: string;
-      };
-      /**
-       * @description The type of object
-       * @enum {string}
-       */
-      object: CreateImportResponseObject;
-      /**
-       * @description The status of the Import
-       * @enum {string}
-       */
-      status: CreateImportResponseStatus;
-      /** @description The title of the import */
-      title: string;
-      /**
-       * Format: date-time
-       * @description When the import was last updated
-       */
-      updatedAt: string;
-      /** @description The URL to upload the file to */
-      uploadUrl: string;
-      /** @description The date and time until the upload URL is valid. The upload URL will be valid for 1 hour. */
-      uploadValidUntil: string;
-    };
-    CreateMonitorParameters: {
-      /** @description Behavior to perform when monitor runs */
-      behavior: {
-        /** @description Specify the search parameters for the Monitor.
-         *
-         *     By default, the search parameters (query, entity and criteria) from the last search are used when no parameters are provided. */
-        config: {
-          /**
-           * @description The behaviour of the Search when it is added to a Webset.
-           * @default append
-           * @enum {string}
-           */
-          behavior: WebsetSearchBehavior;
-          /** @description The maximum number of results to find */
-          count: number;
-          /** @description The criteria to search for. By default, the criteria from the last search is used. */
-          criteria?: {
+    schemas: {
+        /** Article */
+        ArticleEntity: {
+            /**
+             * @default article
+             * @constant
+             */
+            type: "article";
+        };
+        /** Company */
+        CompanyEntity: {
+            /**
+             * @default company
+             * @constant
+             */
+            type: "company";
+        };
+        CreateCriterionParameters: {
+            /** @description The description of the criterion */
             description: string;
-          }[];
-          /**
-           * Entity
-           * @description The entity to search for. By default, the entity from the last search/import is used.
-           */
-          entity?: components["schemas"]["Entity"];
-          /** @description The query to search for. By default, the query from the last search is used. */
-          query?: string;
         };
-        /**
-         * @default search
-         * @constant
-         */
-        type: "search";
-      };
-      /** @description How often the monitor will run */
-      cadence: {
-        /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
-        cron: string;
-        /**
-         * @description IANA timezone (e.g., "America/New_York")
-         * @default Etc/UTC
-         */
-        timezone: string;
-      };
-      metadata?: {
-        [key: string]: string;
-      };
-      /** @description The id of the Webset */
-      websetId: string;
-    };
-    CreateWebhookParameters: {
-      /** @description The events to trigger the webhook */
-      events: EventType[];
-      /** @description Set of key-value pairs you want to associate with this object. */
-      metadata?: {
-        [key: string]: string;
-      };
-      /**
-       * Format: uri
-       * @description The URL to send the webhook to
-       */
-      url: string;
-    };
-    CreateWebsetParameters: {
-      /** @description Add enrichments to extract additional data from found items.
-       *
-       *     Enrichments automatically search for and extract specific information (like contact details, funding data, employee counts, etc.) from each item added to your Webset. */
-      enrichments?: components["schemas"]["CreateEnrichmentParameters"][];
-      /** @description The external identifier for the webset.
-       *
-       *     You can use this to reference the Webset by your own internal identifiers. */
-      externalId?: string;
-      /** @description Import data from existing Websets and Imports into this Webset. */
-      import?: {
-        /** @description The ID of the source to search. */
-        id: string;
-        /** @enum {string} */
-        source: CreateWebsetParametersImportSource;
-      }[];
-      /** @description Set of key-value pairs you want to associate with this object. */
-      metadata?: {
-        [key: string]: string;
-      };
-      /** @description Create initial search for the Webset. */
-      search?: {
-        /**
-         * @description Number of Items the Webset will attempt to find.
-         *
-         *     The actual number of Items found may be less than this number depending on the search complexity.
-         * @default 10
-         */
-        count: number;
-        /** @description Criteria every item is evaluated against.
-         *
-         *     It's not required to provide your own criteria, we automatically detect the criteria from all the information provided in the query. Only use this when you need more fine control. */
-        criteria?: components["schemas"]["CreateCriterionParameters"][];
-        /** @description Entity the Webset will return results for.
-         *
-         *     It is not required to provide it, we automatically detect the entity from all the information provided in the query. Only use this when you need more fine control. */
-        entity?: components["schemas"]["Entity"];
-        /** @description Sources (existing imports or websets) to exclude from search results. Any results found within these sources will be omitted to prevent finding them during search. */
-        exclude?: {
-          /** @description The ID of the source to exclude. */
-          id: string;
-          /** @enum {string} */
-          source: CreateWebsetParametersSearchExcludeSource;
-        }[];
-        /** @description Natural language search query describing what you are looking for.
-         *
-         *     Be specific and descriptive about your requirements, characteristics, and any constraints that help narrow down the results.
-         *
-         *     Any URLs provided will be crawled and used as additional context for the search. */
-        query: string;
-      };
-    };
-    CreateWebsetSearchParameters: {
-      /**
-       * @description How this search interacts with existing items in the Webset:
-       *
-       *     - **override**: Replace existing items and evaluate all items against new criteria
-       *     - **append**: Add new items to existing ones, keeping items that match the new criteria
-       * @default override
-       */
-      behavior: components["schemas"]["WebsetSearchBehavior"];
-      /** @description Number of Items the Search will attempt to find.
-       *
-       *     The actual number of Items found may be less than this number depending on the query complexity. */
-      count: number;
-      /** @description Criteria every item is evaluated against.
-       *
-       *     It's not required to provide your own criteria, we automatically detect the criteria from all the information provided in the query. Only use this when you need more fine control. */
-      criteria?: components["schemas"]["CreateCriterionParameters"][];
-      /** @description Entity the search will return results for.
-       *
-       *     It is not required to provide it, we automatically detect the entity from all the information provided in the query. Only use this when you need more fine control. */
-      entity?: components["schemas"]["Entity"];
-      /** @description Sources (existing imports or websets) to exclude from search results. Any results found within these sources will be omitted to prevent finding them during search. */
-      exclude?: {
-        /** @description The ID of the source to exclude. */
-        id: string;
-        /** @enum {string} */
-        source: CreateWebsetSearchParametersExcludeSource;
-      }[];
-      /** @description Set of key-value pairs you want to associate with this object. */
-      metadata?: {
-        [key: string]: string;
-      };
-      /** @description Natural language search query describing what you are looking for.
-       *
-       *     Be specific and descriptive about your requirements, characteristics, and any constraints that help narrow down the results.
-       *
-       *     Any URLs provided will be crawled and used as additional context for the search. */
-      query: string;
-    };
-    /** Custom */
-    CustomEntity: {
-      /** @description When you decide to use a custom entity, this is the description of the entity.
-       *
-       *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
-      description: string;
-      /**
-       * @default custom
-       * @constant
-       */
-      type: "custom";
-    };
-    EnrichmentResult: {
-      /** @description The id of the Enrichment that generated the result */
-      enrichmentId: string;
-      format: components["schemas"]["WebsetEnrichmentFormat"];
-      /**
-       * @default enrichment_result
-       * @constant
-       */
-      object: "enrichment_result";
-      /** @description The reasoning for the result when an Agent is used. */
-      reasoning: string | null;
-      /** @description The references used to generate the result. */
-      references: {
-        /** @description The relevant snippet of the reference content */
-        snippet: string | null;
-        /** @description The title of the reference */
-        title: string | null;
-        /** @description The URL of the reference */
-        url: string;
-      }[];
-      /** @description The result of the enrichment. */
-      result: string[] | null;
-    };
-    Entity:
-      | components["schemas"]["CompanyEntity"]
-      | components["schemas"]["PersonEntity"]
-      | components["schemas"]["ArticleEntity"]
-      | components["schemas"]["ResearchPaperEntity"]
-      | components["schemas"]["CustomEntity"];
-    /** Event */
-    Event:
-      | {
-          /**
-           * Format: date-time
-           * @description The date and time the event was created
-           */
-          createdAt: string;
-          data: components["schemas"]["Webset"];
-          /** @description The unique identifier for the event */
-          id: string;
-          /**
-           * @default event
-           * @constant
-           */
-          object: "event";
-          /**
-           * @default webset.created
-           * @constant
-           */
-          type: "webset.created";
-        }
-      | {
-          /**
-           * Format: date-time
-           * @description The date and time the event was created
-           */
-          createdAt: string;
-          data: components["schemas"]["Webset"];
-          /** @description The unique identifier for the event */
-          id: string;
-          /**
-           * @default event
-           * @constant
-           */
-          object: "event";
-          /**
-           * @default webset.deleted
-           * @constant
-           */
-          type: "webset.deleted";
-        }
-      | {
-          /**
-           * Format: date-time
-           * @description The date and time the event was created
-           */
-          createdAt: string;
-          data: components["schemas"]["Webset"];
-          /** @description The unique identifier for the event */
-          id: string;
-          /**
-           * @default event
-           * @constant
-           */
-          object: "event";
-          /**
-           * @default webset.idle
-           * @constant
-           */
-          type: "webset.idle";
-        }
-      | {
-          /**
-           * Format: date-time
-           * @description The date and time the event was created
-           */
-          createdAt: string;
-          data: components["schemas"]["Webset"];
-          /** @description The unique identifier for the event */
-          id: string;
-          /**
-           * @default event
-           * @constant
-           */
-          object: "event";
-          /**
-           * @default webset.paused
-           * @constant
-           */
-          type: "webset.paused";
-        }
-      | {
-          /**
-           * Format: date-time
-           * @description The date and time the event was created
-           */
-          createdAt: string;
-          data: components["schemas"]["WebsetItem"];
-          /** @description The unique identifier for the event */
-          id: string;
-          /**
-           * @default event
-           * @constant
-           */
-          object: "event";
-          /**
-           * @default webset.item.created
-           * @constant
-           */
-          type: "webset.item.created";
-        }
-      | {
-          /**
-           * Format: date-time
-           * @description The date and time the event was created
-           */
-          createdAt: string;
-          data: components["schemas"]["WebsetItem"];
-          /** @description The unique identifier for the event */
-          id: string;
-          /**
-           * @default event
-           * @constant
-           */
-          object: "event";
-          /**
-           * @default webset.item.enriched
-           * @constant
-           */
-          type: "webset.item.enriched";
-        }
-      | {
-          /**
-           * Format: date-time
-           * @description The date and time the event was created
-           */
-          createdAt: string;
-          data: components["schemas"]["WebsetSearch"];
-          /** @description The unique identifier for the event */
-          id: string;
-          /**
-           * @default event
-           * @constant
-           */
-          object: "event";
-          /**
-           * @default webset.search.created
-           * @constant
-           */
-          type: "webset.search.created";
-        }
-      | {
-          /**
-           * Format: date-time
-           * @description The date and time the event was created
-           */
-          createdAt: string;
-          data: components["schemas"]["WebsetSearch"];
-          /** @description The unique identifier for the event */
-          id: string;
-          /**
-           * @default event
-           * @constant
-           */
-          object: "event";
-          /**
-           * @default webset.search.updated
-           * @constant
-           */
-          type: "webset.search.updated";
-        }
-      | {
-          /**
-           * Format: date-time
-           * @description The date and time the event was created
-           */
-          createdAt: string;
-          data: components["schemas"]["WebsetSearch"];
-          /** @description The unique identifier for the event */
-          id: string;
-          /**
-           * @default event
-           * @constant
-           */
-          object: "event";
-          /**
-           * @default webset.search.canceled
-           * @constant
-           */
-          type: "webset.search.canceled";
-        }
-      | {
-          /**
-           * Format: date-time
-           * @description The date and time the event was created
-           */
-          createdAt: string;
-          data: components["schemas"]["WebsetSearch"];
-          /** @description The unique identifier for the event */
-          id: string;
-          /**
-           * @default event
-           * @constant
-           */
-          object: "event";
-          /**
-           * @default webset.search.completed
-           * @constant
-           */
-          type: "webset.search.completed";
-        };
-    /** @enum {string} */
-    GetWebsetResponse: components["schemas"]["Webset"] & {
-      /** @description When expand query parameter contains `items`, this will contain the items in the webset */
-      items?: components["schemas"]["WebsetItem"][];
-    };
-    Import: {
-      /** @description The number of entities in the import */
-      count: number;
-      /**
-       * Format: date-time
-       * @description When the import was created
-       */
-      createdAt: string;
-      /** @description The type of entity the import contains. */
-      entity: components["schemas"]["Entity"];
-      /**
-       * Format: date-time
-       * @description When the import failed
-       */
-      failedAt: string | null;
-      /** @description A human readable message of the import failure */
-      failedMessage: string | null;
-      /**
-       * @description The reason the import failed
-       * @enum {string|null}
-       */
-      failedReason: ImportFailedReason;
-      /**
-       * @description The format of the import.
-       * @enum {string}
-       */
-      format: ImportFormat;
-      /** @description The unique identifier for the Import */
-      id: string;
-      /** @description Set of key-value pairs you want to associate with this object. */
-      metadata: {
-        [key: string]: string;
-      };
-      /**
-       * @description The type of object
-       * @enum {string}
-       */
-      object: ImportObject;
-      /**
-       * @description The status of the Import
-       * @enum {string}
-       */
-      status: ImportStatus;
-      /** @description The title of the import */
-      title: string;
-      /**
-       * Format: date-time
-       * @description When the import was last updated
-       */
-      updatedAt: string;
-    };
-    ListEventsResponse: {
-      /** @description The list of events */
-      data: components["schemas"]["Event"][];
-      /** @description Whether there are more results to paginate through */
-      hasMore: boolean;
-      /** @description The cursor to paginate through the next set of results */
-      nextCursor: string | null;
-    };
-    ListImportsResponse: {
-      /** @description The list of imports */
-      data: components["schemas"]["Import"][];
-      /** @description Whether there are more results to paginate through */
-      hasMore: boolean;
-      /** @description The cursor to paginate through the next set of results */
-      nextCursor: string | null;
-    };
-    ListMonitorRunsResponse: {
-      /** @description The list of monitor runs */
-      data: components["schemas"]["MonitorRun"][];
-      /** @description Whether there are more results to paginate through */
-      hasMore: boolean;
-      /** @description The cursor to paginate through the next set of results */
-      nextCursor: string | null;
-    };
-    ListMonitorsResponse: {
-      /** @description The list of monitors */
-      data: components["schemas"]["Monitor"][];
-      /** @description Whether there are more results to paginate through */
-      hasMore: boolean;
-      /** @description The cursor to paginate through the next set of results */
-      nextCursor: string | null;
-    };
-    ListWebhookAttemptsResponse: {
-      /** @description The list of webhook attempts */
-      data: components["schemas"]["WebhookAttempt"][];
-      /** @description Whether there are more results to paginate through */
-      hasMore: boolean;
-      /** @description The cursor to paginate through the next set of results */
-      nextCursor: string | null;
-    };
-    ListWebhooksResponse: {
-      /** @description The list of webhooks */
-      data: components["schemas"]["Webhook"][];
-      /** @description Whether there are more results to paginate through */
-      hasMore: boolean;
-      /** @description The cursor to paginate through the next set of results */
-      nextCursor: string | null;
-    };
-    ListWebsetItemResponse: {
-      /** @description The list of webset items */
-      data: components["schemas"]["WebsetItem"][];
-      /** @description Whether there are more Items to paginate through */
-      hasMore: boolean;
-      /** @description The cursor to paginate through the next set of Items */
-      nextCursor: string | null;
-    };
-    ListWebsetsResponse: {
-      /** @description The list of websets */
-      data: components["schemas"]["Webset"][];
-      /** @description Whether there are more results to paginate through */
-      hasMore: boolean;
-      /** @description The cursor to paginate through the next set of results */
-      nextCursor: string | null;
-    };
-    Monitor: {
-      /** @description Behavior to perform when monitor runs */
-      behavior: {
-        /** @description Specify the search parameters for the Monitor.
-         *
-         *     By default, the search parameters (query, entity and criteria) from the last search are used when no parameters are provided. */
-        config: {
-          /**
-           * @description The behaviour of the Search when it is added to a Webset.
-           * @default append
-           * @enum {string}
-           */
-          behavior: MonitorBehaviorConfigBehavior;
-          /** @description The maximum number of results to find */
-          count: number;
-          /** @description The criteria to search for. By default, the criteria from the last search is used. */
-          criteria?: {
+        CreateEnrichmentParameters: {
+            /** @description Provide a description of the enrichment task you want to perform to each Webset Item. */
             description: string;
-          }[];
-          /**
-           * Entity
-           * @description The entity to search for. By default, the entity from the last search/import is used.
-           */
-          entity?: components["schemas"]["Entity"];
-          /** @description The query to search for. By default, the query from the last search is used. */
-          query?: string;
+            /**
+             * @description Format of the enrichment response.
+             *
+             *     We automatically select the best format based on the description. If you want to explicitly specify the format, you can do so here.
+             * @enum {string}
+             */
+            format?: CreateEnrichmentParametersFormat;
+            /** @description Set of key-value pairs you want to associate with this object. */
+            metadata?: {
+                [key: string]: string;
+            };
+            /** @description When the format is options, the different options for the enrichment agent to choose from. */
+            options?: {
+                /** @description The label of the option */
+                label: string;
+            }[];
         };
-        /**
-         * @default search
-         * @constant
-         */
-        type: "search";
-      };
-      /** @description How often the monitor will run */
-      cadence: {
-        /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
-        cron: string;
-        /**
-         * @description IANA timezone (e.g., "America/New_York")
-         * @default Etc/UTC
-         */
-        timezone: string;
-      };
-      /**
-       * Format: date-time
-       * @description When the monitor was created
-       */
-      createdAt: string;
-      /** @description The unique identifier for the Monitor */
-      id: string;
-      /**
-       * MonitorRun
-       * @description The last run of the monitor
-       */
-      lastRun: components["schemas"]["MonitorRun"];
-      /** @description Set of key-value pairs you want to associate with this object. */
-      metadata: {
-        [key: string]: string;
-      };
-      /**
-       * Format: date-time
-       * @description Date and time when the next run will occur in
-       */
-      nextRunAt: string | null;
-      /**
-       * @description The type of object
-       * @enum {string}
-       */
-      object: MonitorObject;
-      /**
-       * @description The status of the Monitor
-       * @enum {string}
-       */
-      status: MonitorStatus;
-      /**
-       * Format: date-time
-       * @description When the monitor was last updated
-       */
-      updatedAt: string;
-      /** @description The id of the Webset the Monitor belongs to */
-      websetId: string;
-    };
-    MonitorBehavior: {
-      /** @description Specify the search parameters for the Monitor.
-       *
-       *     By default, the search parameters (query, entity and criteria) from the last search are used when no parameters are provided. */
-      config: {
-        /**
-         * @description The behaviour of the Search when it is added to a Webset.
-         * @default append
-         * @enum {string}
-         */
-        behavior: MonitorBehaviorConfigBehavior;
-        /** @description The maximum number of results to find */
-        count: number;
-        /** @description The criteria to search for. By default, the criteria from the last search is used. */
-        criteria?: {
-          description: string;
-        }[];
-        /**
-         * Entity
-         * @description The entity to search for. By default, the entity from the last search/import is used.
-         */
-        entity?: components["schemas"]["Entity"];
-        /** @description The query to search for. By default, the query from the last search is used. */
-        query?: string;
-      };
-      /**
-       * @default search
-       * @constant
-       */
-      type: "search";
-    };
-    MonitorCadence: {
-      /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
-      cron: string;
-      /**
-       * @description IANA timezone (e.g., "America/New_York")
-       * @default Etc/UTC
-       */
-      timezone: string;
-    };
-    MonitorRun: {
-      /**
-       * Format: date-time
-       * @description When the run was canceled
-       */
-      canceledAt: string | null;
-      /**
-       * Format: date-time
-       * @description When the run completed
-       */
-      completedAt: string | null;
-      /**
-       * Format: date-time
-       * @description When the run was created
-       */
-      createdAt: string;
-      /**
-       * Format: date-time
-       * @description When the run failed
-       */
-      failedAt: string | null;
-      /** @description The unique identifier for the Monitor Run */
-      id: string;
-      /** @description The monitor that the run is associated with */
-      monitorId: string;
-      /**
-       * @description The type of object
-       * @enum {string}
-       */
-      object: MonitorRunObject;
-      /**
-       * @description The status of the Monitor Run
-       * @enum {string}
-       */
-      status: MonitorRunStatus;
-      /**
-       * @description The type of the Monitor Run
-       * @enum {string}
-       */
-      type: MonitorRunType;
-      /**
-       * Format: date-time
-       * @description When the run was last updated
-       */
-      updatedAt: string;
-    };
-    /** Person */
-    PersonEntity: {
-      /**
-       * @default person
-       * @constant
-       */
-      type: "person";
-    };
-    /** Research Paper */
-    ResearchPaperEntity: {
-      /**
-       * @default research_paper
-       * @constant
-       */
-      type: "research_paper";
-    };
-    UpdateImport: {
-      metadata?: {
-        [key: string]: string;
-      };
-      title?: string;
-    };
-    UpdateMonitor: {
-      behavior?: components["schemas"]["MonitorBehavior"];
-      cadence?: components["schemas"]["MonitorCadence"];
-      metadata?: {
-        [key: string]: string;
-      };
-      /**
-       * @description The status of the monitor.
-       * @enum {string}
-       */
-      status?: UpdateMonitorStatus;
-    };
-    UpdateWebhookParameters: {
-      /** @description The events to trigger the webhook */
-      events?: EventType[];
-      /** @description Set of key-value pairs you want to associate with this object. */
-      metadata?: {
-        [key: string]: string;
-      };
-      /**
-       * Format: uri
-       * @description The URL to send the webhook to
-       */
-      url?: string;
-    };
-    UpdateWebsetRequest: {
-      /** @description Set of key-value pairs you want to associate with this object. */
-      metadata?: {
-        [key: string]: string;
-      } | null;
-    };
-    Webhook: {
-      /**
-       * Format: date-time
-       * @description The date and time the webhook was created
-       */
-      createdAt: string;
-      /** @description The events to trigger the webhook */
-      events: EventType[];
-      /** @description The unique identifier for the webhook */
-      id: string;
-      /**
-       * @description The metadata of the webhook
-       * @default {}
-       */
-      metadata: {
-        [key: string]: string;
-      };
-      /**
-       * @default webhook
-       * @constant
-       */
-      object: "webhook";
-      /** @description The secret to verify the webhook signature. Only returned on Webhook creation. */
-      secret: string | null;
-      /**
-       * WebhookStatus
-       * @description The status of the webhook
-       * @enum {string}
-       */
-      status: WebhookStatus;
-      /**
-       * Format: date-time
-       * @description The date and time the webhook was last updated
-       */
-      updatedAt: string;
-      /**
-       * Format: uri
-       * @description The URL to send the webhook to
-       */
-      url: string;
-    };
-    WebhookAttempt: {
-      /** @description The attempt number of the webhook */
-      attempt: number;
-      /**
-       * Format: date-time
-       * @description The date and time the webhook attempt was made
-       */
-      attemptedAt: string;
-      /** @description The unique identifier for the event */
-      eventId: string;
-      /**
-       * @description The type of event
-       * @enum {string}
-       */
-      eventType: WebhookAttemptEventType;
-      /** @description The unique identifier for the webhook attempt */
-      id: string;
-      /**
-       * @default webhook_attempt
-       * @constant
-       */
-      object: "webhook_attempt";
-      /** @description The body of the response */
-      responseBody: string | null;
-      /** @description The headers of the response */
-      responseHeaders: {
-        [key: string]: string;
-      };
-      /** @description The status code of the response */
-      responseStatusCode: number;
-      /** @description Whether the attempt was successful */
-      successful: boolean;
-      /** @description The URL that was used during the attempt */
-      url: string;
-      /** @description The unique identifier for the webhook */
-      webhookId: string;
-    };
-    Webset: {
-      /**
-       * Format: date-time
-       * @description The date and time the webset was created
-       */
-      createdAt: string;
-      /** @description The Enrichments to apply to the Webset Items. */
-      enrichments: components["schemas"]["WebsetEnrichment"][];
-      /** @description The external identifier for the webset */
-      externalId: string | null;
-      /** @description The unique identifier for the webset */
-      id: string;
-      /** @description Imports that have been performed on the webset. */
-      imports?: (
-        | {
+        CreateImportParameters: {
+            /** @description The number of records to import */
             count: number;
-            /** Format: date-time */
-            createdAt: string;
-            entity?:
-              | {
-                  /**
-                   * @default A homepage of a company
-                   * @constant
-                   */
-                  description: "A homepage of a company";
-                  /**
-                   * @default company
-                   * @constant
-                   */
-                  type: "company";
-                }
-              | {
-                  /**
-                   * @default A LinkedIn profile
-                   * @constant
-                   */
-                  description: "A LinkedIn profile";
-                  /**
-                   * @default person
-                   * @constant
-                   */
-                  type: "person";
-                }
-              | {
-                  /**
-                   * @default A blog post or article
-                   * @constant
-                   */
-                  description: "A blog post or article";
-                  /**
-                   * @default article
-                   * @constant
-                   */
-                  type: "article";
-                }
-              | {
-                  /**
-                   * @default A research paper
-                   * @constant
-                   */
-                  description: "A research paper";
-                  /**
-                   * @default research_paper
-                   * @constant
-                   */
-                  type: "research_paper";
-                }
-              | {
-                  /** @description When you decide to use a custom entity, this is the description of the entity.
-                   *
-                   *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
-                  description: string;
-                  /**
-                   * @default custom
-                   * @constant
-                   */
-                  type: "custom";
-                };
-            /** @enum {string} */
-            format: WebsetImportsFormat;
-            id: string;
-            metadata?: {
-              [key: string]: string;
+            /** @description When format is `csv`, these are the specific import parameters. */
+            csv?: {
+                /** @description Column containing the key identifier for the entity (e.g. URL, Name, etc.). If not provided, we will try to infer it from the file. */
+                identifier?: number;
             };
-            /** @enum {string} */
-            status: WebsetImportsStatus;
-            teamId: string;
-            title: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** @description The URI of the import when format is CSV */
-            uri?: string;
-            /** @description The ID of the webset when format is WEBSET */
-            websetId?: string;
-          }
-        | {
+            /** @description What type of entity the import contains (e.g. People, Companies, etc.), and thus should be attempted to be resolved as. */
+            entity: components["schemas"]["CompanyEntity"] | components["schemas"]["PersonEntity"] | components["schemas"]["ArticleEntity"] | components["schemas"]["ResearchPaperEntity"] | components["schemas"]["CustomEntity"];
+            /**
+             * @description When the import is in CSV format, we expect a column containing the key identifier for the entity - for now URL. If not provided, import will fail to be processed.
+             * @enum {string}
+             */
+            format: CreateImportParametersFormat;
+            /** @description Set of key-value pairs you want to associate with this object. */
+            metadata?: {
+                [key: string]: string;
+            };
+            /** @description The size of the file in megabytes. Maximum size is 50 MB. */
+            size: number;
+            /** @description The title of the import */
+            title?: string;
+        };
+        /** @description The response to a successful import. Includes the upload URL and the upload valid until date. */
+        CreateImportResponse: {
+            /** @description The number of entities in the import */
             count: number;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description When the import was created
+             */
             createdAt: string;
-            entity:
-              | {
-                  /**
-                   * @default A homepage of a company
-                   * @constant
-                   */
-                  description: "A homepage of a company";
-                  /**
-                   * @default company
-                   * @constant
-                   */
-                  type: "company";
-                }
-              | {
-                  /**
-                   * @default A LinkedIn profile
-                   * @constant
-                   */
-                  description: "A LinkedIn profile";
-                  /**
-                   * @default person
-                   * @constant
-                   */
-                  type: "person";
-                }
-              | {
-                  /**
-                   * @default A blog post or article
-                   * @constant
-                   */
-                  description: "A blog post or article";
-                  /**
-                   * @default article
-                   * @constant
-                   */
-                  type: "article";
-                }
-              | {
-                  /**
-                   * @default A research paper
-                   * @constant
-                   */
-                  description: "A research paper";
-                  /**
-                   * @default research_paper
-                   * @constant
-                   */
-                  type: "research_paper";
-                }
-              | {
-                  /** @description When you decide to use a custom entity, this is the description of the entity.
-                   *
-                   *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
-                  description: string;
-                  /**
-                   * @default custom
-                   * @constant
-                   */
-                  type: "custom";
-                };
-            /** @enum {string} */
-            format: WebsetImportsFormat;
+            /** @description The type of entity the import contains. */
+            entity: components["schemas"]["Entity"];
+            /**
+             * Format: date-time
+             * @description When the import failed
+             */
+            failedAt: string | null;
+            /** @description A human readable message of the import failure */
+            failedMessage: string | null;
+            /**
+             * @description The reason the import failed
+             * @enum {string|null}
+             */
+            failedReason: CreateImportResponseFailedReason;
+            /**
+             * @description The format of the import.
+             * @enum {string}
+             */
+            format: CreateImportResponseFormat;
+            /** @description The unique identifier for the Import */
             id: string;
-            metadata?: {
-              [key: string]: string;
+            /** @description Set of key-value pairs you want to associate with this object. */
+            metadata: {
+                [key: string]: string;
             };
-            /** @enum {string} */
-            status: WebsetImportsStatus;
-            teamId: string;
+            /**
+             * @description The type of object
+             * @enum {string}
+             */
+            object: CreateImportResponseObject;
+            /**
+             * @description The status of the Import
+             * @enum {string}
+             */
+            status: CreateImportResponseStatus;
+            /** @description The title of the import */
             title: string;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description When the import was last updated
+             */
             updatedAt: string;
-            /** @description The URI of the import when format is CSV */
-            uri?: string;
-            /** @description The ID of the webset when format is WEBSET */
-            websetId?: string;
-          }
-        | {
+            /** @description The URL to upload the file to */
+            uploadUrl: string;
+            /** @description The date and time until the upload URL is valid. The upload URL will be valid for 1 hour. */
+            uploadValidUntil: string;
+        };
+        CreateMonitorParameters: {
+            /** @description Behavior to perform when monitor runs */
+            behavior: {
+                /** @description Specify the search parameters for the Monitor.
+                 *
+                 *     By default, the search parameters (query, entity and criteria) from the last search are used when no parameters are provided. */
+                config: {
+                    /**
+                     * @description The behaviour of the Search when it is added to a Webset.
+                     * @default append
+                     * @enum {string}
+                     */
+                    behavior: CreateMonitorParametersBehaviorConfigBehavior;
+                    /** @description The maximum number of results to find */
+                    count: number;
+                    /** @description The criteria to search for. By default, the criteria from the last search is used. */
+                    criteria?: {
+                        description: string;
+                    }[];
+                    /**
+                     * Entity
+                     * @description The entity to search for. By default, the entity from the last search/import is used.
+                     */
+                    entity?: components["schemas"]["Entity"];
+                    /** @description The query to search for. By default, the query from the last search is used. */
+                    query?: string;
+                };
+                /**
+                 * @default search
+                 * @constant
+                 */
+                type: "search";
+            };
+            /** @description How often the monitor will run */
+            cadence: {
+                /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
+                cron: string;
+                /**
+                 * @description IANA timezone (e.g., "America/New_York")
+                 * @default Etc/UTC
+                 */
+                timezone: string;
+            };
+            metadata?: {
+                [key: string]: string;
+            };
+            /** @description The id of the Webset */
+            websetId: string;
+        };
+        CreateWebhookParameters: {
+            /** @description The events to trigger the webhook */
+            events: components["schemas"]["EventType"][];
+            /** @description Set of key-value pairs you want to associate with this object. */
+            metadata?: {
+                [key: string]: string;
+            };
+            /**
+             * Format: uri
+             * @description The URL to send the webhook to
+             */
+            url: string;
+        };
+        CreateWebsetParameters: {
+            /** @description Add enrichments to extract additional data from found items.
+             *
+             *     Enrichments automatically search for and extract specific information (like contact details, funding data, employee counts, etc.) from each item added to your Webset. */
+            enrichments?: components["schemas"]["CreateEnrichmentParameters"][];
+            /** @description The external identifier for the webset.
+             *
+             *     You can use this to reference the Webset by your own internal identifiers. */
+            externalId?: string;
+            /** @description Import data from existing Websets and Imports into this Webset. */
+            import?: {
+                /** @description The ID of the source to search. */
+                id: string;
+                /** @enum {string} */
+                source: CreateWebsetParametersImportSource;
+            }[];
+            /** @description Set of key-value pairs you want to associate with this object. */
+            metadata?: {
+                [key: string]: string;
+            };
+            /** @description Create initial search for the Webset. */
+            search?: {
+                /**
+                 * @description Number of Items the Webset will attempt to find.
+                 *
+                 *     The actual number of Items found may be less than this number depending on the search complexity.
+                 * @default 10
+                 */
+                count: number;
+                /** @description Criteria every item is evaluated against.
+                 *
+                 *     It's not required to provide your own criteria, we automatically detect the criteria from all the information provided in the query. Only use this when you need more fine control. */
+                criteria?: components["schemas"]["CreateCriterionParameters"][];
+                /** @description Entity the Webset will return results for.
+                 *
+                 *     It is not required to provide it, we automatically detect the entity from all the information provided in the query. Only use this when you need more fine control. */
+                entity?: components["schemas"]["Entity"];
+                /** @description Sources (existing imports or websets) to exclude from search results. Any results found within these sources will be omitted to prevent finding them during search. */
+                exclude?: {
+                    /** @description The ID of the source to exclude. */
+                    id: string;
+                    /** @enum {string} */
+                    source: CreateWebsetParametersSearchExcludeSource;
+                }[];
+                /** @description Natural language search query describing what you are looking for.
+                 *
+                 *     Be specific and descriptive about your requirements, characteristics, and any constraints that help narrow down the results.
+                 *
+                 *     Any URLs provided will be crawled and used as additional context for the search. */
+                query: string;
+            };
+        };
+        CreateWebsetSearchParameters: {
+            /**
+             * @description How this search interacts with existing items in the Webset:
+             *
+             *     - **override**: Replace existing items and evaluate all items against new criteria
+             *     - **append**: Add new items to existing ones, keeping items that match the new criteria
+             * @default override
+             */
+            behavior: components["schemas"]["WebsetSearchBehavior"];
+            /** @description Number of Items the Search will attempt to find.
+             *
+             *     The actual number of Items found may be less than this number depending on the query complexity. */
             count: number;
-            /** Format: date-time */
-            createdAt: string;
-            entity:
-              | {
-                  /**
-                   * @default A homepage of a company
-                   * @constant
-                   */
-                  description: "A homepage of a company";
-                  /**
-                   * @default company
-                   * @constant
-                   */
-                  type: "company";
-                }
-              | {
-                  /**
-                   * @default A LinkedIn profile
-                   * @constant
-                   */
-                  description: "A LinkedIn profile";
-                  /**
-                   * @default person
-                   * @constant
-                   */
-                  type: "person";
-                }
-              | {
-                  /**
-                   * @default A blog post or article
-                   * @constant
-                   */
-                  description: "A blog post or article";
-                  /**
-                   * @default article
-                   * @constant
-                   */
-                  type: "article";
-                }
-              | {
-                  /**
-                   * @default A research paper
-                   * @constant
-                   */
-                  description: "A research paper";
-                  /**
-                   * @default research_paper
-                   * @constant
-                   */
-                  type: "research_paper";
-                }
-              | {
-                  /** @description When you decide to use a custom entity, this is the description of the entity.
-                   *
-                   *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
-                  description: string;
-                  /**
-                   * @default custom
-                   * @constant
-                   */
-                  type: "custom";
-                };
-            /** @enum {string} */
-            format: WebsetImportsFormat;
-            id: string;
+            /** @description Criteria every item is evaluated against.
+             *
+             *     It's not required to provide your own criteria, we automatically detect the criteria from all the information provided in the query. Only use this when you need more fine control. */
+            criteria?: components["schemas"]["CreateCriterionParameters"][];
+            /** @description Entity the search will return results for.
+             *
+             *     It is not required to provide it, we automatically detect the entity from all the information provided in the query. Only use this when you need more fine control. */
+            entity?: components["schemas"]["Entity"];
+            /** @description Sources (existing imports or websets) to exclude from search results. Any results found within these sources will be omitted to prevent finding them during search. */
+            exclude?: {
+                /** @description The ID of the source to exclude. */
+                id: string;
+                /** @enum {string} */
+                source: CreateWebsetSearchParametersExcludeSource;
+            }[];
+            /** @description Set of key-value pairs you want to associate with this object. */
             metadata?: {
-              [key: string]: string;
+                [key: string]: string;
             };
-            /** @enum {string} */
-            status: WebsetImportsStatus;
-            teamId: string;
-            title: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** @description The URI of the import when format is CSV */
-            uri?: string;
-            /** @description The ID of the webset when format is WEBSET */
-            websetId?: string;
-          }
-        | {
-            count: number;
-            /** Format: date-time */
+            /** @description Natural language search query describing what you are looking for.
+             *
+             *     Be specific and descriptive about your requirements, characteristics, and any constraints that help narrow down the results.
+             *
+             *     Any URLs provided will be crawled and used as additional context for the search. */
+            query: string;
+        };
+        /** Custom */
+        CustomEntity: {
+            description: string;
+            /**
+             * @default custom
+             * @constant
+             */
+            type: "custom";
+        };
+        EnrichmentResult: {
+            /** @description The id of the Enrichment that generated the result */
+            enrichmentId: string;
+            format: components["schemas"]["WebsetEnrichmentFormat"];
+            /**
+             * @default enrichment_result
+             * @constant
+             */
+            object: "enrichment_result";
+            /** @description The reasoning for the result when an Agent is used. */
+            reasoning: string | null;
+            /** @description The references used to generate the result. */
+            references: {
+                /** @description The relevant snippet of the reference content */
+                snippet: string | null;
+                /** @description The title of the reference */
+                title: string | null;
+                /** @description The URL of the reference */
+                url: string;
+            }[];
+            /** @description The result of the enrichment. */
+            result: string[] | null;
+        };
+        Entity: components["schemas"]["CompanyEntity"] | components["schemas"]["PersonEntity"] | components["schemas"]["ArticleEntity"] | components["schemas"]["ResearchPaperEntity"] | components["schemas"]["CustomEntity"];
+        /** Event */
+        Event: {
+            /**
+             * Format: date-time
+             * @description The date and time the event was created
+             */
             createdAt: string;
-            entity:
-              | {
-                  /**
-                   * @default A homepage of a company
-                   * @constant
-                   */
-                  description: "A homepage of a company";
-                  /**
-                   * @default company
-                   * @constant
-                   */
-                  type: "company";
-                }
-              | {
-                  /**
-                   * @default A LinkedIn profile
-                   * @constant
-                   */
-                  description: "A LinkedIn profile";
-                  /**
-                   * @default person
-                   * @constant
-                   */
-                  type: "person";
-                }
-              | {
-                  /**
-                   * @default A blog post or article
-                   * @constant
-                   */
-                  description: "A blog post or article";
-                  /**
-                   * @default article
-                   * @constant
-                   */
-                  type: "article";
-                }
-              | {
-                  /**
-                   * @default A research paper
-                   * @constant
-                   */
-                  description: "A research paper";
-                  /**
-                   * @default research_paper
-                   * @constant
-                   */
-                  type: "research_paper";
-                }
-              | {
-                  /** @description When you decide to use a custom entity, this is the description of the entity.
-                   *
-                   *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
-                  description: string;
-                  /**
-                   * @default custom
-                   * @constant
-                   */
-                  type: "custom";
-                };
-            /** Format: date-time */
-            failedAt: string;
-            failedMessage: string;
-            /** @enum {string} */
-            failedReason: WebsetImportsFailedReason;
-            /** @enum {string} */
-            format: WebsetImportsFormat;
+            data: components["schemas"]["Webset"];
+            /** @description The unique identifier for the event */
             id: string;
-            metadata?: {
-              [key: string]: string;
-            };
-            /** @enum {string} */
-            status: WebsetImportsStatus;
-            teamId: string;
-            title: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** @description The URI of the import when format is CSV */
-            uri?: string;
-            /** @description The ID of the webset when format is WEBSET */
-            websetId?: string;
-          }
-        | {
-            count: number;
-            /** Format: date-time */
+            /**
+             * @default event
+             * @constant
+             */
+            object: "event";
+            /**
+             * @default webset.created
+             * @constant
+             */
+            type: "webset.created";
+        } | {
+            /**
+             * Format: date-time
+             * @description The date and time the event was created
+             */
             createdAt: string;
-            entity:
-              | {
-                  /**
-                   * @default A homepage of a company
-                   * @constant
-                   */
-                  description: "A homepage of a company";
-                  /**
-                   * @default company
-                   * @constant
-                   */
-                  type: "company";
-                }
-              | {
-                  /**
-                   * @default A LinkedIn profile
-                   * @constant
-                   */
-                  description: "A LinkedIn profile";
-                  /**
-                   * @default person
-                   * @constant
-                   */
-                  type: "person";
-                }
-              | {
-                  /**
-                   * @default A blog post or article
-                   * @constant
-                   */
-                  description: "A blog post or article";
-                  /**
-                   * @default article
-                   * @constant
-                   */
-                  type: "article";
-                }
-              | {
-                  /**
-                   * @default A research paper
-                   * @constant
-                   */
-                  description: "A research paper";
-                  /**
-                   * @default research_paper
-                   * @constant
-                   */
-                  type: "research_paper";
-                }
-              | {
-                  /** @description When you decide to use a custom entity, this is the description of the entity.
-                   *
-                   *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
-                  description: string;
-                  /**
-                   * @default custom
-                   * @constant
-                   */
-                  type: "custom";
-                };
-            /** @enum {string} */
-            format: WebsetImportsFormat;
+            data: components["schemas"]["Webset"];
+            /** @description The unique identifier for the event */
             id: string;
-            metadata?: {
-              [key: string]: string;
-            };
-            /** @enum {string} */
-            status: WebsetImportsStatus;
-            teamId: string;
-            title: string;
-            /** Format: date-time */
-            updatedAt: string;
-            /** @description The URI of the import when format is CSV */
-            uri?: string;
-            /** @description The ID of the webset when format is WEBSET */
-            websetId?: string;
-          }
-      )[];
-      /**
-       * @description Set of key-value pairs you want to associate with this object.
-       * @default {}
-       */
-      metadata: {
-        [key: string]: string;
-      };
-      /** @description The Monitors for the Webset. */
-      monitors: components["schemas"]["Monitor"][];
-      /**
-       * @default webset
-       * @constant
-       */
-      object: "webset";
-      /** @description The searches that have been performed on the webset. */
-      searches: components["schemas"]["WebsetSearch"][];
-      /**
-       * WebsetStatus
-       * @description The status of the webset
-       * @enum {string}
-       */
-      status: WebsetStatus;
-      /** @description The Streams for the Webset. */
-      streams: unknown[];
-      /**
-       * Format: date-time
-       * @description The date and time the webset was updated
-       */
-      updatedAt: string;
-    };
-    WebsetEnrichment: {
-      /**
-       * Format: date-time
-       * @description The date and time the enrichment was created
-       */
-      createdAt: string;
-      /** @description The description of the enrichment task provided during the creation of the enrichment. */
-      description: string;
-      /** @description The format of the enrichment response. */
-      format: components["schemas"]["WebsetEnrichmentFormat"];
-      /** @description The unique identifier for the enrichment */
-      id: string;
-      /** @description The instructions for the enrichment Agent.
-       *
-       *     This will be automatically generated based on the description and format. */
-      instructions: string | null;
-      /**
-       * @description The metadata of the enrichment
-       * @default {}
-       */
-      metadata: {
-        [key: string]: string;
-      };
-      /**
-       * @default webset_enrichment
-       * @constant
-       */
-      object: "webset_enrichment";
-      /**
-       * WebsetEnrichmentOptions
-       * @description When the format is options, the different options for the enrichment agent to choose from.
-       */
-      options:
-        | {
-            /** @description The label of the option */
-            label: string;
-          }[]
-        | null;
-      /**
-       * WebsetEnrichmentStatus
-       * @description The status of the enrichment
-       * @enum {string}
-       */
-      status: WebsetEnrichmentStatus;
-      /** @description The title of the enrichment.
-       *
-       *     This will be automatically generated based on the description and format. */
-      title: string | null;
-      /**
-       * Format: date-time
-       * @description The date and time the enrichment was updated
-       */
-      updatedAt: string;
-      /** @description The unique identifier for the Webset this enrichment belongs to. */
-      websetId: string;
-    };
-    /** @enum {string} */
-    WebsetEnrichmentFormat: WebsetEnrichmentFormat;
-    WebsetItem: {
-      /**
-       * Format: date-time
-       * @description The date and time the item was created
-       */
-      createdAt: string;
-      /** @description The enrichments results of the Webset item */
-      enrichments: components["schemas"]["EnrichmentResult"][] | null;
-      /** @description The criteria evaluations of the item */
-      evaluations: components["schemas"]["WebsetItemEvaluation"][];
-      /** @description The unique identifier for the Webset Item */
-      id: string;
-      /**
-       * @default webset_item
-       * @constant
-       */
-      object: "webset_item";
-      /** @description The properties of the Item */
-      properties:
-        | components["schemas"]["WebsetItemPersonProperties"]
-        | components["schemas"]["WebsetItemCompanyProperties"]
-        | components["schemas"]["WebsetItemArticleProperties"]
-        | components["schemas"]["WebsetItemResearchPaperProperties"]
-        | components["schemas"]["WebsetItemCustomProperties"];
-      /**
-       * @description The source of the Item
-       * @enum {string}
-       */
-      source: WebsetItemSource;
-      /** @description The unique identifier for the source */
-      sourceId: string;
-      /**
-       * Format: date-time
-       * @description The date and time the item was last updated
-       */
-      updatedAt: string;
-      /** @description The unique identifier for the Webset this Item belongs to. */
-      websetId: string;
-    };
-    WebsetItemArticleProperties: {
-      /** WebsetItemArticlePropertiesFields */
-      article: {
-        /** @description The author(s) of the article */
-        author: string | null;
-        /** @description The date and time the article was published */
-        publishedAt: string | null;
-        /** @description The title of the article */
-        title: string | null;
-      };
-      /** @description The text content for the article */
-      content: string | null;
-      /** @description Short description of the relevance of the article */
-      description: string;
-      /**
-       * @default article
-       * @constant
-       */
-      type: "article";
-      /**
-       * Format: uri
-       * @description The URL of the article
-       */
-      url: string;
-    };
-    WebsetItemCompanyProperties: {
-      /** WebsetItemCompanyPropertiesFields */
-      company: {
-        /** @description A short description of the company */
-        about: string | null;
-        /** @description The number of employees of the company */
-        employees: number | null;
-        /** @description The industry of the company */
-        industry: string | null;
-        /** @description The main location of the company */
-        location: string | null;
-        /**
-         * Format: uri
-         * @description The logo URL of the company
-         */
-        logoUrl: string | null;
-        /** @description The name of the company */
-        name: string;
-      };
-      /** @description The text content of the company website */
-      content: string | null;
-      /** @description Short description of the relevance of the company */
-      description: string;
-      /**
-       * @default company
-       * @constant
-       */
-      type: "company";
-      /**
-       * Format: uri
-       * @description The URL of the company website
-       */
-      url: string;
-    };
-    WebsetItemCustomProperties: {
-      /** @description The text content of the Item */
-      content: string | null;
-      /** WebsetItemCustomPropertiesFields */
-      custom: {
-        /** @description The author(s) of the website */
-        author: string | null;
-        /** @description The date and time the website was published */
-        publishedAt: string | null;
-        /** @description The title of the website */
-        title: string | null;
-      };
-      /** @description Short description of the Item */
-      description: string;
-      /**
-       * @default custom
-       * @constant
-       */
-      type: "custom";
-      /**
-       * Format: uri
-       * @description The URL of the Item
-       */
-      url: string;
-    };
-    WebsetItemEvaluation: {
-      /** @description The description of the criterion */
-      criterion: string;
-      /** @description The reasoning for the result of the evaluation */
-      reasoning: string;
-      /**
-       * @description The references used to generate the result.
-       * @default []
-       */
-      references: {
-        /** @description The relevant snippet of the reference content */
-        snippet: string | null;
-        /** @description The title of the reference */
-        title: string | null;
-        /** @description The URL of the reference */
-        url: string;
-      }[];
-      /**
-       * @description The satisfaction of the criterion
-       * @enum {string}
-       */
-      satisfied: WebsetItemEvaluationSatisfied;
-    };
-    WebsetItemPersonProperties: {
-      /** @description Short description of the relevance of the person */
-      description: string;
-      /** WebsetItemPersonPropertiesFields */
-      person: {
-        /** @description The location of the person */
-        location: string | null;
-        /** @description The name of the person */
-        name: string;
-        /**
-         * Format: uri
-         * @description The image URL of the person
-         */
-        pictureUrl: string | null;
-        /** @description The current work position of the person */
-        position: string | null;
-      };
-      /**
-       * @default person
-       * @constant
-       */
-      type: "person";
-      /**
-       * Format: uri
-       * @description The URL of the person profile
-       */
-      url: string;
-    };
-    WebsetItemResearchPaperProperties: {
-      /** @description The text content of the research paper */
-      content: string | null;
-      /** @description Short description of the relevance of the research paper */
-      description: string;
-      /** WebsetItemResearchPaperPropertiesFields */
-      researchPaper: {
-        /** @description The author(s) of the research paper */
-        author: string | null;
-        /** @description The date and time the research paper was published */
-        publishedAt: string | null;
-        /** @description The title of the research paper */
-        title: string | null;
-      };
-      /**
-       * @default research_paper
-       * @constant
-       */
-      type: "research_paper";
-      /**
-       * Format: uri
-       * @description The URL of the research paper
-       */
-      url: string;
-    };
-    WebsetSearch: {
-      /**
-       * @description The behavior of the search when it is added to a Webset.
-       *
-       *     - `override`: the search will replace the existing Items found in the Webset and evaluate them against the new criteria. Any Items that don't match the new criteria will be discarded.
-       *     - `append`: the search will add the new Items found to the existing Webset. Any Items that don't match the new criteria will be discarded.
-       * @default override
-       */
-      behavior: components["schemas"]["WebsetSearchBehavior"];
-      /**
-       * Format: date-time
-       * @description The date and time the search was canceled
-       */
-      canceledAt: string | null;
-      /** @description The reason the search was canceled */
-      canceledReason: components["schemas"]["WebsetSearchCanceledReason"];
-      /** @description The number of results the search will attempt to find. The actual number of results may be less than this number depending on the search complexity. */
-      count: number;
-      /**
-       * Format: date-time
-       * @description The date and time the search was created
-       */
-      createdAt: string;
-      /** @description The criteria the search will use to evaluate the results. If not provided, we will automatically generate them for you. */
-      criteria: {
-        /** @description The description of the criterion */
-        description: string;
-        /** @description Value between 0 and 100 representing the percentage of results that meet the criterion. */
-        successRate: number;
-      }[];
-      /** @description The entity the search will return results for.
-       *
-       *     When no entity is provided during creation, we will automatically select the best entity based on the query. */
-      entity: components["schemas"]["Entity"];
-      /** @description Sources (existing imports or websets) used to omit certain results to be found during the search. */
-      exclude: {
-        id: string;
+            /**
+             * @default event
+             * @constant
+             */
+            object: "event";
+            /**
+             * @default webset.deleted
+             * @constant
+             */
+            type: "webset.deleted";
+        } | {
+            /**
+             * Format: date-time
+             * @description The date and time the event was created
+             */
+            createdAt: string;
+            data: components["schemas"]["Webset"];
+            /** @description The unique identifier for the event */
+            id: string;
+            /**
+             * @default event
+             * @constant
+             */
+            object: "event";
+            /**
+             * @default webset.idle
+             * @constant
+             */
+            type: "webset.idle";
+        } | {
+            /**
+             * Format: date-time
+             * @description The date and time the event was created
+             */
+            createdAt: string;
+            data: components["schemas"]["Webset"];
+            /** @description The unique identifier for the event */
+            id: string;
+            /**
+             * @default event
+             * @constant
+             */
+            object: "event";
+            /**
+             * @default webset.paused
+             * @constant
+             */
+            type: "webset.paused";
+        } | {
+            /**
+             * Format: date-time
+             * @description The date and time the event was created
+             */
+            createdAt: string;
+            data: components["schemas"]["WebsetItem"];
+            /** @description The unique identifier for the event */
+            id: string;
+            /**
+             * @default event
+             * @constant
+             */
+            object: "event";
+            /**
+             * @default webset.item.created
+             * @constant
+             */
+            type: "webset.item.created";
+        } | {
+            /**
+             * Format: date-time
+             * @description The date and time the event was created
+             */
+            createdAt: string;
+            data: components["schemas"]["WebsetItem"];
+            /** @description The unique identifier for the event */
+            id: string;
+            /**
+             * @default event
+             * @constant
+             */
+            object: "event";
+            /**
+             * @default webset.item.enriched
+             * @constant
+             */
+            type: "webset.item.enriched";
+        } | {
+            /**
+             * Format: date-time
+             * @description The date and time the event was created
+             */
+            createdAt: string;
+            data: components["schemas"]["WebsetSearch"];
+            /** @description The unique identifier for the event */
+            id: string;
+            /**
+             * @default event
+             * @constant
+             */
+            object: "event";
+            /**
+             * @default webset.search.created
+             * @constant
+             */
+            type: "webset.search.created";
+        } | {
+            /**
+             * Format: date-time
+             * @description The date and time the event was created
+             */
+            createdAt: string;
+            data: components["schemas"]["WebsetSearch"];
+            /** @description The unique identifier for the event */
+            id: string;
+            /**
+             * @default event
+             * @constant
+             */
+            object: "event";
+            /**
+             * @default webset.search.updated
+             * @constant
+             */
+            type: "webset.search.updated";
+        } | {
+            /**
+             * Format: date-time
+             * @description The date and time the event was created
+             */
+            createdAt: string;
+            data: components["schemas"]["WebsetSearch"];
+            /** @description The unique identifier for the event */
+            id: string;
+            /**
+             * @default event
+             * @constant
+             */
+            object: "event";
+            /**
+             * @default webset.search.canceled
+             * @constant
+             */
+            type: "webset.search.canceled";
+        } | {
+            /**
+             * Format: date-time
+             * @description The date and time the event was created
+             */
+            createdAt: string;
+            data: components["schemas"]["WebsetSearch"];
+            /** @description The unique identifier for the event */
+            id: string;
+            /**
+             * @default event
+             * @constant
+             */
+            object: "event";
+            /**
+             * @default webset.search.completed
+             * @constant
+             */
+            type: "webset.search.completed";
+        };
         /** @enum {string} */
-        source: WebsetSearchExcludeSource;
-      }[];
-      /** @description The unique identifier for the search */
-      id: string;
-      /**
-       * @description Set of key-value pairs you want to associate with this object.
-       * @default {}
-       */
-      metadata: {
-        [key: string]: string;
-      };
-      /**
-       * @default webset_search
-       * @constant
-       */
-      object: "webset_search";
-      /** @description The progress of the search */
-      progress: {
-        /** @description The completion percentage of the search */
-        completion: number;
-        /** @description The number of results found so far */
-        found: number;
-      };
-      /** @description The query used to create the search. */
-      query: string;
-      /**
-       * WebsetSearchStatus
-       * @description The status of the search
-       * @enum {string}
-       */
-      status: WebsetSearchStatus;
-      /**
-       * Format: date-time
-       * @description The date and time the search was updated
-       */
-      updatedAt: string;
+        EventType: EventType;
+        GetWebsetResponse: components["schemas"]["Webset"] & {
+            /** @description When expand query parameter contains `items`, this will contain the items in the webset */
+            items?: components["schemas"]["WebsetItem"][];
+        };
+        Import: {
+            /** @description The number of entities in the import */
+            count: number;
+            /**
+             * Format: date-time
+             * @description When the import was created
+             */
+            createdAt: string;
+            /** @description The type of entity the import contains. */
+            entity: components["schemas"]["Entity"];
+            /**
+             * Format: date-time
+             * @description When the import failed
+             */
+            failedAt: string | null;
+            /** @description A human readable message of the import failure */
+            failedMessage: string | null;
+            /**
+             * @description The reason the import failed
+             * @enum {string|null}
+             */
+            failedReason: ImportFailedReason;
+            /**
+             * @description The format of the import.
+             * @enum {string}
+             */
+            format: ImportFormat;
+            /** @description The unique identifier for the Import */
+            id: string;
+            /** @description Set of key-value pairs you want to associate with this object. */
+            metadata: {
+                [key: string]: string;
+            };
+            /**
+             * @description The type of object
+             * @enum {string}
+             */
+            object: ImportObject;
+            /**
+             * @description The status of the Import
+             * @enum {string}
+             */
+            status: ImportStatus;
+            /** @description The title of the import */
+            title: string;
+            /**
+             * Format: date-time
+             * @description When the import was last updated
+             */
+            updatedAt: string;
+        };
+        ListEventsResponse: {
+            /** @description The list of events */
+            data: components["schemas"]["Event"][];
+            /** @description Whether there are more results to paginate through */
+            hasMore: boolean;
+            /** @description The cursor to paginate through the next set of results */
+            nextCursor: string | null;
+        };
+        ListImportsResponse: {
+            /** @description The list of imports */
+            data: components["schemas"]["Import"][];
+            /** @description Whether there are more results to paginate through */
+            hasMore: boolean;
+            /** @description The cursor to paginate through the next set of results */
+            nextCursor: string | null;
+        };
+        ListMonitorRunsResponse: {
+            /** @description The list of monitor runs */
+            data: components["schemas"]["MonitorRun"][];
+            /** @description Whether there are more results to paginate through */
+            hasMore: boolean;
+            /** @description The cursor to paginate through the next set of results */
+            nextCursor: string | null;
+        };
+        ListMonitorsResponse: {
+            /** @description The list of monitors */
+            data: components["schemas"]["Monitor"][];
+            /** @description Whether there are more results to paginate through */
+            hasMore: boolean;
+            /** @description The cursor to paginate through the next set of results */
+            nextCursor: string | null;
+        };
+        ListWebhookAttemptsResponse: {
+            /** @description The list of webhook attempts */
+            data: components["schemas"]["WebhookAttempt"][];
+            /** @description Whether there are more results to paginate through */
+            hasMore: boolean;
+            /** @description The cursor to paginate through the next set of results */
+            nextCursor: string | null;
+        };
+        ListWebhooksResponse: {
+            /** @description The list of webhooks */
+            data: components["schemas"]["Webhook"][];
+            /** @description Whether there are more results to paginate through */
+            hasMore: boolean;
+            /** @description The cursor to paginate through the next set of results */
+            nextCursor: string | null;
+        };
+        ListWebsetItemResponse: {
+            /** @description The list of webset items */
+            data: components["schemas"]["WebsetItem"][];
+            /** @description Whether there are more Items to paginate through */
+            hasMore: boolean;
+            /** @description The cursor to paginate through the next set of Items */
+            nextCursor: string | null;
+        };
+        ListWebsetsResponse: {
+            /** @description The list of websets */
+            data: components["schemas"]["Webset"][];
+            /** @description Whether there are more results to paginate through */
+            hasMore: boolean;
+            /** @description The cursor to paginate through the next set of results */
+            nextCursor: string | null;
+        };
+        Monitor: {
+            /** @description Behavior to perform when monitor runs */
+            behavior: {
+                /** @description Specify the search parameters for the Monitor.
+                 *
+                 *     By default, the search parameters (query, entity and criteria) from the last search are used when no parameters are provided. */
+                config: {
+                    /**
+                     * @description The behaviour of the Search when it is added to a Webset.
+                     * @default append
+                     * @enum {string}
+                     */
+                    behavior: MonitorBehaviorConfigBehavior;
+                    /** @description The maximum number of results to find */
+                    count: number;
+                    /** @description The criteria to search for. By default, the criteria from the last search is used. */
+                    criteria?: {
+                        description: string;
+                    }[];
+                    /**
+                     * Entity
+                     * @description The entity to search for. By default, the entity from the last search/import is used.
+                     */
+                    entity?: components["schemas"]["Entity"];
+                    /** @description The query to search for. By default, the query from the last search is used. */
+                    query?: string;
+                };
+                /**
+                 * @default search
+                 * @constant
+                 */
+                type: "search";
+            };
+            /** @description How often the monitor will run */
+            cadence: {
+                /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
+                cron: string;
+                /**
+                 * @description IANA timezone (e.g., "America/New_York")
+                 * @default Etc/UTC
+                 */
+                timezone: string;
+            };
+            /**
+             * Format: date-time
+             * @description When the monitor was created
+             */
+            createdAt: string;
+            /** @description The unique identifier for the Monitor */
+            id: string;
+            /**
+             * MonitorRun
+             * @description The last run of the monitor
+             */
+            lastRun: components["schemas"]["MonitorRun"];
+            /** @description Set of key-value pairs you want to associate with this object. */
+            metadata: {
+                [key: string]: string;
+            };
+            /**
+             * Format: date-time
+             * @description Date and time when the next run will occur in
+             */
+            nextRunAt: string | null;
+            /**
+             * @description The type of object
+             * @enum {string}
+             */
+            object: MonitorObject;
+            /**
+             * @description The status of the Monitor
+             * @enum {string}
+             */
+            status: MonitorStatus;
+            /**
+             * Format: date-time
+             * @description When the monitor was last updated
+             */
+            updatedAt: string;
+            /** @description The id of the Webset the Monitor belongs to */
+            websetId: string;
+        };
+        MonitorBehavior: {
+            /** @description Specify the search parameters for the Monitor.
+             *
+             *     By default, the search parameters (query, entity and criteria) from the last search are used when no parameters are provided. */
+            config: {
+                /**
+                 * @description The behaviour of the Search when it is added to a Webset.
+                 * @default append
+                 * @enum {string}
+                 */
+                behavior: MonitorBehaviorConfigBehavior;
+                /** @description The maximum number of results to find */
+                count: number;
+                /** @description The criteria to search for. By default, the criteria from the last search is used. */
+                criteria?: {
+                    description: string;
+                }[];
+                /**
+                 * Entity
+                 * @description The entity to search for. By default, the entity from the last search/import is used.
+                 */
+                entity?: components["schemas"]["Entity"];
+                /** @description The query to search for. By default, the query from the last search is used. */
+                query?: string;
+            };
+            /**
+             * @default search
+             * @constant
+             */
+            type: "search";
+        };
+        MonitorCadence: {
+            /** @description Cron expression for monitor cadence (must be a valid Unix cron with 5 fields). The schedule must trigger at most once per day. */
+            cron: string;
+            /**
+             * @description IANA timezone (e.g., "America/New_York")
+             * @default Etc/UTC
+             */
+            timezone: string;
+        };
+        MonitorRun: {
+            /**
+             * Format: date-time
+             * @description When the run was canceled
+             */
+            canceledAt: string | null;
+            /**
+             * Format: date-time
+             * @description When the run completed
+             */
+            completedAt: string | null;
+            /**
+             * Format: date-time
+             * @description When the run was created
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description When the run failed
+             */
+            failedAt: string | null;
+            /** @description The unique identifier for the Monitor Run */
+            id: string;
+            /** @description The monitor that the run is associated with */
+            monitorId: string;
+            /**
+             * @description The type of object
+             * @enum {string}
+             */
+            object: MonitorRunObject;
+            /**
+             * @description The status of the Monitor Run
+             * @enum {string}
+             */
+            status: MonitorRunStatus;
+            /**
+             * @description The type of the Monitor Run
+             * @enum {string}
+             */
+            type: MonitorRunType;
+            /**
+             * Format: date-time
+             * @description When the run was last updated
+             */
+            updatedAt: string;
+        };
+        /** Person */
+        PersonEntity: {
+            /**
+             * @default person
+             * @constant
+             */
+            type: "person";
+        };
+        /** Research Paper */
+        ResearchPaperEntity: {
+            /**
+             * @default research_paper
+             * @constant
+             */
+            type: "research_paper";
+        };
+        UpdateImport: {
+            metadata?: {
+                [key: string]: string;
+            };
+            title?: string;
+        };
+        UpdateMonitor: {
+            behavior?: components["schemas"]["MonitorBehavior"];
+            cadence?: components["schemas"]["MonitorCadence"];
+            metadata?: {
+                [key: string]: string;
+            };
+            /**
+             * @description The status of the monitor.
+             * @enum {string}
+             */
+            status?: UpdateMonitorStatus;
+        };
+        UpdateWebhookParameters: {
+            /** @description The events to trigger the webhook */
+            events?: components["schemas"]["EventType"][];
+            /** @description Set of key-value pairs you want to associate with this object. */
+            metadata?: {
+                [key: string]: string;
+            };
+            /**
+             * Format: uri
+             * @description The URL to send the webhook to
+             */
+            url?: string;
+        };
+        UpdateWebsetRequest: {
+            /** @description Set of key-value pairs you want to associate with this object. */
+            metadata?: {
+                [key: string]: string;
+            } | null;
+        };
+        Webhook: {
+            /**
+             * Format: date-time
+             * @description The date and time the webhook was created
+             */
+            createdAt: string;
+            /** @description The events to trigger the webhook */
+            events: components["schemas"]["EventType"][];
+            /** @description The unique identifier for the webhook */
+            id: string;
+            /**
+             * @description The metadata of the webhook
+             * @default {}
+             */
+            metadata: {
+                [key: string]: string;
+            };
+            /**
+             * @default webhook
+             * @constant
+             */
+            object: "webhook";
+            /** @description The secret to verify the webhook signature. Only returned on Webhook creation. */
+            secret: string | null;
+            /**
+             * WebhookStatus
+             * @description The status of the webhook
+             * @enum {string}
+             */
+            status: WebhookStatus;
+            /**
+             * Format: date-time
+             * @description The date and time the webhook was last updated
+             */
+            updatedAt: string;
+            /**
+             * Format: uri
+             * @description The URL to send the webhook to
+             */
+            url: string;
+        };
+        WebhookAttempt: {
+            /** @description The attempt number of the webhook */
+            attempt: number;
+            /**
+             * Format: date-time
+             * @description The date and time the webhook attempt was made
+             */
+            attemptedAt: string;
+            /** @description The unique identifier for the event */
+            eventId: string;
+            /**
+             * @description The type of event
+             * @enum {string}
+             */
+            eventType: WebhookAttemptEventType;
+            /** @description The unique identifier for the webhook attempt */
+            id: string;
+            /**
+             * @default webhook_attempt
+             * @constant
+             */
+            object: "webhook_attempt";
+            /** @description The body of the response */
+            responseBody: string | null;
+            /** @description The headers of the response */
+            responseHeaders: {
+                [key: string]: string;
+            };
+            /** @description The status code of the response */
+            responseStatusCode: number;
+            /** @description Whether the attempt was successful */
+            successful: boolean;
+            /** @description The URL that was used during the attempt */
+            url: string;
+            /** @description The unique identifier for the webhook */
+            webhookId: string;
+        };
+        Webset: {
+            /**
+             * Format: date-time
+             * @description The date and time the webset was created
+             */
+            createdAt: string;
+            /** @description The Enrichments to apply to the Webset Items. */
+            enrichments: components["schemas"]["WebsetEnrichment"][];
+            /** @description The external identifier for the webset */
+            externalId: string | null;
+            /** @description The unique identifier for the webset */
+            id: string;
+            /** @description Imports that have been performed on the webset. */
+            imports: components["schemas"]["Import"][];
+            /**
+             * @description Set of key-value pairs you want to associate with this object.
+             * @default {}
+             */
+            metadata: {
+                [key: string]: string;
+            };
+            /** @description The Monitors for the Webset. */
+            monitors: components["schemas"]["Monitor"][];
+            /**
+             * @default webset
+             * @constant
+             */
+            object: "webset";
+            /** @description The searches that have been performed on the webset. */
+            searches: components["schemas"]["WebsetSearch"][];
+            /**
+             * WebsetStatus
+             * @description The status of the webset
+             * @enum {string}
+             */
+            status: WebsetStatus;
+            /** @description The Streams for the Webset. */
+            streams: unknown[];
+            /**
+             * Format: date-time
+             * @description The date and time the webset was updated
+             */
+            updatedAt: string;
+        };
+        WebsetEnrichment: {
+            /**
+             * Format: date-time
+             * @description The date and time the enrichment was created
+             */
+            createdAt: string;
+            /** @description The description of the enrichment task provided during the creation of the enrichment. */
+            description: string;
+            /** @description The format of the enrichment response. */
+            format: components["schemas"]["WebsetEnrichmentFormat"];
+            /** @description The unique identifier for the enrichment */
+            id: string;
+            /** @description The instructions for the enrichment Agent.
+             *
+             *     This will be automatically generated based on the description and format. */
+            instructions: string | null;
+            /**
+             * @description The metadata of the enrichment
+             * @default {}
+             */
+            metadata: {
+                [key: string]: string;
+            };
+            /**
+             * @default webset_enrichment
+             * @constant
+             */
+            object: "webset_enrichment";
+            /**
+             * WebsetEnrichmentOptions
+             * @description When the format is options, the different options for the enrichment agent to choose from.
+             */
+            options: {
+                /** @description The label of the option */
+                label: string;
+            }[] | null;
+            /**
+             * WebsetEnrichmentStatus
+             * @description The status of the enrichment
+             * @enum {string}
+             */
+            status: WebsetEnrichmentStatus;
+            /** @description The title of the enrichment.
+             *
+             *     This will be automatically generated based on the description and format. */
+            title: string | null;
+            /**
+             * Format: date-time
+             * @description The date and time the enrichment was updated
+             */
+            updatedAt: string;
+            /** @description The unique identifier for the Webset this enrichment belongs to. */
+            websetId: string;
+        };
+        /** @enum {string} */
+        WebsetEnrichmentFormat: WebsetEnrichmentFormat;
+        WebsetItem: {
+            /**
+             * Format: date-time
+             * @description The date and time the item was created
+             */
+            createdAt: string;
+            /** @description The enrichments results of the Webset item */
+            enrichments: components["schemas"]["EnrichmentResult"][] | null;
+            /** @description The criteria evaluations of the item */
+            evaluations: components["schemas"]["WebsetItemEvaluation"][];
+            /** @description The unique identifier for the Webset Item */
+            id: string;
+            /**
+             * @default webset_item
+             * @constant
+             */
+            object: "webset_item";
+            /** @description The properties of the Item */
+            properties: components["schemas"]["WebsetItemPersonProperties"] | components["schemas"]["WebsetItemCompanyProperties"] | components["schemas"]["WebsetItemArticleProperties"] | components["schemas"]["WebsetItemResearchPaperProperties"] | components["schemas"]["WebsetItemCustomProperties"];
+            /**
+             * @description The source of the Item
+             * @enum {string}
+             */
+            source: WebsetItemSource;
+            /** @description The unique identifier for the source */
+            sourceId: string;
+            /**
+             * Format: date-time
+             * @description The date and time the item was last updated
+             */
+            updatedAt: string;
+            /** @description The unique identifier for the Webset this Item belongs to. */
+            websetId: string;
+        };
+        WebsetItemArticleProperties: {
+            /** WebsetItemArticlePropertiesFields */
+            article: {
+                /** @description The author(s) of the article */
+                author: string | null;
+                /** @description The date and time the article was published */
+                publishedAt: string | null;
+                /** @description The title of the article */
+                title: string | null;
+            };
+            /** @description The text content for the article */
+            content: string | null;
+            /** @description Short description of the relevance of the article */
+            description: string;
+            /**
+             * @default article
+             * @constant
+             */
+            type: "article";
+            /**
+             * Format: uri
+             * @description The URL of the article
+             */
+            url: string;
+        };
+        WebsetItemCompanyProperties: {
+            /** WebsetItemCompanyPropertiesFields */
+            company: {
+                /** @description A short description of the company */
+                about: string | null;
+                /** @description The number of employees of the company */
+                employees: number | null;
+                /** @description The industry of the company */
+                industry: string | null;
+                /** @description The main location of the company */
+                location: string | null;
+                /**
+                 * Format: uri
+                 * @description The logo URL of the company
+                 */
+                logoUrl: string | null;
+                /** @description The name of the company */
+                name: string;
+            };
+            /** @description The text content of the company website */
+            content: string | null;
+            /** @description Short description of the relevance of the company */
+            description: string;
+            /**
+             * @default company
+             * @constant
+             */
+            type: "company";
+            /**
+             * Format: uri
+             * @description The URL of the company website
+             */
+            url: string;
+        };
+        WebsetItemCustomProperties: {
+            /** @description The text content of the Item */
+            content: string | null;
+            /** WebsetItemCustomPropertiesFields */
+            custom: {
+                /** @description The author(s) of the website */
+                author: string | null;
+                /** @description The date and time the website was published */
+                publishedAt: string | null;
+                /** @description The title of the website */
+                title: string | null;
+            };
+            /** @description Short description of the Item */
+            description: string;
+            /**
+             * @default custom
+             * @constant
+             */
+            type: "custom";
+            /**
+             * Format: uri
+             * @description The URL of the Item
+             */
+            url: string;
+        };
+        WebsetItemEvaluation: {
+            /** @description The description of the criterion */
+            criterion: string;
+            /** @description The reasoning for the result of the evaluation */
+            reasoning: string;
+            /**
+             * @description The references used to generate the result.
+             * @default []
+             */
+            references: {
+                /** @description The relevant snippet of the reference content */
+                snippet: string | null;
+                /** @description The title of the reference */
+                title: string | null;
+                /** @description The URL of the reference */
+                url: string;
+            }[];
+            /**
+             * @description The satisfaction of the criterion
+             * @enum {string}
+             */
+            satisfied: WebsetItemEvaluationSatisfied;
+        };
+        WebsetItemPersonProperties: {
+            /** @description Short description of the relevance of the person */
+            description: string;
+            /** WebsetItemPersonPropertiesFields */
+            person: {
+                /** WebsetItemPersonCompanyPropertiesFields */
+                company: {
+                    /** @description The location the person is working at the company */
+                    location: string | null;
+                    /** @description The name of the company */
+                    name: string;
+                } | null;
+                /** @description The location of the person */
+                location: string | null;
+                /** @description The name of the person */
+                name: string;
+                /**
+                 * Format: uri
+                 * @description The image URL of the person
+                 */
+                pictureUrl: string | null;
+                /** @description The current work position of the person */
+                position: string | null;
+            };
+            /**
+             * @default person
+             * @constant
+             */
+            type: "person";
+            /**
+             * Format: uri
+             * @description The URL of the person profile
+             */
+            url: string;
+        };
+        WebsetItemResearchPaperProperties: {
+            /** @description The text content of the research paper */
+            content: string | null;
+            /** @description Short description of the relevance of the research paper */
+            description: string;
+            /** WebsetItemResearchPaperPropertiesFields */
+            researchPaper: {
+                /** @description The author(s) of the research paper */
+                author: string | null;
+                /** @description The date and time the research paper was published */
+                publishedAt: string | null;
+                /** @description The title of the research paper */
+                title: string | null;
+            };
+            /**
+             * @default research_paper
+             * @constant
+             */
+            type: "research_paper";
+            /**
+             * Format: uri
+             * @description The URL of the research paper
+             */
+            url: string;
+        };
+        WebsetSearch: {
+            /**
+             * @description The behavior of the search when it is added to a Webset.
+             *
+             *     - `override`: the search will replace the existing Items found in the Webset and evaluate them against the new criteria. Any Items that don't match the new criteria will be discarded.
+             *     - `append`: the search will add the new Items found to the existing Webset. Any Items that don't match the new criteria will be discarded.
+             * @default override
+             */
+            behavior: components["schemas"]["WebsetSearchBehavior"];
+            /**
+             * Format: date-time
+             * @description The date and time the search was canceled
+             */
+            canceledAt: string | null;
+            /** @description The reason the search was canceled */
+            canceledReason: components["schemas"]["WebsetSearchCanceledReason"];
+            /** @description The number of results the search will attempt to find. The actual number of results may be less than this number depending on the search complexity. */
+            count: number;
+            /**
+             * Format: date-time
+             * @description The date and time the search was created
+             */
+            createdAt: string;
+            /** @description The criteria the search will use to evaluate the results. If not provided, we will automatically generate them for you. */
+            criteria: {
+                /** @description The description of the criterion */
+                description: string;
+                /** @description Value between 0 and 100 representing the percentage of results that meet the criterion. */
+                successRate: number;
+            }[];
+            /** @description The entity the search will return results for.
+             *
+             *     When no entity is provided during creation, we will automatically select the best entity based on the query. */
+            entity: components["schemas"]["Entity"];
+            /** @description Sources (existing imports or websets) used to omit certain results to be found during the search. */
+            exclude: {
+                id: string;
+                /** @enum {string} */
+                source: WebsetSearchExcludeSource;
+            }[];
+            /** @description The unique identifier for the search */
+            id: string;
+            /**
+             * @description Set of key-value pairs you want to associate with this object.
+             * @default {}
+             */
+            metadata: {
+                [key: string]: string;
+            };
+            /**
+             * @default webset_search
+             * @constant
+             */
+            object: "webset_search";
+            /** @description The progress of the search */
+            progress: {
+                /** @description The completion percentage of the search */
+                completion: number;
+                /** @description The number of results found so far */
+                found: number;
+            };
+            /** @description The query used to create the search. */
+            query: string;
+            /**
+             * WebsetSearchStatus
+             * @description The status of the search
+             * @enum {string}
+             */
+            status: WebsetSearchStatus;
+            /**
+             * Format: date-time
+             * @description The date and time the search was updated
+             */
+            updatedAt: string;
+        };
+        /** @enum {string} */
+        WebsetSearchBehavior: WebsetSearchBehavior;
+        /** @enum {string} */
+        WebsetSearchCanceledReason: WebsetSearchCanceledReason;
     };
-    /** @enum {string} */
-    WebsetSearchBehavior: WebsetSearchBehavior;
-    /** @enum {string} */
-    WebsetSearchCanceledReason: WebsetSearchCanceledReason;
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
-export type ArticleEntity = components["schemas"]["ArticleEntity"];
-export type CompanyEntity = components["schemas"]["CompanyEntity"];
-export type CreateCriterionParameters =
-  components["schemas"]["CreateCriterionParameters"];
-export type CreateEnrichmentParameters =
-  components["schemas"]["CreateEnrichmentParameters"];
-export type CreateImportParameters =
-  components["schemas"]["CreateImportParameters"];
-export type CreateImportResponse =
-  components["schemas"]["CreateImportResponse"];
-export type CreateMonitorParameters =
-  components["schemas"]["CreateMonitorParameters"];
-export type CreateWebhookParameters =
-  components["schemas"]["CreateWebhookParameters"];
-export type CreateWebsetParameters =
-  components["schemas"]["CreateWebsetParameters"];
-export type CreateWebsetSearchParameters =
-  components["schemas"]["CreateWebsetSearchParameters"];
-export type CustomEntity = components["schemas"]["CustomEntity"];
-export type EnrichmentResult = components["schemas"]["EnrichmentResult"];
-export type Entity = components["schemas"]["Entity"];
-export type Event = components["schemas"]["Event"];
-export type GetWebsetResponse = components["schemas"]["GetWebsetResponse"];
-export type Import = components["schemas"]["Import"];
-export type ListEventsResponse = components["schemas"]["ListEventsResponse"];
-export type ListImportsResponse = components["schemas"]["ListImportsResponse"];
-export type ListMonitorRunsResponse =
-  components["schemas"]["ListMonitorRunsResponse"];
-export type ListMonitorsResponse =
-  components["schemas"]["ListMonitorsResponse"];
-export type ListWebhookAttemptsResponse =
-  components["schemas"]["ListWebhookAttemptsResponse"];
-export type ListWebhooksResponse =
-  components["schemas"]["ListWebhooksResponse"];
-export type ListWebsetItemResponse =
-  components["schemas"]["ListWebsetItemResponse"];
-export type ListWebsetsResponse = components["schemas"]["ListWebsetsResponse"];
-export type Monitor = components["schemas"]["Monitor"];
-export type MonitorBehavior = components["schemas"]["MonitorBehavior"];
-export type MonitorCadence = components["schemas"]["MonitorCadence"];
-export type MonitorRun = components["schemas"]["MonitorRun"];
-export type PersonEntity = components["schemas"]["PersonEntity"];
-export type ResearchPaperEntity = components["schemas"]["ResearchPaperEntity"];
-export type UpdateImport = components["schemas"]["UpdateImport"];
-export type UpdateMonitor = components["schemas"]["UpdateMonitor"];
-export type UpdateWebhookParameters =
-  components["schemas"]["UpdateWebhookParameters"];
-export type UpdateWebsetRequest = components["schemas"]["UpdateWebsetRequest"];
-export type Webhook = components["schemas"]["Webhook"];
-export type WebhookAttempt = components["schemas"]["WebhookAttempt"];
-export type Webset = components["schemas"]["Webset"];
-export type WebsetEnrichment = components["schemas"]["WebsetEnrichment"];
-export type WebsetItem = components["schemas"]["WebsetItem"];
-export type WebsetItemArticleProperties =
-  components["schemas"]["WebsetItemArticleProperties"];
-export type WebsetItemCompanyProperties =
-  components["schemas"]["WebsetItemCompanyProperties"];
-export type WebsetItemCustomProperties =
-  components["schemas"]["WebsetItemCustomProperties"];
-export type WebsetItemEvaluation =
-  components["schemas"]["WebsetItemEvaluation"];
-export type WebsetItemPersonProperties =
-  components["schemas"]["WebsetItemPersonProperties"];
-export type WebsetItemResearchPaperProperties =
-  components["schemas"]["WebsetItemResearchPaperProperties"];
-export type WebsetSearch = components["schemas"]["WebsetSearch"];
+export type ArticleEntity = components['schemas']['ArticleEntity'];
+export type CompanyEntity = components['schemas']['CompanyEntity'];
+export type CreateCriterionParameters = components['schemas']['CreateCriterionParameters'];
+export type CreateEnrichmentParameters = components['schemas']['CreateEnrichmentParameters'];
+export type CreateImportParameters = components['schemas']['CreateImportParameters'];
+export type CreateImportResponse = components['schemas']['CreateImportResponse'];
+export type CreateMonitorParameters = components['schemas']['CreateMonitorParameters'];
+export type CreateWebhookParameters = components['schemas']['CreateWebhookParameters'];
+export type CreateWebsetParameters = components['schemas']['CreateWebsetParameters'];
+export type CreateWebsetSearchParameters = components['schemas']['CreateWebsetSearchParameters'];
+export type CustomEntity = components['schemas']['CustomEntity'];
+export type EnrichmentResult = components['schemas']['EnrichmentResult'];
+export type Entity = components['schemas']['Entity'];
+export type Event = components['schemas']['Event'];
+export type EventType = components['schemas']['EventType'];
+export type GetWebsetResponse = components['schemas']['GetWebsetResponse'];
+export type Import = components['schemas']['Import'];
+export type ListEventsResponse = components['schemas']['ListEventsResponse'];
+export type ListImportsResponse = components['schemas']['ListImportsResponse'];
+export type ListMonitorRunsResponse = components['schemas']['ListMonitorRunsResponse'];
+export type ListMonitorsResponse = components['schemas']['ListMonitorsResponse'];
+export type ListWebhookAttemptsResponse = components['schemas']['ListWebhookAttemptsResponse'];
+export type ListWebhooksResponse = components['schemas']['ListWebhooksResponse'];
+export type ListWebsetItemResponse = components['schemas']['ListWebsetItemResponse'];
+export type ListWebsetsResponse = components['schemas']['ListWebsetsResponse'];
+export type Monitor = components['schemas']['Monitor'];
+export type MonitorBehavior = components['schemas']['MonitorBehavior'];
+export type MonitorCadence = components['schemas']['MonitorCadence'];
+export type MonitorRun = components['schemas']['MonitorRun'];
+export type PersonEntity = components['schemas']['PersonEntity'];
+export type ResearchPaperEntity = components['schemas']['ResearchPaperEntity'];
+export type UpdateImport = components['schemas']['UpdateImport'];
+export type UpdateMonitor = components['schemas']['UpdateMonitor'];
+export type UpdateWebhookParameters = components['schemas']['UpdateWebhookParameters'];
+export type UpdateWebsetRequest = components['schemas']['UpdateWebsetRequest'];
+export type Webhook = components['schemas']['Webhook'];
+export type WebhookAttempt = components['schemas']['WebhookAttempt'];
+export type Webset = components['schemas']['Webset'];
+export type WebsetEnrichment = components['schemas']['WebsetEnrichment'];
+export type WebsetEnrichmentFormat = components['schemas']['WebsetEnrichmentFormat'];
+export type WebsetItem = components['schemas']['WebsetItem'];
+export type WebsetItemArticleProperties = components['schemas']['WebsetItemArticleProperties'];
+export type WebsetItemCompanyProperties = components['schemas']['WebsetItemCompanyProperties'];
+export type WebsetItemCustomProperties = components['schemas']['WebsetItemCustomProperties'];
+export type WebsetItemEvaluation = components['schemas']['WebsetItemEvaluation'];
+export type WebsetItemPersonProperties = components['schemas']['WebsetItemPersonProperties'];
+export type WebsetItemResearchPaperProperties = components['schemas']['WebsetItemResearchPaperProperties'];
+export type WebsetSearch = components['schemas']['WebsetSearch'];
+export type WebsetSearchBehavior = components['schemas']['WebsetSearchBehavior'];
+export type WebsetSearchCanceledReason = components['schemas']['WebsetSearchCanceledReason'];
 export type $defs = Record<string, never>;
 export interface operations {
-  "events-list": {
-    parameters: {
-      query?: {
-        /** @description The cursor to paginate through the results */
-        cursor?: string;
-        /** @description The number of results to return */
-        limit?: number;
-        /** @description The types of events to filter by */
-        types?: EventType[];
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description List of events */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ListEventsResponse"];
-        };
-      };
-    };
-  };
-  "events-get": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the event */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Event"];
-        };
-      };
-      /** @description Event not found */
-      404: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  "imports-list": {
-    parameters: {
-      query?: {
-        /** @description The cursor to paginate through the results */
-        cursor?: string;
-        /** @description The number of results to return */
-        limit?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description List of imports */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ListImportsResponse"];
-        };
-      };
-    };
-  };
-  "imports-create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateImportParameters"];
-      };
-    };
-    responses: {
-      /** @description Import created successfully */
-      201: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CreateImportResponse"];
-        };
-      };
-    };
-  };
-  "imports-get": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Import */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Import details */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Import"];
-        };
-      };
-    };
-  };
-  "imports-delete": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Import */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Import deleted successfully */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Import"];
-        };
-      };
-    };
-  };
-  "imports-update": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Import */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateImport"];
-      };
-    };
-    responses: {
-      /** @description Import updated successfully */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Import"];
-        };
-      };
-    };
-  };
-  "monitors-list": {
-    parameters: {
-      query?: {
-        /** @description The cursor to paginate through the results */
-        cursor?: string;
-        /** @description The number of results to return */
-        limit?: number;
-        /** @description The id of the Webset to list monitors for */
-        websetId?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description List of monitors */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ListMonitorsResponse"];
-        };
-      };
-    };
-  };
-  "monitors-create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateMonitorParameters"];
-      };
-    };
-    responses: {
-      /** @description Monitor created successfully */
-      201: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Monitor"];
-        };
-      };
-    };
-  };
-  "monitors-get": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Monitor */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Monitor details */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Monitor"];
-        };
-      };
-    };
-  };
-  "monitors-delete": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Monitor */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Monitor deleted successfully */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Monitor"];
-        };
-      };
-    };
-  };
-  "monitors-update": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Monitor */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateMonitor"];
-      };
-    };
-    responses: {
-      /** @description Monitor updated successfully */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Monitor"];
-        };
-      };
-    };
-  };
-  "monitors-runs-list": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Monitor to list runs for */
-        monitor: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description List of monitor runs */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ListMonitorRunsResponse"];
-        };
-      };
-    };
-  };
-  "monitors-runs-get": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        /** @description The id of the Monitor to get the run for */
-        monitor: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Monitor run details */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["MonitorRun"];
-        };
-      };
-    };
-  };
-  "webhooks-list": {
-    parameters: {
-      query?: {
-        /** @description The cursor to paginate through the results */
-        cursor?: string;
-        /** @description The number of results to return */
-        limit?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description List of webhooks */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ListWebhooksResponse"];
-        };
-      };
-    };
-  };
-  "webhooks-create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateWebhookParameters"];
-      };
-    };
-    responses: {
-      /** @description Webhook */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Webhook"];
-        };
-      };
-    };
-  };
-  "webhooks-get": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the webhook */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Webhook */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Webhook"];
-        };
-      };
-      /** @description Webhook not found */
-      404: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  "webhooks-delete": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the webhook */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Webhook */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Webhook"];
-        };
-      };
-      /** @description Webhook not found */
-      404: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  "webhooks-update": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the webhook */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateWebhookParameters"];
-      };
-    };
-    responses: {
-      /** @description Webhook */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Webhook"];
-        };
-      };
-      /** @description Webhook not found */
-      404: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  "webhooks-attempts-list": {
-    parameters: {
-      query?: {
-        /** @description The cursor to paginate through the results */
-        cursor?: string;
-        /** @description The type of event to filter by */
-        eventType?: EventType;
-        /** @description The number of results to return */
-        limit?: number;
-      };
-      header?: never;
-      path: {
-        /** @description The ID of the webhook */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description List of webhook attempts */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ListWebhookAttemptsResponse"];
-        };
-      };
-    };
-  };
-  "websets-list": {
-    parameters: {
-      query?: {
-        /** @description The cursor to paginate through the results */
-        cursor?: string;
-        /** @description The number of Websets to return */
-        limit?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description List of Websets */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ListWebsetsResponse"];
-        };
-      };
-    };
-  };
-  "websets-create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateWebsetParameters"];
-      };
-    };
-    responses: {
-      /** @description Webset created */
-      201: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Webset"];
-        };
-      };
-      /** @description Webset with this externalId already exists */
-      409: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  "websets-get": {
-    parameters: {
-      query?: {
-        /** @description Expand the response with the specified resources */
-        expand?: PathsV0WebsetsIdGetParametersQueryExpand[];
-      };
-      header?: never;
-      path: {
-        /** @description The id or externalId of the Webset. */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Webset */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["GetWebsetResponse"];
-        };
-      };
-      /** @description Webset not found */
-      404: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  "websets-update": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id or externalId of the Webset */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateWebsetRequest"];
-      };
-    };
-    responses: {
-      /** @description Webset updated */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Webset"];
-        };
-      };
-      /** @description Webset not found */
-      404: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  "websets-delete": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id or externalId of the Webset */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Webset deleted */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Webset"];
-        };
-      };
-      /** @description Webset not found */
-      404: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  "websets-cancel": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id or externalId of the Webset */
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Webset canceled */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["Webset"];
-        };
-      };
-    };
-  };
-  "websets-enrichments-create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id or externalId of the Webset */
-        webset: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateEnrichmentParameters"];
-      };
-    };
-    responses: {
-      /** @description Enrichment created */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["WebsetEnrichment"];
-        };
-      };
-    };
-  };
-  "websets-enrichments-get": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Enrichment */
-        id: string;
-        /** @description The id or externalId of the Webset */
-        webset: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Enrichment */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["WebsetEnrichment"];
-        };
-      };
-    };
-  };
-  "websets-enrichments-delete": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Enrichment */
-        id: string;
-        /** @description The id or externalId of the Webset */
-        webset: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Enrichment deleted */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["WebsetEnrichment"];
-        };
-      };
-    };
-  };
-  "websets-enrichments-cancel": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Enrichment */
-        id: string;
-        /** @description The id or externalId of the Webset */
-        webset: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Enrichment cancelled */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["WebsetEnrichment"];
-        };
-      };
-    };
-  };
-  "websets-items-list": {
-    parameters: {
-      query?: {
-        /** @description The cursor to paginate through the results */
-        cursor?: string;
-        /** @description The number of results to return */
-        limit?: number;
-      };
-      header?: never;
-      path: {
-        /** @description The id or externalId of the Webset */
-        webset: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Webset Items */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ListWebsetItemResponse"];
-        };
-      };
-    };
-  };
-  "websets-items-get": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Webset item */
-        id: string;
-        /** @description The id or externalId of the Webset */
-        webset: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Webset Item */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["WebsetItem"];
-        };
-      };
-    };
-  };
-  "websets-items-delete": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Webset item */
-        id: string;
-        /** @description The id or externalId of the Webset */
-        webset: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Webset Item deleted */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["WebsetItem"];
-        };
-      };
-    };
-  };
-  "websets-searches-create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Webset */
-        webset: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateWebsetSearchParameters"];
-      };
-    };
-    responses: {
-      /** @description Webset Search created */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["WebsetSearch"];
-        };
-      };
-    };
-  };
-  "websets-searches-get": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Search */
-        id: string;
-        /** @description The id of the Webset */
-        webset: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  "websets-searches-cancel": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description The id of the Search */
-        id: string;
-        /** @description The id of the Webset */
-        webset: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Search canceled */
-      200: {
-        headers: {
-          /**
-           * @description Unique identifier for the request.
-           * @example req_N6SsgoiaOQOPqsYKKiw5
-           */
-          "X-Request-Id": string;
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["WebsetSearch"];
-        };
-      };
-    };
-  };
+    "events-list": {
+        parameters: {
+            query?: {
+                /** @description The cursor to paginate through the results */
+                cursor?: string;
+                /** @description The number of results to return */
+                limit?: number;
+                /** @description The types of events to filter by */
+                types?: PathsV0EventsGetParametersQueryTypes[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of events */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListEventsResponse"];
+                };
+            };
+        };
+    };
+    "events-get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the event */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Event"];
+                };
+            };
+            /** @description Event not found */
+            404: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "imports-list": {
+        parameters: {
+            query?: {
+                /** @description The cursor to paginate through the results */
+                cursor?: string;
+                /** @description The number of results to return */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of imports */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListImportsResponse"];
+                };
+            };
+        };
+    };
+    "imports-create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateImportParameters"];
+            };
+        };
+        responses: {
+            /** @description Import created successfully */
+            201: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateImportResponse"];
+                };
+            };
+        };
+    };
+    "imports-get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Import */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Import details */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Import"];
+                };
+            };
+        };
+    };
+    "imports-delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Import */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Import deleted successfully */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Import"];
+                };
+            };
+        };
+    };
+    "imports-update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Import */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateImport"];
+            };
+        };
+        responses: {
+            /** @description Import updated successfully */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Import"];
+                };
+            };
+        };
+    };
+    "monitors-list": {
+        parameters: {
+            query?: {
+                /** @description The cursor to paginate through the results */
+                cursor?: string;
+                /** @description The number of results to return */
+                limit?: number;
+                /** @description The id of the Webset to list monitors for */
+                websetId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of monitors */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListMonitorsResponse"];
+                };
+            };
+        };
+    };
+    "monitors-create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMonitorParameters"];
+            };
+        };
+        responses: {
+            /** @description Monitor created successfully */
+            201: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Monitor"];
+                };
+            };
+        };
+    };
+    "monitors-get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Monitor */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Monitor details */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Monitor"];
+                };
+            };
+        };
+    };
+    "monitors-delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Monitor */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Monitor deleted successfully */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Monitor"];
+                };
+            };
+        };
+    };
+    "monitors-update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Monitor */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMonitor"];
+            };
+        };
+        responses: {
+            /** @description Monitor updated successfully */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Monitor"];
+                };
+            };
+        };
+    };
+    "monitors-runs-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Monitor to list runs for */
+                monitor: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of monitor runs */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListMonitorRunsResponse"];
+                };
+            };
+        };
+    };
+    "monitors-runs-get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                /** @description The id of the Monitor to get the run for */
+                monitor: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Monitor run details */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonitorRun"];
+                };
+            };
+        };
+    };
+    "webhooks-list": {
+        parameters: {
+            query?: {
+                /** @description The cursor to paginate through the results */
+                cursor?: string;
+                /** @description The number of results to return */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of webhooks */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListWebhooksResponse"];
+                };
+            };
+        };
+    };
+    "webhooks-create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWebhookParameters"];
+            };
+        };
+        responses: {
+            /** @description Webhook */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webhook"];
+                };
+            };
+        };
+    };
+    "webhooks-get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the webhook */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Webhook */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webhook"];
+                };
+            };
+            /** @description Webhook not found */
+            404: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "webhooks-delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the webhook */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Webhook */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webhook"];
+                };
+            };
+            /** @description Webhook not found */
+            404: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "webhooks-update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the webhook */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWebhookParameters"];
+            };
+        };
+        responses: {
+            /** @description Webhook */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webhook"];
+                };
+            };
+            /** @description Webhook not found */
+            404: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "webhooks-attempts-list": {
+        parameters: {
+            query?: {
+                /** @description The cursor to paginate through the results */
+                cursor?: string;
+                /** @description The type of event to filter by */
+                eventType?: PathsV0WebhooksIdAttemptsGetParametersQueryEventType;
+                /** @description The number of results to return */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                /** @description The ID of the webhook */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of webhook attempts */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListWebhookAttemptsResponse"];
+                };
+            };
+        };
+    };
+    "websets-list": {
+        parameters: {
+            query?: {
+                /** @description The cursor to paginate through the results */
+                cursor?: string;
+                /** @description The number of Websets to return */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of Websets */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListWebsetsResponse"];
+                };
+            };
+        };
+    };
+    "websets-create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWebsetParameters"];
+            };
+        };
+        responses: {
+            /** @description Webset created */
+            201: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webset"];
+                };
+            };
+            /** @description Webset with this externalId already exists */
+            409: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "websets-get": {
+        parameters: {
+            query?: {
+                /** @description Expand the response with the specified resources */
+                expand?: PathsV0WebsetsIdGetParametersQueryExpand[];
+            };
+            header?: never;
+            path: {
+                /** @description The id or externalId of the Webset. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Webset */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetWebsetResponse"];
+                };
+            };
+            /** @description Webset not found */
+            404: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "websets-update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id or externalId of the Webset */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWebsetRequest"];
+            };
+        };
+        responses: {
+            /** @description Webset updated */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webset"];
+                };
+            };
+            /** @description Webset not found */
+            404: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "websets-delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id or externalId of the Webset */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Webset deleted */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webset"];
+                };
+            };
+            /** @description Webset not found */
+            404: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "websets-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id or externalId of the Webset */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Webset canceled */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webset"];
+                };
+            };
+        };
+    };
+    "websets-enrichments-create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id or externalId of the Webset */
+                webset: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEnrichmentParameters"];
+            };
+        };
+        responses: {
+            /** @description Enrichment created */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebsetEnrichment"];
+                };
+            };
+        };
+    };
+    "websets-enrichments-get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Enrichment */
+                id: string;
+                /** @description The id or externalId of the Webset */
+                webset: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enrichment */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebsetEnrichment"];
+                };
+            };
+        };
+    };
+    "websets-enrichments-delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Enrichment */
+                id: string;
+                /** @description The id or externalId of the Webset */
+                webset: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enrichment deleted */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebsetEnrichment"];
+                };
+            };
+        };
+    };
+    "websets-enrichments-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Enrichment */
+                id: string;
+                /** @description The id or externalId of the Webset */
+                webset: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enrichment cancelled */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebsetEnrichment"];
+                };
+            };
+        };
+    };
+    "websets-items-list": {
+        parameters: {
+            query?: {
+                /** @description The cursor to paginate through the results */
+                cursor?: string;
+                /** @description The number of results to return */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                /** @description The id or externalId of the Webset */
+                webset: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Webset Items */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListWebsetItemResponse"];
+                };
+            };
+        };
+    };
+    "websets-items-get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Webset item */
+                id: string;
+                /** @description The id or externalId of the Webset */
+                webset: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Webset Item */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebsetItem"];
+                };
+            };
+        };
+    };
+    "websets-items-delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Webset item */
+                id: string;
+                /** @description The id or externalId of the Webset */
+                webset: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Webset Item deleted */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebsetItem"];
+                };
+            };
+        };
+    };
+    "websets-searches-create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Webset */
+                webset: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWebsetSearchParameters"];
+            };
+        };
+        responses: {
+            /** @description Webset Search created */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebsetSearch"];
+                };
+            };
+        };
+    };
+    "websets-searches-get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Search */
+                id: string;
+                /** @description The id of the Webset */
+                webset: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "websets-searches-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id of the Search */
+                id: string;
+                /** @description The id of the Webset */
+                webset: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Search canceled */
+            200: {
+                headers: {
+                    /**
+                     * @description Unique identifier for the request.
+                     * @example req_N6SsgoiaOQOPqsYKKiw5
+                     */
+                    "X-Request-Id": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebsetSearch"];
+                };
+            };
+        };
+    };
+}
+export enum PathsV0EventsGetParametersQueryTypes {
+    webset_created = "webset.created",
+    webset_deleted = "webset.deleted",
+    webset_paused = "webset.paused",
+    webset_idle = "webset.idle",
+    webset_search_created = "webset.search.created",
+    webset_search_canceled = "webset.search.canceled",
+    webset_search_completed = "webset.search.completed",
+    webset_search_updated = "webset.search.updated",
+    import_created = "import.created",
+    import_completed = "import.completed",
+    import_processing = "import.processing",
+    webset_item_created = "webset.item.created",
+    webset_item_enriched = "webset.item.enriched",
+    webset_export_created = "webset.export.created",
+    webset_export_completed = "webset.export.completed"
+}
+export enum PathsV0WebhooksIdAttemptsGetParametersQueryEventType {
+    webset_created = "webset.created",
+    webset_deleted = "webset.deleted",
+    webset_paused = "webset.paused",
+    webset_idle = "webset.idle",
+    webset_search_created = "webset.search.created",
+    webset_search_canceled = "webset.search.canceled",
+    webset_search_completed = "webset.search.completed",
+    webset_search_updated = "webset.search.updated",
+    import_created = "import.created",
+    import_completed = "import.completed",
+    import_processing = "import.processing",
+    webset_item_created = "webset.item.created",
+    webset_item_enriched = "webset.item.enriched",
+    webset_export_created = "webset.export.created",
+    webset_export_completed = "webset.export.completed"
 }
 export enum PathsV0WebsetsIdGetParametersQueryExpand {
-  items = "items",
+    items = "items"
 }
 export enum CreateEnrichmentParametersFormat {
-  text = "text",
-  date = "date",
-  number = "number",
-  options = "options",
-  email = "email",
-  phone = "phone",
+    text = "text",
+    date = "date",
+    number = "number",
+    options = "options",
+    email = "email",
+    phone = "phone"
 }
 export enum CreateImportParametersFormat {
-  csv = "csv",
+    csv = "csv"
 }
 export enum CreateImportResponseFailedReason {
-  invalid_format = "invalid_format",
-  invalid_file_content = "invalid_file_content",
-  missing_identifier = "missing_identifier",
+    invalid_format = "invalid_format",
+    invalid_file_content = "invalid_file_content",
+    missing_identifier = "missing_identifier"
 }
 export enum CreateImportResponseFormat {
-  csv = "csv",
-  webset = "webset",
+    csv = "csv",
+    webset = "webset"
 }
 export enum CreateImportResponseObject {
-  import = "import",
+    import = "import"
 }
 export enum CreateImportResponseStatus {
-  pending = "pending",
-  processing = "processing",
-  completed = "completed",
-  failed = "failed",
+    pending = "pending",
+    processing = "processing",
+    completed = "completed",
+    failed = "failed"
 }
 export enum CreateMonitorParametersBehaviorConfigBehavior {
-  override = "override",
-  append = "append",
+    override = "override",
+    append = "append"
 }
 export enum CreateWebsetParametersImportSource {
-  import = "import",
-  webset = "webset",
+    import = "import",
+    webset = "webset"
 }
 export enum CreateWebsetParametersSearchExcludeSource {
-  import = "import",
-  webset = "webset",
+    import = "import",
+    webset = "webset"
 }
 export enum CreateWebsetSearchParametersExcludeSource {
-  import = "import",
-  webset = "webset",
+    import = "import",
+    webset = "webset"
 }
 export enum EventType {
-  webset_created = "webset.created",
-  webset_deleted = "webset.deleted",
-  webset_paused = "webset.paused",
-  webset_idle = "webset.idle",
-  webset_search_created = "webset.search.created",
-  webset_search_canceled = "webset.search.canceled",
-  webset_search_completed = "webset.search.completed",
-  webset_search_updated = "webset.search.updated",
-  import_created = "import.created",
-  import_completed = "import.completed",
-  import_processing = "import.processing",
-  webset_item_created = "webset.item.created",
-  webset_item_enriched = "webset.item.enriched",
-  webset_export_created = "webset.export.created",
-  webset_export_completed = "webset.export.completed",
+    webset_created = "webset.created",
+    webset_deleted = "webset.deleted",
+    webset_paused = "webset.paused",
+    webset_idle = "webset.idle",
+    webset_search_created = "webset.search.created",
+    webset_search_canceled = "webset.search.canceled",
+    webset_search_completed = "webset.search.completed",
+    webset_search_updated = "webset.search.updated",
+    import_created = "import.created",
+    import_completed = "import.completed",
+    import_processing = "import.processing",
+    webset_item_created = "webset.item.created",
+    webset_item_enriched = "webset.item.enriched",
+    webset_export_created = "webset.export.created",
+    webset_export_completed = "webset.export.completed"
 }
 export enum ImportFailedReason {
-  invalid_format = "invalid_format",
-  invalid_file_content = "invalid_file_content",
-  missing_identifier = "missing_identifier",
+    invalid_format = "invalid_format",
+    invalid_file_content = "invalid_file_content",
+    missing_identifier = "missing_identifier"
 }
 export enum ImportFormat {
-  csv = "csv",
-  webset = "webset",
+    csv = "csv",
+    webset = "webset"
 }
 export enum ImportObject {
-  import = "import",
+    import = "import"
 }
 export enum ImportStatus {
-  pending = "pending",
-  processing = "processing",
-  completed = "completed",
-  failed = "failed",
-}
-export enum MonitorObject {
-  monitor = "monitor",
-}
-export enum MonitorStatus {
-  enabled = "enabled",
-  disabled = "disabled",
+    pending = "pending",
+    processing = "processing",
+    completed = "completed",
+    failed = "failed"
 }
 export enum MonitorBehaviorConfigBehavior {
-  override = "override",
-  append = "append",
+    override = "override",
+    append = "append"
+}
+export enum MonitorObject {
+    monitor = "monitor"
+}
+export enum MonitorStatus {
+    enabled = "enabled",
+    disabled = "disabled"
+}
+export enum MonitorBehaviorConfigBehavior {
+    override = "override",
+    append = "append"
 }
 export enum MonitorRunObject {
-  monitor_run = "monitor_run",
+    monitor_run = "monitor_run"
 }
 export enum MonitorRunStatus {
-  created = "created",
-  running = "running",
-  completed = "completed",
-  canceled = "canceled",
+    created = "created",
+    running = "running",
+    completed = "completed",
+    canceled = "canceled"
 }
 export enum MonitorRunType {
-  search = "search",
-  refresh = "refresh",
+    search = "search",
+    refresh = "refresh"
 }
 export enum UpdateMonitorStatus {
-  enabled = "enabled",
-  disabled = "disabled",
+    enabled = "enabled",
+    disabled = "disabled"
 }
 export enum WebhookStatus {
-  active = "active",
-  inactive = "inactive",
+    active = "active",
+    inactive = "inactive"
 }
 export enum WebhookAttemptEventType {
-  webset_created = "webset.created",
-  webset_deleted = "webset.deleted",
-  webset_paused = "webset.paused",
-  webset_idle = "webset.idle",
-  webset_search_created = "webset.search.created",
-  webset_search_canceled = "webset.search.canceled",
-  webset_search_completed = "webset.search.completed",
-  webset_search_updated = "webset.search.updated",
-  import_created = "import.created",
-  import_completed = "import.completed",
-  import_processing = "import.processing",
-  webset_item_created = "webset.item.created",
-  webset_item_enriched = "webset.item.enriched",
-  webset_export_created = "webset.export.created",
-  webset_export_completed = "webset.export.completed",
-}
-export enum WebsetImportsFormat {
-  csv = "csv",
-  webset = "webset",
-}
-export enum WebsetImportsFailedReason {
-  file_not_uploaded = "file_not_uploaded",
-  invalid_format = "invalid_format",
-  invalid_file_content = "invalid_file_content",
-  missing_identifier = "missing_identifier",
-}
-export enum WebsetImportsStatus {
-  created = "created",
-  failed = "failed",
-  processing = "processing",
-  scheduled = "scheduled",
-  completed = "completed",
+    webset_created = "webset.created",
+    webset_deleted = "webset.deleted",
+    webset_paused = "webset.paused",
+    webset_idle = "webset.idle",
+    webset_search_created = "webset.search.created",
+    webset_search_canceled = "webset.search.canceled",
+    webset_search_completed = "webset.search.completed",
+    webset_search_updated = "webset.search.updated",
+    import_created = "import.created",
+    import_completed = "import.completed",
+    import_processing = "import.processing",
+    webset_item_created = "webset.item.created",
+    webset_item_enriched = "webset.item.enriched",
+    webset_export_created = "webset.export.created",
+    webset_export_completed = "webset.export.completed"
 }
 export enum WebsetStatus {
-  idle = "idle",
-  running = "running",
-  paused = "paused",
+    idle = "idle",
+    running = "running",
+    paused = "paused"
 }
 export enum WebsetEnrichmentStatus {
-  pending = "pending",
-  canceled = "canceled",
-  completed = "completed",
+    pending = "pending",
+    canceled = "canceled",
+    completed = "completed"
 }
 export enum WebsetEnrichmentFormat {
-  text = "text",
-  date = "date",
-  number = "number",
-  options = "options",
-  email = "email",
-  phone = "phone",
+    text = "text",
+    date = "date",
+    number = "number",
+    options = "options",
+    email = "email",
+    phone = "phone"
 }
 export enum WebsetItemSource {
-  search = "search",
-  import = "import",
+    search = "search",
+    import = "import"
 }
 export enum WebsetItemEvaluationSatisfied {
-  yes = "yes",
-  no = "no",
-  unclear = "unclear",
+    yes = "yes",
+    no = "no",
+    unclear = "unclear"
 }
 export enum WebsetSearchExcludeSource {
-  import = "import",
-  webset = "webset",
+    import = "import",
+    webset = "webset"
 }
 export enum WebsetSearchStatus {
-  created = "created",
-  running = "running",
-  completed = "completed",
-  canceled = "canceled",
+    created = "created",
+    running = "running",
+    completed = "completed",
+    canceled = "canceled"
 }
 export enum WebsetSearchBehavior {
-  override = "override",
-  append = "append",
+    override = "override",
+    append = "append"
 }
 export enum WebsetSearchCanceledReason {
-  webset_deleted = "webset_deleted",
-  webset_canceled = "webset_canceled",
+    webset_deleted = "webset_deleted",
+    webset_canceled = "webset_canceled"
 }
