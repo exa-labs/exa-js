@@ -249,4 +249,99 @@ describe("Search API", () => {
     });
     expect(result).toEqual(mockResponse);
   });
+
+  it("should handle includeUrls and excludeUrls filtering", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://example.com/article",
+          id: "test-id",
+        },
+      ],
+      requestId: "req-url-filter",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("tech news", {
+      includeUrls: ["https://techcrunch.com/startups", "https://arstechnica.com/tech-policy"],
+      excludeUrls: ["https://example.com/sports", "https://example.com/entertainment"],
+      numResults: 5,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "tech news",
+      includeUrls: ["https://techcrunch.com/startups", "https://arstechnica.com/tech-policy"],
+      excludeUrls: ["https://example.com/sports", "https://example.com/entertainment"],
+      numResults: 5,
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should handle combined domain and URL filtering", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://nytimes.com/tech/article",
+          id: "test-id",
+        },
+      ],
+      requestId: "req-combined-filter",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("artificial intelligence", {
+      includeDomains: ["nytimes.com", "wsj.com"],
+      includeUrls: ["https://techcrunch.com/ai"],
+      excludeUrls: ["https://nytimes.com/sports"],
+      numResults: 3,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "artificial intelligence",
+      includeDomains: ["nytimes.com", "wsj.com"],
+      includeUrls: ["https://techcrunch.com/ai"],
+      excludeUrls: ["https://nytimes.com/sports"],
+      numResults: 3,
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should handle URL filtering in findSimilar", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Similar Result",
+          url: "https://similar.com/article",
+          id: "similar-id",
+        },
+      ],
+      requestId: "req-similar-url-filter",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.findSimilar("https://example.com", {
+      includeUrls: ["https://similar.com/tech"],
+      excludeUrls: ["https://similar.com/sports"],
+      numResults: 4,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/findSimilar", "POST", {
+      url: "https://example.com",
+      includeUrls: ["https://similar.com/tech"],
+      excludeUrls: ["https://similar.com/sports"],
+      numResults: 4,
+    });
+    expect(result).toEqual(mockResponse);
+  });
 }); 

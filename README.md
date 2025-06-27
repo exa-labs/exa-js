@@ -38,6 +38,17 @@ const domainFilteredResults = await exa.search("This is a Exa query:", {
   includeDomains: ["www.cnn.com", "www.nytimes.com"],
 });
 
+// Search with URL filters
+const urlFilteredResults = await exa.search("This is a Exa query:", {
+  includeUrls: ["https://www.cnn.com/tech", "https://www.nytimes.com/section/technology"],
+});
+
+// Search with both domain and URL filters
+const combinedFilteredResults = await exa.search("This is a Exa query:", {
+  includeDomains: ["www.cnn.com"],
+  excludeUrls: ["https://www.cnn.com/sports", "https://www.cnn.com/entertainment"],
+});
+
 // Search and get text contents
 const searchAndTextResults = await exa.searchAndContents(
   "This is a Exa query:",
@@ -118,6 +129,8 @@ Performs a search on the Exa system with the given parameters.
 const response = await exa.search("funny article about tech culture", {
   numResults: 5,
   includeDomains: ["nytimes.com", "wsj.com"],
+  includeUrls: ["https://techcrunch.com/startups", "https://arstechnica.com/tech-policy"],
+  excludeUrls: ["https://nytimes.com/sports"],
   startPublishedDate: "2023-06-12",
 });
 ```
