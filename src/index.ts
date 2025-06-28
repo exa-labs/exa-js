@@ -17,6 +17,8 @@ const isBeta = false;
  * @property {number} [numResults] - Number of search results to return. Default 10. Max 10 for basic plans.
  * @property {string[]} [includeDomains] - List of domains to include in the search.
  * @property {string[]} [excludeDomains] - List of domains to exclude in the search.
+ * @property {string[]} [includeUrls] - List of URLs to include in the search.
+ * @property {string[]} [excludeUrls] - List of URLs to exclude in the search.
  * @property {string} [startCrawlDate] - Start date for results based on crawl date.
  * @property {string} [endCrawlDate] - End date for results based on crawl date.
  * @property {string} [startPublishedDate] - Start date for results based on published date.
@@ -30,6 +32,8 @@ export type BaseSearchOptions = {
   numResults?: number;
   includeDomains?: string[];
   excludeDomains?: string[];
+  includeUrls?: string[];
+  excludeUrls?: string[];
   startCrawlDate?: string;
   endCrawlDate?: string;
   startPublishedDate?: string;
