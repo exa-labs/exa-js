@@ -3213,10 +3213,6 @@ export enum ImportStatus {
   completed = "completed",
   failed = "failed",
 }
-export enum MonitorBehaviorConfigBehavior {
-  override = "override",
-  append = "append",
-}
 export enum MonitorObject {
   monitor = "monitor",
 }
