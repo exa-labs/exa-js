@@ -749,6 +749,8 @@ export interface components {
          *
          *     Any URLs provided will be crawled and used as additional context for the search. */
         query: string;
+        /** @description Whether to compute recall metrics for the search */
+        recall?: boolean;
       };
     };
     CreateWebsetSearchParameters: {
@@ -789,12 +791,11 @@ export interface components {
        *
        *     Any URLs provided will be crawled and used as additional context for the search. */
       query: string;
+      /** @description Whether to compute recall metrics for the search */
+      recall?: boolean;
     };
     /** Custom */
     CustomEntity: {
-      /** @description When you decide to use a custom entity, this is the description of the entity.
-       *
-       *     The entity represents what type of results the  will return. For example, if you want results to be Job Postings, you might use "Job Postings" as the entity description. */
       description: string;
       /**
        * @default custom
@@ -824,6 +825,11 @@ export interface components {
       }[];
       /** @description The result of the enrichment. */
       result: string[] | null;
+      /**
+       * @description The status of the enrichment result.
+       * @enum {string}
+       */
+      status: EnrichmentResultStatus;
     };
     Entity:
       | components["schemas"]["CompanyEntity"]
@@ -1034,6 +1040,7 @@ export interface components {
           type: "webset.search.completed";
         };
     /** @enum {string} */
+    EventType: EventType;
     GetWebsetResponse: components["schemas"]["Webset"] & {
       /** @description When expand query parameter contains `items`, this will contain the items in the webset */
       items?: components["schemas"]["WebsetItem"][];
@@ -1816,13 +1823,37 @@ export interface components {
       object: "webset_search";
       /** @description The progress of the search */
       progress: {
+        /** @description The number of results analyzed so far */
+        analyzed: number;
         /** @description The completion percentage of the search */
         completion: number;
         /** @description The number of results found so far */
         found: number;
+        /** @description The estimated time remaining in seconds, null if unknown */
+        timeLeft: number | null;
       };
       /** @description The query used to create the search. */
       query: string;
+      /** @description Recall metrics for the search, null if not yet computed or requested. */
+      recall: {
+        expected: {
+          bounds: {
+            /** @description The maximum estimated total number of potential matches */
+            max: number;
+            /** @description The minimum estimated total number of potential matches */
+            min: number;
+          };
+          /**
+           * @description The confidence in the estimate
+           * @enum {string}
+           */
+          confidence: WebsetSearchRecallExpectedConfidence;
+          /** @description The estimated total number of potential matches */
+          total: number;
+        };
+        /** @description The reasoning for the estimate */
+        reasoning: string;
+      } | null;
       /**
        * WebsetSearchStatus
        * @description The status of the search
@@ -1917,6 +1948,10 @@ export interface operations {
   "events-list": {
     parameters: {
       query?: {
+        /** @description Filter events created after or at this timestamp (inclusive). Must be a valid ISO 8601 datetime string. All times are in UTC. */
+        createdAfter?: string;
+        /** @description Filter events created before or at this timestamp (inclusive). Must be a valid ISO 8601 datetime string. All times are in UTC. */
+        createdBefore?: string;
         /** @description The cursor to paginate through the results */
         cursor?: string;
         /** @description The number of results to return */
@@ -3043,6 +3078,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
+      /** @description Search retrieved */
       200: {
         headers: {
           /**
@@ -3052,7 +3088,9 @@ export interface operations {
           "X-Request-Id": string;
           [name: string]: unknown;
         };
-        content?: never;
+        content: {
+          "application/json": components["schemas"]["WebsetSearch"];
+        };
       };
     };
   };
@@ -3135,6 +3173,11 @@ export enum CreateWebsetSearchParametersExcludeSource {
   import = "import",
   webset = "webset",
 }
+export enum EnrichmentResultStatus {
+  pending = "pending",
+  completed = "completed",
+  canceled = "canceled",
+}
 export enum EventType {
   webset_created = "webset.created",
   webset_deleted = "webset.deleted",
@@ -3169,6 +3212,10 @@ export enum ImportStatus {
   processing = "processing",
   completed = "completed",
   failed = "failed",
+}
+export enum MonitorBehaviorConfigBehavior {
+  override = "override",
+  append = "append",
 }
 export enum MonitorObject {
   monitor = "monitor",
@@ -3219,23 +3266,6 @@ export enum WebhookAttemptEventType {
   webset_export_created = "webset.export.created",
   webset_export_completed = "webset.export.completed",
 }
-export enum WebsetImportsFormat {
-  csv = "csv",
-  webset = "webset",
-}
-export enum WebsetImportsFailedReason {
-  file_not_uploaded = "file_not_uploaded",
-  invalid_format = "invalid_format",
-  invalid_file_content = "invalid_file_content",
-  missing_identifier = "missing_identifier",
-}
-export enum WebsetImportsStatus {
-  created = "created",
-  failed = "failed",
-  processing = "processing",
-  scheduled = "scheduled",
-  completed = "completed",
-}
 export enum WebsetStatus {
   idle = "idle",
   running = "running",
@@ -3266,6 +3296,11 @@ export enum WebsetItemEvaluationSatisfied {
 export enum WebsetSearchExcludeSource {
   import = "import",
   webset = "webset",
+}
+export enum WebsetSearchRecallExpectedConfidence {
+  high = "high",
+  medium = "medium",
+  low = "low",
 }
 export enum WebsetSearchStatus {
   created = "created",
