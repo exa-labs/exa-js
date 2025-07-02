@@ -9,7 +9,10 @@ import {
   JSONSchema,
   ResearchCreateTaskRequest,
   ResearchCreateTaskResponse,
+  ResearchCreateTaskParamsTyped,
 } from "../index";
+import { ZodSchema } from "zod";
+import { isZodSchema, zodToJsonSchema } from "../zod-utils";
 import { ResearchBaseClient } from "./base";
 
 /**
@@ -19,6 +22,13 @@ export class ResearchClient extends ResearchBaseClient {
   constructor(client: Exa) {
     super(client);
   }
+
+  /**
+   * Create a new research task with Zod schema for strongly typed output
+   */
+  async createTask<T>(
+    params: ResearchCreateTaskParamsTyped<ZodSchema<T>>
+  ): Promise<ResearchCreateTaskResponse>;
 
   /**
    * Create a new research task.
@@ -34,15 +44,28 @@ export class ResearchClient extends ResearchBaseClient {
     instructions: string;
     model?: "exa-research" | "exa-research-pro";
     output?: { inferSchema?: boolean; schema?: JSONSchema };
+  }): Promise<ResearchCreateTaskResponse>;
+
+  async createTask<T>(params: {
+    instructions: string;
+    model?: "exa-research" | "exa-research-pro";
+    output?: { inferSchema?: boolean; schema?: JSONSchema | ZodSchema<T> };
   }): Promise<ResearchCreateTaskResponse> {
     // Ensure we have a model (default to exa_research)
     const { instructions, model, output } = params;
+
+    // Convert Zod schema to JSON schema if needed
+    let schema = output?.schema;
+    if (schema && isZodSchema(schema)) {
+      schema = zodToJsonSchema(schema);
+    }
+
     const payload: ResearchCreateTaskRequest = {
       instructions,
       model: model ?? "exa-research",
       output: output
         ? {
-            schema: output.schema,
+            schema,
             inferSchema: output.inferSchema ?? true,
           }
         : { inferSchema: true },
