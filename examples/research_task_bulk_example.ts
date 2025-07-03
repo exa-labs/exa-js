@@ -1,77 +1,50 @@
 import "dotenv/config";
-import Exa, { JSONSchema } from "../src/index";
+import { Exa } from "../src/index";
+import { z } from "zod";
 
 const exa = new Exa(process.env.EXA_API_KEY);
 
+// ===============================================
+// Zod Schemas for Research Tasks
+// ===============================================
+
+const TimelineEvent = z.object({
+  decade: z.string().describe('Decade label e.g. "1850s"'),
+  notableEvents: z.string().describe("A summary of notable events."),
+});
+
+const SanFranciscoTimeline = z.object({
+  timeline: z
+    .array(TimelineEvent)
+    .describe("Timeline of San Francisco history"),
+});
+
+const NewsStory = z.object({
+  title: z.string().describe("Headline of the article."),
+  publication: z.string().describe("Name of the news outlet."),
+  date: z.string().describe("Publication date in ISO-8601 format."),
+  summary: z.string().describe("One-sentence summary of the article."),
+});
+
+const EnvironmentalNews = z.object({
+  stories: z.array(NewsStory).describe("Environmental policy news stories"),
+});
+
 type ExampleDefinition = {
   instructions: string;
-  schema: JSONSchema;
+  schema: z.ZodSchema<any>;
 };
 
 const examples: ExampleDefinition[] = [
   {
     instructions:
       "Summarize the history of San Francisco highlighting one or two major events for each decade from 1850 to 1950",
-    schema: {
-      type: "object",
-      required: ["timeline"],
-      properties: {
-        timeline: {
-          type: "array",
-          items: {
-            type: "object",
-            required: ["decade", "notableEvents"],
-            properties: {
-              decade: {
-                type: "string",
-                description: 'Decade label e.g. "1850s"',
-              },
-              notableEvents: {
-                type: "string",
-                description: "A summary of notable events.",
-              },
-            },
-          },
-        },
-      },
-      additionalProperties: false,
-    },
+    schema: SanFranciscoTimeline,
   },
   {
     instructions:
       "Compile three major news stories related to environmental policy from the last week. For each story, include the article title, publication name, publication date, and a one-sentence summary.",
-    schema: {
-      type: "object",
-      required: ["stories"],
-      properties: {
-        stories: {
-          type: "array",
-          items: {
-            type: "object",
-            required: ["title", "publication", "date", "summary"],
-            properties: {
-              title: {
-                type: "string",
-                description: "Headline of the article.",
-              },
-              publication: {
-                type: "string",
-                description: "Name of the news outlet.",
-              },
-              date: {
-                type: "string",
-                description: "Publication date in ISO-8601 format.",
-              },
-              summary: {
-                type: "string",
-                description: "One-sentence summary of the article.",
-              },
-            },
-          },
-        },
-      },
-      additionalProperties: false,
-    },
+    schema: EnvironmentalNews,
   },
 ];
 

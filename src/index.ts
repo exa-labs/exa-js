@@ -2,6 +2,8 @@ import fetch, { Headers } from "cross-fetch";
 import { ExaError, HttpStatusCode } from "./errors";
 import { WebsetsClient } from "./websets/client";
 import { ResearchClient } from "./research/client";
+import { ZodSchema } from "zod";
+import { isZodSchema, zodToJsonSchema } from "./zod-utils";
 
 // Use native fetch in Node.js environments
 const fetchImpl =
@@ -143,37 +145,13 @@ export type HighlightsContentsOptions = {
  */
 export type SummaryContentsOptions = {
   query?: string;
-  schema?: JSONSchema;
+  schema?: Record<string, unknown> | ZodSchema;
 };
 
 /**
- * Represents a JSON Schema definition used for structured summary output.
- * To learn more visit https://json-schema.org/overview/what-is-jsonschema.
+ * @deprecated Use Record<string, unknown> instead.
  */
-export type JSONSchema = {
-  $schema?: string;
-  title?: string;
-  description?: string;
-  type:
-    | "object"
-    | "array"
-    | "string"
-    | "number"
-    | "boolean"
-    | "null"
-    | "integer";
-  properties?: Record<string, JSONSchema>;
-  items?: JSONSchema | JSONSchema[];
-  required?: string[];
-  enum?: any[];
-  additionalProperties?: boolean | JSONSchema;
-  definitions?: Record<string, JSONSchema>;
-  patternProperties?: Record<string, JSONSchema>;
-  allOf?: JSONSchema[];
-  anyOf?: JSONSchema[];
-  oneOf?: JSONSchema[];
-  not?: JSONSchema;
-};
+export type JSONSchema = Record<string, unknown>;
 
 /**
  * Options for retrieving the context from a list of search results. The context is a string
@@ -390,6 +368,51 @@ export type AnswerStreamResponse = {
   citations?: SearchResult<{}>[];
 };
 
+// ==========================================
+// Zod-Enhanced Types
+// ==========================================
+
+/**
+ * Enhanced answer options that accepts either JSON schema or Zod schema
+ */
+export type AnswerOptionsTyped<T> = Omit<AnswerOptions, "outputSchema"> & {
+  outputSchema: T;
+};
+
+/**
+ * Enhanced answer response with strongly typed answer when using Zod
+ */
+export type AnswerResponseTyped<T> = Omit<AnswerResponse, "answer"> & {
+  answer: T;
+};
+
+/**
+ * Enhanced summary contents options that accepts either JSON schema or Zod schema
+ */
+export type SummaryContentsOptionsTyped<T> = Omit<
+  SummaryContentsOptions,
+  "schema"
+> & {
+  schema: T;
+};
+
+/**
+ * Enhanced research task output options that accepts either JSON schema or Zod schema
+ */
+export type ResearchTaskOutputTyped<T> = {
+  inferSchema?: boolean;
+  schema: T;
+};
+
+/**
+ * Enhanced research task creation params with zod schema support
+ */
+export type ResearchCreateTaskParamsTyped<T> = {
+  instructions: string;
+  model?: "exa-research" | "exa-research-pro";
+  output?: ResearchTaskOutputTyped<T>;
+};
+
 /**
  * The Exa class encapsulates the API's endpoints.
  */
@@ -442,7 +465,23 @@ export class Exa {
     }
 
     if (text !== undefined) contentsOptions.text = text;
-    if (summary !== undefined) contentsOptions.summary = summary;
+    if (summary !== undefined) {
+      // Handle zod schema conversion for summary
+      if (
+        typeof summary === "object" &&
+        summary !== null &&
+        "schema" in summary &&
+        summary.schema &&
+        isZodSchema(summary.schema)
+      ) {
+        contentsOptions.summary = {
+          ...summary,
+          schema: zodToJsonSchema(summary.schema),
+        };
+      } else {
+        contentsOptions.summary = summary;
+      }
+    }
     if (highlights !== undefined) contentsOptions.highlights = highlights;
     if (subpages !== undefined) contentsOptions.subpages = subpages;
     if (subpageTarget !== undefined)
@@ -701,6 +740,14 @@ export class Exa {
   }
 
   /**
+   * Generate an answer with Zod schema for strongly typed output
+   */
+  async answer<T>(
+    query: string,
+    options: AnswerOptionsTyped<ZodSchema<T>>
+  ): Promise<AnswerResponseTyped<T>>;
+
+  /**
    * Generate an answer to a query.
    * @param {string} query - The question or query to answer.
    * @param {AnswerOptions} [options] - Additional options for answer generation.
@@ -722,10 +769,12 @@ export class Exa {
    * }
    * ```
    */
-  async answer(
+  async answer(query: string, options?: AnswerOptions): Promise<AnswerResponse>;
+
+  async answer<T>(
     query: string,
-    options?: AnswerOptions
-  ): Promise<AnswerResponse> {
+    options?: AnswerOptions | AnswerOptionsTyped<ZodSchema<T>>
+  ): Promise<AnswerResponse | AnswerResponseTyped<T>> {
     if (options?.stream) {
       throw new ExaError(
         "For streaming responses, please use streamAnswer() instead:\n\n" +
@@ -737,17 +786,38 @@ export class Exa {
     }
 
     // For non-streaming requests, make a regular API call
+    let outputSchema = options?.outputSchema;
+
+    // Convert Zod schema to JSON schema if needed
+    if (outputSchema && isZodSchema(outputSchema)) {
+      outputSchema = zodToJsonSchema(outputSchema);
+    }
+
     const requestBody = {
       query,
       stream: false,
       text: options?.text ?? false,
       model: options?.model ?? "exa",
       systemPrompt: options?.systemPrompt,
-      outputSchema: options?.outputSchema,
+      outputSchema,
     };
 
     return await this.request("/answer", "POST", requestBody);
   }
+
+  /**
+   * Stream an answer with Zod schema for structured output (non-streaming content)
+   * Note: Structured output works only with non-streaming content, not with streaming chunks
+   */
+  streamAnswer<T>(
+    query: string,
+    options: {
+      text?: boolean;
+      model?: "exa" | "exa-pro";
+      systemPrompt?: string;
+      outputSchema: ZodSchema<T>;
+    }
+  ): AsyncGenerator<AnswerStreamChunk>;
 
   /**
    * Stream an answer as an async generator
@@ -768,7 +838,7 @@ export class Exa {
    * }
    * ```
    */
-  async *streamAnswer(
+  streamAnswer(
     query: string,
     options?: {
       text?: boolean;
@@ -776,7 +846,23 @@ export class Exa {
       systemPrompt?: string;
       outputSchema?: Record<string, unknown>;
     }
+  ): AsyncGenerator<AnswerStreamChunk>;
+
+  async *streamAnswer<T>(
+    query: string,
+    options?: {
+      text?: boolean;
+      model?: "exa" | "exa-pro";
+      systemPrompt?: string;
+      outputSchema?: Record<string, unknown> | ZodSchema<T>;
+    }
   ): AsyncGenerator<AnswerStreamChunk> {
+    // Convert Zod schema to JSON schema if needed
+    let outputSchema = options?.outputSchema;
+    if (outputSchema && isZodSchema(outputSchema)) {
+      outputSchema = zodToJsonSchema(outputSchema);
+    }
+
     // Build the POST body and fetch the streaming response.
     const body = {
       query,
@@ -784,7 +870,7 @@ export class Exa {
       stream: true,
       model: options?.model ?? "exa",
       systemPrompt: options?.systemPrompt,
-      outputSchema: options?.outputSchema,
+      outputSchema,
     };
 
     const response = await fetchImpl(this.baseURL + "/answer", {
