@@ -1,16 +1,26 @@
 /**
  * Client for managing Webset Streams
+ * NOTE: Stream functionality is currently disabled as the types are not available in the current API spec.
  */
 import { Exa } from "..";
 import { PaginationParams, WebsetsBaseClient } from "./base";
-import {
-  CreateStreamParameters,
-  ListStreamRunsResponse,
-  ListStreamsResponse,
-  Stream,
-  StreamRun,
-  UpdateStream,
-} from "./openapi";
+// Stream types are currently not available in the OpenAPI spec
+// import {
+//   CreateStreamParameters,
+//   ListStreamRunsResponse,
+//   ListStreamsResponse,
+//   Stream,
+//   StreamRun,
+//   UpdateStream,
+// } from "./openapi";
+
+// Placeholder types until Stream functionality is restored
+type CreateStreamParameters = any;
+type ListStreamRunsResponse = any;
+type ListStreamsResponse = any;
+type Stream = any;
+type StreamRun = any;
+type UpdateStream = any;
 
 /**
  * Options for listing streams
