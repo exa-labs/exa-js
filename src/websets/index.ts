@@ -72,7 +72,6 @@ export {
   ImportFormat,
   ImportObject,
   ImportStatus,
-  MonitorBehaviorConfigBehavior,
   MonitorObject,
   MonitorRunObject,
   MonitorRunStatus,
