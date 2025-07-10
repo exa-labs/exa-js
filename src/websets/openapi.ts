@@ -649,7 +649,7 @@ export interface components {
            * @default append
            * @enum {string}
            */
-          behavior: CreateMonitorParametersBehaviorConfigBehavior;
+          behavior: MonitorBehaviorConfigBehavior;
           /** @description The maximum number of results to find */
           count: number;
           /** @description The criteria to search for. By default, the criteria from the last search is used. */
@@ -3176,10 +3176,6 @@ export enum CreateImportResponseStatus {
   processing = "processing",
   completed = "completed",
   failed = "failed",
-}
-export enum CreateMonitorParametersBehaviorConfigBehavior {
-  override = "override",
-  append = "append",
 }
 export enum CreateWebsetParametersImportSource {
   import = "import",

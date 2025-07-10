@@ -5,20 +5,33 @@ import { PaginationParams, WebsetsBaseClient } from "./base";
 import { ListWebsetItemResponse, WebsetItem } from "./openapi";
 
 /**
+ * Options for listing webset items
+ */
+export interface ListWebsetItemsOptions extends PaginationParams {
+  /**
+   * The id of the source to filter items by
+   */
+  sourceId?: string;
+}
+
+/**
  * Client for managing Webset Items
  */
 export class WebsetItemsClient extends WebsetsBaseClient {
   /**
    * List all Items for a Webset
    * @param websetId The ID of the Webset
-   * @param params - Optional pagination parameters
+   * @param params - Optional pagination and filtering parameters
    * @returns A promise that resolves with the list of Items
    */
   list(
     websetId: string,
-    params?: PaginationParams
+    params?: ListWebsetItemsOptions
   ): Promise<ListWebsetItemResponse> {
-    const queryParams = this.buildPaginationParams(params);
+    const queryParams = {
+      ...this.buildPaginationParams(params),
+      sourceId: params?.sourceId,
+    };
     return this.request<ListWebsetItemResponse>(
       `/v0/websets/${websetId}/items`,
       "GET",
@@ -35,7 +48,7 @@ export class WebsetItemsClient extends WebsetsBaseClient {
    */
   async *listAll(
     websetId: string,
-    options?: PaginationParams
+    options?: ListWebsetItemsOptions
   ): AsyncGenerator<WebsetItem> {
     let cursor: string | undefined = undefined;
     const pageOptions = options ? { ...options } : {};
@@ -64,7 +77,7 @@ export class WebsetItemsClient extends WebsetsBaseClient {
    */
   async getAll(
     websetId: string,
-    options?: PaginationParams
+    options?: ListWebsetItemsOptions
   ): Promise<WebsetItem[]> {
     const items: WebsetItem[] = [];
     for await (const item of this.listAll(websetId, options)) {
