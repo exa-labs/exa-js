@@ -649,7 +649,7 @@ export interface components {
            * @default append
            * @enum {string}
            */
-          behavior: MonitorBehaviorConfigBehavior;
+          behavior: WebsetSearchBehavior;
           /** @description The maximum number of results to find */
           count: number;
           /** @description The criteria to search for. By default, the criteria from the last search is used. */
@@ -1177,7 +1177,7 @@ export interface components {
            * @default append
            * @enum {string}
            */
-          behavior: MonitorBehaviorConfigBehavior;
+          behavior: WebsetSearchBehavior;
           /** @description The maximum number of results to find */
           count: number;
           /** @description The criteria to search for. By default, the criteria from the last search is used. */
@@ -1257,7 +1257,7 @@ export interface components {
          * @default append
          * @enum {string}
          */
-        behavior: MonitorBehaviorConfigBehavior;
+        behavior: WebsetSearchBehavior;
         /** @description The maximum number of results to find */
         count: number;
         /** @description The criteria to search for. By default, the criteria from the last search is used. */
@@ -1718,10 +1718,6 @@ export interface components {
        * @enum {string}
        */
       satisfied: WebsetItemEvaluationSatisfied;
-      /** @description The source of the criterion */
-      source?: string;
-      /** @description The source type of the criterion */
-      sourceType?: string;
     };
     WebsetItemPersonProperties: {
       /** @description Short description of the relevance of the person */
@@ -3235,10 +3231,6 @@ export enum MonitorObject {
 export enum MonitorStatus {
   enabled = "enabled",
   disabled = "disabled",
-}
-export enum MonitorBehaviorConfigBehavior {
-  override = "override",
-  append = "append",
 }
 export enum MonitorRunObject {
   monitor_run = "monitor_run",
