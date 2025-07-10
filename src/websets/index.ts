@@ -99,3 +99,4 @@ export type {
   WaitUntilCompletedOptions,
 } from "./imports";
 export type { ListMonitorsOptions } from "./monitors";
+export type { ListWebsetItemsOptions } from "./items";

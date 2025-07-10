@@ -25,6 +25,10 @@ export interface ListWebhookAttemptsOptions extends PaginationParams {
    * The type of event to filter by
    */
   eventType?: EventType;
+  /**
+   * Filter attempts by their success status
+   */
+  successful?: boolean;
 }
 
 /**
@@ -135,6 +139,7 @@ export class WebsetWebhooksClient extends WebsetsBaseClient {
       cursor: options?.cursor,
       limit: options?.limit,
       eventType: options?.eventType,
+      successful: options?.successful,
     };
 
     return this.request<ListWebhookAttemptsResponse>(
