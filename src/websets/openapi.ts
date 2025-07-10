@@ -649,7 +649,7 @@ export interface components {
            * @default append
            * @enum {string}
            */
-          behavior: WebsetSearchBehavior;
+          behavior: CreateMonitorParametersBehaviorConfigBehavior;
           /** @description The maximum number of results to find */
           count: number;
           /** @description The criteria to search for. By default, the criteria from the last search is used. */
@@ -749,7 +749,8 @@ export interface components {
          *
          *     Any URLs provided will be crawled and used as additional context for the search. */
         query: string;
-        /** @description Whether to compute recall metrics for the search */
+        /** @description Whether to provide an estimate of how many total relevant results could exist for this search.
+         *     Result of the analysis will be available in the `recall` field within the search request. */
         recall?: boolean;
       };
     };
@@ -791,7 +792,8 @@ export interface components {
        *
        *     Any URLs provided will be crawled and used as additional context for the search. */
       query: string;
-      /** @description Whether to compute recall metrics for the search */
+      /** @description Whether to provide an estimate of how many total relevant results could exist for this search.
+       *     Result of the analysis will be available in the `recall` field within the search request. */
       recall?: boolean;
     };
     /** Custom */
@@ -820,7 +822,10 @@ export interface components {
         snippet: string | null;
         /** @description The title of the reference */
         title: string | null;
-        /** @description The URL of the reference */
+        /**
+         * Format: uri
+         * @description The URL of the reference
+         */
         url: string;
       }[];
       /** @description The result of the enrichment. */
@@ -1303,6 +1308,8 @@ export interface components {
        * @description When the run failed
        */
       failedAt: string | null;
+      /** @description The reason the run failed */
+      failedReason: string | null;
       /** @description The unique identifier for the Monitor Run */
       id: string;
       /** @description The monitor that the run is associated with */
@@ -1497,6 +1504,8 @@ export interface components {
       status: WebsetStatus;
       /** @description The Streams for the Webset. */
       streams: unknown[];
+      /** @description The title of the webset */
+      title: string | null;
       /**
        * Format: date-time
        * @description The date and time the webset was updated
@@ -1698,7 +1707,10 @@ export interface components {
         snippet: string | null;
         /** @description The title of the reference */
         title: string | null;
-        /** @description The URL of the reference */
+        /**
+         * Format: uri
+         * @description The URL of the reference
+         */
         url: string;
       }[];
       /**
@@ -1706,6 +1718,10 @@ export interface components {
        * @enum {string}
        */
       satisfied: WebsetItemEvaluationSatisfied;
+      /** @description The source of the criterion */
+      source?: string;
+      /** @description The source type of the criterion */
+      sourceType?: string;
     };
     WebsetItemPersonProperties: {
       /** @description Short description of the relevance of the person */
@@ -2565,6 +2581,8 @@ export interface operations {
         eventType?: EventType;
         /** @description The number of results to return */
         limit?: number;
+        /** @description Filter attempts by their success status */
+        successful?: boolean;
       };
       header?: never;
       path: {
@@ -2946,6 +2964,8 @@ export interface operations {
         cursor?: string;
         /** @description The number of results to return */
         limit?: number;
+        /** @description The id of the source */
+        sourceId?: string;
       };
       header?: never;
       path: {
@@ -3232,6 +3252,7 @@ export enum MonitorRunStatus {
   running = "running",
   completed = "completed",
   canceled = "canceled",
+  failed = "failed",
 }
 export enum MonitorRunType {
   search = "search",
