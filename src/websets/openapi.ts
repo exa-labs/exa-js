@@ -508,6 +508,28 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v0/websets/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview a webset
+     * @description Preview how a search query will be decomposed before creating a webset. This endpoint performs the same query analysis that happens during webset creation, allowing you to see the detected entity type, generated search criteria, and available enrichment columns in advance.
+     *
+     *     Use this to help users understand how their search will be interpreted before committing to a full webset creation.
+     */
+    post: operations["websets-preview"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -752,6 +774,13 @@ export interface components {
         /** @description Whether to provide an estimate of how many total relevant results could exist for this search.
          *     Result of the analysis will be available in the `recall` field within the search request. */
         recall?: boolean;
+        /** @description Limit the search to specific sources (existing imports or websets). Any results found within these sources matching the search criteria will be included in the Webset. */
+        scope?: {
+          /** @description The ID of the source to search. */
+          id: string;
+          /** @enum {string} */
+          source: ScopeSourceType;
+        }[];
       };
     };
     CreateWebsetSearchParameters: {
@@ -795,6 +824,13 @@ export interface components {
       /** @description Whether to provide an estimate of how many total relevant results could exist for this search.
        *     Result of the analysis will be available in the `recall` field within the search request. */
       recall?: boolean;
+      /** @description Limit the search to specific sources (existing imports). Any results found within these sources matching the search criteria will be included in the Webset. */
+      scope?: {
+        /** @description The ID of the source to search. */
+        id: string;
+        /** @enum {string} */
+        source: ScopeSourceType;
+      }[];
     };
     /** Custom */
     CustomEntity: {
@@ -1343,6 +1379,46 @@ export interface components {
        */
       type: "person";
     };
+    PreviewWebsetParameters: {
+      /** @description Entity used to inform the decomposition.
+       *
+       *     It is not required to provide it, we automatically detect the entity from all the information provided in the query. Only use this when you need more fine control. */
+      entity?: components["schemas"]["Entity"];
+      /** @description Natural language search query describing what you are looking for.
+       *
+       *     Be specific and descriptive about your requirements, characteristics, and any constraints that help narrow down the results. */
+      query: string;
+    };
+    PreviewWebsetResponse: {
+      /** @description Detected enrichments from the query. */
+      enrichments: {
+        /** @description Description of the enrichment. */
+        description: string;
+        /**
+         * @description Format of the enrichment.
+         * @enum {string}
+         */
+        format: PreviewWebsetResponseEnrichmentsFormat;
+        /** @description When format is options, the options detected from the query. */
+        options?: {
+          /** @description Label of the option. */
+          label: string;
+        }[];
+      }[];
+      search: {
+        /** @description Detected criteria from the query. */
+        criteria: {
+          description: string;
+        }[];
+        /** @description Detected entity from the query. */
+        entity:
+          | components["schemas"]["CompanyEntity"]
+          | components["schemas"]["PersonEntity"]
+          | components["schemas"]["ArticleEntity"]
+          | components["schemas"]["ResearchPaperEntity"]
+          | components["schemas"]["CustomEntity"];
+      };
+    };
     /** Research Paper */
     ResearchPaperEntity: {
       /**
@@ -1866,6 +1942,17 @@ export interface components {
         /** @description The reasoning for the estimate */
         reasoning: string;
       } | null;
+      /** @description The scope of the search. By default, there is no scope - thus searching the web.
+       *
+       *     If provided during creation, the search will only be performed on the sources provided. */
+      scope: {
+        id: string;
+        /**
+         * @default import
+         * @enum {string}
+         */
+        source: ScopeSourceType;
+      }[];
       /**
        * WebsetSearchStatus
        * @description The status of the search
@@ -1931,6 +2018,10 @@ export type MonitorBehavior = components["schemas"]["MonitorBehavior"];
 export type MonitorCadence = components["schemas"]["MonitorCadence"];
 export type MonitorRun = components["schemas"]["MonitorRun"];
 export type PersonEntity = components["schemas"]["PersonEntity"];
+export type PreviewWebsetParameters =
+  components["schemas"]["PreviewWebsetParameters"];
+export type PreviewWebsetResponse =
+  components["schemas"]["PreviewWebsetResponse"];
 export type ResearchPaperEntity = components["schemas"]["ResearchPaperEntity"];
 export type UpdateImport = components["schemas"]["UpdateImport"];
 export type UpdateMonitor = components["schemas"]["UpdateMonitor"];
@@ -3140,6 +3231,35 @@ export interface operations {
       };
     };
   };
+  "websets-preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PreviewWebsetParameters"];
+      };
+    };
+    responses: {
+      /** @description Preview of the webset */
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PreviewWebsetResponse"];
+        };
+      };
+    };
+  };
 }
 export enum PathsV0WebsetsIdGetParametersQueryExpand {
   items = "items",
@@ -3180,6 +3300,9 @@ export enum CreateWebsetParametersImportSource {
 export enum CreateWebsetParametersSearchExcludeSource {
   import = "import",
   webset = "webset",
+}
+export enum ScopeSourceType {
+  import = "import",
 }
 export enum CreateWebsetSearchParametersExcludeSource {
   import = "import",
@@ -3246,6 +3369,14 @@ export enum MonitorRunType {
   search = "search",
   refresh = "refresh",
 }
+export enum PreviewWebsetResponseEnrichmentsFormat {
+  text = "text",
+  date = "date",
+  number = "number",
+  options = "options",
+  email = "email",
+  phone = "phone",
+}
 export enum UpdateMonitorStatus {
   enabled = "enabled",
   disabled = "disabled",
@@ -3273,6 +3404,7 @@ export enum WebhookAttemptEventType {
 }
 export enum WebsetStatus {
   idle = "idle",
+  pending = "pending",
   running = "running",
   paused = "paused",
 }
@@ -3309,6 +3441,7 @@ export enum WebsetSearchRecallExpectedConfidence {
 }
 export enum WebsetSearchStatus {
   created = "created",
+  pending = "pending",
   running = "running",
   completed = "completed",
   canceled = "canceled",

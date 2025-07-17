@@ -29,6 +29,7 @@ describe("Websets Monitors API", () => {
     type: MonitorRunType.search,
     completedAt: "2023-01-08T09:30:00Z",
     failedAt: null,
+    failedReason: null,
     canceledAt: null,
     createdAt: "2023-01-08T09:00:00Z",
     updatedAt: "2023-01-08T09:30:00Z",

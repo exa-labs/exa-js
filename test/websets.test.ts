@@ -8,6 +8,9 @@ import {
   ListEventsResponse,
   ListWebsetItemResponse,
   ListWebsetsResponse,
+  PreviewWebsetResponse,
+  PreviewWebsetResponseEnrichmentsFormat,
+  ScopeSourceType,
   Webset,
   WebsetEnrichment,
   WebsetEnrichmentFormat,
@@ -42,6 +45,9 @@ describe("Websets API", () => {
       updatedAt: "2023-01-01T00:00:00Z",
       externalId: null,
       metadata: {},
+      imports: [],
+      streams: [],
+      title: "Test Webset",
     };
 
     const websetsClient = getProtectedClient(exa.websets);
@@ -66,6 +72,106 @@ describe("Websets API", () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it("should preview a webset query", async () => {
+    const mockResponse: PreviewWebsetResponse = {
+      search: {
+        entity: {
+          type: "company",
+        },
+        criteria: [
+          {
+            description: "Companies in the AI industry",
+          },
+          {
+            description: "Founded after 2020",
+          },
+        ],
+      },
+      enrichments: [
+        {
+          description: "Company valuation",
+          format: PreviewWebsetResponseEnrichmentsFormat.number,
+        },
+        {
+          description: "Funding stage",
+          format: PreviewWebsetResponseEnrichmentsFormat.options,
+          options: [
+            { label: "Seed" },
+            { label: "Series A" },
+            { label: "Series B" },
+          ],
+        },
+      ],
+    };
+
+    const websetsClient = getProtectedClient(exa.websets);
+    const requestSpy = vi
+      .spyOn(websetsClient, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const previewParams = {
+      query: "AI companies founded after 2020",
+      entity: { type: "company" as const },
+    };
+    const result = await exa.websets.preview(previewParams);
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/v0/websets/preview",
+      "POST",
+      previewParams
+    );
+    expect(result).toEqual(mockResponse);
+    expect(result.search.entity.type).toBe("company");
+    expect(result.search.criteria).toHaveLength(2);
+    expect(result.enrichments).toHaveLength(2);
+    expect(result.enrichments[1].format).toBe(PreviewWebsetResponseEnrichmentsFormat.options);
+  });
+
+  it("should create a Webset with scope parameter", async () => {
+    const mockResponse: Webset = {
+      id: "ws_789012",
+      object: "webset",
+      status: WebsetStatus.running,
+      searches: [],
+      enrichments: [],
+      monitors: [],
+      createdAt: "2023-01-01T00:00:00Z",
+      updatedAt: "2023-01-01T00:00:00Z",
+      externalId: null,
+      metadata: {},
+      imports: [],
+      streams: [],
+      title: "Scoped Webset",
+    };
+
+    const websetsClient = getProtectedClient(exa.websets);
+    const requestSpy = vi
+      .spyOn(websetsClient, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const createParams = {
+      search: {
+        query: "Tech companies",
+        count: 10,
+        scope: [
+          {
+            id: "import_123456",
+            source: ScopeSourceType.import,
+          },
+        ],
+      },
+      metadata: { test: "scoped" },
+    };
+    const result = await exa.websets.create(createParams);
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/v0/websets",
+      "POST",
+      createParams
+    );
+    expect(result).toEqual(mockResponse);
+  });
+
   it("should get a Webset by ID", async () => {
     const mockResponse: Webset = {
       id: "ws_123456",
@@ -78,6 +184,9 @@ describe("Websets API", () => {
       updatedAt: "2023-01-01T00:00:00Z",
       externalId: null,
       metadata: {},
+      imports: [],
+      streams: [],
+      title: "Test Webset",
     };
 
     const websetsClient = getProtectedClient(exa.websets);
@@ -104,6 +213,9 @@ describe("Websets API", () => {
       searches: [],
       enrichments: [],
       monitors: [],
+      imports: [],
+      streams: [],
+      title: "Test Webset",
       createdAt: "2023-01-01T00:00:00Z",
       updatedAt: "2023-01-01T00:00:00Z",
       externalId: null,
@@ -140,6 +252,9 @@ describe("Websets API", () => {
       searches: [],
       enrichments: [],
       monitors: [],
+      imports: [],
+      streams: [],
+      title: "Test Webset",
       metadata: { updated: "true" },
       createdAt: "2023-01-01T00:00:00Z",
       updatedAt: "2023-01-01T00:00:00Z",
@@ -170,6 +285,9 @@ describe("Websets API", () => {
       searches: [],
       enrichments: [],
       monitors: [],
+      imports: [],
+      streams: [],
+      title: "Test Webset",
       createdAt: "2023-01-01T00:00:00Z",
       updatedAt: "2023-01-01T00:00:00Z",
       externalId: null,
@@ -196,13 +314,16 @@ describe("Websets API", () => {
       count: 10,
       behavior: WebsetSearchBehavior.override,
       criteria: [],
-      progress: { found: 0, completion: 0 },
+      progress: { found: 0, completion: 0, analyzed: 0, timeLeft: null },
       createdAt: "2023-01-01T00:00:00Z",
       updatedAt: "2023-01-01T00:00:00Z",
       canceledAt: null,
       canceledReason: WebsetSearchCanceledReason.webset_canceled,
       entity: { type: "company" },
       metadata: {},
+      exclude: [],
+      recall: null,
+      scope: [],
     };
 
     const searchesClient = getProtectedClient(exa.websets.searches);
@@ -359,6 +480,9 @@ describe("Websets API", () => {
       updatedAt: "",
       externalId: null,
       metadata: {},
+      imports: [],
+      streams: [],
+      title: null
     };
     const mockIdleResponse: Webset = {
       id: "ws_123456",
@@ -367,6 +491,9 @@ describe("Websets API", () => {
       searches: [],
       enrichments: [],
       monitors: [],
+      imports: [],
+      streams: [],
+      title: "Test Webset",
       createdAt: "2023-01-01T00:00:00Z",
       updatedAt: "2023-01-01T00:00:00Z",
       externalId: null,
@@ -419,6 +546,9 @@ describe("Websets API", () => {
         searches: [],
         enrichments: [],
         monitors: [],
+        imports: [],
+        streams: [],
+        title: "Test Webset",
         createdAt: "2023-01-01T00:00:00Z",
         updatedAt: "2023-01-01T00:00:00Z",
         externalId: null,
@@ -464,6 +594,9 @@ describe("Websets API", () => {
         searches: [],
         enrichments: [],
         monitors: [],
+        imports: [],
+        streams: [],
+        title: "Test Webset",
         createdAt: "2023-01-01T00:00:00Z",
         updatedAt: "2023-01-01T00:00:00Z",
         externalId: null,

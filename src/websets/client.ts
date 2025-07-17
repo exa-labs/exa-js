@@ -12,6 +12,8 @@ import {
   CreateWebsetParameters,
   GetWebsetResponse,
   ListWebsetsResponse,
+  PreviewWebsetParameters,
+  PreviewWebsetResponse,
   UpdateWebsetRequest,
   Webset,
   WebsetStatus,
@@ -85,6 +87,15 @@ export class WebsetsClient extends WebsetsBaseClient {
    */
   async create(params: CreateWebsetParameters): Promise<Webset> {
     return this.request<Webset>("/v0/websets", "POST", params);
+  }
+
+  /**
+   * Preview a webset
+   * @param params The preview parameters
+   * @returns The preview response showing how the query will be decomposed
+   */
+  async preview(params: PreviewWebsetParameters): Promise<PreviewWebsetResponse> {
+    return this.request<PreviewWebsetResponse>("/v0/websets/preview", "POST", params);
   }
 
   /**
