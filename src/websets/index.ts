@@ -69,6 +69,7 @@ export {
   CreateWebsetParametersImportSource,
   CreateWebsetParametersSearchExcludeSource,
   CreateWebsetSearchParametersExcludeSource,
+  CreateWebsetSearchParametersScopeSource,
   EventType,
   ImportFailedReason,
   ImportFormat,

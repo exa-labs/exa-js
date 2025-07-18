@@ -10,3 +10,4 @@ tests
 
 .env
 .env.local
+personal/

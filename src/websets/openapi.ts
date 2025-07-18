@@ -784,7 +784,7 @@ export interface components {
             limit: number;
           };
           /** @enum {string} */
-          source: ScopeSourceType;
+          source: CreateWebsetSearchParametersScopeSource;
         }[];
       };
     };
