@@ -778,6 +778,11 @@ export interface components {
         scope?: {
           /** @description The ID of the source to search. */
           id: string;
+          relationship?: {
+            /** @description What the relationship of the entities you hope to find is relative to the entities contained in the provided source. */
+            definition: string;
+            limit: number;
+          };
           /** @enum {string} */
           source: ScopeSourceType;
         }[];
@@ -828,8 +833,13 @@ export interface components {
       scope?: {
         /** @description The ID of the source to search. */
         id: string;
+        relationship?: {
+          /** @description What the relationship of the entities you hope to find is relative to the entities contained in the provided source. */
+          definition: string;
+          limit: number;
+        };
         /** @enum {string} */
-        source: ScopeSourceType;
+        source: CreateWebsetSearchParametersScopeSource;
       }[];
     };
     /** Custom */
@@ -3303,8 +3313,13 @@ export enum CreateWebsetParametersSearchExcludeSource {
 }
 export enum ScopeSourceType {
   import = "import",
+  webset = "webset",
 }
 export enum CreateWebsetSearchParametersExcludeSource {
+  import = "import",
+  webset = "webset",
+}
+export enum CreateWebsetSearchParametersScopeSource {
   import = "import",
   webset = "webset",
 }
