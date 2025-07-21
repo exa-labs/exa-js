@@ -1974,6 +1974,8 @@ export interface components {
        * @description The date and time the search was updated
        */
       updatedAt: string;
+      /** @description The unique identifier for the Webset this search belongs to */
+      websetId: string;
     };
     /** @enum {string} */
     WebsetSearchBehavior: WebsetSearchBehavior;
