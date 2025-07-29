@@ -249,4 +249,33 @@ describe("Search API", () => {
     });
     expect(result).toEqual(mockResponse);
   });
+
+  it("should handle fast search type", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Fast Search Result",
+          url: "https://example.com",
+          id: "fast-id",
+        },
+      ],
+      requestId: "req-fast-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("quick search query", {
+      type: "fast",
+      numResults: 10,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "quick search query",
+      type: "fast",
+      numResults: 10,
+    });
+    expect(result).toEqual(mockResponse);
+  });
 }); 

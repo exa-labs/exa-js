@@ -62,7 +62,7 @@ export type RegularSearchOptions = BaseSearchOptions & {
   moderation?: boolean;
 
   useAutoprompt?: boolean;
-  type?: "keyword" | "neural" | "auto" | "hybrid";
+  type?: "keyword" | "neural" | "auto" | "hybrid" | "fast";
 };
 
 /**
