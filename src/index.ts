@@ -27,6 +27,7 @@ const isBeta = false;
  * @property {string[]} [includeText] - List of strings that must be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  * @property {string[]} [excludeText] - List of strings that must not be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  * @property {string[]} [flags] - Experimental flags
+ * @property {string} [userLocation] - The two-letter ISO country code of the user, e.g. US.
  */
 export type BaseSearchOptions = {
   numResults?: number;
@@ -49,6 +50,7 @@ export type BaseSearchOptions = {
   includeText?: string[];
   excludeText?: string[];
   flags?: string[];
+  userLocation?: string;
 };
 
 /**

@@ -278,4 +278,33 @@ describe("Search API", () => {
     });
     expect(result).toEqual(mockResponse);
   });
+
+  it("should handle userLocation parameter", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "US Result",
+          url: "https://example.com",
+          id: "us-id",
+        },
+      ],
+      requestId: "req-us-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("local news", {
+      userLocation: "US",
+      numResults: 5,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "local news",
+      userLocation: "US",
+      numResults: 5,
+    });
+    expect(result).toEqual(mockResponse);
+  });
 }); 
