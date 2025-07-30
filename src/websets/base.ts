@@ -60,9 +60,16 @@ export class WebsetsBaseClient {
     endpoint: string,
     method: string = "POST",
     data?: RequestBody,
-    params?: QueryParams
+    params?: QueryParams,
+    headers?: Record<string, string>
   ): Promise<T> {
-    return this.client.request<T>(`/websets${endpoint}`, method, data, params);
+    return this.client.request<T>(
+      `/websets${endpoint}`,
+      method,
+      data,
+      params,
+      headers
+    );
   }
 
   /**

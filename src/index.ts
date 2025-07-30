@@ -539,7 +539,8 @@ export class Exa {
     endpoint: string,
     method: string,
     body?: any,
-    params?: Record<string, any>
+    params?: Record<string, any>,
+    headers?: Record<string, string>
   ): Promise<T> {
     // Build URL with query parameters if provided
     let url = this.baseURL + endpoint;
@@ -557,9 +558,23 @@ export class Exa {
       url += `?${searchParams.toString()}`;
     }
 
+    let combinedHeaders: Record<string, string> = {};
+
+    if (this.headers instanceof HeadersImpl) {
+      this.headers.forEach((value, key) => {
+        combinedHeaders[key] = value;
+      });
+    } else {
+      combinedHeaders = { ...(this.headers as Record<string, string>) };
+    }
+
+    if (headers) {
+      combinedHeaders = { ...combinedHeaders, ...headers };
+    }
+
     const response = await fetchImpl(url, {
       method,
-      headers: this.headers,
+      headers: combinedHeaders,
       body: body ? JSON.stringify(body) : undefined,
     });
 

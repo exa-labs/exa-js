@@ -1,6 +1,7 @@
 /**
  * Client for managing Webset Searches
  */
+import { WebsetHeadersLike } from ".";
 import { WebsetsBaseClient } from "./base";
 import { CreateWebsetSearchParameters, WebsetSearch } from "./openapi";
 
@@ -16,12 +17,15 @@ export class WebsetSearchesClient extends WebsetsBaseClient {
    */
   async create(
     websetId: string,
-    params: CreateWebsetSearchParameters
+    params: CreateWebsetSearchParameters,
+    options?: { headers?: WebsetHeadersLike }
   ): Promise<WebsetSearch> {
     return this.request<WebsetSearch>(
       `/v0/websets/${websetId}/searches`,
       "POST",
-      params
+      params,
+      undefined,
+      options?.headers
     );
   }
 

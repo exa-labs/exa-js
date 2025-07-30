@@ -67,7 +67,9 @@ describe("Websets API", () => {
     expect(requestSpy).toHaveBeenCalledWith(
       "/v0/websets",
       "POST",
-      createParams
+      createParams,
+      undefined,
+      undefined
     );
     expect(result).toEqual(mockResponse);
   });
@@ -124,7 +126,9 @@ describe("Websets API", () => {
     expect(result.search.entity.type).toBe("company");
     expect(result.search.criteria).toHaveLength(2);
     expect(result.enrichments).toHaveLength(2);
-    expect(result.enrichments[1].format).toBe(PreviewWebsetResponseEnrichmentsFormat.options);
+    expect(result.enrichments[1].format).toBe(
+      PreviewWebsetResponseEnrichmentsFormat.options
+    );
   });
 
   it("should create a Webset with scope parameter", async () => {
@@ -167,7 +171,9 @@ describe("Websets API", () => {
     expect(requestSpy).toHaveBeenCalledWith(
       "/v0/websets",
       "POST",
-      createParams
+      createParams,
+      undefined,
+      undefined
     );
     expect(result).toEqual(mockResponse);
   });
@@ -341,7 +347,9 @@ describe("Websets API", () => {
     expect(requestSpy).toHaveBeenCalledWith(
       "/v0/websets/ws_123456/searches",
       "POST",
-      searchParams
+      searchParams,
+      undefined,
+      undefined
     );
     expect(result).toEqual(mockResponse);
   });
@@ -482,7 +490,7 @@ describe("Websets API", () => {
       metadata: {},
       imports: [],
       streams: [],
-      title: null
+      title: null,
     };
     const mockIdleResponse: Webset = {
       id: "ws_123456",
