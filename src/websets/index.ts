@@ -105,3 +105,7 @@ export type {
 } from "./imports";
 export type { ListMonitorsOptions } from "./monitors";
 export type { ListWebsetItemsOptions } from "./items";
+
+export type WebsetHeadersLike = {
+  "x-exa-websets-priority"?: "low" | "medium" | "high";
+} & Record<string, string>;

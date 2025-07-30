@@ -1,7 +1,7 @@
 /**
  * Main client for Websets API
  */
-import { Exa, ExaError, HttpStatusCode } from "../index";
+import { Exa, ExaError, HttpStatusCode, WebsetHeadersLike } from "../index";
 import { PaginationParams, WebsetsBaseClient } from "./base";
 import { WebsetEnrichmentsClient } from "./enrichments";
 import { EventsClient } from "./events";
@@ -85,8 +85,17 @@ export class WebsetsClient extends WebsetsBaseClient {
    * @param params The Webset creation parameters
    * @returns The created Webset
    */
-  async create(params: CreateWebsetParameters): Promise<Webset> {
-    return this.request<Webset>("/v0/websets", "POST", params);
+  async create(
+    params: CreateWebsetParameters,
+    options?: { headers?: WebsetHeadersLike }
+  ): Promise<Webset> {
+    return this.request<Webset>(
+      "/v0/websets",
+      "POST",
+      params,
+      undefined,
+      options?.headers
+    );
   }
 
   /**
@@ -94,8 +103,14 @@ export class WebsetsClient extends WebsetsBaseClient {
    * @param params The preview parameters
    * @returns The preview response showing how the query will be decomposed
    */
-  async preview(params: PreviewWebsetParameters): Promise<PreviewWebsetResponse> {
-    return this.request<PreviewWebsetResponse>("/v0/websets/preview", "POST", params);
+  async preview(
+    params: PreviewWebsetParameters
+  ): Promise<PreviewWebsetResponse> {
+    return this.request<PreviewWebsetResponse>(
+      "/v0/websets/preview",
+      "POST",
+      params
+    );
   }
 
   /**
