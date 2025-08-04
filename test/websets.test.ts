@@ -3,6 +3,8 @@ import Exa, { WebsetStatus } from "../src";
 import { ExaError } from "../src/errors";
 import {
   CreateEnrichmentParametersFormat,
+  CreateWebsetParameters,
+  CreateWebsetSearchParametersScopeSource,
   Event,
   EventType,
   ListEventsResponse,
@@ -10,7 +12,6 @@ import {
   ListWebsetsResponse,
   PreviewWebsetResponse,
   PreviewWebsetResponseEnrichmentsFormat,
-  ScopeSourceType,
   Webset,
   WebsetEnrichment,
   WebsetEnrichmentFormat,
@@ -160,12 +161,12 @@ describe("Websets API", () => {
         scope: [
           {
             id: "import_123456",
-            source: ScopeSourceType.import,
+            source: CreateWebsetSearchParametersScopeSource.import,
           },
         ],
       },
       metadata: { test: "scoped" },
-    };
+    } satisfies CreateWebsetParameters;
     const result = await exa.websets.create(createParams);
 
     expect(requestSpy).toHaveBeenCalledWith(
@@ -314,6 +315,7 @@ describe("Websets API", () => {
   it("should create a new search for a Webset", async () => {
     const mockResponse: WebsetSearch = {
       id: "ws_search_123456",
+      websetId: "ws_search_123456",
       object: "webset_search",
       status: WebsetSearchStatus.running,
       query: "Test search",

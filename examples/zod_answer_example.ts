@@ -17,14 +17,6 @@ const exa = new Exa(EXA_API_KEY, EXA_BASE_URL);
 // Zod Schemas for Structured Answers
 // ===============================================
 
-const ConfidenceLevel = z.enum(["high", "medium", "low"]);
-
-const Evidence = z.object({
-  claim: z.string().describe("The specific claim or fact"),
-  source_description: z.string().describe("Brief description of the source"),
-  confidence: ConfidenceLevel.describe("Confidence level in this evidence"),
-});
-
 const ComparisonAnalysis = z.object({
   title: z.string().describe("Title of the comparison"),
   executive_summary: z
@@ -78,28 +70,6 @@ const MarketResearch = z.object({
   opportunities: z.array(z.string()).describe("Market opportunities"),
   challenges: z.array(z.string()).describe("Market challenges"),
   outlook: z.string().describe("Future outlook for the market"),
-});
-
-const QuestionAnswerPair = z.object({
-  question: z.string().describe("The question being answered"),
-  answer: z.string().describe("Detailed answer to the question"),
-  supporting_evidence: z
-    .array(Evidence)
-    .optional()
-    .describe("Evidence supporting the answer"),
-});
-
-const ComprehensiveAnalysis = z.object({
-  topic: z.string().describe("Main topic of analysis"),
-  overview: z.string().describe("High-level overview"),
-  key_points: z.array(z.string()).describe("Most important points"),
-  detailed_analysis: z
-    .array(QuestionAnswerPair)
-    .describe("Detailed Q&A analysis"),
-  conclusion: z.string().describe("Final conclusion"),
-  confidence_level: ConfidenceLevel.describe(
-    "Overall confidence in the analysis"
-  ),
 });
 
 const SimpleComparison = z.object({
