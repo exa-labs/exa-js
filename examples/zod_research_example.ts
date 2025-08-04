@@ -322,10 +322,10 @@ async function demonstrateCustomResearch() {
 async function main() {
   console.log("🚀 Zod Research Integration Examples\n");
 
-  // await analyzeTechnologyLandscape();
+  await analyzeTechnologyLandscape();
   await researchStartupEcosystem();
-  // await exploreAIResearch();
-  // await demonstrateCustomResearch();
+  await exploreAIResearch();
+  await demonstrateCustomResearch();
 
   console.log("\n✅ All research examples completed!");
 }
