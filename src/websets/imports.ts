@@ -144,7 +144,7 @@ export class ImportsClient extends WebsetsBaseClient {
     try {
       const uploadResponse = await fetch(importResponse.uploadUrl, {
         method: "PUT",
-        body: csvBuffer,
+        body: csvBuffer as BodyInit,
       });
 
       if (!uploadResponse.ok) {
