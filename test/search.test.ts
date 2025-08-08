@@ -39,6 +39,7 @@ describe("Search API", () => {
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
       query: "latest AI developments",
       numResults: 2,
+      type: "auto",
     });
     expect(result).toEqual(mockResponse);
   });
@@ -71,6 +72,7 @@ describe("Search API", () => {
         text: true,
       },
       numResults: 2,
+      type: "auto",
     });
     expect(result).toEqual(mockResponse);
   });
@@ -106,6 +108,7 @@ describe("Search API", () => {
         context: true,
       },
       numResults: 2,
+      type: "auto",
     });
     expect(result).toEqual(mockResponse);
   });
@@ -147,6 +150,7 @@ describe("Search API", () => {
         context: { maxCharacters: 500 },
       },
       numResults: 3,
+      type: "auto",
     });
     expect(result).toEqual(mockResponse);
   });
@@ -175,6 +179,7 @@ describe("Search API", () => {
       contents: {
         text: true,
       },
+      type: "auto",
     });
     expect(result).toEqual(mockResponse);
   });
@@ -246,6 +251,7 @@ describe("Search API", () => {
         livecrawlTimeout: 8000,
       },
       numResults: 3,
+      type: "auto",
     });
     expect(result).toEqual(mockResponse);
   });
@@ -304,6 +310,7 @@ describe("Search API", () => {
       query: "local news",
       userLocation: "US",
       numResults: 5,
+      type: "auto",
     });
     expect(result).toEqual(mockResponse);
   });

@@ -660,7 +660,11 @@ export class Exa {
     query: string,
     options?: RegularSearchOptions
   ): Promise<SearchResponse<{}>> {
-    return await this.request("/search", "POST", { query, ...options });
+    const payload =
+      options === undefined || options.type === undefined
+        ? { query, type: "auto", ...(options ?? {}) }
+        : { query, ...options };
+    return await this.request("/search", "POST", payload);
   }
 
   /**
@@ -679,10 +683,16 @@ export class Exa {
         ? { contentsOptions: { text: true }, restOptions: {} }
         : this.extractContentsOptions(options);
 
+    const finalRestOptions: typeof restOptions & { type?: RegularSearchOptions["type"] } =
+      { ...(restOptions as any) };
+    if (finalRestOptions.type === undefined) {
+      finalRestOptions.type = "auto";
+    }
+
     return await this.request("/search", "POST", {
       query,
       contents: contentsOptions,
-      ...restOptions,
+      ...finalRestOptions,
     });
   }
 
