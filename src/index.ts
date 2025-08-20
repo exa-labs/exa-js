@@ -399,23 +399,6 @@ export type SummaryContentsOptionsTyped<T> = Omit<
 };
 
 /**
- * Enhanced research task output options that accepts either JSON schema or Zod schema
- */
-export type ResearchTaskOutputTyped<T> = {
-  inferSchema?: boolean;
-  schema: T;
-};
-
-/**
- * Enhanced research task creation params with zod schema support
- */
-export type ResearchCreateTaskParamsTyped<T> = {
-  instructions: string;
-  model?: "exa-research" | "exa-research-pro";
-  output?: ResearchTaskOutputTyped<T>;
-};
-
-/**
  * The Exa class encapsulates the API's endpoints.
  */
 export class Exa {
@@ -1081,7 +1064,7 @@ export class Exa {
 
 // Re-export Websets related types and enums
 export * from "./websets";
-// Re-export Research related clients
+// Re-export Research related types and client
 export * from "./research";
 
 // Export the main class

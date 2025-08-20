@@ -4,67 +4,39 @@
  */
 
 export interface paths {
-  "/research/v0/responses": {
+  "/research/v1": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /**
+     * List research requests
+     * @description Get a paginated list of research requests
+     */
+    get: operations["ResearchController_listResearch"];
     put?: never;
-    /** Create a research task using OpenAI response types and semantics */
-    post: operations["research-responses-create"];
+    /** Create a new research request */
+    post: operations["ResearchController_createResearch"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/research/v0/responses/{id}": {
+  "/research/v1/{researchId}": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** Get a research task by id using OpenAI response types and semantics */
-    get: operations["ResearchControllerV0_getResearchOpenAIResponse"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/research/v0/tasks": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List research tasks */
-    get: operations["research-tasks-list"];
-    put?: never;
-    /** Create a research task with instructions and an output schema */
-    post: operations["research-tasks-create"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/research/v0/tasks/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get a research task by id */
-    get: operations["ResearchControllerV0_getResearchTask"];
+    /**
+     * Get a research request by id
+     * @description Retrieve research by ID. Add ?stream=true for real-time SSE updates.
+     */
+    get: operations["ResearchController_getResearch"];
     put?: never;
     post?: never;
     delete?: never;
@@ -77,363 +49,1780 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
-    ListResearchTasksRequestDto: {
-      /** @description The cursor to paginate through the results */
-      cursor?: string;
-      /**
-       * @description The number of results to return
-       * @default 10
-       */
-      limit: number;
-    };
-    ListResearchTasksResponseDto: {
-      /** @description The list of research tasks */
-      data: components["schemas"]["ResearchTaskDto"][];
+    ListResearchResponseDto: {
+      /** @description The list of research requests */
+      data: (
+        | {
+            /** @description Milliseconds since epoch time */
+            createdAt: number;
+            /** @description The instructions given to this research request */
+            instructions: string;
+            /**
+             * @description The model used for the research request
+             * @default exa-research
+             * @enum {string}
+             */
+            model: "exa-research" | "exa-research-pro";
+            /** @description The unique identifier for the research request */
+            researchId: string;
+            /** @enum {string} */
+            status: "pending";
+          }
+        | {
+            /** @description Milliseconds since epoch time */
+            createdAt: number;
+            events?: (
+              | (
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "research-definition";
+                      instructions: string;
+                      outputSchema?: {
+                        [key: string]: unknown;
+                      };
+                      researchId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "research-output";
+                      output:
+                        | {
+                            content: string;
+                            costDollars: {
+                              numPages: number;
+                              numSearches: number;
+                              reasoningTokens: number;
+                              total: number;
+                            };
+                            /** @enum {string} */
+                            outputType: "completed";
+                            parsed?: {
+                              [key: string]: unknown;
+                            };
+                          }
+                        | {
+                            error: string;
+                            /** @enum {string} */
+                            outputType: "failed";
+                          };
+                      researchId: string;
+                    }
+                )
+              | (
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "plan-definition";
+                      planId: string;
+                      researchId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      data:
+                        | {
+                            content: string;
+                            /** @enum {string} */
+                            type: "think";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            query: string;
+                            results: {
+                              url: string;
+                            }[];
+                            /** @enum {string} */
+                            searchType: "neural" | "keyword" | "auto" | "fast";
+                            /** @enum {string} */
+                            type: "search";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            result: {
+                              url: string;
+                            };
+                            /** @enum {string} */
+                            type: "crawl";
+                          };
+                      /** @enum {string} */
+                      eventType: "plan-operation";
+                      operationId: string;
+                      planId: string;
+                      researchId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "plan-output";
+                      output:
+                        | {
+                            /** @enum {string} */
+                            outputType: "tasks";
+                            reasoning: string;
+                            tasksInstructions: string[];
+                          }
+                        | {
+                            /** @enum {string} */
+                            outputType: "stop";
+                            reasoning: string;
+                          };
+                      planId: string;
+                      researchId: string;
+                    }
+                )
+              | (
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "task-definition";
+                      instructions: string;
+                      planId: string;
+                      researchId: string;
+                      taskId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      data:
+                        | {
+                            content: string;
+                            /** @enum {string} */
+                            type: "think";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            query: string;
+                            results: {
+                              url: string;
+                            }[];
+                            /** @enum {string} */
+                            searchType: "neural" | "keyword" | "auto" | "fast";
+                            /** @enum {string} */
+                            type: "search";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            result: {
+                              url: string;
+                            };
+                            /** @enum {string} */
+                            type: "crawl";
+                          };
+                      /** @enum {string} */
+                      eventType: "task-operation";
+                      operationId: string;
+                      planId: string;
+                      researchId: string;
+                      taskId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "task-output";
+                      output: {
+                        content: string;
+                        /** @enum {string} */
+                        outputType: "completed";
+                      };
+                      planId: string;
+                      researchId: string;
+                      taskId: string;
+                    }
+                )
+            )[];
+            /** @description The instructions given to this research request */
+            instructions: string;
+            /**
+             * @description The model used for the research request
+             * @default exa-research
+             * @enum {string}
+             */
+            model: "exa-research" | "exa-research-pro";
+            /** @description The unique identifier for the research request */
+            researchId: string;
+            /** @enum {string} */
+            status: "running";
+          }
+        | {
+            costDollars: {
+              numPages: number;
+              numSearches: number;
+              reasoningTokens: number;
+              total: number;
+            };
+            /** @description Milliseconds since epoch time */
+            createdAt: number;
+            events?: (
+              | (
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "research-definition";
+                      instructions: string;
+                      outputSchema?: {
+                        [key: string]: unknown;
+                      };
+                      researchId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "research-output";
+                      output:
+                        | {
+                            content: string;
+                            costDollars: {
+                              numPages: number;
+                              numSearches: number;
+                              reasoningTokens: number;
+                              total: number;
+                            };
+                            /** @enum {string} */
+                            outputType: "completed";
+                            parsed?: {
+                              [key: string]: unknown;
+                            };
+                          }
+                        | {
+                            error: string;
+                            /** @enum {string} */
+                            outputType: "failed";
+                          };
+                      researchId: string;
+                    }
+                )
+              | (
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "plan-definition";
+                      planId: string;
+                      researchId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      data:
+                        | {
+                            content: string;
+                            /** @enum {string} */
+                            type: "think";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            query: string;
+                            results: {
+                              url: string;
+                            }[];
+                            /** @enum {string} */
+                            searchType: "neural" | "keyword" | "auto" | "fast";
+                            /** @enum {string} */
+                            type: "search";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            result: {
+                              url: string;
+                            };
+                            /** @enum {string} */
+                            type: "crawl";
+                          };
+                      /** @enum {string} */
+                      eventType: "plan-operation";
+                      operationId: string;
+                      planId: string;
+                      researchId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "plan-output";
+                      output:
+                        | {
+                            /** @enum {string} */
+                            outputType: "tasks";
+                            reasoning: string;
+                            tasksInstructions: string[];
+                          }
+                        | {
+                            /** @enum {string} */
+                            outputType: "stop";
+                            reasoning: string;
+                          };
+                      planId: string;
+                      researchId: string;
+                    }
+                )
+              | (
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "task-definition";
+                      instructions: string;
+                      planId: string;
+                      researchId: string;
+                      taskId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      data:
+                        | {
+                            content: string;
+                            /** @enum {string} */
+                            type: "think";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            query: string;
+                            results: {
+                              url: string;
+                            }[];
+                            /** @enum {string} */
+                            searchType: "neural" | "keyword" | "auto" | "fast";
+                            /** @enum {string} */
+                            type: "search";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            result: {
+                              url: string;
+                            };
+                            /** @enum {string} */
+                            type: "crawl";
+                          };
+                      /** @enum {string} */
+                      eventType: "task-operation";
+                      operationId: string;
+                      planId: string;
+                      researchId: string;
+                      taskId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "task-output";
+                      output: {
+                        content: string;
+                        /** @enum {string} */
+                        outputType: "completed";
+                      };
+                      planId: string;
+                      researchId: string;
+                      taskId: string;
+                    }
+                )
+            )[];
+            /** @description The instructions given to this research request */
+            instructions: string;
+            /**
+             * @description The model used for the research request
+             * @default exa-research
+             * @enum {string}
+             */
+            model: "exa-research" | "exa-research-pro";
+            output: {
+              content: string;
+              parsed?: {
+                [key: string]: unknown;
+              };
+            };
+            /** @description The unique identifier for the research request */
+            researchId: string;
+            /** @enum {string} */
+            status: "completed";
+          }
+        | {
+            /** @description Milliseconds since epoch time */
+            createdAt: number;
+            events?: (
+              | (
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "research-definition";
+                      instructions: string;
+                      outputSchema?: {
+                        [key: string]: unknown;
+                      };
+                      researchId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "research-output";
+                      output:
+                        | {
+                            content: string;
+                            costDollars: {
+                              numPages: number;
+                              numSearches: number;
+                              reasoningTokens: number;
+                              total: number;
+                            };
+                            /** @enum {string} */
+                            outputType: "completed";
+                            parsed?: {
+                              [key: string]: unknown;
+                            };
+                          }
+                        | {
+                            error: string;
+                            /** @enum {string} */
+                            outputType: "failed";
+                          };
+                      researchId: string;
+                    }
+                )
+              | (
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "plan-definition";
+                      planId: string;
+                      researchId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      data:
+                        | {
+                            content: string;
+                            /** @enum {string} */
+                            type: "think";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            query: string;
+                            results: {
+                              url: string;
+                            }[];
+                            /** @enum {string} */
+                            searchType: "neural" | "keyword" | "auto" | "fast";
+                            /** @enum {string} */
+                            type: "search";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            result: {
+                              url: string;
+                            };
+                            /** @enum {string} */
+                            type: "crawl";
+                          };
+                      /** @enum {string} */
+                      eventType: "plan-operation";
+                      operationId: string;
+                      planId: string;
+                      researchId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "plan-output";
+                      output:
+                        | {
+                            /** @enum {string} */
+                            outputType: "tasks";
+                            reasoning: string;
+                            tasksInstructions: string[];
+                          }
+                        | {
+                            /** @enum {string} */
+                            outputType: "stop";
+                            reasoning: string;
+                          };
+                      planId: string;
+                      researchId: string;
+                    }
+                )
+              | (
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "task-definition";
+                      instructions: string;
+                      planId: string;
+                      researchId: string;
+                      taskId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      data:
+                        | {
+                            content: string;
+                            /** @enum {string} */
+                            type: "think";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            query: string;
+                            results: {
+                              url: string;
+                            }[];
+                            /** @enum {string} */
+                            searchType: "neural" | "keyword" | "auto" | "fast";
+                            /** @enum {string} */
+                            type: "search";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            result: {
+                              url: string;
+                            };
+                            /** @enum {string} */
+                            type: "crawl";
+                          };
+                      /** @enum {string} */
+                      eventType: "task-operation";
+                      operationId: string;
+                      planId: string;
+                      researchId: string;
+                      taskId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "task-output";
+                      output: {
+                        content: string;
+                        /** @enum {string} */
+                        outputType: "completed";
+                      };
+                      planId: string;
+                      researchId: string;
+                      taskId: string;
+                    }
+                )
+            )[];
+            /** @description The instructions given to this research request */
+            instructions: string;
+            /**
+             * @description The model used for the research request
+             * @default exa-research
+             * @enum {string}
+             */
+            model: "exa-research" | "exa-research-pro";
+            /** @description The unique identifier for the research request */
+            researchId: string;
+            /** @enum {string} */
+            status: "canceled";
+          }
+        | {
+            /** @description Milliseconds since epoch time */
+            createdAt: number;
+            /** @description A message indicating why the request failed */
+            error: string;
+            events?: (
+              | (
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "research-definition";
+                      instructions: string;
+                      outputSchema?: {
+                        [key: string]: unknown;
+                      };
+                      researchId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "research-output";
+                      output:
+                        | {
+                            content: string;
+                            costDollars: {
+                              numPages: number;
+                              numSearches: number;
+                              reasoningTokens: number;
+                              total: number;
+                            };
+                            /** @enum {string} */
+                            outputType: "completed";
+                            parsed?: {
+                              [key: string]: unknown;
+                            };
+                          }
+                        | {
+                            error: string;
+                            /** @enum {string} */
+                            outputType: "failed";
+                          };
+                      researchId: string;
+                    }
+                )
+              | (
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "plan-definition";
+                      planId: string;
+                      researchId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      data:
+                        | {
+                            content: string;
+                            /** @enum {string} */
+                            type: "think";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            query: string;
+                            results: {
+                              url: string;
+                            }[];
+                            /** @enum {string} */
+                            searchType: "neural" | "keyword" | "auto" | "fast";
+                            /** @enum {string} */
+                            type: "search";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            result: {
+                              url: string;
+                            };
+                            /** @enum {string} */
+                            type: "crawl";
+                          };
+                      /** @enum {string} */
+                      eventType: "plan-operation";
+                      operationId: string;
+                      planId: string;
+                      researchId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "plan-output";
+                      output:
+                        | {
+                            /** @enum {string} */
+                            outputType: "tasks";
+                            reasoning: string;
+                            tasksInstructions: string[];
+                          }
+                        | {
+                            /** @enum {string} */
+                            outputType: "stop";
+                            reasoning: string;
+                          };
+                      planId: string;
+                      researchId: string;
+                    }
+                )
+              | (
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "task-definition";
+                      instructions: string;
+                      planId: string;
+                      researchId: string;
+                      taskId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      data:
+                        | {
+                            content: string;
+                            /** @enum {string} */
+                            type: "think";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            query: string;
+                            results: {
+                              url: string;
+                            }[];
+                            /** @enum {string} */
+                            searchType: "neural" | "keyword" | "auto" | "fast";
+                            /** @enum {string} */
+                            type: "search";
+                          }
+                        | {
+                            goal?: string;
+                            pageTokens: number;
+                            result: {
+                              url: string;
+                            };
+                            /** @enum {string} */
+                            type: "crawl";
+                          };
+                      /** @enum {string} */
+                      eventType: "task-operation";
+                      operationId: string;
+                      planId: string;
+                      researchId: string;
+                      taskId: string;
+                    }
+                  | {
+                      /** @description Milliseconds since epoch time */
+                      createdAt: number;
+                      /** @enum {string} */
+                      eventType: "task-output";
+                      output: {
+                        content: string;
+                        /** @enum {string} */
+                        outputType: "completed";
+                      };
+                      planId: string;
+                      researchId: string;
+                      taskId: string;
+                    }
+                )
+            )[];
+            /** @description The instructions given to this research request */
+            instructions: string;
+            /**
+             * @description The model used for the research request
+             * @default exa-research
+             * @enum {string}
+             */
+            model: "exa-research" | "exa-research-pro";
+            /** @description The unique identifier for the research request */
+            researchId: string;
+            /** @enum {string} */
+            status: "failed";
+          }
+      )[];
       /** @description Whether there are more results to paginate through */
       hasMore: boolean;
       /** @description The cursor to paginate through the next set of results */
       nextCursor: string | null;
     };
-    ResearchCreateOpenAIResponseDto: {
-      input: string;
-      instructions?: string;
-      /** @enum {string} */
-      model: "exa-research" | "exa-research-pro";
-      stream?: boolean;
-      text?: {
-        format?:
-          | {
-              /** @enum {string} */
-              type: "text";
-            }
-          | {
-              description?: string;
-              name?: string;
-              schema: {
-                [key: string]: unknown;
-              };
-              strict?: boolean;
-              /** @enum {string} */
-              type: "json_schema";
-            };
-      };
-    };
-    ResearchCreateTaskRequestDto: {
-      input?: {
-        instructions: string;
-      };
-      /** @description Instructions for what the research task should accomplish */
-      instructions?: string;
+    ResearchCreateRequestDtoClass: {
+      /** @description Instructions for what research should be conducted */
+      instructions: string;
       /**
        * @default exa-research
        * @enum {string}
        */
       model: "exa-research" | "exa-research-pro";
-      output?: {
-        /**
-         * @description When true and an output schema is omitted, an output schema will be intelligently generated. Otherwise, if this is false and there is no output schema, a generic markdown report will be generated.
-         * @default true
-         */
-        inferSchema: boolean;
-        /** @description A JsonSchema specification of the desired output. See https://json-schema.org/draft-07. */
-        schema?: unknown;
-      };
-    };
-    ResearchCreateTaskResponseDto: {
-      /** @description The unique identifier for the research task */
-      id: string;
-      outputSchema: {
+      outputSchema?: {
         [key: string]: unknown;
       };
     };
-    ResearchTaskDto: {
-      /** @description Citations grouped by the root field they were used in */
-      citations?: {
-        [key: string]: {
-          id: string;
-          snippet: string;
-          title?: string;
-          url: string;
-        }[];
-      };
-      costDollars?: {
-        research: {
-          pages: number;
-          reasoningTokens: number;
-          searches: number;
-        };
-        total: number;
-      };
-      /** @description The creation time of the research task in milliseconds since the Unix epoch */
-      createdAt: number;
-      /** @description The research results data conforming to the specified schema */
-      data?: {
-        [key: string]: unknown;
-      };
-      /** @description The unique identifier for the research task */
-      id: string;
-      /** @description The instructions or query for the research task */
-      instructions: string;
-      /** @enum {string} */
-      model?: "exa-research" | "exa-research-pro";
-      operations: (
-        | {
-            stepId: string;
-            /** @description Agent generated plan or reasoning for upcoming actions. */
-            text: string;
-            /** @enum {string} */
-            type: "step-plan";
-          }
-        | {
-            /** @description A completed subfield */
-            data: {
-              [key: string]: unknown;
-            };
-            stepId: string;
-            /** @enum {string} */
-            type: "step-data";
-          }
-        | {
-            /** @description What the agent hopes to find with this search query */
-            goal?: string;
-            /** @description Search query used */
-            query: string;
-            results?: {
-              id: string;
-              snippet: string;
-              title?: string;
-              url: string;
-              /** @enum {number} */
-              version: 1;
-            }[];
-            stepId: string;
-            /** @enum {string} */
-            type: "search";
-          }
-        | {
-            /** @description What the agent hopes to find with this crawl */
-            goal?: string;
-            stepId: string;
-            /** @enum {string} */
-            type: "crawl";
-            url: string;
-          }
-        | {
-            stepId: string;
-            /** @description Intermediate chain-of-thought style reasoning output */
-            thought: string;
-            /** @enum {string} */
-            type: "think";
-          }
-      )[];
-      /** @description The JSON schema specification for the expected output format */
-      schema?: {
-        [key: string]: unknown;
-      };
-      /**
-       * @description The current status of the research task
-       * @enum {string}
-       */
-      status: "running" | "completed" | "failed";
-      timeMs?: number;
-    };
-    ResearchTaskEventDto:
+    ResearchDtoClass:
       | {
-          operation:
-            | {
-                stepId: string;
-                /** @description Agent generated plan or reasoning for upcoming actions. */
-                text: string;
-                /** @enum {string} */
-                type: "step-plan";
-              }
-            | {
-                /** @description A completed subfield */
-                data: {
-                  [key: string]: unknown;
-                };
-                stepId: string;
-                /** @enum {string} */
-                type: "step-data";
-              }
-            | {
-                /** @description What the agent hopes to find with this search query */
-                goal?: string;
-                /** @description Search query used */
-                query: string;
-                results?: {
-                  id: string;
-                  snippet: string;
-                  title?: string;
-                  url: string;
-                  /** @enum {number} */
-                  version: 1;
-                }[];
-                stepId: string;
-                /** @enum {string} */
-                type: "search";
-              }
-            | {
-                /** @description What the agent hopes to find with this crawl */
-                goal?: string;
-                stepId: string;
-                /** @enum {string} */
-                type: "crawl";
-                url: string;
-              }
-            | {
-                stepId: string;
-                /** @description Intermediate chain-of-thought style reasoning output */
-                thought: string;
-                /** @enum {string} */
-                type: "think";
-              };
+          /** @description Milliseconds since epoch time */
+          createdAt: number;
+          /** @description The instructions given to this research request */
+          instructions: string;
+          /**
+           * @description The model used for the research request
+           * @default exa-research
+           * @enum {string}
+           */
+          model: "exa-research" | "exa-research-pro";
+          /** @description The unique identifier for the research request */
+          researchId: string;
           /** @enum {string} */
-          type: "operation";
+          status: "pending";
         }
       | {
-          task: {
-            /** @description Citations grouped by the root field they were used in */
-            citations?: {
-              [key: string]: {
-                id: string;
-                snippet: string;
-                title?: string;
-                url: string;
-              }[];
-            };
-            costDollars?: {
-              research: {
-                pages: number;
-                reasoningTokens: number;
-                searches: number;
-              };
-              total: number;
-            };
-            /** @description The creation time of the research task in milliseconds since the Unix epoch */
-            createdAt: number;
-            /** @description The research results data conforming to the specified schema */
-            data?: {
+          /** @description Milliseconds since epoch time */
+          createdAt: number;
+          events?: (
+            | (
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "research-definition";
+                    instructions: string;
+                    outputSchema?: {
+                      [key: string]: unknown;
+                    };
+                    researchId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "research-output";
+                    output:
+                      | {
+                          content: string;
+                          costDollars: {
+                            numPages: number;
+                            numSearches: number;
+                            reasoningTokens: number;
+                            total: number;
+                          };
+                          /** @enum {string} */
+                          outputType: "completed";
+                          parsed?: {
+                            [key: string]: unknown;
+                          };
+                        }
+                      | {
+                          error: string;
+                          /** @enum {string} */
+                          outputType: "failed";
+                        };
+                    researchId: string;
+                  }
+              )
+            | (
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "plan-definition";
+                    planId: string;
+                    researchId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    data:
+                      | {
+                          content: string;
+                          /** @enum {string} */
+                          type: "think";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          query: string;
+                          results: {
+                            url: string;
+                          }[];
+                          /** @enum {string} */
+                          searchType: "neural" | "keyword" | "auto" | "fast";
+                          /** @enum {string} */
+                          type: "search";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          result: {
+                            url: string;
+                          };
+                          /** @enum {string} */
+                          type: "crawl";
+                        };
+                    /** @enum {string} */
+                    eventType: "plan-operation";
+                    operationId: string;
+                    planId: string;
+                    researchId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "plan-output";
+                    output:
+                      | {
+                          /** @enum {string} */
+                          outputType: "tasks";
+                          reasoning: string;
+                          tasksInstructions: string[];
+                        }
+                      | {
+                          /** @enum {string} */
+                          outputType: "stop";
+                          reasoning: string;
+                        };
+                    planId: string;
+                    researchId: string;
+                  }
+              )
+            | (
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "task-definition";
+                    instructions: string;
+                    planId: string;
+                    researchId: string;
+                    taskId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    data:
+                      | {
+                          content: string;
+                          /** @enum {string} */
+                          type: "think";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          query: string;
+                          results: {
+                            url: string;
+                          }[];
+                          /** @enum {string} */
+                          searchType: "neural" | "keyword" | "auto" | "fast";
+                          /** @enum {string} */
+                          type: "search";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          result: {
+                            url: string;
+                          };
+                          /** @enum {string} */
+                          type: "crawl";
+                        };
+                    /** @enum {string} */
+                    eventType: "task-operation";
+                    operationId: string;
+                    planId: string;
+                    researchId: string;
+                    taskId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "task-output";
+                    output: {
+                      content: string;
+                      /** @enum {string} */
+                      outputType: "completed";
+                    };
+                    planId: string;
+                    researchId: string;
+                    taskId: string;
+                  }
+              )
+          )[];
+          /** @description The instructions given to this research request */
+          instructions: string;
+          /**
+           * @description The model used for the research request
+           * @default exa-research
+           * @enum {string}
+           */
+          model: "exa-research" | "exa-research-pro";
+          /** @description The unique identifier for the research request */
+          researchId: string;
+          /** @enum {string} */
+          status: "running";
+        }
+      | {
+          costDollars: {
+            numPages: number;
+            numSearches: number;
+            reasoningTokens: number;
+            total: number;
+          };
+          /** @description Milliseconds since epoch time */
+          createdAt: number;
+          events?: (
+            | (
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "research-definition";
+                    instructions: string;
+                    outputSchema?: {
+                      [key: string]: unknown;
+                    };
+                    researchId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "research-output";
+                    output:
+                      | {
+                          content: string;
+                          costDollars: {
+                            numPages: number;
+                            numSearches: number;
+                            reasoningTokens: number;
+                            total: number;
+                          };
+                          /** @enum {string} */
+                          outputType: "completed";
+                          parsed?: {
+                            [key: string]: unknown;
+                          };
+                        }
+                      | {
+                          error: string;
+                          /** @enum {string} */
+                          outputType: "failed";
+                        };
+                    researchId: string;
+                  }
+              )
+            | (
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "plan-definition";
+                    planId: string;
+                    researchId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    data:
+                      | {
+                          content: string;
+                          /** @enum {string} */
+                          type: "think";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          query: string;
+                          results: {
+                            url: string;
+                          }[];
+                          /** @enum {string} */
+                          searchType: "neural" | "keyword" | "auto" | "fast";
+                          /** @enum {string} */
+                          type: "search";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          result: {
+                            url: string;
+                          };
+                          /** @enum {string} */
+                          type: "crawl";
+                        };
+                    /** @enum {string} */
+                    eventType: "plan-operation";
+                    operationId: string;
+                    planId: string;
+                    researchId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "plan-output";
+                    output:
+                      | {
+                          /** @enum {string} */
+                          outputType: "tasks";
+                          reasoning: string;
+                          tasksInstructions: string[];
+                        }
+                      | {
+                          /** @enum {string} */
+                          outputType: "stop";
+                          reasoning: string;
+                        };
+                    planId: string;
+                    researchId: string;
+                  }
+              )
+            | (
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "task-definition";
+                    instructions: string;
+                    planId: string;
+                    researchId: string;
+                    taskId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    data:
+                      | {
+                          content: string;
+                          /** @enum {string} */
+                          type: "think";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          query: string;
+                          results: {
+                            url: string;
+                          }[];
+                          /** @enum {string} */
+                          searchType: "neural" | "keyword" | "auto" | "fast";
+                          /** @enum {string} */
+                          type: "search";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          result: {
+                            url: string;
+                          };
+                          /** @enum {string} */
+                          type: "crawl";
+                        };
+                    /** @enum {string} */
+                    eventType: "task-operation";
+                    operationId: string;
+                    planId: string;
+                    researchId: string;
+                    taskId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "task-output";
+                    output: {
+                      content: string;
+                      /** @enum {string} */
+                      outputType: "completed";
+                    };
+                    planId: string;
+                    researchId: string;
+                    taskId: string;
+                  }
+              )
+          )[];
+          /** @description The instructions given to this research request */
+          instructions: string;
+          /**
+           * @description The model used for the research request
+           * @default exa-research
+           * @enum {string}
+           */
+          model: "exa-research" | "exa-research-pro";
+          output: {
+            content: string;
+            parsed?: {
               [key: string]: unknown;
             };
-            /** @description The unique identifier for the research task */
-            id: string;
-            /** @description The instructions or query for the research task */
-            instructions: string;
-            /** @enum {string} */
-            model?: "exa-research" | "exa-research-pro";
-            operations: (
-              | {
-                  stepId: string;
-                  /** @description Agent generated plan or reasoning for upcoming actions. */
-                  text: string;
-                  /** @enum {string} */
-                  type: "step-plan";
-                }
-              | {
-                  /** @description A completed subfield */
-                  data: {
-                    [key: string]: unknown;
+          };
+          /** @description The unique identifier for the research request */
+          researchId: string;
+          /** @enum {string} */
+          status: "completed";
+        }
+      | {
+          /** @description Milliseconds since epoch time */
+          createdAt: number;
+          events?: (
+            | (
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "research-definition";
+                    instructions: string;
+                    outputSchema?: {
+                      [key: string]: unknown;
+                    };
+                    researchId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "research-output";
+                    output:
+                      | {
+                          content: string;
+                          costDollars: {
+                            numPages: number;
+                            numSearches: number;
+                            reasoningTokens: number;
+                            total: number;
+                          };
+                          /** @enum {string} */
+                          outputType: "completed";
+                          parsed?: {
+                            [key: string]: unknown;
+                          };
+                        }
+                      | {
+                          error: string;
+                          /** @enum {string} */
+                          outputType: "failed";
+                        };
+                    researchId: string;
+                  }
+              )
+            | (
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "plan-definition";
+                    planId: string;
+                    researchId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    data:
+                      | {
+                          content: string;
+                          /** @enum {string} */
+                          type: "think";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          query: string;
+                          results: {
+                            url: string;
+                          }[];
+                          /** @enum {string} */
+                          searchType: "neural" | "keyword" | "auto" | "fast";
+                          /** @enum {string} */
+                          type: "search";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          result: {
+                            url: string;
+                          };
+                          /** @enum {string} */
+                          type: "crawl";
+                        };
+                    /** @enum {string} */
+                    eventType: "plan-operation";
+                    operationId: string;
+                    planId: string;
+                    researchId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "plan-output";
+                    output:
+                      | {
+                          /** @enum {string} */
+                          outputType: "tasks";
+                          reasoning: string;
+                          tasksInstructions: string[];
+                        }
+                      | {
+                          /** @enum {string} */
+                          outputType: "stop";
+                          reasoning: string;
+                        };
+                    planId: string;
+                    researchId: string;
+                  }
+              )
+            | (
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "task-definition";
+                    instructions: string;
+                    planId: string;
+                    researchId: string;
+                    taskId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    data:
+                      | {
+                          content: string;
+                          /** @enum {string} */
+                          type: "think";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          query: string;
+                          results: {
+                            url: string;
+                          }[];
+                          /** @enum {string} */
+                          searchType: "neural" | "keyword" | "auto" | "fast";
+                          /** @enum {string} */
+                          type: "search";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          result: {
+                            url: string;
+                          };
+                          /** @enum {string} */
+                          type: "crawl";
+                        };
+                    /** @enum {string} */
+                    eventType: "task-operation";
+                    operationId: string;
+                    planId: string;
+                    researchId: string;
+                    taskId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "task-output";
+                    output: {
+                      content: string;
+                      /** @enum {string} */
+                      outputType: "completed";
+                    };
+                    planId: string;
+                    researchId: string;
+                    taskId: string;
+                  }
+              )
+          )[];
+          /** @description The instructions given to this research request */
+          instructions: string;
+          /**
+           * @description The model used for the research request
+           * @default exa-research
+           * @enum {string}
+           */
+          model: "exa-research" | "exa-research-pro";
+          /** @description The unique identifier for the research request */
+          researchId: string;
+          /** @enum {string} */
+          status: "canceled";
+        }
+      | {
+          /** @description Milliseconds since epoch time */
+          createdAt: number;
+          /** @description A message indicating why the request failed */
+          error: string;
+          events?: (
+            | (
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "research-definition";
+                    instructions: string;
+                    outputSchema?: {
+                      [key: string]: unknown;
+                    };
+                    researchId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "research-output";
+                    output:
+                      | {
+                          content: string;
+                          costDollars: {
+                            numPages: number;
+                            numSearches: number;
+                            reasoningTokens: number;
+                            total: number;
+                          };
+                          /** @enum {string} */
+                          outputType: "completed";
+                          parsed?: {
+                            [key: string]: unknown;
+                          };
+                        }
+                      | {
+                          error: string;
+                          /** @enum {string} */
+                          outputType: "failed";
+                        };
+                    researchId: string;
+                  }
+              )
+            | (
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "plan-definition";
+                    planId: string;
+                    researchId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    data:
+                      | {
+                          content: string;
+                          /** @enum {string} */
+                          type: "think";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          query: string;
+                          results: {
+                            url: string;
+                          }[];
+                          /** @enum {string} */
+                          searchType: "neural" | "keyword" | "auto" | "fast";
+                          /** @enum {string} */
+                          type: "search";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          result: {
+                            url: string;
+                          };
+                          /** @enum {string} */
+                          type: "crawl";
+                        };
+                    /** @enum {string} */
+                    eventType: "plan-operation";
+                    operationId: string;
+                    planId: string;
+                    researchId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "plan-output";
+                    output:
+                      | {
+                          /** @enum {string} */
+                          outputType: "tasks";
+                          reasoning: string;
+                          tasksInstructions: string[];
+                        }
+                      | {
+                          /** @enum {string} */
+                          outputType: "stop";
+                          reasoning: string;
+                        };
+                    planId: string;
+                    researchId: string;
+                  }
+              )
+            | (
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "task-definition";
+                    instructions: string;
+                    planId: string;
+                    researchId: string;
+                    taskId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    data:
+                      | {
+                          content: string;
+                          /** @enum {string} */
+                          type: "think";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          query: string;
+                          results: {
+                            url: string;
+                          }[];
+                          /** @enum {string} */
+                          searchType: "neural" | "keyword" | "auto" | "fast";
+                          /** @enum {string} */
+                          type: "search";
+                        }
+                      | {
+                          goal?: string;
+                          pageTokens: number;
+                          result: {
+                            url: string;
+                          };
+                          /** @enum {string} */
+                          type: "crawl";
+                        };
+                    /** @enum {string} */
+                    eventType: "task-operation";
+                    operationId: string;
+                    planId: string;
+                    researchId: string;
+                    taskId: string;
+                  }
+                | {
+                    /** @description Milliseconds since epoch time */
+                    createdAt: number;
+                    /** @enum {string} */
+                    eventType: "task-output";
+                    output: {
+                      content: string;
+                      /** @enum {string} */
+                      outputType: "completed";
+                    };
+                    planId: string;
+                    researchId: string;
+                    taskId: string;
+                  }
+              )
+          )[];
+          /** @description The instructions given to this research request */
+          instructions: string;
+          /**
+           * @description The model used for the research request
+           * @default exa-research
+           * @enum {string}
+           */
+          model: "exa-research" | "exa-research-pro";
+          /** @description The unique identifier for the research request */
+          researchId: string;
+          /** @enum {string} */
+          status: "failed";
+        };
+    ResearchEventDtoClass:
+      | (
+          | {
+              /** @description Milliseconds since epoch time */
+              createdAt: number;
+              /** @enum {string} */
+              eventType: "research-definition";
+              instructions: string;
+              outputSchema?: {
+                [key: string]: unknown;
+              };
+              researchId: string;
+            }
+          | {
+              /** @description Milliseconds since epoch time */
+              createdAt: number;
+              /** @enum {string} */
+              eventType: "research-output";
+              output:
+                | {
+                    content: string;
+                    costDollars: {
+                      numPages: number;
+                      numSearches: number;
+                      reasoningTokens: number;
+                      total: number;
+                    };
+                    /** @enum {string} */
+                    outputType: "completed";
+                    parsed?: {
+                      [key: string]: unknown;
+                    };
+                  }
+                | {
+                    error: string;
+                    /** @enum {string} */
+                    outputType: "failed";
                   };
-                  stepId: string;
-                  /** @enum {string} */
-                  type: "step-data";
-                }
-              | {
-                  /** @description What the agent hopes to find with this search query */
-                  goal?: string;
-                  /** @description Search query used */
-                  query: string;
-                  results?: {
-                    id: string;
-                    snippet: string;
-                    title?: string;
-                    url: string;
-                    /** @enum {number} */
-                    version: 1;
-                  }[];
-                  stepId: string;
-                  /** @enum {string} */
-                  type: "search";
-                }
-              | {
-                  /** @description What the agent hopes to find with this crawl */
-                  goal?: string;
-                  stepId: string;
-                  /** @enum {string} */
-                  type: "crawl";
-                  url: string;
-                }
-              | {
-                  stepId: string;
-                  /** @description Intermediate chain-of-thought style reasoning output */
-                  thought: string;
-                  /** @enum {string} */
-                  type: "think";
-                }
-            )[];
-            /** @description The JSON schema specification for the expected output format */
-            schema?: {
-              [key: string]: unknown;
-            };
-            /**
-             * @description The current status of the research task
-             * @enum {string}
-             */
-            status: "running" | "completed" | "failed";
-            timeMs?: number;
-          };
-          /** @enum {string} */
-          type: "completed";
-        };
-    ResearchTaskOperationDto:
+              researchId: string;
+            }
+        )
+      | (
+          | {
+              /** @description Milliseconds since epoch time */
+              createdAt: number;
+              /** @enum {string} */
+              eventType: "plan-definition";
+              planId: string;
+              researchId: string;
+            }
+          | {
+              /** @description Milliseconds since epoch time */
+              createdAt: number;
+              data:
+                | {
+                    content: string;
+                    /** @enum {string} */
+                    type: "think";
+                  }
+                | {
+                    goal?: string;
+                    pageTokens: number;
+                    query: string;
+                    results: {
+                      url: string;
+                    }[];
+                    /** @enum {string} */
+                    searchType: "neural" | "keyword" | "auto" | "fast";
+                    /** @enum {string} */
+                    type: "search";
+                  }
+                | {
+                    goal?: string;
+                    pageTokens: number;
+                    result: {
+                      url: string;
+                    };
+                    /** @enum {string} */
+                    type: "crawl";
+                  };
+              /** @enum {string} */
+              eventType: "plan-operation";
+              operationId: string;
+              planId: string;
+              researchId: string;
+            }
+          | {
+              /** @description Milliseconds since epoch time */
+              createdAt: number;
+              /** @enum {string} */
+              eventType: "plan-output";
+              output:
+                | {
+                    /** @enum {string} */
+                    outputType: "tasks";
+                    reasoning: string;
+                    tasksInstructions: string[];
+                  }
+                | {
+                    /** @enum {string} */
+                    outputType: "stop";
+                    reasoning: string;
+                  };
+              planId: string;
+              researchId: string;
+            }
+        )
+      | (
+          | {
+              /** @description Milliseconds since epoch time */
+              createdAt: number;
+              /** @enum {string} */
+              eventType: "task-definition";
+              instructions: string;
+              planId: string;
+              researchId: string;
+              taskId: string;
+            }
+          | {
+              /** @description Milliseconds since epoch time */
+              createdAt: number;
+              data:
+                | {
+                    content: string;
+                    /** @enum {string} */
+                    type: "think";
+                  }
+                | {
+                    goal?: string;
+                    pageTokens: number;
+                    query: string;
+                    results: {
+                      url: string;
+                    }[];
+                    /** @enum {string} */
+                    searchType: "neural" | "keyword" | "auto" | "fast";
+                    /** @enum {string} */
+                    type: "search";
+                  }
+                | {
+                    goal?: string;
+                    pageTokens: number;
+                    result: {
+                      url: string;
+                    };
+                    /** @enum {string} */
+                    type: "crawl";
+                  };
+              /** @enum {string} */
+              eventType: "task-operation";
+              operationId: string;
+              planId: string;
+              researchId: string;
+              taskId: string;
+            }
+          | {
+              /** @description Milliseconds since epoch time */
+              createdAt: number;
+              /** @enum {string} */
+              eventType: "task-output";
+              output: {
+                content: string;
+                /** @enum {string} */
+                outputType: "completed";
+              };
+              planId: string;
+              researchId: string;
+              taskId: string;
+            }
+        );
+    ResearchOperationDtoClass:
       | {
-          stepId: string;
-          /** @description Agent generated plan or reasoning for upcoming actions. */
-          text: string;
+          content: string;
           /** @enum {string} */
-          type: "step-plan";
+          type: "think";
         }
       | {
-          /** @description A completed subfield */
-          data: {
-            [key: string]: unknown;
-          };
-          stepId: string;
-          /** @enum {string} */
-          type: "step-data";
-        }
-      | {
-          /** @description What the agent hopes to find with this search query */
           goal?: string;
-          /** @description Search query used */
+          pageTokens: number;
           query: string;
-          results?: {
-            id: string;
-            snippet: string;
-            title?: string;
+          results: {
             url: string;
-            /** @enum {number} */
-            version: 1;
           }[];
-          stepId: string;
+          /** @enum {string} */
+          searchType: "neural" | "keyword" | "auto" | "fast";
           /** @enum {string} */
           type: "search";
         }
       | {
-          /** @description What the agent hopes to find with this crawl */
           goal?: string;
-          stepId: string;
+          pageTokens: number;
+          result: {
+            url: string;
+          };
           /** @enum {string} */
           type: "crawl";
-          url: string;
-        }
-      | {
-          stepId: string;
-          /** @description Intermediate chain-of-thought style reasoning output */
-          thought: string;
-          /** @enum {string} */
-          type: "think";
         };
   };
   responses: never;
@@ -442,64 +1831,18 @@ export interface components {
   headers: never;
   pathItems: never;
 }
-export type SchemaListResearchTasksRequestDto =
-  components["schemas"]["ListResearchTasksRequestDto"];
-export type SchemaListResearchTasksResponseDto =
-  components["schemas"]["ListResearchTasksResponseDto"];
-export type SchemaResearchCreateOpenAiResponseDto =
-  components["schemas"]["ResearchCreateOpenAIResponseDto"];
-export type SchemaResearchCreateTaskRequestDto =
-  components["schemas"]["ResearchCreateTaskRequestDto"];
-export type SchemaResearchCreateTaskResponseDto =
-  components["schemas"]["ResearchCreateTaskResponseDto"];
-export type SchemaResearchTaskDto = components["schemas"]["ResearchTaskDto"];
-export type SchemaResearchTaskEventDto =
-  components["schemas"]["ResearchTaskEventDto"];
-export type SchemaResearchTaskOperationDto =
-  components["schemas"]["ResearchTaskOperationDto"];
+export type SchemaListResearchResponseDto =
+  components["schemas"]["ListResearchResponseDto"];
+export type SchemaResearchCreateRequestDtoClass =
+  components["schemas"]["ResearchCreateRequestDtoClass"];
+export type SchemaResearchDtoClass = components["schemas"]["ResearchDtoClass"];
+export type SchemaResearchEventDtoClass =
+  components["schemas"]["ResearchEventDtoClass"];
+export type SchemaResearchOperationDtoClass =
+  components["schemas"]["ResearchOperationDtoClass"];
 export type $defs = Record<string, never>;
 export interface operations {
-  "research-responses-create": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ResearchCreateOpenAIResponseDto"];
-      };
-    };
-    responses: {
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  ResearchControllerV0_getResearchOpenAIResponse: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  "research-tasks-list": {
+  ResearchController_listResearch: {
     parameters: {
       query?: {
         /** @description The cursor to paginate through the results */
@@ -513,18 +1856,18 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description List of research tasks */
+      /** @description List of research requests */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ListResearchTasksResponseDto"];
+          "application/json": components["schemas"]["ListResearchResponseDto"];
         };
       };
     };
   };
-  "research-tasks-create": {
+  ResearchController_createResearch: {
     parameters: {
       query?: never;
       header?: never;
@@ -533,27 +1876,30 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["ResearchCreateTaskRequestDto"];
+        "application/json": components["schemas"]["ResearchCreateRequestDtoClass"];
       };
     };
     responses: {
-      /** @description Research task created */
+      /** @description Research request created */
       201: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ResearchCreateTaskResponseDto"];
+          "application/json": components["schemas"]["ResearchDtoClass"];
         };
       };
     };
   };
-  ResearchControllerV0_getResearchTask: {
+  ResearchController_getResearch: {
     parameters: {
-      query?: never;
+      query: {
+        events: string;
+        stream: string;
+      };
       header?: never;
       path: {
-        id: string;
+        researchId: string;
       };
       cookie?: never;
     };
@@ -564,7 +1910,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ResearchTaskDto"];
+          "application/json": components["schemas"]["ResearchDtoClass"];
         };
       };
     };

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Exa, { type JSONSchema } from "../src";
+import Exa from "../src";
 
 /**
- * Test suite for the /research endpoint.
+ * Test suite for the /research/v1 endpoint.
  *
  * These tests only ensure that the Exa client constructs the correct
  * internal request payload. They do **not** make any real HTTP calls.
@@ -20,33 +20,33 @@ describe("Research API", () => {
     const instructions = "General research";
     const model = "exa-research";
 
-    // Minimal (but valid) JSON schema
-    const schema: JSONSchema = { type: "object" };
+    const schema = { type: "object" };
 
     const mockResponse = {
-      id: "research_123",
-      status: "running", // string allowed by ResearchTaskResponse
-      output: null,
-      citations: {},
+      researchId: "research_123",
+      status: "running",
+      instructions,
+      model,
+      createdAt: Date.now(),
     };
 
     const requestSpy = vi
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
-    const result = await exa.research.createTask({
+    const result = await exa.research.create({
       instructions,
       model,
-      output: { schema },
+      outputSchema: schema,
     });
 
     expect(requestSpy).toHaveBeenCalledWith(
-      "/research/v0/tasks",
+      "/research/v1",
       "POST",
       {
         instructions,
         model,
-        output: { inferSchema: true, schema },
+        outputSchema: schema,
       },
       undefined
     );
@@ -56,7 +56,7 @@ describe("Research API", () => {
   it("should submit a research request with an explicit output schema", async () => {
     const instructions = "Explain photosynthesis in simple terms.";
 
-    const schema: JSONSchema = {
+    const schema = {
       type: "object",
       required: ["answer"],
       properties: {
@@ -65,38 +65,47 @@ describe("Research API", () => {
     };
 
     const mockResponse = {
-      id: "research_456",
+      researchId: "research_456",
       status: "completed",
-      output: { answer: "Photosynthesis is ..." },
-      citations: {},
+      instructions,
+      model: "exa-research",
+      createdAt: Date.now(),
+      output: {
+        content: "Photosynthesis is ...",
+        parsed: { answer: "Photosynthesis is ..." },
+      },
+      costDollars: {
+        numPages: 5,
+        numSearches: 2,
+        reasoningTokens: 1000,
+        total: 0.05,
+      },
+      events: [],
     };
 
     const requestSpy = vi
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
-    const result = await exa.research.createTask({
+    const result = await exa.research.create({
       instructions,
-      output: { schema },
+      outputSchema: schema,
     });
 
     expect(requestSpy).toHaveBeenCalledWith(
-      "/research/v0/tasks",
+      "/research/v1",
       "POST",
       {
         instructions,
         model: "exa-research",
-        output: {
-          inferSchema: true,
-          schema,
-        },
+        outputSchema: schema,
       },
       undefined
     );
     expect(result).toEqual(mockResponse);
   });
 
-  it("should list research tasks without options", async () => {
+  it("should list research requests without options", async () => {
     const mockResponse = {
       data: [],
       hasMore: false,
@@ -107,10 +116,10 @@ describe("Research API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
-    const result = await exa.research.listTasks();
+    const result = await exa.research.list();
 
     expect(requestSpy).toHaveBeenCalledWith(
-      "/research/v0/tasks",
+      "/research/v1",
       "GET",
       undefined,
       {}
@@ -118,7 +127,7 @@ describe("Research API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it("should list research tasks with pagination options", async () => {
+  it("should list research requests with pagination options", async () => {
     const pagination = { cursor: "abc123", limit: 25 } as const;
 
     const mockResponse = {
@@ -131,10 +140,10 @@ describe("Research API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
-    const result = await exa.research.listTasks(pagination);
+    const result = await exa.research.list(pagination);
 
     expect(requestSpy).toHaveBeenCalledWith(
-      "/research/v0/tasks",
+      "/research/v1",
       "GET",
       undefined,
       pagination

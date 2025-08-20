@@ -2,7 +2,7 @@
  * Zod Research Example for Exa
  *
  * This example demonstrates how to use Zod schemas with the research endpoint
- * for comprehensive analysis with parallelizable research tasks.
+ * for comprehensive analysis.
  */
 
 import { Exa } from "../src";
@@ -10,12 +10,7 @@ import { z } from "zod";
 
 const EXA_API_KEY = process.env.EXA_API_KEY;
 const EXA_BASE_URL = process.env.EXA_BASE_URL;
-
 const exa = new Exa(EXA_API_KEY, EXA_BASE_URL);
-
-// ===============================================
-// Zod Schemas for Research Analysis
-// ===============================================
 
 const TechnologyInfo = z.object({
   name: z.string().describe("Name of the technology"),
@@ -123,23 +118,33 @@ async function analyzeTechnologyLandscape() {
   console.log("=".repeat(40));
 
   try {
-    // Create the research task
-    const task = await exa.research.createTask({
+    // Create the research
+    const research = await exa.research.create({
       instructions:
         "quantum computing technology landscape, market leaders, and investment trends",
-      output: {
-        schema: TechnologyLandscape,
-      },
+      outputSchema: TechnologyLandscape,
       model: "exa-research",
     });
 
-    console.log(`Created task ${task.id}, polling for completion...`);
+    console.log(
+      `Created research ${research.researchId}, polling for completion...`
+    );
 
     // Poll until completion
-    const finalTask = await exa.research.pollTask(task.id);
-
-    // TypeScript knows this is TechnologyLandscape type!
-    const analysis = finalTask.data as z.infer<typeof TechnologyLandscape>;
+    const finalState = await exa.research.pollUntilFinished(
+      research.researchId,
+      { outputSchema: TechnologyLandscape }
+    );
+    if (finalState.status !== "completed") {
+      throw new Error(`Research failed with status: ${finalState.status}`);
+    }
+    const finalStateByGet = await exa.research.get(research.researchId, {
+      outputSchema: TechnologyLandscape,
+    });
+    if (finalStateByGet.status !== "completed") {
+      throw new Error(`Research failed with status: ${finalStateByGet.status}`);
+    }
+    const analysis = finalStateByGet.output.parsed;
 
     console.log("Emerging Technologies:");
     analysis.emerging_technologies.forEach((tech) => {
@@ -171,23 +176,25 @@ async function researchStartupEcosystem() {
   console.log("=".repeat(40));
 
   try {
-    // Create the research task
-    const task = await exa.research.createTask({
+    const research = await exa.research.create({
       instructions:
         "fintech startup ecosystem, top companies, funding rounds, and industry challenges",
-      output: {
-        schema: StartupEcosystem,
-      },
+      outputSchema: StartupEcosystem,
       model: "exa-research",
     });
 
-    console.log(`Created task ${task.id}, polling for completion...`);
+    console.log(
+      `Created research ${research.researchId}, polling for completion...`
+    );
 
-    // Poll until completion
-    const finalTask = await exa.research.pollTask(task.id);
-
-    // TypeScript knows this is StartupEcosystem type!
-    const ecosystem = finalTask.data as z.infer<typeof StartupEcosystem>;
+    const finalState = await exa.research.pollUntilFinished(
+      research.researchId,
+      { outputSchema: StartupEcosystem }
+    );
+    if (finalState.status !== "completed") {
+      throw new Error(`Research failed with status: ${finalState.status}`);
+    }
+    const ecosystem = finalState.output.parsed;
 
     console.log("Top Startups:");
     ecosystem.top_startups.forEach((startup) => {
@@ -221,33 +228,35 @@ async function exploreAIResearch() {
   console.log("=".repeat(40));
 
   try {
-    // Create the research task
-    const task = await exa.research.createTask({
+    const research = await exa.research.create({
       instructions:
         "AI research landscape including breakthrough papers, leading researchers, and commercial applications",
-      output: {
-        schema: AIResearchOverview,
-      },
+      outputSchema: AIResearchOverview,
       model: "exa-research",
     });
 
-    console.log(`Created task ${task.id}, polling for completion...`);
+    console.log(
+      `Created research ${research.researchId}, polling for completion...`
+    );
 
-    // Poll until completion
-    const finalTask = await exa.research.pollTask(task.id);
-
-    // TypeScript knows this is AIResearchOverview type!
-    const research = finalTask.data as z.infer<typeof AIResearchOverview>;
+    const finalState = await exa.research.pollUntilFinished(
+      research.researchId,
+      { outputSchema: AIResearchOverview }
+    );
+    if (finalState.status !== "completed") {
+      throw new Error(`Research failed with status: ${finalState.status}`);
+    }
+    const aiResearch = finalState.output.parsed;
 
     console.log("Breakthrough Papers:");
-    research.breakthrough_papers.forEach((paper) => {
+    aiResearch.breakthrough_papers.forEach((paper) => {
       console.log(`  • ${paper.title}`);
       console.log(`    Authors: ${paper.authors.join(", ")}`);
       console.log(`    Key Contribution: ${paper.key_contribution}`);
     });
 
     console.log("\nLeading Researchers:");
-    research.leading_researchers.forEach((researcher) => {
+    aiResearch.leading_researchers.forEach((researcher) => {
       console.log(`  • ${researcher.name} (${researcher.affiliation})`);
       console.log(`    Expertise: ${researcher.expertise}`);
       if (researcher.notable_work) {
@@ -256,7 +265,7 @@ async function exploreAIResearch() {
     });
 
     console.log("\nCommercial Applications:");
-    research.commercial_applications.forEach((app) => {
+    aiResearch.commercial_applications.forEach((app) => {
       console.log(`  • ${app.application_area}: ${app.description}`);
       if (app.companies) {
         console.log(`    Companies: ${app.companies.join(", ")}`);
@@ -272,23 +281,25 @@ async function demonstrateCustomResearch() {
   console.log("=".repeat(40));
 
   try {
-    // Create the research task
-    const task = await exa.research.createTask({
+    const research = await exa.research.create({
       instructions:
         "autonomous vehicle technology development, key players, and market outlook",
-      output: {
-        schema: TechnologyLandscape,
-      },
+      outputSchema: TechnologyLandscape,
       model: "exa-research",
     });
 
-    console.log(`Created task ${task.id}, polling for completion...`);
+    console.log(
+      `Created research ${research.researchId}, polling for completion...`
+    );
 
-    // Poll until completion
-    const finalTask = await exa.research.pollTask(task.id);
-
-    // TypeScript knows this is TechnologyLandscape type!
-    const analysis = finalTask.data as z.infer<typeof TechnologyLandscape>;
+    const finalState = await exa.research.pollUntilFinished(
+      research.researchId,
+      { outputSchema: TechnologyLandscape }
+    );
+    if (finalState.status !== "completed") {
+      throw new Error(`Research failed with status: ${finalState.status}`);
+    }
+    const analysis = finalState.output.parsed;
 
     console.log("Emerging Technologies in Autonomous Vehicles:");
     analysis.emerging_technologies.forEach((tech) => {
@@ -315,10 +326,6 @@ async function demonstrateCustomResearch() {
   }
 }
 
-// ===============================================
-// Main Function
-// ===============================================
-
 async function main() {
   console.log("🚀 Zod Research Integration Examples\n");
 
@@ -326,22 +333,8 @@ async function main() {
   await researchStartupEcosystem();
   await exploreAIResearch();
   await demonstrateCustomResearch();
-
-  console.log("\n✅ All research examples completed!");
 }
 
-// Export schemas and functions for use in other examples
-export {
-  TechnologyLandscape,
-  StartupEcosystem,
-  AIResearchOverview,
-  TechnologyInfo,
-  CompanyProfile,
-  ResearchInsight,
-  main as runResearchExamples,
-};
-
-// Run if executed directly
 if (require.main === module) {
   main().catch(console.error);
 }

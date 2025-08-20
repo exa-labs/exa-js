@@ -14,5 +14,10 @@
     "resolveJsonModule": true,
 
     "types": ["vitest/globals"]
-  }
+  },
+  "exclude": [
+    "examples/next",
+    "examples/vite",
+    "examples/node"
+  ]
 }
