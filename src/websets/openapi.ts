@@ -373,7 +373,7 @@ export interface paths {
     delete: operations["websets-enrichments-delete"];
     options?: never;
     head?: never;
-    patch?: never;
+    patch: operations["WebsetsEnrichmentsController_updateEnrichment_v0"];
     trace?: never;
   };
   "/v0/websets/{webset}/enrichments/{id}/cancel": {
@@ -735,7 +735,7 @@ export interface components {
         /** @description The ID of the source to search. */
         id: string;
         /** @enum {string} */
-        source: CreateWebsetParametersImportSource;
+        source: WebsetImportSource;
       }[];
       /** @description Set of key-value pairs you want to associate with this object. */
       metadata?: {
@@ -763,7 +763,7 @@ export interface components {
           /** @description The ID of the source to exclude. */
           id: string;
           /** @enum {string} */
-          source: CreateWebsetParametersSearchExcludeSource;
+          source: WebsetSearchExcludeSource;
         }[];
         /** @description Natural language search query describing what you are looking for.
          *
@@ -784,7 +784,7 @@ export interface components {
             limit: number;
           };
           /** @enum {string} */
-          source: CreateWebsetSearchParametersScopeSource;
+          source: WebsetSearchScopeSource;
         }[];
       };
     };
@@ -796,7 +796,7 @@ export interface components {
        *     - **append**: Add new items to existing ones, keeping items that match the new criteria
        * @default override
        */
-      behavior: components["schemas"]["WebsetSearchBehavior"];
+      behavior: WebsetSearchBehavior;
       /** @description Number of Items the Search will attempt to find.
        *
        *     The actual number of Items found may be less than this number depending on the query complexity. */
@@ -814,7 +814,7 @@ export interface components {
         /** @description The ID of the source to exclude. */
         id: string;
         /** @enum {string} */
-        source: CreateWebsetSearchParametersExcludeSource;
+        source: WebsetSearchExcludeSource;
       }[];
       /** @description Set of key-value pairs you want to associate with this object. */
       metadata?: {
@@ -839,7 +839,7 @@ export interface components {
           limit: number;
         };
         /** @enum {string} */
-        source: CreateWebsetSearchParametersScopeSource;
+        source: WebsetSearchScopeSource;
       }[];
     };
     /** Custom */
@@ -1089,6 +1089,146 @@ export interface components {
            * @constant
            */
           type: "webset.search.completed";
+        }
+      | {
+          /**
+           * Format: date-time
+           * @description The date and time the event was created
+           */
+          createdAt: string;
+          data: components["schemas"]["Import"];
+          /** @description The unique identifier for the event */
+          id: string;
+          /**
+           * @default event
+           * @constant
+           */
+          object: "event";
+          /**
+           * @default import.created
+           * @constant
+           */
+          type: "import.created";
+        }
+      | {
+          /**
+           * Format: date-time
+           * @description The date and time the event was created
+           */
+          createdAt: string;
+          data: components["schemas"]["Import"];
+          /** @description The unique identifier for the event */
+          id: string;
+          /**
+           * @default event
+           * @constant
+           */
+          object: "event";
+          /**
+           * @default import.completed
+           * @constant
+           */
+          type: "import.completed";
+        }
+      | {
+          /**
+           * Format: date-time
+           * @description The date and time the event was created
+           */
+          createdAt: string;
+          data: components["schemas"]["Monitor"];
+          /** @description The unique identifier for the event */
+          id: string;
+          /**
+           * @default event
+           * @constant
+           */
+          object: "event";
+          /**
+           * @default monitor.created
+           * @constant
+           */
+          type: "monitor.created";
+        }
+      | {
+          /**
+           * Format: date-time
+           * @description The date and time the event was created
+           */
+          createdAt: string;
+          data: components["schemas"]["Monitor"];
+          /** @description The unique identifier for the event */
+          id: string;
+          /**
+           * @default event
+           * @constant
+           */
+          object: "event";
+          /**
+           * @default monitor.updated
+           * @constant
+           */
+          type: "monitor.updated";
+        }
+      | {
+          /**
+           * Format: date-time
+           * @description The date and time the event was created
+           */
+          createdAt: string;
+          data: components["schemas"]["Monitor"];
+          /** @description The unique identifier for the event */
+          id: string;
+          /**
+           * @default event
+           * @constant
+           */
+          object: "event";
+          /**
+           * @default monitor.deleted
+           * @constant
+           */
+          type: "monitor.deleted";
+        }
+      | {
+          /**
+           * Format: date-time
+           * @description The date and time the event was created
+           */
+          createdAt: string;
+          data: components["schemas"]["MonitorRun"];
+          /** @description The unique identifier for the event */
+          id: string;
+          /**
+           * @default event
+           * @constant
+           */
+          object: "event";
+          /**
+           * @default monitor.run.created
+           * @constant
+           */
+          type: "monitor.run.created";
+        }
+      | {
+          /**
+           * Format: date-time
+           * @description The date and time the event was created
+           */
+          createdAt: string;
+          data: components["schemas"]["MonitorRun"];
+          /** @description The unique identifier for the event */
+          id: string;
+          /**
+           * @default event
+           * @constant
+           */
+          object: "event";
+          /**
+           * @default monitor.run.completed
+           * @constant
+           */
+          type: "monitor.run.completed";
         };
     /** @enum {string} */
     EventType: EventType;
@@ -1408,7 +1548,7 @@ export interface components {
          * @description Format of the enrichment.
          * @enum {string}
          */
-        format: PreviewWebsetResponseEnrichmentsFormat;
+        format: WebsetEnrichmentFormat;
         /** @description When format is options, the options detected from the query. */
         options?: {
           /** @description Label of the option. */
@@ -1436,6 +1576,26 @@ export interface components {
        * @constant
        */
       type: "research_paper";
+    };
+    UpdateEnrichmentParameters: {
+      /** @description Provide a description of the enrichment task you want to perform to each Webset Item. */
+      description?: string;
+      /**
+       * @description Format of the enrichment response.
+       *
+       *     We automatically select the best format based on the description. If you want to explicitly specify the format, you can do so here.
+       * @enum {string}
+       */
+      format?: WebsetEnrichmentFormat;
+      /** @description Set of key-value pairs you want to associate with this object. */
+      metadata?: {
+        [key: string]: string;
+      } | null;
+      /** @description When the format is options, the different options for the enrichment agent to choose from. */
+      options?: {
+        /** @description The label of the option */
+        label: string;
+      }[];
     };
     UpdateImport: {
       metadata?: {
@@ -1529,7 +1689,7 @@ export interface components {
        * @description The type of event
        * @enum {string}
        */
-      eventType: WebhookAttemptEventType;
+      eventType: EventType;
       /** @description The unique identifier for the webhook attempt */
       id: string;
       /**
@@ -1873,14 +2033,14 @@ export interface components {
        *     - `append`: the search will add the new Items found to the existing Webset. Any Items that don't match the new criteria will be discarded.
        * @default override
        */
-      behavior: components["schemas"]["WebsetSearchBehavior"];
+      behavior: WebsetSearchBehavior;
       /**
        * Format: date-time
        * @description The date and time the search was canceled
        */
       canceledAt: string | null;
       /** @description The reason the search was canceled */
-      canceledReason: components["schemas"]["WebsetSearchCanceledReason"];
+      canceledReason: WebsetSearchCanceledReason;
       /** @description The number of results the search will attempt to find. The actual number of results may be less than this number depending on the search complexity. */
       count: number;
       /**
@@ -1957,11 +2117,13 @@ export interface components {
        *     If provided during creation, the search will only be performed on the sources provided. */
       scope: {
         id: string;
-        /**
-         * @default import
-         * @enum {string}
-         */
-        source: ScopeSourceType;
+        relationship?: {
+          /** @description What the relationship of the entities you hope to find is relative to the entities contained in the provided source. */
+          definition: string;
+          limit: number;
+        };
+        /** @enum {string} */
+        source: WebsetSearchScopeSource;
       }[];
       /**
        * WebsetSearchStatus
@@ -1978,9 +2140,6 @@ export interface components {
       websetId: string;
     };
     /** @enum {string} */
-    WebsetSearchBehavior: WebsetSearchBehavior;
-    /** @enum {string} */
-    WebsetSearchCanceledReason: WebsetSearchCanceledReason;
   };
   responses: never;
   parameters: never;
@@ -2035,6 +2194,7 @@ export type PreviewWebsetParameters =
 export type PreviewWebsetResponse =
   components["schemas"]["PreviewWebsetResponse"];
 export type ResearchPaperEntity = components["schemas"]["ResearchPaperEntity"];
+export type UpdateEnrichmentParameters = components["schemas"]["UpdateEnrichmentParameters"];
 export type UpdateImport = components["schemas"]["UpdateImport"];
 export type UpdateMonitor = components["schemas"]["UpdateMonitor"];
 export type UpdateWebhookParameters =
@@ -3026,6 +3186,35 @@ export interface operations {
       };
     };
   };
+  WebsetsEnrichmentsController_updateEnrichment_v0: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        webset: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateEnrichmentParameters"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   "websets-enrichments-cancel": {
     parameters: {
       query?: never;
@@ -3283,6 +3472,7 @@ export enum CreateEnrichmentParametersFormat {
   options = "options",
   email = "email",
   phone = "phone",
+  url = "url",
 }
 export enum CreateImportParametersFormat {
   csv = "csv",
@@ -3305,26 +3495,11 @@ export enum CreateImportResponseStatus {
   completed = "completed",
   failed = "failed",
 }
-export enum CreateWebsetParametersImportSource {
+export enum WebsetImportSource {
   import = "import",
   webset = "webset",
 }
-export enum CreateWebsetParametersSearchExcludeSource {
-  import = "import",
-  webset = "webset",
-}
-export enum ScopeSourceType {
-  import = "import",
-  webset = "webset",
-}
-export enum CreateWebsetSearchParametersExcludeSource {
-  import = "import",
-  webset = "webset",
-}
-export enum CreateWebsetSearchParametersScopeSource {
-  import = "import",
-  webset = "webset",
-}
+
 export enum EnrichmentResultStatus {
   pending = "pending",
   completed = "completed",
@@ -3341,9 +3516,13 @@ export enum EventType {
   webset_search_updated = "webset.search.updated",
   import_created = "import.created",
   import_completed = "import.completed",
-  import_processing = "import.processing",
   webset_item_created = "webset.item.created",
   webset_item_enriched = "webset.item.enriched",
+  monitor_created = "monitor.created",
+  monitor_updated = "monitor.updated",
+  monitor_deleted = "monitor.deleted",
+  monitor_run_created = "monitor.run.created",
+  monitor_run_completed = "monitor.run.completed",
   webset_export_created = "webset.export.created",
   webset_export_completed = "webset.export.completed",
 }
@@ -3386,14 +3565,6 @@ export enum MonitorRunType {
   search = "search",
   refresh = "refresh",
 }
-export enum PreviewWebsetResponseEnrichmentsFormat {
-  text = "text",
-  date = "date",
-  number = "number",
-  options = "options",
-  email = "email",
-  phone = "phone",
-}
 export enum UpdateMonitorStatus {
   enabled = "enabled",
   disabled = "disabled",
@@ -3401,23 +3572,6 @@ export enum UpdateMonitorStatus {
 export enum WebhookStatus {
   active = "active",
   inactive = "inactive",
-}
-export enum WebhookAttemptEventType {
-  webset_created = "webset.created",
-  webset_deleted = "webset.deleted",
-  webset_paused = "webset.paused",
-  webset_idle = "webset.idle",
-  webset_search_created = "webset.search.created",
-  webset_search_canceled = "webset.search.canceled",
-  webset_search_completed = "webset.search.completed",
-  webset_search_updated = "webset.search.updated",
-  import_created = "import.created",
-  import_completed = "import.completed",
-  import_processing = "import.processing",
-  webset_item_created = "webset.item.created",
-  webset_item_enriched = "webset.item.enriched",
-  webset_export_created = "webset.export.created",
-  webset_export_completed = "webset.export.completed",
 }
 export enum WebsetStatus {
   idle = "idle",
@@ -3437,6 +3591,7 @@ export enum WebsetEnrichmentFormat {
   options = "options",
   email = "email",
   phone = "phone",
+  url = "url",
 }
 export enum WebsetItemSource {
   search = "search",
@@ -3455,6 +3610,10 @@ export enum WebsetSearchRecallExpectedConfidence {
   high = "high",
   medium = "medium",
   low = "low",
+}
+export enum WebsetSearchScopeSource {
+  import = "import",
+  webset = "webset",
 }
 export enum WebsetSearchStatus {
   created = "created",

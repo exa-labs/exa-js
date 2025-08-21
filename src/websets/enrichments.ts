@@ -2,7 +2,11 @@
  * Client for managing Webset Enrichments
  */
 import { WebsetsBaseClient } from "./base";
-import { CreateEnrichmentParameters, WebsetEnrichment } from "./openapi";
+import {
+  CreateEnrichmentParameters,
+  UpdateEnrichmentParameters,
+  WebsetEnrichment,
+} from "./openapi";
 
 /**
  * Client for managing Webset Enrichments
@@ -48,6 +52,25 @@ export class WebsetEnrichmentsClient extends WebsetsBaseClient {
     return this.request<WebsetEnrichment>(
       `/v0/websets/${websetId}/enrichments/${id}`,
       "DELETE"
+    );
+  }
+
+  /**
+   * Update an Enrichment
+   * @param websetId The ID of the Webset
+   * @param id The ID of the Enrichment
+   * @param params The enrichment update parameters
+   * @returns Promise that resolves when the update is complete
+   */
+  async update(
+    websetId: string,
+    id: string,
+    params: UpdateEnrichmentParameters
+  ): Promise<void> {
+    return this.request<void>(
+      `/v0/websets/${websetId}/enrichments/${id}`,
+      "PATCH",
+      params
     );
   }
 
