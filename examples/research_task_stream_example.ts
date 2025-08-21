@@ -2,7 +2,9 @@ import "dotenv/config";
 import { Exa } from "../src/index";
 import { z } from "zod";
 
-const exa = new Exa(process.env.EXA_API_KEY);
+const EXA_API_KEY = process.env.EXA_API_KEY;
+const EXA_BASE_URL = process.env.EXA_BASE_URL;
+const exa = new Exa(EXA_API_KEY, EXA_BASE_URL);
 
 // ===============================================
 // Zod Schema for Research Task
@@ -23,17 +25,15 @@ const instructions =
   "Summarize the history of San Francisco highlighting one or two major events for each decade from 1850 to 1950";
 
 async function runResearchExample() {
-  // Create a single research task
-  const createdTask = await exa.research.createTask({
+  const research = await exa.research.create({
     model: "exa-research",
     instructions,
-    output: { schema: SanFranciscoTimeline },
+    outputSchema: SanFranciscoTimeline,
   });
 
-  const taskId = createdTask.id;
-  console.log("Created Task ID:", taskId);
+  console.log("Created Research ID:", research.researchId);
 
-  const stream = await exa.research.getTask(taskId, { stream: true });
+  const stream = await exa.research.get(research.researchId, { stream: true });
   for await (const event of stream) {
     console.log("Research Event:", event);
   }

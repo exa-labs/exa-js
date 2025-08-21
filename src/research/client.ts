@@ -1,102 +1,96 @@
+import { Exa } from "../index";
 import {
-  Exa,
-  ListResearchTasksRequest,
-  ListResearchTasksResponse,
-  ResearchTaskEvent,
-  ResearchTask,
-} from "../index";
-import {
-  JSONSchema,
-  ResearchCreateTaskRequest,
-  ResearchCreateTaskResponse,
-  ResearchCreateTaskParamsTyped,
-} from "../index";
+  ListResearchRequest,
+  ListResearchResponse,
+  Research,
+  ResearchCreateRequest,
+  ResearchCreateResponse,
+  ResearchStreamEvent,
+  ResearchCreateParamsTyped,
+  ResearchTyped,
+} from "./index";
 import { ZodSchema } from "zod";
 import { isZodSchema, zodToJsonSchema } from "../zod-utils";
 import { ResearchBaseClient } from "./base";
 
-/**
- * Client for interacting with the Research Tasks API.
- */
 export class ResearchClient extends ResearchBaseClient {
   constructor(client: Exa) {
     super(client);
   }
 
-  /**
-   * Create a new research task with Zod schema for strongly typed output
-   */
-  async createTask<T>(
-    params: ResearchCreateTaskParamsTyped<ZodSchema<T>>
-  ): Promise<ResearchCreateTaskResponse>;
+  async create<T>(
+    params: ResearchCreateParamsTyped<ZodSchema<T>>
+  ): Promise<ResearchCreateResponse>;
 
-  /**
-   * Create a new research task.
-   *
-   * @param params Object containing:
-   *   - model: The research model to use (e.g., ResearchModel.ExaResearch).
-   *   - instructions: High-level guidance for the research agent.
-   *   - output: An object with a `schema` property (JSONSchema) that defines the expected output structure.
-   *
-   * @returns An object containing the unique ID of the created research task.
-   */
-  async createTask(params: {
+  async create(params: {
     instructions: string;
     model?: "exa-research" | "exa-research-pro";
-    output?: { inferSchema?: boolean; schema?: JSONSchema };
-  }): Promise<ResearchCreateTaskResponse>;
+    outputSchema?: Record<string, unknown>;
+  }): Promise<ResearchCreateResponse>;
 
-  async createTask<T>(params: {
+  async create<T>(params: {
     instructions: string;
     model?: "exa-research" | "exa-research-pro";
-    output?: { inferSchema?: boolean; schema?: JSONSchema | ZodSchema<T> };
-  }): Promise<ResearchCreateTaskResponse> {
-    // Ensure we have a model (default to exa_research)
-    const { instructions, model, output } = params;
+    outputSchema?: Record<string, unknown> | ZodSchema<T>;
+  }): Promise<ResearchCreateResponse> {
+    const { instructions, model, outputSchema } = params;
 
-    // Convert Zod schema to JSON schema if needed
-    let schema = output?.schema;
+    let schema = outputSchema;
     if (schema && isZodSchema(schema)) {
       schema = zodToJsonSchema(schema);
     }
 
-    const payload: ResearchCreateTaskRequest = {
+    const payload: ResearchCreateRequest = {
       instructions,
       model: model ?? "exa-research",
-      output: output
-        ? {
-            schema,
-            inferSchema: output.inferSchema ?? true,
-          }
-        : { inferSchema: true },
     };
 
-    return this.request<ResearchCreateTaskResponse>("/tasks", "POST", payload);
+    if (schema) {
+      payload.outputSchema = schema as Record<string, unknown>;
+    }
+
+    return this.request<ResearchCreateResponse>("", "POST", payload);
   }
 
-  /**
-   * Retrieve a research task by ID.
-   *
-   * Overloads:
-   *   - getTask(id)
-   *   - getTask(id, {stream: false})
-   *     => Promise<ResearchTask>
-   *   - getTask(id, {stream: true})
-   *     => AsyncGenerator<ResearchTaskEvent>
-   */
-  getTask(id: string): Promise<ResearchTask>;
-  getTask(id: string, options: { stream?: false }): Promise<ResearchTask>;
-  getTask(
-    id: string,
-    options: { stream: true }
-  ): Promise<AsyncGenerator<ResearchTaskEvent, any, any>>;
-  getTask(
-    id: string,
-    options?: { stream?: boolean }
-  ): Promise<ResearchTask> | Promise<AsyncGenerator<ResearchTaskEvent>> {
+  get(researchId: string): Promise<Research>;
+  get(
+    researchId: string,
+    options: { stream?: false; events?: boolean }
+  ): Promise<Research>;
+  get<T>(
+    researchId: string,
+    options: { stream?: false; events?: boolean; outputSchema: ZodSchema<T> }
+  ): Promise<ResearchTyped<T>>;
+  get(
+    researchId: string,
+    options: { stream: true; events?: boolean }
+  ): Promise<AsyncGenerator<ResearchStreamEvent, any, any>>;
+  get<T>(
+    researchId: string,
+    options: { stream: true; events?: boolean; outputSchema?: ZodSchema<T> }
+  ): Promise<AsyncGenerator<ResearchStreamEvent, any, any>>;
+  get<T = unknown>(
+    researchId: string,
+    options?: {
+      stream?: boolean;
+      events?: boolean;
+      outputSchema?: ZodSchema<T>;
+    }
+  ):
+    | Promise<Research | ResearchTyped<T>>
+    | Promise<AsyncGenerator<ResearchStreamEvent>> {
     if (options?.stream) {
       const promise = async () => {
-        const resp = await this.rawRequest(`/tasks/${id}?stream=true`, "GET");
+        const params: Record<string, string> = { stream: "true" };
+        if (options.events !== undefined) {
+          params.events = options.events.toString();
+        }
+        const resp = await this.rawRequest(
+          `/${researchId}`,
+          "GET",
+          undefined,
+          params
+        );
         if (!resp.body) {
           throw new Error("No response body for SSE stream");
         }
@@ -104,7 +98,7 @@ export class ResearchClient extends ResearchBaseClient {
         const decoder = new TextDecoder();
         let buffer = "";
 
-        function processPart(part: string): ResearchTaskEvent | null {
+        function processPart(part: string): ResearchStreamEvent | null {
           const lines = part.split("\n");
           let data = lines.slice(1).join("\n");
           if (data.startsWith("data:")) {
@@ -144,73 +138,91 @@ export class ResearchClient extends ResearchBaseClient {
         return streamEvents();
       };
       return promise() as
-        | Promise<ResearchTask>
-        | Promise<AsyncGenerator<ResearchTaskEvent>>;
+        | Promise<Research>
+        | Promise<AsyncGenerator<ResearchStreamEvent>>;
     } else {
-      // Non-streaming: just fetch the task as before
-      return this.request<ResearchTask>(`/tasks/${id}`, "GET") as
-        | Promise<ResearchTask>
-        | Promise<AsyncGenerator<ResearchTaskEvent>>;
+      const params: Record<string, string> = { stream: "false" };
+      if (options?.events !== undefined) {
+        params.events = options.events.toString();
+      }
+      return this.request<Research>(
+        `/${researchId}`,
+        "GET",
+        undefined,
+        params
+      ) as Promise<Research> | Promise<AsyncGenerator<ResearchStreamEvent>>;
     }
   }
 
-  /**
-   * @deprecated This method is deprecated and may be removed in a future release.
-   * @see getTask(id, {stream: true})
-   * Poll a research task until completion or failure.
-   * Polls every 1 second with a maximum timeout of 10 minutes.
-   * Resilient to up to 10 consecutive polling failures.
-   */
-  async pollTask(id: string): Promise<ResearchTask> {
-    const pollingInterval = 1000; // 1 second
-    const maxPollingTime = 10 * 60 * 1000; // 10 minutes
-    const maxConsecutiveFailures = 10;
+  async list(options?: ListResearchRequest): Promise<ListResearchResponse> {
+    const params = this.buildPaginationParams(options);
+    return this.request<ListResearchResponse>("", "GET", undefined, params);
+  }
+
+  async pollUntilFinished(
+    researchId: string,
+    options?: {
+      pollInterval?: number;
+      timeoutMs?: number;
+      events?: boolean;
+    }
+  ): Promise<Research & { status: "completed" | "failed" | "canceled" }>;
+  async pollUntilFinished<T>(
+    researchId: string,
+    options?: {
+      pollInterval?: number;
+      timeoutMs?: number;
+      events?: boolean;
+      outputSchema: ZodSchema<T>;
+    }
+  ): Promise<
+    ResearchTyped<T> & { status: "completed" | "failed" | "canceled" }
+  >;
+  async pollUntilFinished<T = unknown>(
+    researchId: string,
+    options?: {
+      pollInterval?: number;
+      timeoutMs?: number;
+      events?: boolean;
+      outputSchema?: ZodSchema<T>;
+    }
+  ): Promise<any> {
+    const pollInterval = options?.pollInterval ?? 1000;
+    const timeoutMs = options?.timeoutMs ?? 10 * 60 * 1000;
+    const maxConsecutiveFailures = 5;
     const startTime = Date.now();
     let consecutiveFailures = 0;
 
     while (true) {
       try {
-        const task = await this.request<ResearchTask>(`/tasks/${id}`, "GET");
-        consecutiveFailures = 0; // Reset on success
+        const research = await this.get(researchId, {
+          events: options?.events,
+        });
+        consecutiveFailures = 0;
 
-        if (task.status === "completed" || task.status === "failed") {
-          return task;
+        if (
+          research.status === "completed" ||
+          research.status === "failed" ||
+          research.status === "canceled"
+        ) {
+          return research;
         }
       } catch (err) {
         consecutiveFailures += 1;
         if (consecutiveFailures >= maxConsecutiveFailures) {
           throw new Error(
-            `Polling failed ${maxConsecutiveFailures} times in a row for task ${id}: ${err}`
+            `Polling failed ${maxConsecutiveFailures} times in a row for research ${researchId}: ${err}`
           );
         }
       }
 
-      // Check if we've exceeded the maximum polling time
-      if (Date.now() - startTime > maxPollingTime) {
+      if (Date.now() - startTime > timeoutMs) {
         throw new Error(
-          `Polling timeout: Task ${id} did not complete within 10 minutes`
+          `Polling timeout: Research ${researchId} did not complete within ${timeoutMs}ms`
         );
       }
 
-      // Wait before next poll
-      await new Promise((resolve) => setTimeout(resolve, pollingInterval));
+      await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
-  }
-
-  /**
-   * List research tasks
-   * @param options Pagination options
-   * @returns The paginated list of research tasks
-   */
-  async listTasks(
-    options?: ListResearchTasksRequest
-  ): Promise<ListResearchTasksResponse> {
-    const params = this.buildPaginationParams(options);
-    return this.request<ListResearchTasksResponse>(
-      "/tasks",
-      "GET",
-      undefined,
-      params
-    );
   }
 }

@@ -2,7 +2,9 @@ import "dotenv/config";
 import { Exa } from "../src/index";
 import { z } from "zod";
 
-const exa = new Exa(process.env.EXA_API_KEY);
+const EXA_API_KEY = process.env.EXA_API_KEY;
+const EXA_BASE_URL = process.env.EXA_BASE_URL;
+const exa = new Exa(EXA_API_KEY, EXA_BASE_URL);
 
 // ===============================================
 // Zod Schemas for Research Tasks
@@ -49,36 +51,34 @@ const examples: ExampleDefinition[] = [
 ];
 
 async function runResearchExample() {
-  const createdTasks = await Promise.all(
+  const createdRequests = await Promise.all(
     examples.map(({ instructions, schema }) =>
-      exa.research.createTask({
+      exa.research.create({
         model: "exa-research",
         instructions,
-        output: { schema },
+        outputSchema: schema,
       })
     )
   );
 
-  const taskIds = createdTasks.map((t) => t.id);
-  console.log("Created Task IDs:", taskIds);
+  const researchIds = createdRequests.map((t) => t.researchId);
+  console.log("Created Research IDs:", researchIds);
 
-  const listResponse = await exa.research.listTasks();
-  const retrievedIds = listResponse.data.map((t) => t.id);
-  const allFound = taskIds.every((id) => retrievedIds.includes(id));
-  console.log("All created tasks present in list:", allFound);
-  console.log("Polling until research completion...");
+  const listResponse = await exa.research.list();
+  const retrievedIds = listResponse.data.map((t) => t.researchId);
+  const allFound = researchIds.every((id) => retrievedIds.includes(id));
+  console.log("All created requests present in list:", allFound);
+  console.log("Streaming research results...");
 
-  const pollingPromises = taskIds.map((id) =>
-    exa.research.pollTask(id).then((result) => {
-      console.log(
-        `Final Task State for ${id}:`,
-        JSON.stringify(result, null, 2)
-      );
-      return result;
-    })
-  );
+  const streamingPromises = researchIds.map(async (id) => {
+    const eventStream = await exa.research.get(id, { stream: true });
 
-  await Promise.all(pollingPromises);
+    for await (const event of eventStream) {
+      console.log("Event:", JSON.stringify(event, undefined, 2));
+    }
+  });
+
+  await Promise.all(streamingPromises);
 }
 
 runResearchExample().catch((err) => {
