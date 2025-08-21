@@ -6,7 +6,7 @@
  */
 
 import * as dotenv from "dotenv";
-import Exa, { CreateWebsetParametersSearchExcludeSource } from "../../src";
+import Exa, { WebsetSearchExcludeSource } from "../../src";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -55,7 +55,7 @@ async function main() {
         count: 5,
         exclude: [
           {
-            source: CreateWebsetParametersSearchExcludeSource.webset,
+            source: WebsetSearchExcludeSource.webset,
             id: knownCompaniesWebset.id,
           },
         ],

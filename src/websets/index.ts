@@ -44,6 +44,7 @@ export type {
   PreviewWebsetParameters,
   PreviewWebsetResponse,
   ResearchPaperEntity,
+  UpdateEnrichmentParameters,
   UpdateImport,
   UpdateMonitor,
   UpdateWebhookParameters,
@@ -66,10 +67,6 @@ export type {
 export {
   CreateEnrichmentParametersFormat,
   CreateImportParametersFormat,
-  CreateWebsetParametersImportSource,
-  CreateWebsetParametersSearchExcludeSource,
-  CreateWebsetSearchParametersExcludeSource,
-  CreateWebsetSearchParametersScopeSource,
   EventType,
   ImportFailedReason,
   ImportFormat,
@@ -80,16 +77,17 @@ export {
   MonitorRunStatus,
   MonitorRunType,
   MonitorStatus,
-  PreviewWebsetResponseEnrichmentsFormat,
   UpdateMonitorStatus,
   WebhookStatus,
   WebsetEnrichmentFormat,
   WebsetEnrichmentStatus,
+  WebsetImportSource,
   WebsetItemEvaluationSatisfied,
   WebsetItemSource,
   WebsetSearchBehavior,
-  ScopeSourceType,
   WebsetSearchCanceledReason,
+  WebsetSearchExcludeSource,
+  WebsetSearchScopeSource,
   WebsetSearchStatus,
   WebsetStatus,
 } from "./openapi";
@@ -103,8 +101,8 @@ export type {
   CsvDataInput,
   WaitUntilCompletedOptions,
 } from "./imports";
-export type { ListMonitorsOptions } from "./monitors";
 export type { ListWebsetItemsOptions } from "./items";
+export type { ListMonitorsOptions } from "./monitors";
 
 export type WebsetHeadersLike = {
   "x-exa-websets-priority"?: "low" | "medium" | "high";

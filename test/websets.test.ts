@@ -4,14 +4,12 @@ import { ExaError } from "../src/errors";
 import {
   CreateEnrichmentParametersFormat,
   CreateWebsetParameters,
-  CreateWebsetSearchParametersScopeSource,
   Event,
   EventType,
   ListEventsResponse,
   ListWebsetItemResponse,
   ListWebsetsResponse,
   PreviewWebsetResponse,
-  PreviewWebsetResponseEnrichmentsFormat,
   Webset,
   WebsetEnrichment,
   WebsetEnrichmentFormat,
@@ -21,6 +19,7 @@ import {
   WebsetSearch,
   WebsetSearchBehavior,
   WebsetSearchCanceledReason,
+  WebsetSearchScopeSource,
   WebsetSearchStatus,
 } from "../src/websets/openapi";
 import { getProtectedClient } from "./helpers";
@@ -93,11 +92,11 @@ describe("Websets API", () => {
       enrichments: [
         {
           description: "Company valuation",
-          format: PreviewWebsetResponseEnrichmentsFormat.number,
+          format: WebsetEnrichmentFormat.number,
         },
         {
           description: "Funding stage",
-          format: PreviewWebsetResponseEnrichmentsFormat.options,
+          format: WebsetEnrichmentFormat.options,
           options: [
             { label: "Seed" },
             { label: "Series A" },
@@ -127,9 +126,7 @@ describe("Websets API", () => {
     expect(result.search.entity.type).toBe("company");
     expect(result.search.criteria).toHaveLength(2);
     expect(result.enrichments).toHaveLength(2);
-    expect(result.enrichments[1].format).toBe(
-      PreviewWebsetResponseEnrichmentsFormat.options
-    );
+    expect(result.enrichments[1].format).toBe(WebsetEnrichmentFormat.options);
   });
 
   it("should create a Webset with scope parameter", async () => {
@@ -161,7 +158,7 @@ describe("Websets API", () => {
         scope: [
           {
             id: "import_123456",
-            source: CreateWebsetSearchParametersScopeSource.import,
+            source: WebsetSearchScopeSource.import,
           },
         ],
       },
