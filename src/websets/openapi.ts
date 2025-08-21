@@ -2194,7 +2194,8 @@ export type PreviewWebsetParameters =
 export type PreviewWebsetResponse =
   components["schemas"]["PreviewWebsetResponse"];
 export type ResearchPaperEntity = components["schemas"]["ResearchPaperEntity"];
-export type UpdateEnrichmentParameters = components["schemas"]["UpdateEnrichmentParameters"];
+export type UpdateEnrichmentParameters =
+  components["schemas"]["UpdateEnrichmentParameters"];
 export type UpdateImport = components["schemas"]["UpdateImport"];
 export type UpdateMonitor = components["schemas"]["UpdateMonitor"];
 export type UpdateWebhookParameters =
