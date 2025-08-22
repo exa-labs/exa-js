@@ -1,8 +1,9 @@
 import fetch, { Headers } from "cross-fetch";
-import { ExaError, HttpStatusCode } from "./errors";
-import { WebsetsClient } from "./websets/client";
-import { ResearchClient } from "./research/client";
 import { ZodSchema } from "zod";
+import packageJson from "../package.json";
+import { ExaError, HttpStatusCode } from "./errors";
+import { ResearchClient } from "./research/client";
+import { WebsetsClient } from "./websets/client";
 import { isZodSchema, zodToJsonSchema } from "./zod-utils";
 
 // Use native fetch in Node.js environments
@@ -502,7 +503,7 @@ export class Exa {
     this.headers = new HeadersImpl({
       "x-api-key": apiKey,
       "Content-Type": "application/json",
-      "User-Agent": "exa-node 1.4.0",
+      "User-Agent": `exa-node ${packageJson.version}`,
     });
 
     // Initialize the Websets client
