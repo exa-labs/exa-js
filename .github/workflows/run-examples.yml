@@ -71,7 +71,7 @@ jobs:
               continue
             fi
             echo "Compiling $file"
-            tsc $file --resolveJsonModule
+            tsc $file --project ../tsconfig.json
           done
       - name: List compiled files
         run: ls -R examples/*.js
