@@ -71,7 +71,7 @@ jobs:
               continue
             fi
             echo "Compiling $file"
-            tsc $file
+            tsc $file --resolveJsonModule --esModuleInterop
           done
       - name: List compiled files
         run: ls -R examples/*.js
