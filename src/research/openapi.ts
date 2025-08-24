@@ -113,6 +113,8 @@ export interface components {
           /** @description Milliseconds since epoch time */
           createdAt: number;
           events?: components["schemas"]["ResearchEventDtoClass"][];
+          /** @description Milliseconds since epoch time */
+          finishedAt: number;
           /** @description The instructions given to this research request */
           instructions: string;
           /**
@@ -136,6 +138,8 @@ export interface components {
           /** @description Milliseconds since epoch time */
           createdAt: number;
           events?: components["schemas"]["ResearchEventDtoClass"][];
+          /** @description Milliseconds since epoch time */
+          finishedAt: number;
           /** @description The instructions given to this research request */
           instructions: string;
           /**
@@ -155,6 +159,8 @@ export interface components {
           /** @description A message indicating why the request failed */
           error: string;
           events?: components["schemas"]["ResearchEventDtoClass"][];
+          /** @description Milliseconds since epoch time */
+          finishedAt: number;
           /** @description The instructions given to this research request */
           instructions: string;
           /**
