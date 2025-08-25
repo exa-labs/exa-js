@@ -81,6 +81,9 @@ export interface components {
            * @enum {string}
            */
           model: "exa-research" | "exa-research-pro";
+          outputSchema?: {
+            [key: string]: unknown;
+          };
           /** @description The unique identifier for the research request */
           researchId: string;
           /** @enum {string} */
@@ -98,6 +101,9 @@ export interface components {
            * @enum {string}
            */
           model: "exa-research" | "exa-research-pro";
+          outputSchema?: {
+            [key: string]: unknown;
+          };
           /** @description The unique identifier for the research request */
           researchId: string;
           /** @enum {string} */
@@ -129,6 +135,9 @@ export interface components {
               [key: string]: unknown;
             };
           };
+          outputSchema?: {
+            [key: string]: unknown;
+          };
           /** @description The unique identifier for the research request */
           researchId: string;
           /** @enum {string} */
@@ -148,6 +157,9 @@ export interface components {
            * @enum {string}
            */
           model: "exa-research" | "exa-research-pro";
+          outputSchema?: {
+            [key: string]: unknown;
+          };
           /** @description The unique identifier for the research request */
           researchId: string;
           /** @enum {string} */
@@ -169,6 +181,9 @@ export interface components {
            * @enum {string}
            */
           model: "exa-research" | "exa-research-pro";
+          outputSchema?: {
+            [key: string]: unknown;
+          };
           /** @description The unique identifier for the research request */
           researchId: string;
           /** @enum {string} */
