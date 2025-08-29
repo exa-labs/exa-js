@@ -34,6 +34,11 @@ async function runAnswerExample() {
       }
     );
     console.log("Answer result:", JSON.stringify(structuredAnswer, null, 2));
+
+    const answerFromLocation = await exa.answer("National museum", {
+      userLocation: "FR",
+    });
+    console.log("Answer result:", JSON.stringify(answerFromLocation, null, 2));
   } catch (error) {
     console.error("Error in answer example:", error);
   }

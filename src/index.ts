@@ -325,6 +325,7 @@ export type AnswerOptions = {
   model?: "exa";
   systemPrompt?: string;
   outputSchema?: Record<string, unknown>;
+  userLocation?: string;
 };
 
 /**
@@ -801,6 +802,7 @@ export class Exa {
       model: options?.model ?? "exa",
       systemPrompt: options?.systemPrompt,
       outputSchema,
+      userLocation: options?.userLocation,
     };
 
     return await this.request("/answer", "POST", requestBody);
