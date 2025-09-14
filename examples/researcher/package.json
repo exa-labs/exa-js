@@ -2,5 +2,8 @@
   "dependencies": {
     "exa-js": "^1.0.3",
     "openai": "^4.20.1"
+  },
+  "overrides": {
+    "form-data": ">=4.0.4"
   }
 }
