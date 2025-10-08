@@ -65,7 +65,7 @@ export type RegularSearchOptions = BaseSearchOptions & {
   moderation?: boolean;
 
   useAutoprompt?: boolean;
-  type?: "keyword" | "neural" | "auto" | "hybrid" | "fast";
+  type?: "keyword" | "neural" | "auto" | "hybrid" | "fast" | "deep";
 };
 
 /**
@@ -83,7 +83,7 @@ export type ExtrasOptions = { links?: number; imageLinks?: number };
  * Search options for performing a search query.
  * @typedef {Object} ContentsOptions
  * @property {TextContentsOptions | boolean} [text] - Options for retrieving text contents.
- * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights.
+ * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights. NOTE: For search type "deep", only "true" is allowed. "query", "numSentences" and "highlightsPerUrl" will not be respected;
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
  * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
  * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
@@ -129,6 +129,8 @@ export type TextContentsOptions = {
 
 /**
  * Options for retrieving highlights from page.
+ * NOTE: For search type "deep", these options will not be respected. Highlights will be generated with respect
+ * to your initial query, and may vary in quantity and length.
  * @typedef {Object} HighlightsContentsOptions
  * @property {string} [query] - The query string to use for highlights search.
  * @property {number} [numSentences] - The number of sentences to return for each highlight.
