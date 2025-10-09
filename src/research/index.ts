@@ -41,7 +41,7 @@ export type ResearchStreamEvent = ResearchEvent;
  */
 export type ResearchCreateParamsTyped<T> = {
   instructions: string;
-  model?: "exa-research" | "exa-research-pro";
+  model?: ResearchCreateRequest["model"];
   outputSchema?: T;
 };
 

@@ -19,10 +19,6 @@ const TechnologyInfo = z.object({
     .string()
     .optional()
     .describe("How mature/established the technology is"),
-  key_players: z
-    .array(z.string())
-    .optional()
-    .describe("Companies or organizations leading this technology"),
 });
 
 const CompanyProfile = z.object({
@@ -32,10 +28,6 @@ const CompanyProfile = z.object({
     .string()
     .optional()
     .describe("Latest funding amount if available"),
-  notable_achievements: z
-    .array(z.string())
-    .optional()
-    .describe("Key achievements or milestones"),
 });
 
 const ResearchInsight = z.object({
@@ -70,7 +62,6 @@ const StartupEcosystem = z.object({
 
 const ResearchPaper = z.object({
   title: z.string().describe("Paper title"),
-  authors: z.array(z.string()).describe("List of authors"),
   key_contribution: z.string().describe("Main contribution or finding"),
   significance: z
     .string()
@@ -82,19 +73,11 @@ const Researcher = z.object({
   name: z.string().describe("Researcher's name"),
   affiliation: z.string().describe("Institution or company"),
   expertise: z.string().describe("Area of expertise"),
-  notable_work: z
-    .array(z.string())
-    .optional()
-    .describe("Notable research or contributions"),
 });
 
 const Application = z.object({
   application_area: z.string().describe("Area where technology is applied"),
   description: z.string().describe("How the technology is being used"),
-  companies: z
-    .array(z.string())
-    .optional()
-    .describe("Companies implementing this application"),
 });
 
 const AIResearchOverview = z.object({
@@ -123,7 +106,7 @@ async function analyzeTechnologyLandscape() {
       instructions:
         "quantum computing technology landscape, market leaders, and investment trends",
       outputSchema: TechnologyLandscape,
-      model: "exa-research",
+      model: "exa-research-fast",
     });
 
     console.log(
@@ -149,9 +132,6 @@ async function analyzeTechnologyLandscape() {
     console.log("Emerging Technologies:");
     analysis.emerging_technologies.forEach((tech) => {
       console.log(`  • ${tech.name}: ${tech.description}`);
-      if (tech.key_players) {
-        console.log(`    Key Players: ${tech.key_players.join(", ")}`);
-      }
     });
 
     console.log("\nMarket Leaders:");
@@ -180,7 +160,7 @@ async function researchStartupEcosystem() {
       instructions:
         "fintech startup ecosystem, top companies, funding rounds, and industry challenges",
       outputSchema: StartupEcosystem,
-      model: "exa-research",
+      model: "exa-research-fast",
     });
 
     console.log(
@@ -201,11 +181,6 @@ async function researchStartupEcosystem() {
       console.log(`  • ${startup.name} (${startup.industry})`);
       if (startup.funding_amount) {
         console.log(`    Funding: ${startup.funding_amount}`);
-      }
-      if (startup.notable_achievements) {
-        console.log(
-          `    Achievements: ${startup.notable_achievements.join(", ")}`
-        );
       }
     });
 
@@ -232,7 +207,7 @@ async function exploreAIResearch() {
       instructions:
         "AI research landscape including breakthrough papers, leading researchers, and commercial applications",
       outputSchema: AIResearchOverview,
-      model: "exa-research",
+      model: "exa-research-fast",
     });
 
     console.log(
@@ -251,7 +226,6 @@ async function exploreAIResearch() {
     console.log("Breakthrough Papers:");
     aiResearch.breakthrough_papers.forEach((paper) => {
       console.log(`  • ${paper.title}`);
-      console.log(`    Authors: ${paper.authors.join(", ")}`);
       console.log(`    Key Contribution: ${paper.key_contribution}`);
     });
 
@@ -259,17 +233,11 @@ async function exploreAIResearch() {
     aiResearch.leading_researchers.forEach((researcher) => {
       console.log(`  • ${researcher.name} (${researcher.affiliation})`);
       console.log(`    Expertise: ${researcher.expertise}`);
-      if (researcher.notable_work) {
-        console.log(`    Notable Work: ${researcher.notable_work.join(", ")}`);
-      }
     });
 
     console.log("\nCommercial Applications:");
     aiResearch.commercial_applications.forEach((app) => {
       console.log(`  • ${app.application_area}: ${app.description}`);
-      if (app.companies) {
-        console.log(`    Companies: ${app.companies.join(", ")}`);
-      }
     });
   } catch (error) {
     console.error("Error in AI research exploration:", error);
@@ -285,7 +253,7 @@ async function demonstrateCustomResearch() {
       instructions:
         "autonomous vehicle technology development, key players, and market outlook",
       outputSchema: TechnologyLandscape,
-      model: "exa-research",
+      model: "exa-research-fast",
     });
 
     console.log(
@@ -304,9 +272,6 @@ async function demonstrateCustomResearch() {
     console.log("Emerging Technologies in Autonomous Vehicles:");
     analysis.emerging_technologies.forEach((tech) => {
       console.log(`  • ${tech.name}: ${tech.description}`);
-      if (tech.key_players) {
-        console.log(`    Key Players: ${tech.key_players.join(", ")}`);
-      }
     });
 
     console.log("\nMarket Leaders:");
