@@ -24,13 +24,13 @@ export class ResearchClient extends ResearchBaseClient {
 
   async create(params: {
     instructions: string;
-    model?: "exa-research" | "exa-research-pro";
+    model?: ResearchCreateRequest["model"];
     outputSchema?: Record<string, unknown>;
   }): Promise<ResearchCreateResponse>;
 
   async create<T>(params: {
     instructions: string;
-    model?: "exa-research" | "exa-research-pro";
+    model?: ResearchCreateRequest["model"];
     outputSchema?: Record<string, unknown> | ZodSchema<T>;
   }): Promise<ResearchCreateResponse> {
     const { instructions, model, outputSchema } = params;
@@ -42,7 +42,7 @@ export class ResearchClient extends ResearchBaseClient {
 
     const payload: ResearchCreateRequest = {
       instructions,
-      model: model ?? "exa-research",
+      model: model ?? "exa-research-fast",
     };
 
     if (schema) {

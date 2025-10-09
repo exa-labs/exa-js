@@ -50,141 +50,160 @@ export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
     ListResearchResponseDto: {
-      /** @description The list of research requests */
+      /** @description Research requests ordered by creation time (newest first) */
       data: components["schemas"]["ResearchDtoClass"][];
-      /** @description Whether there are more results to paginate through */
+      /** @description If true, use nextCursor to fetch more results */
       hasMore: boolean;
-      /** @description The cursor to paginate through the next set of results */
+      /** @description Pass this value as the cursor parameter to fetch the next page */
       nextCursor: string | null;
     };
     ResearchCreateRequestDtoClass: {
-      /** @description Instructions for what research should be conducted */
+      /** @description Instructions for what you would like research on. A good prompt clearly defines what information you want to find, how research should be conducted, and what the output should look like. */
       instructions: string;
       /**
+       * @description Research model to use. exa-research is faster and cheaper, while exa-research-pro provides more thorough analysis and stronger reasoning.
        * @default exa-research
        * @enum {string}
        */
-      model: "exa-research" | "exa-research-pro";
+      model: "exa-research-fast" | "exa-research" | "exa-research-pro";
+      /** @description JSON Schema to enforce structured output. When provided, the research output will be validated against this schema and returned as parsed JSON. */
       outputSchema?: {
         [key: string]: unknown;
       };
     };
     ResearchDtoClass:
       | {
-          /** @description Milliseconds since epoch time */
+          /** @description When the research was created (Unix timestamp in milliseconds) */
           createdAt: number;
-          /** @description The instructions given to this research request */
+          /** @description The original research instructions provided */
           instructions: string;
           /**
-           * @description The model used for the research request
+           * @description The model used for this research request
            * @default exa-research
            * @enum {string}
            */
-          model: "exa-research" | "exa-research-pro";
+          model: "exa-research-fast" | "exa-research" | "exa-research-pro";
+          /** @description The JSON Schema used to validate the output, if provided */
           outputSchema?: {
             [key: string]: unknown;
           };
-          /** @description The unique identifier for the research request */
+          /** @description Unique identifier for tracking and retrieving this research request */
           researchId: string;
           /** @enum {string} */
           status: "pending";
         }
       | {
-          /** @description Milliseconds since epoch time */
+          /** @description When the research was created (Unix timestamp in milliseconds) */
           createdAt: number;
+          /** @description Real-time log of operations as research progresses. Poll this endpoint or use ?stream=true for live updates. */
           events?: components["schemas"]["ResearchEventDtoClass"][];
-          /** @description The instructions given to this research request */
+          /** @description The original research instructions provided */
           instructions: string;
           /**
-           * @description The model used for the research request
+           * @description The model used for this research request
            * @default exa-research
            * @enum {string}
            */
-          model: "exa-research" | "exa-research-pro";
+          model: "exa-research-fast" | "exa-research" | "exa-research-pro";
+          /** @description The JSON Schema used to validate the output, if provided */
           outputSchema?: {
             [key: string]: unknown;
           };
-          /** @description The unique identifier for the research request */
+          /** @description Unique identifier for tracking and retrieving this research request */
           researchId: string;
           /** @enum {string} */
           status: "running";
         }
       | {
+          /** @description Detailed cost breakdown for billing purposes */
           costDollars: {
+            /** @description Count of web pages fully crawled and processed. Only pages that were read in detail are counted. */
             numPages: number;
+            /** @description Count of web searches performed. Each search query counts as one search. */
             numSearches: number;
+            /** @description Total AI tokens used for reasoning, planning, and generating the final output */
             reasoningTokens: number;
+            /** @description Total cost in USD for this research request */
             total: number;
           };
-          /** @description Milliseconds since epoch time */
+          /** @description When the research was created (Unix timestamp in milliseconds) */
           createdAt: number;
+          /** @description Detailed log of all operations performed during research. Use ?events=true to include this field for debugging or monitoring progress. */
           events?: components["schemas"]["ResearchEventDtoClass"][];
-          /** @description Milliseconds since epoch time */
+          /** @description When the research completed (Unix timestamp in milliseconds) */
           finishedAt: number;
-          /** @description The instructions given to this research request */
+          /** @description The original research instructions provided */
           instructions: string;
           /**
-           * @description The model used for the research request
+           * @description The model used for this research request
            * @default exa-research
            * @enum {string}
            */
-          model: "exa-research" | "exa-research-pro";
+          model: "exa-research-fast" | "exa-research" | "exa-research-pro";
+          /** @description The final research results, containing both raw text and parsed JSON if outputSchema was provided */
           output: {
+            /** @description The complete research output as text. If outputSchema was provided, this is a JSON string. */
             content: string;
+            /** @description Structured JSON object matching your outputSchema. Only present when outputSchema was provided and the output successfully validated. */
             parsed?: {
               [key: string]: unknown;
             };
           };
+          /** @description The JSON Schema used to validate the output, if provided */
           outputSchema?: {
             [key: string]: unknown;
           };
-          /** @description The unique identifier for the research request */
+          /** @description Unique identifier for tracking and retrieving this research request */
           researchId: string;
           /** @enum {string} */
           status: "completed";
         }
       | {
-          /** @description Milliseconds since epoch time */
+          /** @description When the research was created (Unix timestamp in milliseconds) */
           createdAt: number;
+          /** @description Detailed log of all operations performed during research. Use ?events=true to include this field for debugging or monitoring progress. */
           events?: components["schemas"]["ResearchEventDtoClass"][];
-          /** @description Milliseconds since epoch time */
+          /** @description When the research was canceled (Unix timestamp in milliseconds) */
           finishedAt: number;
-          /** @description The instructions given to this research request */
+          /** @description The original research instructions provided */
           instructions: string;
           /**
-           * @description The model used for the research request
+           * @description The model used for this research request
            * @default exa-research
            * @enum {string}
            */
-          model: "exa-research" | "exa-research-pro";
+          model: "exa-research-fast" | "exa-research" | "exa-research-pro";
+          /** @description The JSON Schema used to validate the output, if provided */
           outputSchema?: {
             [key: string]: unknown;
           };
-          /** @description The unique identifier for the research request */
+          /** @description Unique identifier for tracking and retrieving this research request */
           researchId: string;
           /** @enum {string} */
           status: "canceled";
         }
       | {
-          /** @description Milliseconds since epoch time */
+          /** @description When the research was created (Unix timestamp in milliseconds) */
           createdAt: number;
-          /** @description A message indicating why the request failed */
+          /** @description Human-readable error message explaining what went wrong. */
           error: string;
+          /** @description Detailed log of all operations performed during research. Use ?events=true to include this field for debugging or monitoring progress. */
           events?: components["schemas"]["ResearchEventDtoClass"][];
-          /** @description Milliseconds since epoch time */
+          /** @description When the research failed (Unix timestamp in milliseconds) */
           finishedAt: number;
-          /** @description The instructions given to this research request */
+          /** @description The original research instructions provided */
           instructions: string;
           /**
-           * @description The model used for the research request
+           * @description The model used for this research request
            * @default exa-research
            * @enum {string}
            */
-          model: "exa-research" | "exa-research-pro";
+          model: "exa-research-fast" | "exa-research" | "exa-research-pro";
+          /** @description The JSON Schema used to validate the output, if provided */
           outputSchema?: {
             [key: string]: unknown;
           };
-          /** @description The unique identifier for the research request */
+          /** @description Unique identifier for tracking and retrieving this research request */
           researchId: string;
           /** @enum {string} */
           status: "failed";
@@ -192,108 +211,196 @@ export interface components {
     ResearchEventDtoClass:
       | (
           | {
-              /** @description Milliseconds since epoch time */
+              /** @description When this event occurred (Unix timestamp in milliseconds) */
               createdAt: number;
               /** @enum {string} */
               eventType: "research-definition";
+              /** @description The complete research instructions as provided */
               instructions: string;
+              /** @description The JSON Schema that will validate the final output */
               outputSchema?: {
                 [key: string]: unknown;
               };
+              /** @description The research request this event belongs to */
               researchId: string;
             }
           | {
-              /** @description Milliseconds since epoch time */
+              /** @description When this event occurred (Unix timestamp in milliseconds) */
               createdAt: number;
               /** @enum {string} */
               eventType: "research-output";
+              /** @description The final research result, either successful with data or failed with error */
               output:
                 | {
+                    /** @description The complete research output as text. If outputSchema was provided, this is a JSON string. */
                     content: string;
                     costDollars: {
+                      /** @description Count of web pages fully crawled and processed. Only pages that were read in detail are counted. */
                       numPages: number;
+                      /** @description Count of web searches performed. Each search query counts as one search. */
                       numSearches: number;
+                      /** @description Total AI tokens used for reasoning, planning, and generating the final output */
                       reasoningTokens: number;
+                      /** @description Total cost in USD for this research request */
                       total: number;
                     };
                     /** @enum {string} */
                     outputType: "completed";
+                    /** @description Structured JSON object matching your outputSchema. Only present when outputSchema was provided and the output successfully validated. */
                     parsed?: {
                       [key: string]: unknown;
                     };
                   }
                 | {
+                    /** @description Detailed error message explaining why the research failed */
                     error: string;
                     /** @enum {string} */
                     outputType: "failed";
                   };
+              /** @description The research request this event belongs to */
               researchId: string;
             }
         )
       | (
           | {
-              /** @description Milliseconds since epoch time */
+              /** @description When this event occurred (Unix timestamp in milliseconds) */
               createdAt: number;
               /** @enum {string} */
               eventType: "plan-definition";
+              /** @description Identifier for this planning cycle */
               planId: string;
+              /** @description The research request this event belongs to */
               researchId: string;
             }
           | {
-              /** @description Milliseconds since epoch time */
+              /** @description When this event occurred (Unix timestamp in milliseconds) */
               createdAt: number;
-              data: components["schemas"]["ResearchOperationDtoClass"];
-              /** @enum {string} */
-              eventType: "plan-operation";
-              operationId: string;
-              planId: string;
-              researchId: string;
-            }
-          | {
-              /** @description Milliseconds since epoch time */
-              createdAt: number;
-              /** @enum {string} */
-              eventType: "plan-output";
-              output: components["schemas"]["ResearchOperationDtoClass"];
-              planId: string;
-              researchId: string;
-            }
-        )
-      | (
-          | {
-              /** @description Milliseconds since epoch time */
-              createdAt: number;
-              /** @enum {string} */
-              eventType: "task-definition";
-              instructions: string;
-              planId: string;
-              researchId: string;
-              taskId: string;
-            }
-          | {
-              /** @description Milliseconds since epoch time */
-              createdAt: number;
+              /** @description The actual operation performed (think, search, or crawl) */
               data:
                 | {
+                    /** @description The AI's reasoning process and decision-making steps */
                     content: string;
                     /** @enum {string} */
                     type: "think";
                   }
                 | {
+                    /** @description What the AI is trying to find with this search */
                     goal?: string;
+                    /** @description Token cost for processing search result snippets */
                     pageTokens: number;
+                    /** @description The exact search query sent to the search engine */
                     query: string;
+                    /** @description URLs returned by the search, ranked by relevance */
                     results: {
                       url: string;
                     }[];
-                    /** @enum {string} */
+                    /**
+                     * @description Search algorithm used (neural for semantic search, keyword for exact matches)
+                     * @enum {string}
+                     */
                     searchType: "neural" | "keyword" | "auto" | "fast";
                     /** @enum {string} */
                     type: "search";
                   }
                 | {
+                    /** @description What information the AI expects to find on this page */
                     goal?: string;
+                    /** @description Token cost for processing the full page content */
                     pageTokens: number;
+                    /** @description The specific page that was crawled */
+                    result: {
+                      url: string;
+                    };
+                    /** @enum {string} */
+                    type: "crawl";
+                  };
+              /** @enum {string} */
+              eventType: "plan-operation";
+              /** @description Unique identifier for this specific operation */
+              operationId: string;
+              /** @description Which plan this operation belongs to */
+              planId: string;
+              /** @description The research request this event belongs to */
+              researchId: string;
+            }
+          | {
+              /** @description When this event occurred (Unix timestamp in milliseconds) */
+              createdAt: number;
+              /** @enum {string} */
+              eventType: "plan-output";
+              /** @description The plan's decision: either generate tasks or stop researching */
+              output:
+                | {
+                    /** @enum {string} */
+                    outputType: "tasks";
+                    /** @description Why these specific tasks were chosen */
+                    reasoning: string;
+                    /** @description List of task instructions that will be executed in parallel */
+                    tasksInstructions: string[];
+                  }
+                | {
+                    /** @enum {string} */
+                    outputType: "stop";
+                    /** @description Why the AI decided to stop researching */
+                    reasoning: string;
+                  };
+              /** @description Which plan is producing this output */
+              planId: string;
+              /** @description The research request this event belongs to */
+              researchId: string;
+            }
+        )
+      | (
+          | {
+              /** @description When this event occurred (Unix timestamp in milliseconds) */
+              createdAt: number;
+              /** @enum {string} */
+              eventType: "task-definition";
+              /** @description What this task should accomplish */
+              instructions: string;
+              /** @description The plan that generated this task */
+              planId: string;
+              /** @description The research request this event belongs to */
+              researchId: string;
+              /** @description Identifier for tracking this specific task */
+              taskId: string;
+            }
+          | {
+              /** @description When this event occurred (Unix timestamp in milliseconds) */
+              createdAt: number;
+              /** @description The actual operation performed within this task */
+              data:
+                | {
+                    /** @description The AI's reasoning process and decision-making steps */
+                    content: string;
+                    /** @enum {string} */
+                    type: "think";
+                  }
+                | {
+                    /** @description What the AI is trying to find with this search */
+                    goal?: string;
+                    /** @description Token cost for processing search result snippets */
+                    pageTokens: number;
+                    /** @description The exact search query sent to the search engine */
+                    query: string;
+                    /** @description URLs returned by the search, ranked by relevance */
+                    results: {
+                      url: string;
+                    }[];
+                    /**
+                     * @description Search algorithm used (neural for semantic search, keyword for exact matches)
+                     * @enum {string}
+                     */
+                    searchType: "neural" | "keyword" | "auto" | "fast";
+                    /** @enum {string} */
+                    type: "search";
+                  }
+                | {
+                    /** @description What information the AI expects to find on this page */
+                    goal?: string;
+                    /** @description Token cost for processing the full page content */
+                    pageTokens: number;
+                    /** @description The specific page that was crawled */
                     result: {
                       url: string;
                     };
@@ -302,47 +409,67 @@ export interface components {
                   };
               /** @enum {string} */
               eventType: "task-operation";
+              /** @description Unique identifier for this specific operation */
               operationId: string;
+              /** @description The plan that owns this task */
               planId: string;
+              /** @description The research request this event belongs to */
               researchId: string;
+              /** @description Which task is performing this operation */
               taskId: string;
             }
           | {
-              /** @description Milliseconds since epoch time */
+              /** @description When this event occurred (Unix timestamp in milliseconds) */
               createdAt: number;
               /** @enum {string} */
               eventType: "task-output";
+              /** @description The successful completion result of this task */
               output: {
+                /** @description The information gathered by this task */
                 content: string;
                 /** @enum {string} */
                 outputType: "completed";
               };
+              /** @description The plan that owns this task */
               planId: string;
+              /** @description The research request this event belongs to */
               researchId: string;
+              /** @description Which task produced this output */
               taskId: string;
             }
         );
     ResearchOperationDtoClass:
       | {
+          /** @description The AI's reasoning process and decision-making steps */
           content: string;
           /** @enum {string} */
           type: "think";
         }
       | {
+          /** @description What the AI is trying to find with this search */
           goal?: string;
+          /** @description Token cost for processing search result snippets */
           pageTokens: number;
+          /** @description The exact search query sent to the search engine */
           query: string;
+          /** @description URLs returned by the search, ranked by relevance */
           results: {
             url: string;
           }[];
-          /** @enum {string} */
+          /**
+           * @description Search algorithm used (neural for semantic search, keyword for exact matches)
+           * @enum {string}
+           */
           searchType: "neural" | "keyword" | "auto" | "fast";
           /** @enum {string} */
           type: "search";
         }
       | {
+          /** @description What information the AI expects to find on this page */
           goal?: string;
+          /** @description Token cost for processing the full page content */
           pageTokens: number;
+          /** @description The specific page that was crawled */
           result: {
             url: string;
           };
@@ -372,7 +499,7 @@ export interface operations {
       query?: {
         /** @description The cursor to paginate through the results */
         cursor?: string;
-        /** @description The number of results to return */
+        /** @description Number of results per page (1-50) */
         limit?: number;
       };
       header?: never;
@@ -418,12 +545,15 @@ export interface operations {
   };
   ResearchController_getResearch: {
     parameters: {
-      query: {
-        events: string;
-        stream: string;
+      query?: {
+        /** @description Set to "true" to include the detailed event log of all operations performed */
+        events?: string;
+        /** @description Set to "true" to receive real-time updates via Server-Sent Events (SSE) */
+        stream?: string;
       };
       header?: never;
       path: {
+        /** @description The unique identifier of the research request to retrieve */
         researchId: string;
       };
       cookie?: never;
