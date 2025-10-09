@@ -68,7 +68,7 @@ describe("Research API", () => {
       researchId: "research_456",
       status: "completed",
       instructions,
-      model: "exa-research",
+      model: "exa-research-fast",
       createdAt: Date.now(),
       output: {
         content: "Photosynthesis is ...",
@@ -97,7 +97,7 @@ describe("Research API", () => {
       "POST",
       {
         instructions,
-        model: "exa-research",
+        model: "exa-research-fast",
         outputSchema: schema,
       },
       undefined
