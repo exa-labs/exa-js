@@ -211,10 +211,24 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List webhooks */
+    /**
+     * List webhooks
+     * @description Get a list of all webhooks in your account.
+     *     The results come in pages. Use `limit` to set how many webhooks to get per page (up to 200). Use `cursor` to get the next page of results.
+     */
     get: operations["webhooks-list"];
     put?: never;
-    /** Create a Webhook */
+    /**
+     * Create a Webhook
+     * @description Webhooks let you get notifications when things happen in your Websets. When you create a webhook, you choose which events you want to know about and where to send the notifications.
+     *
+     *     When an event happens, Exa sends an HTTP POST request to your webhook URL with:
+     *     - Event details (type, time, ID)
+     *     - Full data of what triggered the event
+     *     - A signature to verify the request came from Exa
+     *
+     *     The webhook starts as `active` and begins getting notifications right away. You'll get a secret key for checking webhook signatures - save this safely as it's only shown once when you create the webhook.
+     */
     post: operations["webhooks-create"];
     delete?: never;
     options?: never;
@@ -229,15 +243,32 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Get a Webhook */
+    /**
+     * Get a Webhook
+     * @description Get information about a webhook using its ID.
+     *     The webhook secret is not shown here for security - you only get it when you first create the webhook.
+     */
     get: operations["webhooks-get"];
     put?: never;
     post?: never;
-    /** Delete a Webhook */
+    /**
+     * Delete a Webhook
+     * @description Remove a webhook from your account. Once deleted, the webhook stops getting notifications right away and cannot be brought back.
+     *
+     *     Important notes: - The webhook stops working as soon as you delete it - You cannot undo this - you'll need to create a new webhook if you want it back - Any notifications currently being sent may still complete
+     */
     delete: operations["webhooks-delete"];
     options?: never;
     head?: never;
-    /** Update a Webhook */
+    /**
+     * Update a Webhook
+     * @description Change a webhook's settings. You can update:
+     *     - Events: Add or remove which events you want to hear about - URL: Change where notifications are sent - Metadata: Update custom data linked to the webhook
+     *
+     *     Changes happen right away. If you change the events list, the webhook will start or stop getting notifications for those events immediately.
+     *
+     *     The webhook keeps its current status (`active` or `inactive`) when you update it.
+     */
     patch: operations["webhooks-update"];
     trace?: never;
   };
@@ -373,7 +404,11 @@ export interface paths {
     delete: operations["websets-enrichments-delete"];
     options?: never;
     head?: never;
-    patch: operations["WebsetsEnrichmentsController_updateEnrichment_v0"];
+    /**
+     * Update an Enrichment
+     * @description Update an Enrichment configuration for a Webset.
+     */
+    patch: operations["websets-enrichments-update"];
     trace?: never;
   };
   "/v0/websets/{webset}/enrichments/{id}/cancel": {
@@ -598,7 +633,7 @@ export interface components {
       metadata?: {
         [key: string]: string;
       };
-      /** @description The size of the file in megabytes. Maximum size is 50 MB. */
+      /** @description The size of the file in bytes. Maximum size is 50 MB. */
       size: number;
       /** @description The title of the import */
       title?: string;
@@ -726,6 +761,13 @@ export interface components {
        *
        *     Enrichments automatically search for and extract specific information (like contact details, funding data, employee counts, etc.) from each item added to your Webset. */
       enrichments?: components["schemas"]["CreateEnrichmentParameters"][];
+      /** @description Global exclusion sources (existing imports or websets) that apply to all operations within this Webset. Any results found within these sources will be omitted across all search and import operations. */
+      exclude?: {
+        /** @description The ID of the source to exclude. */
+        id: string;
+        /** @enum {string} */
+        source: WebsetExcludeSource;
+      }[];
       /** @description The external identifier for the webset.
        *
        *     You can use this to reference the Webset by your own internal identifiers. */
@@ -763,7 +805,7 @@ export interface components {
           /** @description The ID of the source to exclude. */
           id: string;
           /** @enum {string} */
-          source: WebsetSearchExcludeSource;
+          source: WebsetExcludeSource;
         }[];
         /** @description Natural language search query describing what you are looking for.
          *
@@ -814,7 +856,7 @@ export interface components {
         /** @description The ID of the source to exclude. */
         id: string;
         /** @enum {string} */
-        source: WebsetSearchExcludeSource;
+        source: WebsetExcludeSource;
       }[];
       /** @description Set of key-value pairs you want to associate with this object. */
       metadata?: {
@@ -2063,7 +2105,7 @@ export interface components {
       exclude: {
         id: string;
         /** @enum {string} */
-        source: WebsetSearchExcludeSource;
+        source: WebsetExcludeSource;
       }[];
       /** @description The unique identifier for the search */
       id: string;
@@ -2139,7 +2181,6 @@ export interface components {
       /** @description The unique identifier for the Webset this search belongs to */
       websetId: string;
     };
-    /** @enum {string} */
   };
   responses: never;
   parameters: never;
@@ -3187,7 +3228,7 @@ export interface operations {
       };
     };
   };
-  WebsetsEnrichmentsController_updateEnrichment_v0: {
+  "websets-enrichments-update": {
     parameters: {
       query?: never;
       header?: never;
@@ -3460,6 +3501,18 @@ export interface operations {
           "application/json": components["schemas"]["PreviewWebsetResponse"];
         };
       };
+      /** @description Unable to detect entity or criteria from query */
+      422: {
+        headers: {
+          /**
+           * @description Unique identifier for the request.
+           * @example req_N6SsgoiaOQOPqsYKKiw5
+           */
+          "X-Request-Id": string;
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
 }
@@ -3603,7 +3656,7 @@ export enum WebsetItemEvaluationSatisfied {
   no = "no",
   unclear = "unclear",
 }
-export enum WebsetSearchExcludeSource {
+export enum WebsetExcludeSource {
   import = "import",
   webset = "webset",
 }
