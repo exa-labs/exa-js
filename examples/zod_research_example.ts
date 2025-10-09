@@ -10,7 +10,7 @@ import { z } from "zod";
 
 const EXA_API_KEY = process.env.EXA_API_KEY;
 const EXA_BASE_URL = process.env.EXA_BASE_URL;
-const exa = new Exa(EXA_API_KEY, "https://api.exa.sh");
+const exa = new Exa(EXA_API_KEY, EXA_BASE_URL);
 
 const TechnologyInfo = z.object({
   name: z.string().describe("Name of the technology"),
