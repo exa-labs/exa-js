@@ -12,11 +12,36 @@ const fetchImpl =
 const HeadersImpl =
   typeof global !== "undefined" && global.Headers ? global.Headers : Headers;
 
-const isBeta = false;
+const DEFAULT_MAX_CHARACTERS = 10_000;
 
 /**
- * Search options for performing a search query.
+ * Options for retrieving page contents
+ * @typedef {Object} ContentsOptions
+ * @property {TextContentsOptions | boolean} [text] - Options for retrieving text contents.
+ * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
+ * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
+ * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
+ * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
+ * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result.
+ * @property {string | string[]} [subpageTarget] - Text used to match/rank subpages in the returned subpage list. You could use "about" to get *about* page for websites. Note that this is a fuzzy matcher.
+ * @property {ExtrasOptions} [extras] - Miscelleneous data derived from results
+ */
+export type ContentsOptions = {
+  text?: TextContentsOptions | true;
+  summary?: SummaryContentsOptions | true;
+  livecrawl?: LivecrawlOptions;
+  context?: ContextOptions | true;
+  livecrawlTimeout?: number;
+  filterEmptyResults?: boolean;
+  subpages?: number;
+  subpageTarget?: string | string[];
+  extras?: ExtrasOptions;
+};
+
+/**
+ * Options for performing a search query
  * @typedef {Object} SearchOptions
+ * @property {ContentsOptions | boolean} [contents] - Options for retrieving page contents for each result returned. Default is { text: { maxCharacters: 10_000 } }.
  * @property {number} [numResults] - Number of search results to return. Default 10. Max 10 for basic plans.
  * @property {string[]} [includeDomains] - List of domains to include in the search.
  * @property {string[]} [excludeDomains] - List of domains to exclude in the search.
@@ -31,6 +56,7 @@ const isBeta = false;
  * @property {string} [userLocation] - The two-letter ISO country code of the user, e.g. US.
  */
 export type BaseSearchOptions = {
+  contents?: ContentsOptions;
   numResults?: number;
   includeDomains?: string[];
   excludeDomains?: string[];
@@ -63,7 +89,6 @@ export type RegularSearchOptions = BaseSearchOptions & {
    * If true, the search results are moderated for safety.
    */
   moderation?: boolean;
-
   useAutoprompt?: boolean;
   type?: "keyword" | "neural" | "auto" | "hybrid" | "fast" | "deep";
 };
@@ -78,32 +103,6 @@ export type FindSimilarOptions = BaseSearchOptions & {
 };
 
 export type ExtrasOptions = { links?: number; imageLinks?: number };
-
-/**
- * Search options for performing a search query.
- * @typedef {Object} ContentsOptions
- * @property {TextContentsOptions | boolean} [text] - Options for retrieving text contents.
- * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights. NOTE: For search type "deep", only "true" is allowed. "query", "numSentences" and "highlightsPerUrl" will not be respected;
- * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
- * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
- * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
- * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
- * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result.
- * @property {string | string[]} [subpageTarget] - Text used to match/rank subpages in the returned subpage list. You could use "about" to get *about* page for websites. Note that this is a fuzzy matcher.
- * @property {ExtrasOptions} [extras] - Miscelleneous data derived from results
- */
-export type ContentsOptions = {
-  text?: TextContentsOptions | true;
-  highlights?: HighlightsContentsOptions | true;
-  summary?: SummaryContentsOptions | true;
-  livecrawl?: LivecrawlOptions;
-  context?: ContextOptions | true;
-  livecrawlTimeout?: number;
-  filterEmptyResults?: boolean;
-  subpages?: number;
-  subpageTarget?: string | string[];
-  extras?: ExtrasOptions;
-} & (typeof isBeta extends true ? {} : {});
 
 /**
  * Options for livecrawling contents
@@ -125,21 +124,6 @@ export type LivecrawlOptions =
 export type TextContentsOptions = {
   maxCharacters?: number;
   includeHtmlTags?: boolean;
-};
-
-/**
- * Options for retrieving highlights from page.
- * NOTE: For search type "deep", these options will not be respected. Highlights will be generated with respect
- * to your initial query, and may vary in quantity and length.
- * @typedef {Object} HighlightsContentsOptions
- * @property {string} [query] - The query string to use for highlights search.
- * @property {number} [numSentences] - The number of sentences to return for each highlight.
- * @property {number} [highlightsPerUrl] - The number of highlights to return for each URL.
- */
-export type HighlightsContentsOptions = {
-  query?: string;
-  numSentences?: number;
-  highlightsPerUrl?: number;
 };
 
 /**
@@ -175,16 +159,6 @@ export type ContextOptions = {
 export type TextResponse = { text: string };
 
 /**
- * @typedef {Object} HighlightsResponse
- * @property {string[]} highlights - The highlights as an array of strings.
- * @property {number[]} highlightScores - The corresponding scores as an array of floats, 0 to 1
- */
-export type HighlightsResponse = {
-  highlights: string[];
-  highlightScores: number[];
-};
-
-/**
  * @typedef {Object} SummaryResponse
  * @property {string} summary - The generated summary of the page content.
  */
@@ -215,14 +189,11 @@ export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
  *
  * @template T - A type extending from 'ContentsOptions'.
  */
-export type ContentsResultComponent<T extends ContentsOptions> = Default<
+export type ContentsResultComponent<T extends ContentsOptions> =
   (T["text"] extends object | true ? TextResponse : {}) &
-    (T["highlights"] extends object | true ? HighlightsResponse : {}) &
     (T["summary"] extends object | true ? SummaryResponse : {}) &
     (T["subpages"] extends number ? SubpagesResponse<T> : {}) &
-    (T["extras"] extends object ? ExtrasResponse : {}),
-  TextResponse
->;
+    (T["extras"] extends object ? ExtrasResponse : {});
 
 /**
  * Represents the cost breakdown related to contents retrieval. Fields are optional because
@@ -291,7 +262,6 @@ export type SearchResult<T extends ContentsOptions> = {
  * @typedef {Object} SearchResponse
  * @property {Result[]} results - The list of search results.
  * @property {string} [context] - The context for the search.
- * @property {string} [autopromptString] - The autoprompt string, if applicable.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
@@ -299,7 +269,6 @@ export type SearchResult<T extends ContentsOptions> = {
 export type SearchResponse<T extends ContentsOptions> = {
   results: SearchResult<T>[];
   context?: string;
-  autopromptString?: string;
   autoDate?: string;
   requestId: string;
   statuses?: Array<Status>;
@@ -430,7 +399,6 @@ export class Exa {
   } {
     const {
       text,
-      highlights,
       summary,
       subpages,
       subpageTarget,
@@ -443,13 +411,8 @@ export class Exa {
 
     const contentsOptions: ContentsOptions = {};
 
-    // Default: if none of text, summary, or highlights is provided, we retrieve text
-    if (
-      text === undefined &&
-      summary === undefined &&
-      highlights === undefined &&
-      extras === undefined
-    ) {
+    // Default: if none of text or summary is provided, we retrieve text
+    if (text === undefined && summary === undefined && extras === undefined) {
       contentsOptions.text = true;
     }
 
@@ -471,7 +434,6 @@ export class Exa {
         contentsOptions.summary = summary;
       }
     }
-    if (highlights !== undefined) contentsOptions.highlights = highlights;
     if (subpages !== undefined) contentsOptions.subpages = subpages;
     if (subpageTarget !== undefined)
       contentsOptions.subpageTarget = subpageTarget;
@@ -638,19 +600,70 @@ export class Exa {
 
   /**
    * Performs a search with an Exa prompt-engineered query.
+   * By default, returns text contents. Use contents: false to opt-out.
    *
    * @param {string} query - The query string.
-   * @param {RegularSearchOptions} [options] - Additional search options
-   * @returns {Promise<SearchResponse<{}>>} A list of relevant search results.
+   * @returns {Promise<SearchResponse<{ text: { maxCharacters: 10_000 } }>>} A list of relevant search results with text contents.
+   */
+  async search(
+    query: string
+  ): Promise<SearchResponse<{ text: { maxCharacters: 10_000 } }>>;
+  /**
+   * Performs a search without contents.
+   *
+   * @param {string} query - The query string.
+   * @param {RegularSearchOptions & { contents: false }} options - Search options with contents explicitly disabled
+   * @returns {Promise<SearchResponse<{}>>} A list of relevant search results without contents.
    */
   async search(
     query: string,
-    options?: RegularSearchOptions
-  ): Promise<SearchResponse<{}>> {
+    options: RegularSearchOptions & { contents: false | null | undefined }
+  ): Promise<SearchResponse<{}>>;
+  /**
+   * Performs a search with specific contents.
+   *
+   * @param {string} query - The query string.
+   * @param {RegularSearchOptions & { contents: T }} options - Search options with specific contents
+   * @returns {Promise<SearchResponse<T>>} A list of relevant search results with requested contents.
+   */
+  async search<T extends ContentsOptions>(
+    query: string,
+    options: RegularSearchOptions & { contents: T }
+  ): Promise<SearchResponse<T>>;
+  /**
+   * Performs a search with an Exa prompt-engineered query.
+   * When no contents option is specified, returns text contents by default.
+   *
+   * @param {string} query - The query string.
+   * @param {Omit<RegularSearchOptions, 'contents'>} options - Search options without contents
+   * @returns {Promise<SearchResponse<{ text: true }>>} A list of relevant search results with text contents.
+   */
+  async search(
+    query: string,
+    options: Omit<RegularSearchOptions, "contents">
+  ): Promise<SearchResponse<{ text: true }>>;
+  async search<T extends ContentsOptions>(
+    query: string,
+    options?: RegularSearchOptions & { contents?: T | false | null | undefined }
+  ): Promise<SearchResponse<T | { text: true } | {}>> {
+    if (options === undefined || !("contents" in options)) {
+      return await this.request("/search", "POST", {
+        query,
+        ...options,
+        contents: { text: { maxCharacters: DEFAULT_MAX_CHARACTERS } },
+      });
+    }
     return await this.request("/search", "POST", { query, ...options });
   }
 
   /**
+   * @deprecated Use `search()` instead. The search method now returns text contents by default.
+   *
+   * Migration examples:
+   * - `searchAndContents(query)` → `search(query)`
+   * - `searchAndContents(query, { text: true })` → `search(query, { contents: { text: true } })`
+   * - `searchAndContents(query, { summary: true })` → `search(query, { contents: { summary: true } })`
+   *
    * Performs a search with an Exa prompt-engineered query and returns the contents of the documents.
    *
    * @param {string} query - The query string.
@@ -663,7 +676,12 @@ export class Exa {
   ): Promise<SearchResponse<T>> {
     const { contentsOptions, restOptions } =
       options === undefined
-        ? { contentsOptions: { text: true }, restOptions: {} }
+        ? {
+            contentsOptions: {
+              text: { maxCharacters: DEFAULT_MAX_CHARACTERS },
+            },
+            restOptions: {},
+          }
         : this.extractContentsOptions(options);
 
     return await this.request("/search", "POST", {
@@ -675,18 +693,73 @@ export class Exa {
 
   /**
    * Finds similar links to the provided URL.
+   * By default, returns text contents. Use contents: false to opt-out.
+   *
    * @param {string} url - The URL for which to find similar links.
-   * @param {FindSimilarOptions} [options] - Additional options for finding similar links.
-   * @returns {Promise<SearchResponse<{}>>} A list of similar search results.
+   * @returns {Promise<SearchResponse<{ text: { maxCharacters: 10_000 } }>>} A list of similar search results with text contents.
+   */
+  async findSimilar(
+    url: string
+  ): Promise<SearchResponse<{ text: { maxCharacters: 10_000 } }>>;
+  /**
+   * Finds similar links to the provided URL without contents.
+   *
+   * @param {string} url - The URL for which to find similar links.
+   * @param {FindSimilarOptions & { contents: false }} options - Options with contents explicitly disabled
+   * @returns {Promise<SearchResponse<{}>>} A list of similar search results without contents.
    */
   async findSimilar(
     url: string,
-    options?: FindSimilarOptions
-  ): Promise<SearchResponse<{}>> {
+    options: FindSimilarOptions & { contents: false | null | undefined }
+  ): Promise<SearchResponse<{}>>;
+  /**
+   * Finds similar links to the provided URL with specific contents.
+   *
+   * @param {string} url - The URL for which to find similar links.
+   * @param {FindSimilarOptions & { contents: T }} options - Options with specific contents
+   * @returns {Promise<SearchResponse<T>>} A list of similar search results with requested contents.
+   */
+  async findSimilar<T extends ContentsOptions>(
+    url: string,
+    options: FindSimilarOptions & { contents: T }
+  ): Promise<SearchResponse<T>>;
+  /**
+   * Finds similar links to the provided URL.
+   * When no contents option is specified, returns text contents by default.
+   *
+   * @param {string} url - The URL for which to find similar links.
+   * @param {Omit<FindSimilarOptions, 'contents'>} options - Options without contents
+   * @returns {Promise<SearchResponse<{ text: true }>>} A list of similar search results with text contents.
+   */
+  async findSimilar(
+    url: string,
+    options: Omit<FindSimilarOptions, "contents">
+  ): Promise<SearchResponse<{ text: true }>>;
+  async findSimilar<T extends ContentsOptions>(
+    url: string,
+    options?: FindSimilarOptions & { contents?: T | false | null | undefined }
+  ): Promise<SearchResponse<T | { text: { maxCharacters: 10_000 } } | {}>> {
+    if (options === undefined || !("contents" in options)) {
+      // No options or no contents property → default to text contents
+      return await this.request("/findSimilar", "POST", {
+        url,
+        ...options,
+        contents: { text: { maxCharacters: DEFAULT_MAX_CHARACTERS } },
+      });
+    }
+
+    // Contents property exists - pass options as-is
     return await this.request("/findSimilar", "POST", { url, ...options });
   }
 
   /**
+   * @deprecated Use `findSimilar()` instead. The findSimilar method now returns text contents by default.
+   *
+   * Migration examples:
+   * - `findSimilarAndContents(url)` → `findSimilar(url)`
+   * - `findSimilarAndContents(url, { text: true })` → `findSimilar(url, { contents: { text: true } })`
+   * - `findSimilarAndContents(url, { summary: true })` → `findSimilar(url, { contents: { summary: true } })`
+   *
    * Finds similar links to the provided URL and returns the contents of the documents.
    * @param {string} url - The URL for which to find similar links.
    * @param {FindSimilarOptions & T} [options] - Additional options for finding similar links + contents.
@@ -698,7 +771,12 @@ export class Exa {
   ): Promise<SearchResponse<T>> {
     const { contentsOptions, restOptions } =
       options === undefined
-        ? { contentsOptions: { text: true }, restOptions: {} }
+        ? {
+            contentsOptions: {
+              text: { maxCharacters: DEFAULT_MAX_CHARACTERS },
+            },
+            restOptions: {},
+          }
         : this.extractContentsOptions(options);
 
     return await this.request("/findSimilar", "POST", {
