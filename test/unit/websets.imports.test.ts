@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Exa from "../src";
+import Exa from "../../src";
 import {
   CompanyEntity,
   CreateImportParameters,
@@ -16,7 +16,7 @@ import {
   ImportStatus,
   ListImportsResponse,
   UpdateImport,
-} from "../src/websets/openapi";
+} from "../../src/websets/openapi";
 
 describe("Websets Imports API", () => {
   let exa: Exa;

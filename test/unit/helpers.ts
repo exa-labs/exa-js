@@ -1,14 +1,14 @@
-import { WebsetsBaseClient } from "../src/websets/base";
-import { WebsetsClient } from "../src/websets/client";
-import { WebsetEnrichmentsClient } from "../src/websets/enrichments";
-import { EventsClient } from "../src/websets/events";
-import { WebsetItemsClient } from "../src/websets/items";
+import { WebsetsBaseClient } from "../../src/websets/base";
+import { WebsetsClient } from "../../src/websets/client";
+import { WebsetEnrichmentsClient } from "../../src/websets/enrichments";
+import { EventsClient } from "../../src/websets/events";
+import { WebsetItemsClient } from "../../src/websets/items";
 import {
   WebsetMonitorRunsClient,
   WebsetMonitorsClient,
-} from "../src/websets/monitors";
-import { WebsetSearchesClient } from "../src/websets/searches";
-import { WebsetWebhooksClient } from "../src/websets/webhooks";
+} from "../../src/websets/monitors";
+import { WebsetSearchesClient } from "../../src/websets/searches";
+import { WebsetWebhooksClient } from "../../src/websets/webhooks";
 
 /**
  * Helper type that exposes protected members for testing

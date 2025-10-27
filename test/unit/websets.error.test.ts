@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import Exa from "../src";
-import { ExaError } from "../src/errors";
+import Exa from "../../src";
+import { ExaError } from "../../src/errors";
 import { getProtectedClient } from "./helpers";
 
 describe("Websets API Error Handling", () => {

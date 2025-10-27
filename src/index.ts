@@ -653,6 +653,17 @@ export class Exa {
         contents: { text: { maxCharacters: DEFAULT_MAX_CHARACTERS } },
       });
     }
+
+    // If contents is false, null, or undefined, don't send it to the API
+    if (
+      options.contents === false ||
+      options.contents === null ||
+      options.contents === undefined
+    ) {
+      const { contents, ...restOptions } = options;
+      return await this.request("/search", "POST", { query, ...restOptions });
+    }
+
     return await this.request("/search", "POST", { query, ...options });
   }
 
@@ -748,7 +759,20 @@ export class Exa {
       });
     }
 
-    // Contents property exists - pass options as-is
+    // If contents is false, null, or undefined, don't send it to the API
+    if (
+      options.contents === false ||
+      options.contents === null ||
+      options.contents === undefined
+    ) {
+      const { contents, ...restOptions } = options;
+      return await this.request("/findSimilar", "POST", {
+        url,
+        ...restOptions,
+      });
+    }
+
+    // Contents property exists with value - pass it through
     return await this.request("/findSimilar", "POST", { url, ...options });
   }
 
