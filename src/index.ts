@@ -185,7 +185,7 @@ export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
 
 /**
  * @typedef {Object} ContentsResultComponent
- * Depending on 'ContentsOptions', this yields a combination of 'TextResponse', 'HighlightsResponse', 'SummaryResponse', or an empty object.
+ * Depending on 'ContentsOptions', this yields a combination of 'TextResponse', 'SummaryResponse', or an empty object.
  *
  * @template T - A type extending from 'ContentsOptions'.
  */
@@ -200,12 +200,10 @@ export type ContentsResultComponent<T extends ContentsOptions> =
  * only non-zero costs are included.
  * @typedef {Object} CostDollarsContents
  * @property {number} [text] - The cost in dollars for retrieving text.
- * @property {number} [highlights] - The cost in dollars for retrieving highlights.
  * @property {number} [summary] - The cost in dollars for retrieving summary.
  */
 export type CostDollarsContents = {
   text?: number;
-  highlights?: number;
   summary?: number;
 };
 
