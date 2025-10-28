@@ -25,6 +25,8 @@ jobs:
 
       - name: Run tests
         run: npm test
+        env:
+          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
 
       - name: Run Node.js example
         working-directory: ./examples/node
