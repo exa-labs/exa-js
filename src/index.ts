@@ -455,10 +455,10 @@ export class Exa {
   constructor(apiKey?: string, baseURL: string = "https://api.exa.ai") {
     this.baseURL = baseURL;
     if (!apiKey) {
-      apiKey = process.env.EXASEARCH_API_KEY;
+      apiKey = process.env.EXA_API_KEY;
       if (!apiKey) {
         throw new ExaError(
-          "API key must be provided as an argument or as an environment variable (EXASEARCH_API_KEY)",
+          "API key must be provided as an argument or as an environment variable (EXA_API_KEY)",
           HttpStatusCode.Unauthorized
         );
       }

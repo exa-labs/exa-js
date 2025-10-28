@@ -36,7 +36,7 @@ jobs:
           curl -s -o /tmp/curl_output.txt http://localhost:8000 || cat /tmp/curl_output.txt
           kill %1
         env:
-          EXASEARCH_API_KEY: ${{ secrets.EXA_API_KEY }}
+          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
 
     # Optional: Add steps to publish the package if on main branch
     # - name: Publish to npm
@@ -83,4 +83,4 @@ jobs:
             node $file || echo "Failed to run $file"
           done
         env:
-          EXASEARCH_API_KEY: ${{ secrets.EXA_API_KEY }}
+          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
