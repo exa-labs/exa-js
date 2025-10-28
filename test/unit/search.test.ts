@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Exa from "../src";
+import Exa from "../../src";
 
 /**
  * Test suite for search endpoints.
@@ -16,13 +16,14 @@ describe("Search API", () => {
     exa = new Exa("test-api-key", "https://api.exa.ai");
   });
 
-  it("should perform basic search without contents", async () => {
+  it("should perform basic search with default text contents", async () => {
     const mockResponse = {
       results: [
         {
           title: "Test Result",
           url: "https://example.com",
           id: "test-id",
+          text: "Default text content",
         },
       ],
       requestId: "req-123",
@@ -39,6 +40,11 @@ describe("Search API", () => {
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
       query: "latest AI developments",
       numResults: 2,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
     });
     expect(result).toEqual(mockResponse);
   });
@@ -118,8 +124,6 @@ describe("Search API", () => {
           url: "https://example.com",
           id: "test-id",
           text: "Sample text content",
-          highlights: ["highlight 1", "highlight 2"],
-          highlightScores: [0.9, 0.8],
           summary: "This is a summary",
         },
       ],
@@ -132,7 +136,6 @@ describe("Search API", () => {
 
     const result = await exa.searchAndContents("latest AI developments", {
       text: { maxCharacters: 1000 },
-      highlights: { numSentences: 2 },
       summary: { query: "Summarize this" },
       context: { maxCharacters: 500 },
       numResults: 3,
@@ -142,7 +145,6 @@ describe("Search API", () => {
       query: "latest AI developments",
       contents: {
         text: { maxCharacters: 1000 },
-        highlights: { numSentences: 2 },
         summary: { query: "Summarize this" },
         context: { maxCharacters: 500 },
       },
@@ -151,7 +153,7 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it("should default to text: true when no content options provided", async () => {
+  it("should default to text with maxCharacters when no content options provided", async () => {
     const mockResponse = {
       results: [
         {
@@ -173,7 +175,9 @@ describe("Search API", () => {
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
       query: "test query",
       contents: {
-        text: true,
+        text: {
+          maxCharacters: 10000,
+        },
       },
     });
     expect(result).toEqual(mockResponse);
@@ -250,13 +254,14 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it("should handle fast search type", async () => {
+  it("should handle fast search type with default text contents", async () => {
     const mockResponse = {
       results: [
         {
           title: "Fast Search Result",
           url: "https://example.com",
           id: "fast-id",
+          text: "Fast search text content",
         },
       ],
       requestId: "req-fast-123",
@@ -275,17 +280,23 @@ describe("Search API", () => {
       query: "quick search query",
       type: "fast",
       numResults: 10,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
     });
     expect(result).toEqual(mockResponse);
   });
 
-  it("should handle userLocation parameter", async () => {
+  it("should handle userLocation parameter with default text contents", async () => {
     const mockResponse = {
       results: [
         {
           title: "US Result",
           url: "https://example.com",
           id: "us-id",
+          text: "US local news content",
         },
       ],
       requestId: "req-us-123",
@@ -304,7 +315,41 @@ describe("Search API", () => {
       query: "local news",
       userLocation: "US",
       numResults: 5,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
     });
     expect(result).toEqual(mockResponse);
   });
-}); 
+
+  it("should allow opting out of contents with contents: false", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Result Without Contents",
+          url: "https://example.com",
+          id: "no-contents-id",
+        },
+      ],
+      requestId: "req-no-contents-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("test query", {
+      contents: false,
+      numResults: 5,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "test query",
+      numResults: 5,
+      // Note: contents field should NOT be present when set to false
+    });
+    expect(result).toEqual(mockResponse);
+  });
+});

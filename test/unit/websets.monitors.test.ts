@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Exa from "../src";
+import Exa from "../../src";
 import {
   CreateMonitorParameters,
   ListMonitorRunsResponse,
@@ -14,7 +14,7 @@ import {
   UpdateMonitor,
   UpdateMonitorStatus,
   WebsetSearchBehavior,
-} from "../src/websets/openapi";
+} from "../../src/websets/openapi";
 import { getProtectedClient } from "./helpers";
 
 describe("Websets Monitors API", () => {

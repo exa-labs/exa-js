@@ -47,6 +47,8 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Build and Test
         run: pnpm test
+        env:
+          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
 
   release:
     runs-on: ubuntu-latest

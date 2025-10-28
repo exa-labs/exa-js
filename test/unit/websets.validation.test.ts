@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Exa } from "../src";
+import { Exa } from "../../src";
 import {
   CreateWebsetParameters,
   GetWebsetResponse,
@@ -9,7 +9,7 @@ import {
   WebsetSearchesClient,
   WebsetStatus,
   WebsetWebhooksClient,
-} from "../src/websets";
+} from "../../src/websets";
 import { getProtectedClient } from "./helpers";
 
 type RequestParams = Record<string, string | string[] | number | undefined>;

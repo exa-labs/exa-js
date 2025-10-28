@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Exa, { WebsetStatus } from "../src";
-import { ExaError } from "../src/errors";
+import Exa, { WebsetStatus } from "../../src";
+import { ExaError } from "../../src/errors";
 import {
   CreateEnrichmentParametersFormat,
   CreateWebsetParameters,
@@ -21,7 +21,7 @@ import {
   WebsetSearchCanceledReason,
   WebsetSearchScopeSource,
   WebsetSearchStatus,
-} from "../src/websets/openapi";
+} from "../../src/websets/openapi";
 import { getProtectedClient } from "./helpers";
 
 describe("Websets API", () => {

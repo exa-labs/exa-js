@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { Exa } from "../src";
+import { Exa } from "../../src";
 import {
   WebsetEnrichmentsClient,
   WebsetItemsClient,
   WebsetsClient,
   WebsetSearchesClient,
   WebsetWebhooksClient,
-} from "../src/websets";
+} from "../../src/websets";
 
 describe("Websets API Structure", () => {
   const mockExa = {} as Exa;

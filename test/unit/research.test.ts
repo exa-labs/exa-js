@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Exa from "../src";
+import Exa from "../../src";
 
 /**
  * Test suite for the /research/v1 endpoint.
