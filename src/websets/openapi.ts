@@ -1572,14 +1572,16 @@ export interface components {
       type: "person";
     };
     PreviewWebsetParameters: {
-      /** @description Entity used to inform the decomposition.
-       *
-       *     It is not required to provide it, we automatically detect the entity from all the information provided in the query. Only use this when you need more fine control. */
-      entity?: components["schemas"]["Entity"];
-      /** @description Natural language search query describing what you are looking for.
-       *
-       *     Be specific and descriptive about your requirements, characteristics, and any constraints that help narrow down the results. */
-      query: string;
+      search: {
+        /** @description Entity used to inform the decomposition.
+         *
+         *     It is not required to provide it, we automatically detect the entity from all the information provided in the query. Only use this when you need more fine control. */
+        entity?: components["schemas"]["Entity"];
+        /** @description Natural language search query describing what you are looking for.
+         *
+         *     Be specific and descriptive about your requirements, characteristics, and any constraints that help narrow down the results. */
+        query: string;
+      };
     };
     PreviewWebsetResponse: {
       /** @description Detected enrichments from the query. */
@@ -1762,6 +1764,12 @@ export interface components {
       createdAt: string;
       /** @description The Enrichments to apply to the Webset Items. */
       enrichments: components["schemas"]["WebsetEnrichment"][];
+      /** @description The Excludes sources (existing imports or websets) that apply to all operations within this Webset. Any results found within these sources will be omitted across all search and import operations. */
+      excludes?: {
+        id: string;
+        /** @enum {string} */
+        source: WebsetExcludeSource;
+      }[];
       /** @description The external identifier for the webset */
       externalId: string | null;
       /** @description The unique identifier for the webset */
@@ -1790,8 +1798,6 @@ export interface components {
        * @enum {string}
        */
       status: WebsetStatus;
-      /** @description The Streams for the Webset. */
-      streams: unknown[];
       /** @description The title of the webset */
       title: string | null;
       /**
@@ -3478,9 +3484,13 @@ export interface operations {
     parameters: {
       query?: never;
       header?: never;
-      path?: never;
+      path: {
+        /** @description Weather you want to search for a preview list of items or not */
+        search: boolean;
+      };
       cookie?: never;
     };
+    /** @description Search parameters */
     requestBody: {
       content: {
         "application/json": components["schemas"]["PreviewWebsetParameters"];
