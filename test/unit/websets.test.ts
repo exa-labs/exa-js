@@ -112,21 +112,92 @@ describe("Websets API", () => {
       .mockResolvedValueOnce(mockResponse);
 
     const previewParams = {
-      query: "AI companies founded after 2020",
-      entity: { type: "company" as const },
+      search: {
+        query: "AI companies founded after 2020",
+        entity: { type: "company" as const },
+      },
     };
     const result = await exa.websets.preview(previewParams);
 
     expect(requestSpy).toHaveBeenCalledWith(
       "/v0/websets/preview",
       "POST",
-      previewParams
+      previewParams,
+      {}
     );
     expect(result).toEqual(mockResponse);
     expect(result.search.entity.type).toBe("company");
     expect(result.search.criteria).toHaveLength(2);
     expect(result.enrichments).toHaveLength(2);
     expect(result.enrichments[1].format).toBe(WebsetEnrichmentFormat.options);
+  });
+
+  it("should preview a webset query with search option", async () => {
+    const mockResponse: PreviewWebsetResponse = {
+      search: {
+        entity: {
+          type: "company",
+        },
+        criteria: [
+          {
+            description: "Companies in the AI industry",
+          },
+        ],
+      },
+      enrichments: [],
+    };
+
+    const websetsClient = getProtectedClient(exa.websets);
+    const requestSpy = vi
+      .spyOn(websetsClient, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const previewParams = {
+      search: {
+        query: "AI companies",
+      },
+    };
+    const result = await exa.websets.preview(previewParams, { search: true });
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/v0/websets/preview",
+      "POST",
+      previewParams,
+      { search: true }
+    );
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should preview a webset query with search option set to false", async () => {
+    const mockResponse: PreviewWebsetResponse = {
+      search: {
+        entity: {
+          type: "company",
+        },
+        criteria: [],
+      },
+      enrichments: [],
+    };
+
+    const websetsClient = getProtectedClient(exa.websets);
+    const requestSpy = vi
+      .spyOn(websetsClient, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const previewParams = {
+      search: {
+        query: "AI companies",
+      },
+    };
+    const result = await exa.websets.preview(previewParams, { search: false });
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/v0/websets/preview",
+      "POST",
+      previewParams,
+      { search: false }
+    );
+    expect(result).toEqual(mockResponse);
   });
 
   it("should create a Webset with scope parameter", async () => {

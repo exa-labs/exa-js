@@ -101,15 +101,23 @@ export class WebsetsClient extends WebsetsBaseClient {
   /**
    * Preview a webset
    * @param params The preview parameters
+   * @param options Optional parameters. Search = true allows you to retrieve a preview set of items that could be returned by the webset.
    * @returns The preview response showing how the query will be decomposed
    */
   async preview(
-    params: PreviewWebsetParameters
+    params: PreviewWebsetParameters,
+    options?: { search?: boolean }
   ): Promise<PreviewWebsetResponse> {
+    const queryParams: { search?: boolean } = {};
+    if (options?.search !== undefined) {
+      queryParams.search = options.search;
+    }
+
     return this.request<PreviewWebsetResponse>(
       "/v0/websets/preview",
       "POST",
-      params
+      params,
+      queryParams
     );
   }
 
