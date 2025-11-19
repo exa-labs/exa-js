@@ -772,7 +772,7 @@ export interface components {
        *
        *     You can use this to reference the Webset by your own internal identifiers. */
       externalId?: string;
-      /** @description Import data from existing Websets and Imports into this Webset. */
+      /** @description Attach/load data from existing Imports or Websets into this Webset. For CSV Imports, this schedules ingestion and creates a staging pool of items (ImportItems do not automatically appear as Webset Items; searches create Webset Items). This does not filter searches. To filter a search to only look within an Import or Webset, use search.scope instead. */
       import?: {
         /** @description The ID of the source to search. */
         id: string;
@@ -816,13 +816,14 @@ export interface components {
         /** @description Whether to provide an estimate of how many total relevant results could exist for this search.
          *     Result of the analysis will be available in the `recall` field within the search request. */
         recall?: boolean;
-        /** @description Limit the search to specific sources (existing imports or websets). Any results found within these sources matching the search criteria will be included in the Webset. */
+        /** @description Limit this search to only consider candidates from the listed sources (existing Imports or Websets). Scope applies per-search; if you run another search and want to stay within the same dataset, pass scope again. When scope is present, the search behavior is OVERRIDE (replaces results rather than appending). Note: Using the same Import in both top-level import and search.scope will return a 400 error. */
         scope?: {
           /** @description The ID of the source to search. */
           id: string;
           relationship?: {
-            /** @description What the relationship of the entities you hope to find is relative to the entities contained in the provided source. */
+            /** @description What the relationship of the entities you hope to find is relative to the entities contained in the provided source. Only needed for hop searches (graph traversal) from the source entities to related targets. Examples: "investors of", "current employer", "employees at". Omit for simple filtering within the source. */
             definition: string;
+            /** @description Number of related entities to find per source entity (fanout). Only used for hop searches. Range: 1-10. */
             limit: number;
           };
           /** @enum {string} */
@@ -1599,6 +1600,8 @@ export interface components {
           label: string;
         }[];
       }[];
+      /** @description Preview items matching the search criteria. */
+      items: components["schemas"]["WebsetItemPreview"][];
       search: {
         /** @description Detected criteria from the query. */
         criteria: {
@@ -2048,6 +2051,22 @@ export interface components {
        */
       url: string;
     };
+    WebsetItemPreview: {
+      /**
+       * Format: date-time
+       * @description The date and time the preview was created
+       */
+      createdAt: string;
+      /** @description The unique identifier for the preview item */
+      id: string;
+      /** @description The properties of the preview item */
+      properties:
+        | components["schemas"]["WebsetItemPersonProperties"]
+        | components["schemas"]["WebsetItemCompanyProperties"]
+        | components["schemas"]["WebsetItemArticleProperties"]
+        | components["schemas"]["WebsetItemResearchPaperProperties"]
+        | components["schemas"]["WebsetItemCustomProperties"];
+    };
     WebsetItemResearchPaperProperties: {
       /** @description The text content of the research paper */
       content: string | null;
@@ -2263,6 +2282,7 @@ export type WebsetItemEvaluation =
   components["schemas"]["WebsetItemEvaluation"];
 export type WebsetItemPersonProperties =
   components["schemas"]["WebsetItemPersonProperties"];
+export type WebsetItemPreview = components["schemas"]["WebsetItemPreview"];
 export type WebsetItemResearchPaperProperties =
   components["schemas"]["WebsetItemResearchPaperProperties"];
 export type WebsetSearch = components["schemas"]["WebsetSearch"];
