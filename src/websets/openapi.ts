@@ -1574,6 +1574,11 @@ export interface components {
     };
     PreviewWebsetParameters: {
       search: {
+        /**
+         * @description When query parameter search=true, the number of preview items to return.
+         * @default 10
+         */
+        count: number;
         /** @description Entity used to inform the decomposition.
          *
          *     It is not required to provide it, we automatically detect the entity from all the information provided in the query. Only use this when you need more fine control. */
