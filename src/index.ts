@@ -81,17 +81,41 @@ export type BaseSearchOptions = {
 };
 
 /**
- * Search options for performing a search query.
- * @typedef {Object} RegularSearchOptions
+ * Base search options shared across all search types
  */
-export type RegularSearchOptions = BaseSearchOptions & {
+type BaseRegularSearchOptions = BaseSearchOptions & {
   /**
    * If true, the search results are moderated for safety.
    */
   moderation?: boolean;
   useAutoprompt?: boolean;
-  type?: "keyword" | "neural" | "auto" | "hybrid" | "fast" | "deep";
 };
+
+/**
+ * Search options for deep search type, which supports query variants
+ */
+type DeepSearchOptions = BaseRegularSearchOptions & {
+  type: "deep";
+  /**
+   * Alternative query formulations for deep search to skip automatic LLM-based query expansion.
+   * Max 10 variants.
+   * @example ["machine learning", "ML algorithms", "neural networks"]
+   */
+  queryVariants?: string[];
+};
+
+/**
+ * Search options for non-deep search types (keyword, neural, auto, hybrid, fast)
+ */
+type NonDeepSearchOptions = BaseRegularSearchOptions & {
+  type?: "keyword" | "neural" | "auto" | "hybrid" | "fast";
+};
+
+/**
+ * Search options for performing a search query.
+ * Uses a discriminated union to ensure queryVariants is only allowed when type is "deep".
+ */
+export type RegularSearchOptions = DeepSearchOptions | NonDeepSearchOptions;
 
 /**
  * Options for finding similar links.
@@ -633,12 +657,14 @@ export class Exa {
    * When no contents option is specified, returns text contents by default.
    *
    * @param {string} query - The query string.
-   * @param {Omit<RegularSearchOptions, 'contents'>} options - Search options without contents
+   * @param {Omit<DeepSearchOptions, 'contents'> | Omit<NonDeepSearchOptions, 'contents'>} options - Search options without contents
    * @returns {Promise<SearchResponse<{ text: true }>>} A list of relevant search results with text contents.
    */
   async search(
     query: string,
-    options: Omit<RegularSearchOptions, "contents">
+    options:
+      | Omit<DeepSearchOptions, "contents">
+      | Omit<NonDeepSearchOptions, "contents">
   ): Promise<SearchResponse<{ text: true }>>;
   async search<T extends ContentsOptions>(
     query: string,
