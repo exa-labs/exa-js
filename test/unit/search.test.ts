@@ -352,4 +352,41 @@ describe("Search API", () => {
     });
     expect(result).toEqual(mockResponse);
   });
+
+  it("should pass queryVariants for deep search", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Deep Search Result",
+          url: "https://example.com",
+          id: "deep-search-id",
+          text: "Deep search result text",
+        },
+      ],
+      requestId: "req-deep-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("machine learning", {
+      type: "deep",
+      queryVariants: ["ML algorithms", "neural networks", "AI models"],
+      numResults: 5,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "machine learning",
+      type: "deep",
+      queryVariants: ["ML algorithms", "neural networks", "AI models"],
+      numResults: 5,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
+    });
+    expect(result).toEqual(mockResponse);
+  });
 });
