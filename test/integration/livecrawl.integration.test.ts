@@ -9,7 +9,7 @@ integrationDescribe("Integration: getContents livecrawl", () => {
   it("should retrieve statuses when livecrawl is set to 'always'", async () => {
     const exa = new Exa(apiKey as string);
 
-    const url = "https://openai.com";
+    const url = "https://example.com";
 
     const response = await exa.getContents(url, {
       text: true,
