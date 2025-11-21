@@ -353,7 +353,7 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it("should pass queryVariants for deep search", async () => {
+  it("should pass additionalQueries for deep search", async () => {
     const mockResponse = {
       results: [
         {
@@ -372,14 +372,14 @@ describe("Search API", () => {
 
     const result = await exa.search("machine learning", {
       type: "deep",
-      queryVariants: ["ML algorithms", "neural networks", "AI models"],
+      additionalQueries: ["ML algorithms", "neural networks", "AI models"],
       numResults: 5,
     });
 
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
       query: "machine learning",
       type: "deep",
-      queryVariants: ["ML algorithms", "neural networks", "AI models"],
+      additionalQueries: ["ML algorithms", "neural networks", "AI models"],
       numResults: 5,
       contents: {
         text: {

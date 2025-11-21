@@ -92,16 +92,16 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
 };
 
 /**
- * Search options for deep search type, which supports query variants
+ * Search options for deep search type, which supports additional queries
  */
 type DeepSearchOptions = BaseRegularSearchOptions & {
   type: "deep";
   /**
    * Alternative query formulations for deep search to skip automatic LLM-based query expansion.
-   * Max 10 variants.
+   * Max 10 queries.
    * @example ["machine learning", "ML algorithms", "neural networks"]
    */
-  queryVariants?: string[];
+  additionalQueries?: string[];
 };
 
 /**
@@ -113,7 +113,7 @@ type NonDeepSearchOptions = BaseRegularSearchOptions & {
 
 /**
  * Search options for performing a search query.
- * Uses a discriminated union to ensure queryVariants is only allowed when type is "deep".
+ * Uses a discriminated union to ensure additionalQueries is only allowed when type is "deep".
  */
 export type RegularSearchOptions = DeepSearchOptions | NonDeepSearchOptions;
 
