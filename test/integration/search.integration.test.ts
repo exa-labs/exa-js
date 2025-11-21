@@ -111,3 +111,22 @@ describe("Search Contents Options", () => {
     expect(sampleResult.text.length).toBeGreaterThan(100);
   });
 });
+
+describe("Deep Search", () => {
+  it("should always return context for deep search", async () => {
+    const response = await exa.search("latest quantum computing developments", {
+      type: "deep",
+      numResults: 3,
+    });
+
+    // Deep search should always return context
+    expect(response.context).toBeDefined();
+    expect(response.context).not.toBeNull();
+    expect(typeof response.context).toBe("string");
+    expect(response.context?.length).toBeGreaterThan(0);
+
+    // Should also return results
+    expect(response.results).not.toHaveLength(0);
+    expect(response.results.length).toBeGreaterThan(0);
+  }, 30000); // Deep search can take longer
+});
