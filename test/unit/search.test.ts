@@ -363,6 +363,7 @@ describe("Search API", () => {
           text: "Deep search result text",
         },
       ],
+      context: "Deep search context string",
       requestId: "req-deep-123",
     };
 
@@ -388,5 +389,6 @@ describe("Search API", () => {
       },
     });
     expect(result).toEqual(mockResponse);
+    expect(result.context).toBeDefined();
   });
 });

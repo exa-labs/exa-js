@@ -92,9 +92,17 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
 };
 
 /**
- * Search options for deep search type, which supports additional queries
+ * Contents options for deep search - context is always returned and cannot be disabled
  */
-type DeepSearchOptions = BaseRegularSearchOptions & {
+type DeepContentsOptions = Omit<ContentsOptions, "context"> & {
+  context?: Omit<ContextOptions, never> | true;
+};
+
+/**
+ * Search options for deep search type, which supports additional queries.
+ * Note: context is always returned by the API for deep search and cannot be set to false.
+ */
+type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
   type: "deep";
   /**
    * Alternative query formulations for deep search to skip automatic LLM-based query expansion.
@@ -102,6 +110,10 @@ type DeepSearchOptions = BaseRegularSearchOptions & {
    * @example ["machine learning", "ML algorithms", "neural networks"]
    */
   additionalQueries?: string[];
+  /**
+   * Options for retrieving page contents. For deep search, context is always returned.
+   */
+  contents?: DeepContentsOptions;
 };
 
 /**
