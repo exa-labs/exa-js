@@ -42,7 +42,7 @@ export type ContentsOptions = {
  * Options for performing a search query
  * @typedef {Object} SearchOptions
  * @property {ContentsOptions | boolean} [contents] - Options for retrieving page contents for each result returned. Default is { text: { maxCharacters: 10_000 } }.
- * @property {number} [numResults] - Number of search results to return. Default 10. Max 10 for basic plans.
+ * @property {number} [numResults] - Number of search results to return. Default 10. Max 10 for basic plans. For deep search, recommend leaving blank - number of results will be determined dynamically for your query.
  * @property {string[]} [includeDomains] - List of domains to include in the search.
  * @property {string[]} [excludeDomains] - List of domains to exclude in the search.
  * @property {string} [startCrawlDate] - Start date for results based on crawl date.
@@ -98,7 +98,7 @@ type DeepSearchOptions = BaseRegularSearchOptions & {
   type: "deep";
   /**
    * Alternative query formulations for deep search to skip automatic LLM-based query expansion.
-   * Max 10 queries.
+   * Max 5 queries.
    * @example ["machine learning", "ML algorithms", "neural networks"]
    */
   additionalQueries?: string[];
