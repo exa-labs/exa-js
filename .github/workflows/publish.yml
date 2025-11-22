@@ -16,6 +16,7 @@ on:
 
 jobs:
   publish:
+  # I connected the environment to the npm registry in the npm settings and we use OIDC tokens to authenticate the github action
     runs-on: ubuntu-latest
     environment: publishing_env_for_npm_registry
     permissions:
