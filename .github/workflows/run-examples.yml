@@ -2,6 +2,9 @@ name: Test SDK and Run Examples
 
 on:
   workflow_call:
+    secrets:
+      EXA_API_KEY:
+        required: true
   workflow_dispatch:
   push:
     branches: [main]
