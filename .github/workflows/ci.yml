@@ -48,10 +48,19 @@ jobs:
         env:
           EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
 
-  publish:
+  examples:
     needs: test
+    if: needs.test.result == 'success'
+    uses: ./.github/workflows/run-examples.yml
+    secrets: inherit
+
+  publish:
+    needs:
+      - test
+      - examples
     if: >
       needs.test.result == 'success' &&
+      needs.examples.result == 'success' &&
       github.event_name != 'pull_request' &&
       (
         github.ref == 'refs/heads/main' ||
