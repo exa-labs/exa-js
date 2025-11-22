@@ -1,14 +1,21 @@
 name: Publish to npm
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - v*.*.*
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
 
 jobs:
   publish:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      (
+        github.event.workflow_run.head_branch == 'main' ||
+        startsWith(github.event.workflow_run.head_branch || '', 'v')
+      )
     runs-on: ubuntu-latest
     environment: publishing_env_for_npm_registry
     permissions:
@@ -18,6 +25,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.workflow_run.head_repository.full_name }}
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -26,11 +36,17 @@ jobs:
           registry-url: https://registry.npmjs.org/
           scope: '@exa-labs'
 
+      - name: Ensure npm 11.5.1+
+        run: npm install -g npm@latest
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build package
-        run: npm run build
+        run: npm run build --if-present
+
+      - name: Run tests
+        run: npm test
 
       - name: Publish to npm
         run: npm publish
