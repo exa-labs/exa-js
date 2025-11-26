@@ -18,6 +18,7 @@ const DEFAULT_MAX_CHARACTERS = 10_000;
  * Options for retrieving page contents
  * @typedef {Object} ContentsOptions
  * @property {TextContentsOptions | boolean} [text] - Options for retrieving text contents.
+ * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights. NOTE: For search type "deep", only "true" is allowed. "query", "numSentences" and "highlightsPerUrl" will not be respected.
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
  * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
  * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
@@ -28,6 +29,7 @@ const DEFAULT_MAX_CHARACTERS = 10_000;
  */
 export type ContentsOptions = {
   text?: TextContentsOptions | true;
+  highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
   livecrawl?: LivecrawlOptions;
   context?: ContextOptions | true;
@@ -163,6 +165,21 @@ export type TextContentsOptions = {
 };
 
 /**
+ * Options for retrieving highlights from page.
+ * NOTE: For search type "deep", these options will not be respected. Highlights will be generated with respect
+ * to your initial query, and may vary in quantity and length.
+ * @typedef {Object} HighlightsContentsOptions
+ * @property {string} [query] - The query string to use for highlights search.
+ * @property {number} [numSentences] - The number of sentences to return for each highlight.
+ * @property {number} [highlightsPerUrl] - The number of highlights to return for each URL.
+ */
+export type HighlightsContentsOptions = {
+  query?: string;
+  numSentences?: number;
+  highlightsPerUrl?: number;
+};
+
+/**
  * Options for retrieving summary from page.
  * @typedef {Object} SummaryContentsOptions
  * @property {string} [query] - The query string to use for summary generation.
@@ -195,6 +212,16 @@ export type ContextOptions = {
 export type TextResponse = { text: string };
 
 /**
+ * @typedef {Object} HighlightsResponse
+ * @property {string[]} highlights - The highlights as an array of strings.
+ * @property {number[]} highlightScores - The corresponding scores as an array of floats, 0 to 1
+ */
+export type HighlightsResponse = {
+  highlights: string[];
+  highlightScores: number[];
+};
+
+/**
  * @typedef {Object} SummaryResponse
  * @property {string} summary - The generated summary of the page content.
  */
@@ -221,12 +248,13 @@ export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
 
 /**
  * @typedef {Object} ContentsResultComponent
- * Depending on 'ContentsOptions', this yields a combination of 'TextResponse', 'SummaryResponse', or an empty object.
+ * Depending on 'ContentsOptions', this yields a combination of 'TextResponse', 'HighlightsResponse', 'SummaryResponse', or an empty object.
  *
  * @template T - A type extending from 'ContentsOptions'.
  */
 export type ContentsResultComponent<T extends ContentsOptions> =
   (T["text"] extends object | true ? TextResponse : {}) &
+    (T["highlights"] extends object | true ? HighlightsResponse : {}) &
     (T["summary"] extends object | true ? SummaryResponse : {}) &
     (T["subpages"] extends number ? SubpagesResponse<T> : {}) &
     (T["extras"] extends object ? ExtrasResponse : {});
@@ -236,10 +264,12 @@ export type ContentsResultComponent<T extends ContentsOptions> =
  * only non-zero costs are included.
  * @typedef {Object} CostDollarsContents
  * @property {number} [text] - The cost in dollars for retrieving text.
+ * @property {number} [highlights] - The cost in dollars for retrieving highlights.
  * @property {number} [summary] - The cost in dollars for retrieving summary.
  */
 export type CostDollarsContents = {
   text?: number;
+  highlights?: number;
   summary?: number;
 };
 
@@ -433,6 +463,7 @@ export class Exa {
   } {
     const {
       text,
+      highlights,
       summary,
       subpages,
       subpageTarget,
@@ -445,12 +476,18 @@ export class Exa {
 
     const contentsOptions: ContentsOptions = {};
 
-    // Default: if none of text or summary is provided, we retrieve text
-    if (text === undefined && summary === undefined && extras === undefined) {
+    // Default: if none of text, summary, or highlights is provided, we retrieve text
+    if (
+      text === undefined &&
+      summary === undefined &&
+      highlights === undefined &&
+      extras === undefined
+    ) {
       contentsOptions.text = true;
     }
 
     if (text !== undefined) contentsOptions.text = text;
+    if (highlights !== undefined) contentsOptions.highlights = highlights;
     if (summary !== undefined) {
       // Handle zod schema conversion for summary
       if (
