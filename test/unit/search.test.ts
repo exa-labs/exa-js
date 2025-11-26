@@ -153,6 +153,137 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it("should handle highlights option with searchAndContents", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://example.com",
+          id: "test-id",
+          highlights: ["highlight 1", "highlight 2"],
+          highlightScores: [0.9, 0.8],
+        },
+      ],
+      requestId: "req-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.searchAndContents("latest AI developments", {
+      highlights: true,
+      numResults: 2,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "latest AI developments",
+      contents: {
+        highlights: true,
+      },
+      numResults: 2,
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should handle highlights with detailed options", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://example.com",
+          id: "test-id",
+          highlights: ["highlight 1", "highlight 2"],
+          highlightScores: [0.9, 0.8],
+        },
+      ],
+      requestId: "req-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.searchAndContents("latest AI developments", {
+      highlights: { numSentences: 2, highlightsPerUrl: 3, query: "key points" },
+      numResults: 2,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "latest AI developments",
+      contents: {
+        highlights: { numSentences: 2, highlightsPerUrl: 3, query: "key points" },
+      },
+      numResults: 2,
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should handle text and highlights together", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://example.com",
+          id: "test-id",
+          text: "Sample text content",
+          highlights: ["highlight 1", "highlight 2"],
+          highlightScores: [0.9, 0.8],
+        },
+      ],
+      requestId: "req-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.searchAndContents("latest AI developments", {
+      text: true,
+      highlights: true,
+      numResults: 2,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "latest AI developments",
+      contents: {
+        text: true,
+        highlights: true,
+      },
+      numResults: 2,
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should handle highlights via search contents option", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://example.com",
+          id: "test-id",
+          highlights: ["highlight 1"],
+          highlightScores: [0.95],
+        },
+      ],
+      requestId: "req-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("test query", {
+      contents: { highlights: { numSentences: 2 } },
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "test query",
+      contents: { highlights: { numSentences: 2 } },
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
   it("should default to text with maxCharacters when no content options provided", async () => {
     const mockResponse = {
       results: [
