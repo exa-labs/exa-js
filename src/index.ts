@@ -51,7 +51,7 @@ export type ContentsOptions = {
  * @property {string} [endCrawlDate] - End date for results based on crawl date.
  * @property {string} [startPublishedDate] - Start date for results based on published date.
  * @property {string} [endPublishedDate] - End date for results based on published date.
- * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness. Currently, the only category is company.
+ * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness.
  * @property {string[]} [includeText] - List of strings that must be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  * @property {string[]} [excludeText] - List of strings that must not be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  * @property {string[]} [flags] - Experimental flags
@@ -74,8 +74,8 @@ export type BaseSearchOptions = {
     | "github"
     | "tweet"
     | "personal site"
-    | "linkedin profile"
-    | "financial report";
+    | "financial report"
+    | "people";
   includeText?: string[];
   excludeText?: string[];
   flags?: string[];
