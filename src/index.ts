@@ -214,11 +214,11 @@ export type TextResponse = { text: string };
 /**
  * @typedef {Object} HighlightsResponse
  * @property {string[]} highlights - The highlights as an array of strings.
- * @property {number[]} highlightScores - The corresponding scores as an array of floats, 0 to 1
+ * @property {number[]} [highlightScores] - The corresponding scores as an array of floats, 0 to 1
  */
 export type HighlightsResponse = {
   highlights: string[];
-  highlightScores: number[];
+  highlightScores?: number[];
 };
 
 /**
