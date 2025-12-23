@@ -13,15 +13,72 @@ import { ZodSchema } from "zod";
 import { isZodSchema, zodToJsonSchema } from "../zod-utils";
 import { ResearchBaseClient } from "./base";
 
+/**
+ * Client for interacting with the Exa Research API.
+ * The Research API allows you to create autonomous research tasks that gather
+ * information and return structured JSON objects conforming to a provided schema.
+ *
+ * @example
+ * ```typescript
+ * const exa = new Exa(process.env.EXA_API_KEY);
+ *
+ * // Create a research task
+ * const { id } = await exa.research.create({
+ *   instructions: "Find the top 5 AI companies by funding in 2024",
+ *   outputSchema: mySchema
+ * });
+ *
+ * // Poll until finished
+ * const result = await exa.research.pollUntilFinished(id);
+ * ```
+ */
 export class ResearchClient extends ResearchBaseClient {
   constructor(client: Exa) {
     super(client);
   }
 
+  /**
+   * Create a new research task with a Zod schema for type-safe output.
+   *
+   * @template T - The type of the output, inferred from the Zod schema
+   * @param params - The research task parameters
+   * @param params.instructions - Instructions describing what to research
+   * @param params.model - The model to use (default: "exa-research-fast")
+   * @param params.outputSchema - A Zod schema defining the expected output structure
+   * @returns A promise resolving to the created research task response with an ID
+   * @throws {ExaError} If the API request fails
+   *
+   * @example
+   * ```typescript
+   * import { z } from "zod";
+   *
+   * const schema = z.object({
+   *   companies: z.array(z.object({
+   *     name: z.string(),
+   *     funding: z.number()
+   *   }))
+   * });
+   *
+   * const response = await exa.research.create({
+   *   instructions: "Find top AI startups",
+   *   outputSchema: schema
+   * });
+   * ```
+   */
   async create<T>(
     params: ResearchCreateParamsTyped<ZodSchema<T>>
   ): Promise<ResearchCreateResponse>;
 
+  /**
+   * Create a new research task with a JSON schema.
+   *
+   * @param params - The research task parameters
+   * @param params.instructions - Instructions describing what to research
+   * @param params.model - The model to use (default: "exa-research-fast")
+   * @param params.outputSchema - A JSON schema defining the expected output structure
+   * @returns A promise resolving to the created research task response with an ID
+   * @throws {ExaError} If the API request fails
+   */
   async create(params: {
     instructions: string;
     model?: ResearchCreateRequest["model"];
@@ -52,23 +109,87 @@ export class ResearchClient extends ResearchBaseClient {
     return this.request<ResearchCreateResponse>("", "POST", payload);
   }
 
+  /**
+   * Get a research task by ID.
+   *
+   * @param researchId - The ID of the research task to retrieve
+   * @returns A promise resolving to the research task
+   * @throws {ExaError} If the research task is not found or the request fails
+   */
   get(researchId: string): Promise<Research>;
+
+  /**
+   * Get a research task by ID with options.
+   *
+   * @param researchId - The ID of the research task to retrieve
+   * @param options - Options for the request
+   * @param options.stream - If false, returns the complete research object
+   * @param options.events - If true, includes detailed events in the response
+   * @returns A promise resolving to the research task
+   * @throws {ExaError} If the research task is not found or the request fails
+   */
   get(
     researchId: string,
     options: { stream?: false; events?: boolean }
   ): Promise<Research>;
+
+  /**
+   * Get a research task by ID with typed output using Zod schema.
+   *
+   * @template T - The type of the parsed output, inferred from the Zod schema
+   * @param researchId - The ID of the research task to retrieve
+   * @param options - Options for the request
+   * @param options.stream - If false, returns the complete research object
+   * @param options.events - If true, includes detailed events in the response
+   * @param options.outputSchema - Zod schema for parsing the output
+   * @returns A promise resolving to the research task with typed parsed output
+   * @throws {ExaError} If the research task is not found or the request fails
+   */
   get<T>(
     researchId: string,
     options: { stream?: false; events?: boolean; outputSchema: ZodSchema<T> }
   ): Promise<ResearchTyped<T>>;
+
+  /**
+   * Get a research task as a stream of events.
+   *
+   * @param researchId - The ID of the research task to retrieve
+   * @param options - Options for the request
+   * @param options.stream - If true, returns an async generator of events
+   * @param options.events - If true, includes detailed events in the stream
+   * @returns A promise resolving to an async generator of research events
+   * @throws {ExaError} If the research task is not found or the request fails
+   *
+   * @example
+   * ```typescript
+   * const stream = await exa.research.get(researchId, { stream: true });
+   * for await (const event of stream) {
+   *   console.log(event.eventType, event);
+   * }
+   * ```
+   */
   get(
     researchId: string,
     options: { stream: true; events?: boolean }
   ): Promise<AsyncGenerator<ResearchStreamEvent, any, any>>;
+
+  /**
+   * Get a research task as a stream of events with typed output.
+   *
+   * @template T - The type of the parsed output
+   * @param researchId - The ID of the research task to retrieve
+   * @param options - Options for the request
+   * @param options.stream - If true, returns an async generator of events
+   * @param options.events - If true, includes detailed events in the stream
+   * @param options.outputSchema - Optional Zod schema for typing the output
+   * @returns A promise resolving to an async generator of research events
+   * @throws {ExaError} If the research task is not found or the request fails
+   */
   get<T>(
     researchId: string,
     options: { stream: true; events?: boolean; outputSchema?: ZodSchema<T> }
   ): Promise<AsyncGenerator<ResearchStreamEvent, any, any>>;
+
   get<T = unknown>(
     researchId: string,
     options?: {
@@ -154,11 +275,57 @@ export class ResearchClient extends ResearchBaseClient {
     }
   }
 
+  /**
+   * List all research tasks with optional pagination.
+   *
+   * @param options - Optional pagination parameters
+   * @param options.cursor - Cursor for pagination (from previous response)
+   * @param options.limit - Maximum number of results to return
+   * @returns A promise resolving to a paginated list of research tasks
+   * @throws {ExaError} If the API request fails
+   *
+   * @example
+   * ```typescript
+   * // Get first page
+   * const page1 = await exa.research.list({ limit: 10 });
+   *
+   * // Get next page
+   * if (page1.hasMore) {
+   *   const page2 = await exa.research.list({
+   *     cursor: page1.nextCursor,
+   *     limit: 10
+   *   });
+   * }
+   * ```
+   */
   async list(options?: ListResearchRequest): Promise<ListResearchResponse> {
     const params = this.buildPaginationParams(options);
     return this.request<ListResearchResponse>("", "GET", undefined, params);
   }
 
+  /**
+   * Poll a research task until it completes, fails, or is canceled.
+   *
+   * @param researchId - The ID of the research task to poll
+   * @param options - Polling options
+   * @param options.pollInterval - Interval between polls in ms (default: 1000)
+   * @param options.timeoutMs - Maximum time to wait in ms (default: 10 minutes)
+   * @param options.events - If true, includes detailed events in the response
+   * @returns A promise resolving to the completed research task
+   * @throws {ExaError} If polling times out or fails repeatedly
+   *
+   * @example
+   * ```typescript
+   * const result = await exa.research.pollUntilFinished(researchId, {
+   *   pollInterval: 2000, // Check every 2 seconds
+   *   timeoutMs: 5 * 60 * 1000 // Timeout after 5 minutes
+   * });
+   *
+   * if (result.status === "completed") {
+   *   console.log(result.output);
+   * }
+   * ```
+   */
   async pollUntilFinished(
     researchId: string,
     options?: {
@@ -167,6 +334,20 @@ export class ResearchClient extends ResearchBaseClient {
       events?: boolean;
     }
   ): Promise<Research & { status: "completed" | "failed" | "canceled" }>;
+
+  /**
+   * Poll a research task until it completes with typed output using Zod schema.
+   *
+   * @template T - The type of the parsed output, inferred from the Zod schema
+   * @param researchId - The ID of the research task to poll
+   * @param options - Polling options
+   * @param options.pollInterval - Interval between polls in ms (default: 1000)
+   * @param options.timeoutMs - Maximum time to wait in ms (default: 10 minutes)
+   * @param options.events - If true, includes detailed events in the response
+   * @param options.outputSchema - Zod schema for parsing the output
+   * @returns A promise resolving to the completed research task with typed output
+   * @throws {ExaError} If polling times out or fails repeatedly
+   */
   async pollUntilFinished<T>(
     researchId: string,
     options?: {
@@ -178,6 +359,7 @@ export class ResearchClient extends ResearchBaseClient {
   ): Promise<
     ResearchTyped<T> & { status: "completed" | "failed" | "canceled" }
   >;
+
   async pollUntilFinished<T = unknown>(
     researchId: string,
     options?: {

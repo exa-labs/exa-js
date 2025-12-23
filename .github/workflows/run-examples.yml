@@ -66,9 +66,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install TypeScript
-        run: npm install -g typescript
-
       - name: Compile TypeScript files
         run: |
           cd examples
@@ -78,7 +75,7 @@ jobs:
               continue
             fi
             echo "Compiling $file"
-            tsc $file --resolveJsonModule --esModuleInterop
+            npx tsc $file --resolveJsonModule --esModuleInterop
           done
       - name: List compiled files
         run: ls -R examples/*.js
