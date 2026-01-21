@@ -130,3 +130,36 @@ describe("Deep Search", () => {
     expect(response.results.length).toBeGreaterThan(0);
   }, 30000); // Deep search can take longer
 });
+
+describe("Company Category Search", () => {
+  it("should return entities for company category search", async () => {
+    const response = await exa.search("Exa AI search company", {
+      category: "company",
+      numResults: 5,
+      contents: false,
+    });
+
+    expect(response.results).not.toHaveLength(0);
+
+    // Find a result with entities
+    const resultWithEntities = response.results.find(
+      (r) => r.entities && r.entities.length > 0
+    );
+
+    expect(resultWithEntities).toBeDefined();
+    expect(resultWithEntities!.entities).toBeDefined();
+    expect(resultWithEntities!.entities!.length).toBeGreaterThan(0);
+
+    // Verify entity structure
+    const entity = resultWithEntities!.entities![0];
+    expect(entity.type).toBe("company");
+    expect(entity.id).toBeDefined();
+    expect(entity.version).toBeDefined();
+    expect(entity.properties).toBeDefined();
+
+    // Company entity should have company properties
+    if (entity.type === "company") {
+      expect(entity.properties).toHaveProperty("name");
+    }
+  }, 15000);
+});
