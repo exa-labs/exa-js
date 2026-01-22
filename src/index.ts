@@ -304,22 +304,30 @@ export type CostDollars = {
  */
 
 /** Company workforce information. */
-export type EntityWorkforce = {
+export type EntityCompanyPropertiesWorkforce = {
   total?: number | null;
 };
 
 /** Company headquarters information. */
-export type EntityHeadquarters = {
+export type EntityCompanyPropertiesHeadquarters = {
   address?: string | null;
   city?: string | null;
   postalCode?: string | null;
   country?: string | null;
 };
 
+/** Funding round information. */
+export type EntityCompanyPropertiesFundingRound = {
+  name?: string | null;
+  date?: string | null;
+  amount?: number | null;
+};
+
 /** Company financial information. */
-export type EntityFinancials = {
+export type EntityCompanyPropertiesFinancials = {
   revenueAnnual?: number | null;
   fundingTotal?: number | null;
+  fundingLatestRound?: EntityCompanyPropertiesFundingRound | null;
 };
 
 /** Structured properties for a company entity. */
@@ -327,9 +335,9 @@ export type EntityCompanyProperties = {
   name?: string | null;
   foundedYear?: number | null;
   description?: string | null;
-  workforce?: EntityWorkforce | null;
-  headquarters?: EntityHeadquarters | null;
-  financials?: EntityFinancials | null;
+  workforce?: EntityCompanyPropertiesWorkforce | null;
+  headquarters?: EntityCompanyPropertiesHeadquarters | null;
+  financials?: EntityCompanyPropertiesFinancials | null;
 };
 
 /** Date range for work history entries. */
@@ -339,24 +347,24 @@ export type EntityDateRange = {
 };
 
 /** Reference to a company in work history. */
-export type EntityCompanyRef = {
+export type EntityPersonPropertiesCompanyRef = {
   id?: string | null;
   name?: string | null;
 };
 
 /** A single work history entry for a person. */
-export type EntityWorkHistoryEntry = {
+export type EntityPersonPropertiesWorkHistoryEntry = {
   title?: string | null;
   location?: string | null;
   dates?: EntityDateRange | null;
-  company?: EntityCompanyRef | null;
+  company?: EntityPersonPropertiesCompanyRef | null;
 };
 
 /** Structured properties for a person entity. */
 export type EntityPersonProperties = {
   name?: string | null;
   location?: string | null;
-  workHistory?: EntityWorkHistoryEntry[];
+  workHistory?: EntityPersonPropertiesWorkHistoryEntry[];
 };
 
 /** Structured entity data for a company. */
