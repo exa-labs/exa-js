@@ -36,6 +36,11 @@ describe("Entity Types", () => {
           financials: {
             revenueAnnual: 10000000,
             fundingTotal: 50000000,
+            fundingLatestRound: {
+              name: "Series B",
+              date: "2023-06-15",
+              amount: 50000000,
+            },
           },
         },
       };
@@ -45,6 +50,8 @@ describe("Entity Types", () => {
       expect(company.properties.workforce?.total).toBe(50);
       expect(company.properties.headquarters?.city).toBe("San Francisco");
       expect(company.properties.financials?.fundingTotal).toBe(50000000);
+      expect(company.properties.financials?.fundingLatestRound?.name).toBe("Series B");
+      expect(company.properties.financials?.fundingLatestRound?.amount).toBe(50000000);
     });
 
     it("should allow nullable properties", () => {
