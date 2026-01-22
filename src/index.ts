@@ -1,7 +1,7 @@
 import fetch, { Headers } from "cross-fetch";
 import { ZodSchema } from "zod";
 import packageJson from "../package.json";
-import { ExaError, HttpStatusCode } from "./errors";
+import { ExaError, HttpStatusCode, TimeoutError } from "./errors";
 import { ResearchClient } from "./research/client";
 import { WebsetsClient } from "./websets/client";
 import { isZodSchema, zodToJsonSchema } from "./zod-utils";
@@ -618,8 +618,9 @@ export class Exa {
 
   /**
    * Constructs the Exa API client.
-   * @param {string} apiKey - The API key for authentication.
-   * @param {string} [baseURL] - The base URL of the Exa API.
+   * @param {string} apiKey - The API key for authentication. Falls back to EXA_API_KEY environment variable.
+   * @param {string} [baseURL] - The base URL of the Exa API. Default: "https://api.exa.ai"
+   * @throws {AuthenticationError} If no API key is provided and EXA_API_KEY is not set
    */
   constructor(apiKey?: string, baseURL: string = "https://api.exa.ai") {
     this.baseURL = baseURL;
@@ -650,8 +651,13 @@ export class Exa {
    * @param {string} method - The HTTP method to use.
    * @param {any} [body] - The request body for POST requests.
    * @param {Record<string, any>} [params] - The query parameters.
-   * @returns {Promise<any>} The response from the API.
-   * @throws {ExaError} When any API request fails with structured error information
+   * @returns {Promise<T>} The response from the API.
+   * @throws {ExaError} When the API returns an error response
+   * @throws {RateLimitError} When rate limits are exceeded (HTTP 429)
+   * @throws {AuthenticationError} When the API key is invalid (HTTP 401)
+   * @throws {ValidationError} When request parameters are invalid (HTTP 400)
+   * @throws {NotFoundError} When the requested resource is not found (HTTP 404)
+   * @throws {ServerError} When the server encounters an internal error (HTTP 500/503)
    */
   async request<T = unknown>(
     endpoint: string,
@@ -984,6 +990,8 @@ export class Exa {
    * @param {string | string[] | SearchResult[]} urls - A URL or array of URLs, or an array of SearchResult objects.
    * @param {ContentsOptions} [options] - Additional options for retrieving document contents.
    * @returns {Promise<SearchResponse<T>>} A list of document contents for the requested URLs.
+   * @throws {ValidationError} When no URLs are provided
+   * @throws {ExaError} When the API request fails
    */
   async getContents<T extends ContentsOptions>(
     urls: string | string[] | SearchResult<T>[],
@@ -1027,6 +1035,8 @@ export class Exa {
    * @param {string} query - The question or query to answer.
    * @param {AnswerOptions} [options] - Additional options for answer generation.
    * @returns {Promise<AnswerResponse>} The generated answer and source references.
+   * @throws {ValidationError} When stream option is true (use streamAnswer instead)
+   * @throws {ExaError} When the API request fails
    *
    * Example with systemPrompt:
    * ```ts
@@ -1084,6 +1094,18 @@ export class Exa {
   /**
    * Stream an answer with Zod schema for structured output (non-streaming content)
    * Note: Structured output works only with non-streaming content, not with streaming chunks
+   *
+   * @template T - The type of structured output
+   * @param query - The question to answer
+   * @param options - Stream options including Zod schema
+   * @param options.text - Whether to include text in source results
+   * @param options.model - Model to use ("exa" or "exa-pro")
+   * @param options.systemPrompt - System prompt to guide the answer
+   * @param options.outputSchema - Zod schema for structured output
+   * @param options.timeoutMs - Timeout in milliseconds (default: 60000)
+   * @returns An async generator yielding answer chunks
+   * @throws {TimeoutError} If the stream times out
+   * @throws {ExaError} If the API request fails
    */
   streamAnswer<T>(
     query: string,
@@ -1092,6 +1114,7 @@ export class Exa {
       model?: "exa" | "exa-pro";
       systemPrompt?: string;
       outputSchema: ZodSchema<T>;
+      timeoutMs?: number;
     }
   ): AsyncGenerator<AnswerStreamChunk>;
 
@@ -1101,11 +1124,23 @@ export class Exa {
    * Each iteration yields a chunk with partial text (`content`) or new citations.
    * Use this if you'd like to read the answer incrementally, e.g. in a chat UI.
    *
-   * Example usage:
+   * @param query - The question to answer
+   * @param options - Stream options
+   * @param options.text - Whether to include text in source results (default: false)
+   * @param options.model - Model to use ("exa" or "exa-pro", default: "exa")
+   * @param options.systemPrompt - System prompt to guide the answer
+   * @param options.outputSchema - JSON schema for structured output
+   * @param options.timeoutMs - Timeout in milliseconds (default: 60000)
+   * @returns An async generator yielding answer chunks
+   * @throws {TimeoutError} If the stream times out
+   * @throws {ExaError} If the API request fails
+   *
+   * @example
    * ```ts
    * for await (const chunk of exa.streamAnswer("What is quantum computing?", {
    *   text: false,
-   *   systemPrompt: "Answer in a concise manner suitable for beginners."
+   *   systemPrompt: "Answer in a concise manner suitable for beginners.",
+   *   timeoutMs: 30000 // 30 second timeout
    * })) {
    *   if (chunk.content) process.stdout.write(chunk.content);
    *   if (chunk.citations) {
@@ -1121,6 +1156,7 @@ export class Exa {
       model?: "exa" | "exa-pro";
       systemPrompt?: string;
       outputSchema?: Record<string, unknown>;
+      timeoutMs?: number;
     }
   ): AsyncGenerator<AnswerStreamChunk>;
 
@@ -1131,6 +1167,7 @@ export class Exa {
       model?: "exa" | "exa-pro";
       systemPrompt?: string;
       outputSchema?: Record<string, unknown> | ZodSchema<T>;
+      timeoutMs?: number;
     }
   ): AsyncGenerator<AnswerStreamChunk> {
     // Convert Zod schema to JSON schema if needed
@@ -1149,11 +1186,32 @@ export class Exa {
       outputSchema,
     };
 
-    const response = await fetchImpl(this.baseURL + "/answer", {
-      method: "POST",
-      headers: this.headers,
-      body: JSON.stringify(body),
-    });
+    // Setup AbortController for timeout
+    const timeoutMs = options?.timeoutMs ?? 60000; // Default 60 seconds
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, timeoutMs);
+
+    let response: Response;
+    try {
+      response = await fetchImpl(this.baseURL + "/answer", {
+        method: "POST",
+        headers: this.headers,
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (error.name === "AbortError") {
+        throw new TimeoutError(
+          `Stream request timed out after ${timeoutMs}ms`,
+          timeoutMs,
+          "/answer"
+        );
+      }
+      throw error;
+    }
 
     if (!response.ok) {
       const message = await response.text();
@@ -1172,9 +1230,33 @@ export class Exa {
     const decoder = new TextDecoder();
     let buffer = "";
 
+    // Helper to read with timeout
+    const readWithTimeout = async (): Promise<ReadableStreamReadResult<Uint8Array>> => {
+      return new Promise((resolve, reject) => {
+        const readTimeoutId = setTimeout(() => {
+          reject(new TimeoutError(
+            `Stream read timed out after ${timeoutMs}ms`,
+            timeoutMs,
+            "/answer"
+          ));
+        }, timeoutMs);
+
+        reader.read().then(
+          (result) => {
+            clearTimeout(readTimeoutId);
+            resolve(result);
+          },
+          (error) => {
+            clearTimeout(readTimeoutId);
+            reject(error);
+          }
+        );
+      });
+    };
+
     try {
       while (true) {
-        const { done, value } = await reader.read();
+        const { done, value } = await readWithTimeout();
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
@@ -1216,6 +1298,7 @@ export class Exa {
         }
       }
     } finally {
+      clearTimeout(timeoutId);
       reader.releaseLock();
     }
   }
