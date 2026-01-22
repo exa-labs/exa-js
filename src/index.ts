@@ -299,6 +299,94 @@ export type CostDollars = {
 };
 
 /**
+ * Entity types for company/people search results.
+ * Only returned when using category=company or category=people searches.
+ */
+
+/** Company workforce information. */
+export type EntityCompanyPropertiesWorkforce = {
+  total?: number | null;
+};
+
+/** Company headquarters information. */
+export type EntityCompanyPropertiesHeadquarters = {
+  address?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
+};
+
+/** Funding round information. */
+export type EntityCompanyPropertiesFundingRound = {
+  name?: string | null;
+  date?: string | null;
+  amount?: number | null;
+};
+
+/** Company financial information. */
+export type EntityCompanyPropertiesFinancials = {
+  revenueAnnual?: number | null;
+  fundingTotal?: number | null;
+  fundingLatestRound?: EntityCompanyPropertiesFundingRound | null;
+};
+
+/** Structured properties for a company entity. */
+export type EntityCompanyProperties = {
+  name?: string | null;
+  foundedYear?: number | null;
+  description?: string | null;
+  workforce?: EntityCompanyPropertiesWorkforce | null;
+  headquarters?: EntityCompanyPropertiesHeadquarters | null;
+  financials?: EntityCompanyPropertiesFinancials | null;
+};
+
+/** Date range for work history entries. */
+export type EntityDateRange = {
+  from?: string | null;
+  to?: string | null;
+};
+
+/** Reference to a company in work history. */
+export type EntityPersonPropertiesCompanyRef = {
+  id?: string | null;
+  name?: string | null;
+};
+
+/** A single work history entry for a person. */
+export type EntityPersonPropertiesWorkHistoryEntry = {
+  title?: string | null;
+  location?: string | null;
+  dates?: EntityDateRange | null;
+  company?: EntityPersonPropertiesCompanyRef | null;
+};
+
+/** Structured properties for a person entity. */
+export type EntityPersonProperties = {
+  name?: string | null;
+  location?: string | null;
+  workHistory?: EntityPersonPropertiesWorkHistoryEntry[];
+};
+
+/** Structured entity data for a company. */
+export type CompanyEntity = {
+  id: string;
+  type: "company";
+  version: number;
+  properties: EntityCompanyProperties;
+};
+
+/** Structured entity data for a person. */
+export type PersonEntity = {
+  id: string;
+  type: "person";
+  version: number;
+  properties: EntityPersonProperties;
+};
+
+/** Structured entity data for company or person search results. */
+export type Entity = CompanyEntity | PersonEntity;
+
+/**
  * Represents a search result object.
  * @typedef {Object} SearchResult
  * @property {string} title - The title of the search result.
@@ -309,6 +397,7 @@ export type CostDollars = {
  * @property {string} id - The temporary ID for the document.
  * @property {string} [image] - A representative image for the content, if any.
  * @property {string} [favicon] - A favicon for the site, if any.
+ * @property {Entity[]} [entities] - Structured entity data for company or person search results.
  */
 export type SearchResult<T extends ContentsOptions> = {
   title: string | null;
@@ -319,6 +408,7 @@ export type SearchResult<T extends ContentsOptions> = {
   id: string;
   image?: string;
   favicon?: string;
+  entities?: Entity[];
 } & ContentsResultComponent<T>;
 
 /**
