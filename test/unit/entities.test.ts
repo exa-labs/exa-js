@@ -42,6 +42,9 @@ describe("Entity Types", () => {
               amount: 50000000,
             },
           },
+          webTraffic: {
+            visitsMonthly: 266306714,
+          },
         },
       };
 
@@ -52,6 +55,7 @@ describe("Entity Types", () => {
       expect(company.properties.financials?.fundingTotal).toBe(50000000);
       expect(company.properties.financials?.fundingLatestRound?.name).toBe("Series B");
       expect(company.properties.financials?.fundingLatestRound?.amount).toBe(50000000);
+      expect(company.properties.webTraffic?.visitsMonthly).toBe(266306714);
     });
 
     it("should allow nullable properties", () => {
@@ -66,11 +70,13 @@ describe("Entity Types", () => {
           workforce: null,
           headquarters: null,
           financials: null,
+          webTraffic: null,
         },
       };
 
       expect(company.properties.foundedYear).toBeNull();
       expect(company.properties.workforce).toBeNull();
+      expect(company.properties.webTraffic).toBeNull();
     });
   });
 

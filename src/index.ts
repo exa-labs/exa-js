@@ -330,6 +330,11 @@ export type EntityCompanyPropertiesFinancials = {
   fundingLatestRound?: EntityCompanyPropertiesFundingRound | null;
 };
 
+/** Company web traffic information. */
+export type EntityCompanyPropertiesWebTraffic = {
+  visitsMonthly?: number | null;
+};
+
 /** Structured properties for a company entity. */
 export type EntityCompanyProperties = {
   name?: string | null;
@@ -338,6 +343,7 @@ export type EntityCompanyProperties = {
   workforce?: EntityCompanyPropertiesWorkforce | null;
   headquarters?: EntityCompanyPropertiesHeadquarters | null;
   financials?: EntityCompanyPropertiesFinancials | null;
+  webTraffic?: EntityCompanyPropertiesWebTraffic | null;
 };
 
 /** Date range for work history entries. */
