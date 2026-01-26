@@ -71,7 +71,6 @@ export type BaseSearchOptions = {
     | "research paper"
     | "news"
     | "pdf"
-    | "github"
     | "tweet"
     | "personal site"
     | "financial report"
