@@ -618,8 +618,12 @@ function maybeGetQuery(completion: ChatCompletion): string | null {
   if (message?.tool_calls) {
     for (const toolCall of message.tool_calls) {
       if (toolCall.function.name === "search") {
-        const args = JSON.parse(toolCall.function.arguments);
-        return args.query;
+        try {
+          const args = JSON.parse(toolCall.function.arguments);
+          return args.query;
+        } catch {
+          return null;
+        }
       }
     }
   }
@@ -1529,6 +1533,13 @@ export class Exa {
         },
       };
 
+      if (useExa === "none") {
+        const completion = (await originalCreate(
+          openaiParams as ChatCompletionCreateParamsNonStreaming
+        )) as ChatCompletion;
+        return new ExaOpenAICompletion(completion, null);
+      }
+
       const paramsWithTools = {
         ...openaiParams,
         tools: [...(openaiParams.tools || []), searchTool],
@@ -1540,11 +1551,22 @@ export class Exa {
 
       const query = maybeGetQuery(completion);
 
-      if (!query) {
+      if (!query && useExa !== "required") {
         return new ExaOpenAICompletion(completion, null);
       }
 
-      const exaResult = await exa.search(query, {
+      const searchQuery =
+        query ||
+        (openaiParams.messages
+          .filter((m) => m.role === "user")
+          .pop() as { content: string } | undefined)?.content ||
+        "";
+
+      if (!searchQuery) {
+        return new ExaOpenAICompletion(completion, null);
+      }
+
+      const exaResult = await exa.search(searchQuery, {
         contents: { text: { maxCharacters: resultMaxLen } },
         ...exaSearchOptions,
       });
