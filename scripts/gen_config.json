@@ -134,10 +134,14 @@
       {"name": "properties", "type": "EntityPersonProperties", "description": "Structured properties for the person."}
     ]
   },
-  "method_notes": {
-    "research.get": "When called with `stream: true`, returns an `AsyncGenerator<ResearchStreamEvent>` for real-time SSE updates instead of a `Promise<Research>`.",
-    "research.pollUntilFinished": "Options include `pollInterval` (default 1000ms), `timeoutMs` (default 10 minutes), and `events` (boolean to include event log)."
-  },
+    "method_notes": {
+      "search": "The `options.type` parameter accepts: `\"keyword\"`, `\"neural\"`, `\"auto\"` (default), `\"hybrid\"`, `\"fast\"`, or `\"deep\"`. See [RegularSearchOptions](#regularsearchoptions) for all available options.",
+      "searchAndContents": "The `options.type` parameter accepts: `\"keyword\"`, `\"neural\"`, `\"auto\"` (default), `\"hybrid\"`, `\"fast\"`, or `\"deep\"`. See [RegularSearchOptions](#regularsearchoptions) for all available options.",
+      "findSimilar": "See [FindSimilarOptions](#findsimilaroptions) for all available options including `excludeSourceDomain`.",
+      "findSimilarAndContents": "See [FindSimilarOptions](#findsimilaroptions) for all available options including `excludeSourceDomain`.",
+      "research.get": "When called with `stream: true`, returns an `AsyncGenerator<ResearchStreamEvent>` for real-time SSE updates instead of a `Promise<Research>`.",
+      "research.pollUntilFinished": "Options include `pollInterval` (default 1000ms), `timeoutMs` (default 10 minutes), and `events` (boolean to include event log)."
+    },
   "input_examples": {
     "search": "const result = await exa.search(\"hottest AI startups\", {\n  numResults: 10\n});",
     "searchAndContents": "const result = await exa.searchAndContents(\"AI in healthcare\", {\n  text: true,\n  highlights: true,\n  numResults: 5\n});",
