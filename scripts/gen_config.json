@@ -106,6 +106,32 @@
     "AnswerStreamChunk": [
       {"name": "content", "type": "string", "description": "The partial text content of the answer (if present in this chunk)."},
       {"name": "citations", "type": "Array<{id, url, title?, publishedDate?, author?, text?}>", "description": "Citations associated with the current chunk of text (if present)."}
+    ],
+    "EntityCompanyProperties": [
+      {"name": "name", "type": "string | null", "description": "The company name."},
+      {"name": "foundedYear", "type": "number | null", "description": "The year the company was founded."},
+      {"name": "description", "type": "string | null", "description": "A description of the company."},
+      {"name": "workforce", "type": "EntityCompanyPropertiesWorkforce | null", "description": "Information about the company's workforce."},
+      {"name": "headquarters", "type": "EntityCompanyPropertiesHeadquarters | null", "description": "Information about the company's headquarters location."},
+      {"name": "financials", "type": "EntityCompanyPropertiesFinancials | null", "description": "Financial information about the company."},
+      {"name": "webTraffic", "type": "EntityCompanyPropertiesWebTraffic | null", "description": "Web traffic statistics for the company."}
+    ],
+    "EntityPersonProperties": [
+      {"name": "name", "type": "string | null", "description": "The person's name."},
+      {"name": "location", "type": "string | null", "description": "The person's location."},
+      {"name": "workHistory", "type": "EntityPersonPropertiesWorkHistoryEntry[]", "description": "The person's work history."}
+    ],
+    "CompanyEntity": [
+      {"name": "id", "type": "string", "description": "Unique identifier for the entity."},
+      {"name": "type", "type": "\"company\"", "description": "The entity type (always \"company\")."},
+      {"name": "version", "type": "number", "description": "The version of the entity schema."},
+      {"name": "properties", "type": "EntityCompanyProperties", "description": "Structured properties for the company."}
+    ],
+    "PersonEntity": [
+      {"name": "id", "type": "string", "description": "Unique identifier for the entity."},
+      {"name": "type", "type": "\"person\"", "description": "The entity type (always \"person\")."},
+      {"name": "version", "type": "number", "description": "The version of the entity schema."},
+      {"name": "properties", "type": "EntityPersonProperties", "description": "Structured properties for the person."}
     ]
   },
   "method_notes": {
