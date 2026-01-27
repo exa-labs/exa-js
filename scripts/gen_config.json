@@ -21,7 +21,9 @@
       "SearchResponse",
       "AnswerOptions",
       "AnswerResponse",
-      "AnswerStreamChunk"
+      "AnswerStreamChunk",
+      "Status",
+      "CostDollars"
     ],
     "entity_types": [
       "CompanyEntity",
@@ -32,6 +34,83 @@
   },
   "getting_started": {
     "api_key_url": "https://dashboard.exa.ai/api-keys"
+  },
+  "type_field_overrides": {
+    "RegularSearchOptions": [
+      {"name": "type", "type": "\"keyword\" | \"neural\" | \"auto\" | \"hybrid\" | \"fast\" | \"deep\"", "description": "The type of search to perform. Default is \"auto\"."},
+      {"name": "numResults", "type": "number", "description": "Number of search results to return. Default 10. Max 10 for basic plans."},
+      {"name": "includeDomains", "type": "string[]", "description": "List of domains to include in the search."},
+      {"name": "excludeDomains", "type": "string[]", "description": "List of domains to exclude in the search."},
+      {"name": "startCrawlDate", "type": "string", "description": "Start date for results based on crawl date (ISO format)."},
+      {"name": "endCrawlDate", "type": "string", "description": "End date for results based on crawl date (ISO format)."},
+      {"name": "startPublishedDate", "type": "string", "description": "Start date for results based on published date (ISO format)."},
+      {"name": "endPublishedDate", "type": "string", "description": "End date for results based on published date (ISO format)."},
+      {"name": "category", "type": "\"company\" | \"research paper\" | \"news\" | \"pdf\" | \"tweet\" | \"personal site\" | \"financial report\" | \"people\"", "description": "A data category to focus on."},
+      {"name": "includeText", "type": "string[]", "description": "List of strings that must be present in webpage text. Max 1 string of up to 5 words."},
+      {"name": "excludeText", "type": "string[]", "description": "List of strings that must not be present in webpage text. Max 1 string of up to 5 words."},
+      {"name": "contents", "type": "ContentsOptions", "description": "Options for retrieving page contents for each result."},
+      {"name": "moderation", "type": "boolean", "description": "If true, the search results are moderated for safety."},
+      {"name": "useAutoprompt", "type": "boolean", "description": "If true, uses autoprompt to enhance the query."},
+      {"name": "userLocation", "type": "string", "description": "The two-letter ISO country code of the user, e.g. US."},
+      {"name": "additionalQueries", "type": "string[]", "description": "Alternative query formulations for deep search. Max 5 queries. Only for type: \"deep\"."}
+    ],
+    "ContentsOptions": [
+      {"name": "text", "type": "TextContentsOptions | true", "description": "Options for retrieving text contents."},
+      {"name": "highlights", "type": "HighlightsContentsOptions | true", "description": "Options for retrieving highlights."},
+      {"name": "summary", "type": "SummaryContentsOptions | true", "description": "Options for retrieving summary."},
+      {"name": "livecrawl", "type": "LivecrawlOptions", "description": "Options for livecrawling contents. Default is \"never\" for neural/auto, \"fallback\" for keyword."},
+      {"name": "livecrawlTimeout", "type": "number", "description": "The timeout for livecrawling in ms. Max and default is 10000ms."},
+      {"name": "filterEmptyResults", "type": "boolean", "description": "If true, filters out results with no contents. Default is true."},
+      {"name": "subpages", "type": "number", "description": "Number of subpages to return for each result."},
+      {"name": "subpageTarget", "type": "string | string[]", "description": "Text used to match/rank subpages in the returned list."},
+      {"name": "extras", "type": "ExtrasOptions", "description": "Miscellaneous data derived from results."},
+      {"name": "context", "type": "ContextOptions | true", "description": "Options for retrieving context."}
+    ],
+    "SearchResult": [
+      {"name": "title", "type": "string | null", "description": "The title of the search result."},
+      {"name": "url", "type": "string", "description": "The URL of the search result."},
+      {"name": "id", "type": "string", "description": "The temporary ID for the document."},
+      {"name": "publishedDate", "type": "string", "description": "The estimated creation date of the content."},
+      {"name": "author", "type": "string", "description": "The author of the content, if available."},
+      {"name": "score", "type": "number", "description": "Similarity score between the query/url and the result."},
+      {"name": "image", "type": "string", "description": "A representative image for the content, if any."},
+      {"name": "favicon", "type": "string", "description": "A favicon for the site, if any."},
+      {"name": "text", "type": "string", "description": "The text content of the page (if text option enabled)."},
+      {"name": "highlights", "type": "string[]", "description": "Highlighted text snippets (if highlights option enabled)."},
+      {"name": "highlightScores", "type": "number[]", "description": "Scores for each highlight."},
+      {"name": "summary", "type": "string", "description": "Summary of the content (if summary option enabled)."},
+      {"name": "entities", "type": "Entity[]", "description": "Structured entity data for company or person search results."}
+    ],
+    "SearchResponse": [
+      {"name": "results", "type": "SearchResult<T>[]", "description": "The list of search results."},
+      {"name": "requestId", "type": "string", "description": "The request ID for the search."},
+      {"name": "context", "type": "string", "description": "The context for the search (for deep search)."},
+      {"name": "autoDate", "type": "string", "description": "The autoprompt date, if applicable."},
+      {"name": "statuses", "type": "Status[]", "description": "Status information for each result."},
+      {"name": "costDollars", "type": "CostDollars", "description": "The cost breakdown for this request."}
+    ],
+    "AnswerOptions": [
+      {"name": "text", "type": "boolean", "description": "Whether to include text in the source results. Default false."},
+      {"name": "model", "type": "\"exa\"", "description": "The model to use for generating the answer. Default \"exa\"."},
+      {"name": "stream", "type": "boolean", "description": "Whether to stream the response. Default false."},
+      {"name": "systemPrompt", "type": "string", "description": "A system prompt to guide the LLM's behavior when generating the answer."},
+      {"name": "outputSchema", "type": "Record<string, unknown>", "description": "A JSON Schema specification for the structure you expect the output to take."},
+      {"name": "userLocation", "type": "string", "description": "The two-letter ISO country code of the user, e.g. US."}
+    ],
+    "AnswerResponse": [
+      {"name": "answer", "type": "string | Record<string, unknown>", "description": "The generated answer text (or object matching outputSchema if provided)."},
+      {"name": "citations", "type": "SearchResult<{}>[]", "description": "The sources used to generate the answer."},
+      {"name": "requestId", "type": "string", "description": "The request ID for the answer."},
+      {"name": "costDollars", "type": "CostDollars", "description": "The cost breakdown for this request."}
+    ],
+    "AnswerStreamChunk": [
+      {"name": "content", "type": "string", "description": "The partial text content of the answer (if present in this chunk)."},
+      {"name": "citations", "type": "Array<{id, url, title?, publishedDate?, author?, text?}>", "description": "Citations associated with the current chunk of text (if present)."}
+    ]
+  },
+  "method_notes": {
+    "research.get": "When called with `stream: true`, returns an `AsyncGenerator<ResearchStreamEvent>` for real-time SSE updates instead of a `Promise<Research>`.",
+    "research.pollUntilFinished": "Options include `pollInterval` (default 1000ms), `timeoutMs` (default 10 minutes), and `events` (boolean to include event log)."
   },
   "input_examples": {
     "search": "const result = await exa.search(\"hottest AI startups\", {\n  numResults: 10\n});",

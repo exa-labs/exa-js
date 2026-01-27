@@ -26,6 +26,12 @@ interface ParsedType {
   definition?: string;
 }
 
+interface FieldOverride {
+  name: string;
+  type: string;
+  description: string;
+}
+
 interface Config {
   export: {
     methods: Record<string, string[]>;
@@ -41,6 +47,8 @@ interface Config {
   method_result_objects: Record<string, string>;
   external_type_links: Record<string, string>;
   manual_types: Record<string, { description: string; definition: string }>;
+  type_field_overrides?: Record<string, FieldOverride[]>;
+  method_notes?: Record<string, string>;
 }
 
 class DocGenerator {
@@ -182,6 +190,17 @@ class DocGenerator {
     const description = this.getJsDocDescription(typeAlias);
     const typeNode = typeAlias.getTypeNode();
     const definition = typeNode ? typeNode.getText() : "";
+
+    // Check if we have field overrides for this type
+    const overrides = this.config.type_field_overrides?.[name];
+    if (overrides && overrides.length > 0) {
+      const fields = overrides.map(o => ({
+        name: o.name,
+        type: o.type,
+        description: o.description
+      }));
+      return { name, description, fields, definition };
+    }
 
     const fields: Array<{ name: string; type: string; description: string | null }> = [];
 
@@ -328,6 +347,13 @@ const exa = new Exa();  // Reads EXA_API_KEY from environment
 
     if (method.description) {
       lines.push(this.escapeMdxBraces(method.description));
+      lines.push("");
+    }
+
+    // Add method notes if available
+    const methodNote = this.config.method_notes?.[configKey];
+    if (methodNote) {
+      lines.push(`<Note>${methodNote}</Note>`);
       lines.push("");
     }
 
