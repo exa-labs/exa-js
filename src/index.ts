@@ -1,5 +1,5 @@
 import fetch, { Headers } from "cross-fetch";
-import OpenAI from "openai";
+import type OpenAI from "openai";
 import type {
   ChatCompletion,
   ChatCompletionCreateParamsNonStreaming,
