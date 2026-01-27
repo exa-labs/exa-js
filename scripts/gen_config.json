@@ -1,0 +1,304 @@
+{
+  "export": {
+    "methods": {
+      "Exa": ["search", "searchAndContents", "findSimilar", "findSimilarAndContents", "getContents", "answer", "streamAnswer"]
+    },
+    "research_methods": {
+      "ResearchClient": ["create", "get", "pollUntilFinished", "list"]
+    },
+    "types": [
+      "ContentsOptions",
+      "TextContentsOptions",
+      "HighlightsContentsOptions",
+      "SummaryContentsOptions",
+      "ContextOptions",
+      "ExtrasOptions",
+      "LivecrawlOptions",
+      "RegularSearchOptions",
+      "BaseSearchOptions",
+      "FindSimilarOptions",
+      "SearchResult",
+      "SearchResponse",
+      "AnswerOptions",
+      "AnswerResponse",
+      "AnswerStreamChunk",
+      "Status",
+      "CostDollars"
+    ],
+    "entity_types": [
+      "CompanyEntity",
+      "PersonEntity",
+      "EntityCompanyProperties",
+      "EntityPersonProperties"
+    ]
+  },
+  "getting_started": {
+    "api_key_url": "https://dashboard.exa.ai/api-keys"
+  },
+  "type_field_overrides": {
+    "RegularSearchOptions": [
+      {"name": "type", "type": "\"keyword\" | \"neural\" | \"auto\" | \"hybrid\" | \"fast\" | \"deep\"", "description": "The type of search to perform. Default is \"auto\"."},
+      {"name": "numResults", "type": "number", "description": "Number of search results to return. Default 10. Max 10 for basic plans."},
+      {"name": "includeDomains", "type": "string[]", "description": "List of domains to include in the search."},
+      {"name": "excludeDomains", "type": "string[]", "description": "List of domains to exclude in the search."},
+      {"name": "startCrawlDate", "type": "string", "description": "Start date for results based on crawl date (ISO format)."},
+      {"name": "endCrawlDate", "type": "string", "description": "End date for results based on crawl date (ISO format)."},
+      {"name": "startPublishedDate", "type": "string", "description": "Start date for results based on published date (ISO format)."},
+      {"name": "endPublishedDate", "type": "string", "description": "End date for results based on published date (ISO format)."},
+      {"name": "category", "type": "\"company\" | \"research paper\" | \"news\" | \"pdf\" | \"tweet\" | \"personal site\" | \"financial report\" | \"people\"", "description": "A data category to focus on."},
+      {"name": "includeText", "type": "string[]", "description": "List of strings that must be present in webpage text. Max 1 string of up to 5 words."},
+      {"name": "excludeText", "type": "string[]", "description": "List of strings that must not be present in webpage text. Max 1 string of up to 5 words."},
+      {"name": "contents", "type": "ContentsOptions", "description": "Options for retrieving page contents for each result."},
+      {"name": "moderation", "type": "boolean", "description": "If true, the search results are moderated for safety."},
+      {"name": "useAutoprompt", "type": "boolean", "description": "If true, uses autoprompt to enhance the query."},
+      {"name": "userLocation", "type": "string", "description": "The two-letter ISO country code of the user, e.g. US."},
+      {"name": "additionalQueries", "type": "string[]", "description": "Alternative query formulations for deep search. Max 5 queries. Only for type: \"deep\"."}
+    ],
+    "ContentsOptions": [
+      {"name": "text", "type": "TextContentsOptions | true", "description": "Options for retrieving text contents."},
+      {"name": "highlights", "type": "HighlightsContentsOptions | true", "description": "Options for retrieving highlights."},
+      {"name": "summary", "type": "SummaryContentsOptions | true", "description": "Options for retrieving summary."},
+      {"name": "livecrawl", "type": "LivecrawlOptions", "description": "Options for livecrawling contents. Default is \"never\" for neural/auto, \"fallback\" for keyword."},
+      {"name": "livecrawlTimeout", "type": "number", "description": "The timeout for livecrawling in ms. Max and default is 10000ms."},
+      {"name": "filterEmptyResults", "type": "boolean", "description": "If true, filters out results with no contents. Default is true."},
+      {"name": "subpages", "type": "number", "description": "Number of subpages to return for each result."},
+      {"name": "subpageTarget", "type": "string | string[]", "description": "Text used to match/rank subpages in the returned list."},
+      {"name": "extras", "type": "ExtrasOptions", "description": "Miscellaneous data derived from results."},
+      {"name": "context", "type": "ContextOptions | true", "description": "Options for retrieving context."}
+    ],
+    "SearchResult": [
+      {"name": "title", "type": "string | null", "description": "The title of the search result."},
+      {"name": "url", "type": "string", "description": "The URL of the search result."},
+      {"name": "id", "type": "string", "description": "The temporary ID for the document."},
+      {"name": "publishedDate", "type": "string", "description": "The estimated creation date of the content."},
+      {"name": "author", "type": "string", "description": "The author of the content, if available."},
+      {"name": "score", "type": "number", "description": "Similarity score between the query/url and the result."},
+      {"name": "image", "type": "string", "description": "A representative image for the content, if any."},
+      {"name": "favicon", "type": "string", "description": "A favicon for the site, if any."},
+      {"name": "text", "type": "string", "description": "The text content of the page (if text option enabled)."},
+      {"name": "highlights", "type": "string[]", "description": "Highlighted text snippets (if highlights option enabled)."},
+      {"name": "highlightScores", "type": "number[]", "description": "Scores for each highlight."},
+      {"name": "summary", "type": "string", "description": "Summary of the content (if summary option enabled)."},
+      {"name": "entities", "type": "Entity[]", "description": "Structured entity data for company or person search results."}
+    ],
+    "SearchResponse": [
+      {"name": "results", "type": "SearchResult<T>[]", "description": "The list of search results."},
+      {"name": "requestId", "type": "string", "description": "The request ID for the search."},
+      {"name": "context", "type": "string", "description": "The context for the search (for deep search)."},
+      {"name": "autoDate", "type": "string", "description": "The autoprompt date, if applicable."},
+      {"name": "statuses", "type": "Status[]", "description": "Status information for each result."},
+      {"name": "costDollars", "type": "CostDollars", "description": "The cost breakdown for this request."}
+    ],
+    "AnswerOptions": [
+      {"name": "text", "type": "boolean", "description": "Whether to include text in the source results. Default false."},
+      {"name": "model", "type": "\"exa\"", "description": "The model to use for generating the answer. Default \"exa\"."},
+      {"name": "stream", "type": "boolean", "description": "Whether to stream the response. Default false."},
+      {"name": "systemPrompt", "type": "string", "description": "A system prompt to guide the LLM's behavior when generating the answer."},
+      {"name": "outputSchema", "type": "Record<string, unknown>", "description": "A JSON Schema specification for the structure you expect the output to take."},
+      {"name": "userLocation", "type": "string", "description": "The two-letter ISO country code of the user, e.g. US."}
+    ],
+    "AnswerResponse": [
+      {"name": "answer", "type": "string | Record<string, unknown>", "description": "The generated answer text (or object matching outputSchema if provided)."},
+      {"name": "citations", "type": "SearchResult<{}>[]", "description": "The sources used to generate the answer."},
+      {"name": "requestId", "type": "string", "description": "The request ID for the answer."},
+      {"name": "costDollars", "type": "CostDollars", "description": "The cost breakdown for this request."}
+    ],
+    "AnswerStreamChunk": [
+      {"name": "content", "type": "string", "description": "The partial text content of the answer (if present in this chunk)."},
+      {"name": "citations", "type": "Array<{id, url, title?, publishedDate?, author?, text?}>", "description": "Citations associated with the current chunk of text (if present)."}
+    ],
+    "EntityCompanyProperties": [
+      {"name": "name", "type": "string | null", "description": "The company name."},
+      {"name": "foundedYear", "type": "number | null", "description": "The year the company was founded."},
+      {"name": "description", "type": "string | null", "description": "A description of the company."},
+      {"name": "workforce", "type": "EntityCompanyPropertiesWorkforce | null", "description": "Information about the company's workforce."},
+      {"name": "headquarters", "type": "EntityCompanyPropertiesHeadquarters | null", "description": "Information about the company's headquarters location."},
+      {"name": "financials", "type": "EntityCompanyPropertiesFinancials | null", "description": "Financial information about the company."},
+      {"name": "webTraffic", "type": "EntityCompanyPropertiesWebTraffic | null", "description": "Web traffic statistics for the company."}
+    ],
+    "EntityPersonProperties": [
+      {"name": "name", "type": "string | null", "description": "The person's name."},
+      {"name": "location", "type": "string | null", "description": "The person's location."},
+      {"name": "workHistory", "type": "EntityPersonPropertiesWorkHistoryEntry[]", "description": "The person's work history."}
+    ],
+    "CompanyEntity": [
+      {"name": "id", "type": "string", "description": "Unique identifier for the entity."},
+      {"name": "type", "type": "\"company\"", "description": "The entity type (always \"company\")."},
+      {"name": "version", "type": "number", "description": "The version of the entity schema."},
+      {"name": "properties", "type": "EntityCompanyProperties", "description": "Structured properties for the company."}
+    ],
+    "PersonEntity": [
+      {"name": "id", "type": "string", "description": "Unique identifier for the entity."},
+      {"name": "type", "type": "\"person\"", "description": "The entity type (always \"person\")."},
+      {"name": "version", "type": "number", "description": "The version of the entity schema."},
+      {"name": "properties", "type": "EntityPersonProperties", "description": "Structured properties for the person."}
+    ]
+  },
+    "method_notes": {
+      "search": "The `options.type` parameter accepts: `\"keyword\"`, `\"neural\"`, `\"auto\"` (default), `\"hybrid\"`, `\"fast\"`, or `\"deep\"`. See [RegularSearchOptions](#regularsearchoptions) for all available options.",
+      "searchAndContents": "The `options.type` parameter accepts: `\"keyword\"`, `\"neural\"`, `\"auto\"` (default), `\"hybrid\"`, `\"fast\"`, or `\"deep\"`. See [RegularSearchOptions](#regularsearchoptions) for all available options.",
+      "findSimilar": "See [FindSimilarOptions](#findsimilaroptions) for all available options including `excludeSourceDomain`.",
+      "findSimilarAndContents": "See [FindSimilarOptions](#findsimilaroptions) for all available options including `excludeSourceDomain`.",
+      "research.get": "When called with `stream: true`, returns an `AsyncGenerator<ResearchStreamEvent>` for real-time SSE updates instead of a `Promise<Research>`.",
+      "research.pollUntilFinished": "Options include `pollInterval` (default 1000ms), `timeoutMs` (default 10 minutes), and `events` (boolean to include event log)."
+    },
+  "input_examples": {
+    "search": "const result = await exa.search(\"hottest AI startups\", {\n  numResults: 10\n});",
+    "searchAndContents": "const result = await exa.searchAndContents(\"AI in healthcare\", {\n  text: true,\n  highlights: true,\n  numResults: 5\n});",
+    "findSimilar": "const result = await exa.findSimilar(\"https://www.example.com/article\", {\n  numResults: 10,\n  excludeSourceDomain: true\n});",
+    "findSimilarAndContents": "const result = await exa.findSimilarAndContents(\"https://www.example.com/article\", {\n  text: true,\n  highlights: true,\n  numResults: 5\n});",
+    "getContents": "const result = await exa.getContents([\n  \"https://www.example.com/article1\",\n  \"https://www.example.com/article2\"\n], {\n  text: { maxCharacters: 1000 },\n  highlights: { query: \"AI\", numSentences: 2 }\n});",
+    "answer": "const result = await exa.answer(\"What is the capital of France?\", {\n  text: true,\n  model: \"exa\"\n});",
+    "streamAnswer": "for await (const chunk of exa.streamAnswer(\"What is quantum computing?\", {\n  text: true,\n  model: \"exa\"\n})) {\n  if (chunk.content) process.stdout.write(chunk.content);\n  if (chunk.citations) console.log(\"Citations:\", chunk.citations);\n}",
+    "research.create": "const task = await exa.research.create({\n  instructions: \"Research the latest AI developments\",\n  model: \"exa-research-fast\"\n});",
+    "research.get": "const result = await exa.research.get(\"a1b2c3d4-e5f6-7890-abcd-ef1234567890\");",
+    "research.pollUntilFinished": "const result = await exa.research.pollUntilFinished(\"a1b2c3d4-e5f6-7890-abcd-ef1234567890\", {\n  pollInterval: 1000,\n  timeoutMs: 600000\n});",
+    "research.list": "const tasks = await exa.research.list({ limit: 10 });"
+  },
+  "output_examples": {
+    "search": {
+      "autopromptString": "Here is a link to one of the hottest AI startups:",
+      "results": [
+        {
+          "title": "Adept: Useful General Intelligence",
+          "id": "https://www.adept.ai/",
+          "url": "https://www.adept.ai/",
+          "publishedDate": "2000-01-01",
+          "author": null,
+          "text": "Adept is building AI that can automate any software process..."
+        }
+      ],
+      "requestId": "a78ebce717f4d712b6f8fe0d5d7753f8"
+    },
+    "searchAndContents": {
+      "results": [
+        {
+          "title": "2023 AI Trends in Health Care",
+          "id": "https://aibusiness.com/verticals/2023-ai-trends-in-health-care-",
+          "url": "https://aibusiness.com/verticals/2023-ai-trends-in-health-care-",
+          "publishedDate": "2022-12-29",
+          "author": "Wylie Wong",
+          "text": "While the health care industry was initially slow to adopt AI...",
+          "highlights": [
+            "AI is transforming healthcare through improved diagnostics and personalized treatment plans."
+          ],
+          "highlightScores": [0.85]
+        }
+      ],
+      "requestId": "b89fcd823e4f5a91c7d0fe1e6e8864f9"
+    },
+    "findSimilar": {
+      "results": [
+        {
+          "title": "Similar Article: AI and Machine Learning",
+          "id": "https://www.similarsite.com/ai-ml-article",
+          "url": "https://www.similarsite.com/ai-ml-article",
+          "publishedDate": "2023-05-15",
+          "author": "Jane Doe",
+          "text": "Artificial Intelligence (AI) and Machine Learning (ML) are revolutionizing various industries..."
+        }
+      ],
+      "requestId": "08fdc6f20e9f3ea87f860af3f6ccc30f"
+    },
+    "findSimilarAndContents": {
+      "results": [
+        {
+          "title": "The Impact of AI on Modern Technology",
+          "id": "https://www.techblog.com/ai-impact",
+          "url": "https://www.techblog.com/ai-impact",
+          "publishedDate": "2023-06-01",
+          "author": "John Smith",
+          "text": "In recent years, artificial intelligence has made significant strides...",
+          "highlights": [
+            "AI is reshaping industries and creating new opportunities for innovation."
+          ],
+          "highlightScores": [0.92]
+        }
+      ],
+      "requestId": "c90gde934f5g6b02d8e1gf2f7f9975g0"
+    },
+    "getContents": {
+      "results": [
+        {
+          "url": "https://example.com/article",
+          "id": "https://example.com/article",
+          "title": "Example Article",
+          "text": "The full text content of the article..."
+        }
+      ]
+    },
+    "answer": {
+      "answer": "The capital of France is Paris.",
+      "citations": [
+        {
+          "id": "https://www.example.com/france",
+          "url": "https://www.example.com/france",
+          "title": "France - Wikipedia",
+          "publishedDate": "2023-01-01",
+          "author": null,
+          "text": "France, officially the French Republic, is a country in... [truncated for brevity]"
+        }
+      ],
+      "requestId": "abc123"
+    },
+    "streamAnswer": {
+      "content": "The capital of France is Paris.",
+      "citations": [
+        {
+          "id": "https://www.example.com/france",
+          "url": "https://www.example.com/france",
+          "title": "France - Wikipedia"
+        }
+      ]
+    },
+    "research.create": {
+      "researchId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "status": "pending"
+    },
+    "research.get": {
+      "researchId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "status": "completed",
+      "instructions": "What is the latest valuation of SpaceX?",
+      "output": {
+        "parsed": {
+          "valuation": "$350 billion",
+          "date": "December 2024",
+          "source": "Financial Times"
+        }
+      }
+    },
+    "research.list": {
+      "data": [
+        {
+          "researchId": "task-1",
+          "status": "completed",
+          "instructions": "Research SpaceX valuation"
+        }
+      ],
+      "hasMore": true,
+      "nextCursor": "eyJjcmVhdGVkQXQiOiIyMDI0LTAxLTE1VDE4OjMwOjAwWiIsImlkIjoidGFzay0yIn0="
+    }
+  },
+  "method_result_objects": {
+    "search": "SearchResponse",
+    "searchAndContents": "SearchResponse",
+    "findSimilar": "SearchResponse",
+    "findSimilarAndContents": "SearchResponse",
+    "getContents": "SearchResponse",
+    "answer": "AnswerResponse",
+    "streamAnswer": "AnswerStreamChunk",
+    "research.create": "ResearchCreateResponse",
+    "research.get": "Research",
+    "research.pollUntilFinished": "Research",
+    "research.list": "ListResearchResponse"
+  },
+  "external_type_links": {
+    "ZodSchema": "https://zod.dev/?id=basic-usage"
+  },
+  "manual_types": {
+    "ResearchModel": {
+      "description": "The model to use for research tasks.",
+      "definition": "'exa-research-fast' | 'exa-research' | 'exa-research-pro'"
+    }
+  }
+}
