@@ -153,14 +153,41 @@ export type LivecrawlOptions =
   | "preferred";
 
 /**
+ * Verbosity levels for content filtering.
+ * - compact: Most concise output, main content only (default)
+ * - standard: Balanced content with more detail
+ * - full: Complete content including all sections
+ */
+export type VerbosityOptions = "compact" | "standard" | "full";
+
+/**
+ * Section tags for semantic content filtering.
+ */
+export type SectionTag =
+  | "unspecified"
+  | "header"
+  | "navigation"
+  | "banner"
+  | "body"
+  | "sidebar"
+  | "footer"
+  | "metadata";
+
+/**
  * Options for retrieving text from page.
  * @typedef {Object} TextContentsOptions
  * @property {number} [maxCharacters] - The maximum number of characters to return.
  * @property {boolean} [includeHtmlTags] - If true, includes HTML tags in the returned text. Default: false
+ * @property {VerbosityOptions} [verbosity] - Controls verbosity level of returned content. Default: "compact". Requires livecrawl: "always".
+ * @property {SectionTag[]} [includeSections] - Only include content from these semantic sections. Requires livecrawl: "always".
+ * @property {SectionTag[]} [excludeSections] - Exclude content from these semantic sections. Requires livecrawl: "always".
  */
 export type TextContentsOptions = {
   maxCharacters?: number;
   includeHtmlTags?: boolean;
+  verbosity?: VerbosityOptions;
+  includeSections?: SectionTag[];
+  excludeSections?: SectionTag[];
 };
 
 /**
