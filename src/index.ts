@@ -22,6 +22,7 @@ const DEFAULT_MAX_CHARACTERS = 10_000;
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
  * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
  * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
+ * @property {number} [maxAgeHours] - Maximum age of indexed content in hours. If older, fetches with livecrawl. 0 = always livecrawl, -1 = never livecrawl (cache only). Cannot be used together with livecrawl.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
  * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result.
  * @property {string | string[]} [subpageTarget] - Text used to match/rank subpages in the returned subpage list. You could use "about" to get *about* page for websites. Note that this is a fuzzy matcher.
@@ -34,6 +35,7 @@ export type ContentsOptions = {
   livecrawl?: LivecrawlOptions;
   context?: ContextOptions | true;
   livecrawlTimeout?: number;
+  maxAgeHours?: number;
   filterEmptyResults?: boolean;
   subpages?: number;
   subpageTarget?: string | string[];
@@ -592,6 +594,7 @@ export class Exa {
       extras,
       livecrawl,
       livecrawlTimeout,
+      maxAgeHours,
       context,
       ...rest
     } = options;
@@ -634,6 +637,7 @@ export class Exa {
     if (livecrawl !== undefined) contentsOptions.livecrawl = livecrawl;
     if (livecrawlTimeout !== undefined)
       contentsOptions.livecrawlTimeout = livecrawlTimeout;
+    if (maxAgeHours !== undefined) contentsOptions.maxAgeHours = maxAgeHours;
     if (context !== undefined) contentsOptions.context = context;
 
     return {
