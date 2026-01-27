@@ -31,6 +31,7 @@
     "generate:types:websets": "openapi-typescript https://raw.githubusercontent.com/exa-labs/openapi-spec/refs/heads/master/exa-websets-spec.yaml  --enum --root-types --alphabetize --root-types-no-schema-prefix --output ./src/websets/openapi.ts && npm run format:websets",
     "format": "prettier --write \"src/**/*.ts\" \"examples/**/*.ts\"",
     "format:websets": "prettier --write src/websets/openapi.ts",
+    "generate-docs": "npx tsx scripts/generate-docs.ts",
     "build:beta": "cross-env NPM_CONFIG_TAG=beta npm run build",
     "version:beta": "npm version prerelease --preid=beta",
     "version:stable": "npm version patch",
@@ -44,8 +45,10 @@
     "cross-env": "~7.0.3",
     "openapi-typescript": "~7.6.1",
     "prettier": "~3.5.3",
+    "ts-morph": "^27.0.2",
     "ts-node": "~10.9.2",
     "tsup": "~8.4.0",
+    "tsx": "^4.21.0",
     "typescript": "~5.8.3",
     "vitest": "~3.1.1"
   },
