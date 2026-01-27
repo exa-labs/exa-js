@@ -36,6 +36,7 @@ interface Config {
   getting_started: {
     api_key_url: string;
   };
+  input_examples: Record<string, string>;
   output_examples: Record<string, unknown>;
   method_result_objects: Record<string, string>;
   external_type_links: Record<string, string>;
@@ -314,7 +315,10 @@ const exa = new Exa();  // Reads EXA_API_KEY from environment
     lines.push("");
     lines.push("```typescript");
 
-    if (method.examples) {
+    const inputExample = this.config.input_examples[configKey];
+    if (inputExample) {
+      lines.push(inputExample);
+    } else if (method.examples) {
       lines.push(method.examples);
     } else {
       const prefix = className === "ResearchClient" ? "exa.research" : "exa";

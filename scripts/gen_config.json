@@ -1,7 +1,7 @@
 {
   "export": {
     "methods": {
-      "Exa": ["search", "findSimilar", "getContents", "answer", "streamAnswer"]
+      "Exa": ["search", "searchAndContents", "findSimilar", "findSimilarAndContents", "getContents", "answer", "streamAnswer"]
     },
     "research_methods": {
       "ResearchClient": ["create", "get", "pollUntilFinished", "list"]
@@ -13,6 +13,8 @@
       "SummaryContentsOptions",
       "ContextOptions",
       "ExtrasOptions",
+      "LivecrawlOptions",
+      "RegularSearchOptions",
       "BaseSearchOptions",
       "FindSimilarOptions",
       "SearchResult",
@@ -31,6 +33,19 @@
   "getting_started": {
     "api_key_url": "https://dashboard.exa.ai/api-keys"
   },
+  "input_examples": {
+    "search": "const result = await exa.search(\"hottest AI startups\", {\n  numResults: 10\n});",
+    "searchAndContents": "const result = await exa.searchAndContents(\"AI in healthcare\", {\n  text: true,\n  highlights: true,\n  numResults: 5\n});",
+    "findSimilar": "const result = await exa.findSimilar(\"https://www.example.com/article\", {\n  numResults: 10,\n  excludeSourceDomain: true\n});",
+    "findSimilarAndContents": "const result = await exa.findSimilarAndContents(\"https://www.example.com/article\", {\n  text: true,\n  highlights: true,\n  numResults: 5\n});",
+    "getContents": "const result = await exa.getContents([\n  \"https://www.example.com/article1\",\n  \"https://www.example.com/article2\"\n], {\n  text: { maxCharacters: 1000 },\n  highlights: { query: \"AI\", numSentences: 2 }\n});",
+    "answer": "const result = await exa.answer(\"What is the capital of France?\", {\n  text: true,\n  model: \"exa\"\n});",
+    "streamAnswer": "for await (const chunk of exa.streamAnswer(\"What is quantum computing?\", {\n  text: true,\n  model: \"exa\"\n})) {\n  if (chunk.content) process.stdout.write(chunk.content);\n  if (chunk.citations) console.log(\"Citations:\", chunk.citations);\n}",
+    "research.create": "const task = await exa.research.create({\n  instructions: \"Research the latest AI developments\",\n  model: \"exa-research-fast\"\n});",
+    "research.get": "const result = await exa.research.get(\"a1b2c3d4-e5f6-7890-abcd-ef1234567890\");",
+    "research.pollUntilFinished": "const result = await exa.research.pollUntilFinished(\"a1b2c3d4-e5f6-7890-abcd-ef1234567890\", {\n  pollInterval: 1000,\n  timeoutMs: 600000\n});",
+    "research.list": "const tasks = await exa.research.list({ limit: 10 });"
+  },
   "output_examples": {
     "search": {
       "autopromptString": "Here is a link to one of the hottest AI startups:",
@@ -46,6 +61,23 @@
       ],
       "requestId": "a78ebce717f4d712b6f8fe0d5d7753f8"
     },
+    "searchAndContents": {
+      "results": [
+        {
+          "title": "2023 AI Trends in Health Care",
+          "id": "https://aibusiness.com/verticals/2023-ai-trends-in-health-care-",
+          "url": "https://aibusiness.com/verticals/2023-ai-trends-in-health-care-",
+          "publishedDate": "2022-12-29",
+          "author": "Wylie Wong",
+          "text": "While the health care industry was initially slow to adopt AI...",
+          "highlights": [
+            "AI is transforming healthcare through improved diagnostics and personalized treatment plans."
+          ],
+          "highlightScores": [0.85]
+        }
+      ],
+      "requestId": "b89fcd823e4f5a91c7d0fe1e6e8864f9"
+    },
     "findSimilar": {
       "results": [
         {
@@ -58,6 +90,23 @@
         }
       ],
       "requestId": "08fdc6f20e9f3ea87f860af3f6ccc30f"
+    },
+    "findSimilarAndContents": {
+      "results": [
+        {
+          "title": "The Impact of AI on Modern Technology",
+          "id": "https://www.techblog.com/ai-impact",
+          "url": "https://www.techblog.com/ai-impact",
+          "publishedDate": "2023-06-01",
+          "author": "John Smith",
+          "text": "In recent years, artificial intelligence has made significant strides...",
+          "highlights": [
+            "AI is reshaping industries and creating new opportunities for innovation."
+          ],
+          "highlightScores": [0.92]
+        }
+      ],
+      "requestId": "c90gde934f5g6b02d8e1gf2f7f9975g0"
     },
     "getContents": {
       "results": [
@@ -123,7 +172,9 @@
   },
   "method_result_objects": {
     "search": "SearchResponse",
+    "searchAndContents": "SearchResponse",
     "findSimilar": "SearchResponse",
+    "findSimilarAndContents": "SearchResponse",
     "getContents": "SearchResponse",
     "answer": "AnswerResponse",
     "streamAnswer": "AnswerStreamChunk",
