@@ -62,6 +62,26 @@ class DocGenerator {
     return text.replace(/(?<!`)(\{[^}`]+\})(?!`)/g, "`$1`");
   }
 
+  private formatTypeForTable(typeStr: string): string {
+    if (!typeStr) return typeStr;
+    let result = typeStr
+      .replace(/\n/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    result = result.replace(/\|/g, "\\|");
+    result = result.replace(/<([^>]+)>/g, "&lt;$1&gt;");
+    return `\`${result}\``;
+  }
+
+  private formatDescriptionForTable(text: string): string {
+    if (!text) return "-";
+    return text
+      .replace(/\n/g, " ")
+      .replace(/\s+/g, " ")
+      .replace(/\|/g, "\\|")
+      .trim();
+  }
+
   private linkifyType(typeStr: string): string {
     if (!typeStr) return typeStr;
     let result = typeStr;
@@ -350,9 +370,8 @@ const exa = new Exa();  // Reads EXA_API_KEY from environment
       lines.push("| --------- | ---- | ----------- | ------- |");
 
       for (const param of method.params) {
-        const typeStr = this.linkifyType(param.typeHint);
-        let descStr = param.description ? this.escapeMdxBraces(param.description) : "-";
-        descStr = this.linkifyType(descStr);
+        const typeStr = this.formatTypeForTable(param.typeHint);
+        const descStr = this.formatDescriptionForTable(param.description || "");
         
         let defaultStr: string;
         if (param.defaultValue === null) {
@@ -387,9 +406,9 @@ const exa = new Exa();  // Reads EXA_API_KEY from environment
       lines.push("| ----- | ---- | ----------- |");
       
       for (const field of resultType.fields) {
-        const linkedType = this.linkifyType(field.type);
-        const descStr = field.description ? this.escapeMdxBraces(field.description) : "-";
-        lines.push(`| ${field.name} | ${linkedType} | ${descStr} |`);
+        const typeStr = this.formatTypeForTable(field.type);
+        const descStr = this.formatDescriptionForTable(field.description || "");
+        lines.push(`| ${field.name} | ${typeStr} | ${descStr} |`);
       }
       lines.push("");
     }
@@ -409,16 +428,20 @@ const exa = new Exa();  // Reads EXA_API_KEY from environment
     }
 
     if (type.definition && type.fields.length === 0) {
-      lines.push(`**Type:** ${this.linkifyType(type.definition)}`);
+      const formattedDef = type.definition
+        .replace(/\n/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      lines.push(`**Type:** \`${formattedDef}\``);
       lines.push("");
     } else if (type.fields.length > 0) {
       lines.push("| Field | Type | Description |");
       lines.push("| ----- | ---- | ----------- |");
 
       for (const field of type.fields) {
-        const linkedType = this.linkifyType(field.type);
-        const descStr = field.description ? this.escapeMdxBraces(field.description) : "-";
-        lines.push(`| ${field.name} | ${linkedType} | ${descStr} |`);
+        const typeStr = this.formatTypeForTable(field.type);
+        const descStr = this.formatDescriptionForTable(field.description || "");
+        lines.push(`| ${field.name} | ${typeStr} | ${descStr} |`);
       }
       lines.push("");
     }
