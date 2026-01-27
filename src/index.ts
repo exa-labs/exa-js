@@ -1565,7 +1565,6 @@ export class Exa {
     };
 
     (client.chat.completions as any).create = wrappedCreate;
-    console.log("Wrapping OpenAI client with Exa functionality.");
     return client;
   }
 }
