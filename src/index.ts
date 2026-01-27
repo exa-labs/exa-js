@@ -1572,14 +1572,26 @@ export class Exa {
       });
 
       const formattedResult = formatExaResult(exaResult, resultMaxLen);
-      const newMessages = addMessageToMessages(
-        completion,
-        openaiParams.messages,
-        formattedResult
-      );
+
+      let newMessages: ChatCompletionMessageParam[];
+      if (query) {
+        newMessages = addMessageToMessages(
+          completion,
+          openaiParams.messages,
+          formattedResult
+        );
+      } else {
+        newMessages = [
+          {
+            role: "system" as const,
+            content: `Here is relevant information from the web:\n\n${formattedResult}`,
+          },
+          ...openaiParams.messages,
+        ];
+      }
 
       const finalCompletion = (await originalCreate({
-        ...paramsWithTools,
+        ...openaiParams,
         messages: newMessages,
       } as ChatCompletionCreateParamsNonStreaming)) as ChatCompletion;
 
