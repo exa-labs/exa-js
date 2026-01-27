@@ -1,4 +1,10 @@
 import fetch, { Headers } from "cross-fetch";
+import OpenAI from "openai";
+import type {
+  ChatCompletion,
+  ChatCompletionCreateParamsNonStreaming,
+  ChatCompletionMessageParam,
+} from "openai/resources/chat/completions";
 import { ZodSchema } from "zod";
 import packageJson from "../package.json";
 import { ExaError, HttpStatusCode } from "./errors";
@@ -556,6 +562,106 @@ export type SummaryContentsOptionsTyped<T> = Omit<
 > & {
   schema: T;
 };
+
+export type WrapOptions = {
+  useExa?: "required" | "none" | "auto";
+  numResults?: number;
+  includeDomains?: string[];
+  excludeDomains?: string[];
+  startCrawlDate?: string;
+  endCrawlDate?: string;
+  startPublishedDate?: string;
+  endPublishedDate?: string;
+  includeText?: string[];
+  excludeText?: string[];
+  type?: "auto" | "fast" | "deep";
+  category?:
+    | "company"
+    | "research paper"
+    | "news"
+    | "pdf"
+    | "tweet"
+    | "personal site"
+    | "financial report"
+    | "people";
+  resultMaxLen?: number;
+  flags?: string[];
+};
+
+export class ExaOpenAICompletion implements ChatCompletion {
+  id: string;
+  choices: ChatCompletion["choices"];
+  created: number;
+  model: string;
+  object: "chat.completion";
+  system_fingerprint?: string;
+  usage?: ChatCompletion["usage"];
+  exaResult: SearchResponse<{ text: { maxCharacters: number } }> | null;
+
+  constructor(
+    completion: ChatCompletion,
+    exaResult: SearchResponse<{ text: { maxCharacters: number } }> | null
+  ) {
+    this.id = completion.id;
+    this.choices = completion.choices;
+    this.created = completion.created;
+    this.model = completion.model;
+    this.object = completion.object;
+    this.system_fingerprint = completion.system_fingerprint;
+    this.usage = completion.usage;
+    this.exaResult = exaResult;
+  }
+}
+
+function maybeGetQuery(completion: ChatCompletion): string | null {
+  const message = completion.choices[0]?.message;
+  if (message?.tool_calls) {
+    for (const toolCall of message.tool_calls) {
+      if (toolCall.function.name === "search") {
+        const args = JSON.parse(toolCall.function.arguments);
+        return args.query;
+      }
+    }
+  }
+  return null;
+}
+
+function formatExaResult(
+  exaResult: SearchResponse<{ text: { maxCharacters: number } }>,
+  maxLen: number
+): string {
+  return exaResult.results
+    .map((result) => {
+      const text = result.text?.substring(0, maxLen) || "";
+      return `Url: ${result.url}\nTitle: ${result.title}\n${text}\n`;
+    })
+    .join("\n");
+}
+
+function addMessageToMessages(
+  completion: ChatCompletion,
+  messages: ChatCompletionMessageParam[],
+  exaResult: string
+): ChatCompletionMessageParam[] {
+  const assistantMessage = completion.choices[0]?.message;
+  if (!assistantMessage?.tool_calls) {
+    throw new Error("Must use this with a tool call request");
+  }
+
+  const filteredMessages = messages.filter(
+    (message) => message.role !== "function"
+  );
+
+  return [
+    ...filteredMessages,
+    assistantMessage,
+    {
+      role: "tool" as const,
+      tool_call_id: assistantMessage.tool_calls[0].id,
+      content: exaResult,
+    },
+  ];
+}
 
 /**
  * The Exa class encapsulates the API's endpoints.
@@ -1361,6 +1467,106 @@ export class Exa {
         }
       }
     });
+  }
+
+  wrap<T extends OpenAI>(client: T): T {
+    const exa = this;
+    const originalCreate = client.chat.completions.create.bind(
+      client.chat.completions
+    );
+
+    const wrappedCreate = async function (
+      params: WrapOptions & ChatCompletionCreateParamsNonStreaming
+    ): Promise<ExaOpenAICompletion> {
+      const {
+        useExa = "auto",
+        numResults = 3,
+        includeDomains,
+        excludeDomains,
+        startCrawlDate,
+        endCrawlDate,
+        startPublishedDate,
+        endPublishedDate,
+        includeText,
+        excludeText,
+        type,
+        category,
+        resultMaxLen = 2048,
+        flags,
+        ...openaiParams
+      } = params;
+
+      const exaSearchOptions = {
+        numResults,
+        includeDomains,
+        excludeDomains,
+        startCrawlDate,
+        endCrawlDate,
+        startPublishedDate,
+        endPublishedDate,
+        includeText,
+        excludeText,
+        type,
+        category,
+        flags,
+      };
+
+      const searchTool = {
+        type: "function" as const,
+        function: {
+          name: "search",
+          description: "Search the web for relevant information.",
+          parameters: {
+            type: "object",
+            properties: {
+              query: {
+                type: "string",
+                description: "The query to search for.",
+              },
+            },
+            required: ["query"],
+          },
+        },
+      };
+
+      const paramsWithTools = {
+        ...openaiParams,
+        tools: [...(openaiParams.tools || []), searchTool],
+      };
+
+      const completion = (await originalCreate(
+        paramsWithTools as ChatCompletionCreateParamsNonStreaming
+      )) as ChatCompletion;
+
+      const query = maybeGetQuery(completion);
+
+      if (!query) {
+        return new ExaOpenAICompletion(completion, null);
+      }
+
+      const exaResult = await exa.search(query, {
+        contents: { text: { maxCharacters: resultMaxLen } },
+        ...exaSearchOptions,
+      });
+
+      const formattedResult = formatExaResult(exaResult, resultMaxLen);
+      const newMessages = addMessageToMessages(
+        completion,
+        openaiParams.messages,
+        formattedResult
+      );
+
+      const finalCompletion = (await originalCreate({
+        ...paramsWithTools,
+        messages: newMessages,
+      } as ChatCompletionCreateParamsNonStreaming)) as ChatCompletion;
+
+      return new ExaOpenAICompletion(finalCompletion, exaResult);
+    };
+
+    (client.chat.completions as any).create = wrappedCreate;
+    console.log("Wrapping OpenAI client with Exa functionality.");
+    return client;
   }
 }
 
