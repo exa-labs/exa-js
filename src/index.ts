@@ -20,9 +20,7 @@ const DEFAULT_MAX_CHARACTERS = 10_000;
  * @property {TextContentsOptions | boolean} [text] - Options for retrieving text contents.
  * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights. NOTE: For search type "deep", only "true" is allowed. "query", "numSentences" and "highlightsPerUrl" will not be respected.
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
- * @property {LivecrawlOptions} [livecrawl] - Options for livecrawling contents. Default is "never" for neural/auto search, "fallback" for keyword search.
- * @property {number} [livecrawlTimeout] - The timeout for livecrawling. Max and default is 10000ms.
- * @property {number} [maxAgeHours] - Maximum age of indexed content in hours. If older, fetches with livecrawl. 0 = always livecrawl, -1 = never livecrawl (cache only). Cannot be used together with livecrawl.
+ * @property {number} [maxAgeHours] - Maximum age of cached content in hours. If content is older, it will be fetched fresh. Special values: 0 = always fetch fresh content, -1 = never fetch fresh (use cached content only). Example: 168 = fetch fresh for pages older than 7 days.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
  * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result.
  * @property {string | string[]} [subpageTarget] - Text used to match/rank subpages in the returned subpage list. You could use "about" to get *about* page for websites. Note that this is a fuzzy matcher.
@@ -180,9 +178,9 @@ export type SectionTag =
  * @typedef {Object} TextContentsOptions
  * @property {number} [maxCharacters] - The maximum number of characters to return.
  * @property {boolean} [includeHtmlTags] - If true, includes HTML tags in the returned text. Default: false
- * @property {VerbosityOptions} [verbosity] - Controls verbosity level of returned content. Default: "compact". Requires livecrawl: "always".
- * @property {SectionTag[]} [includeSections] - Only include content from these semantic sections. Requires livecrawl: "always".
- * @property {SectionTag[]} [excludeSections] - Exclude content from these semantic sections. Requires livecrawl: "always".
+ * @property {VerbosityOptions} [verbosity] - Controls verbosity level of returned content. Default: "compact". Requires maxAgeHours: 0.
+ * @property {SectionTag[]} [includeSections] - Only include content from these semantic sections. Requires maxAgeHours: 0.
+ * @property {SectionTag[]} [excludeSections] - Exclude content from these semantic sections. Requires maxAgeHours: 0.
  */
 export type TextContentsOptions = {
   maxCharacters?: number;
