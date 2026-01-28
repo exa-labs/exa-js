@@ -1,213 +1,140 @@
-# exa-js
+# Exa JavaScript SDK
 
-Our official Javscript SDK. Uses `cross-fetch` under the hood.
+[![npm version](https://img.shields.io/npm/v/exa-js.svg)](https://www.npmjs.com/package/exa-js)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/exa-js)](https://bundlephobia.com/package/exa-js)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Note: This API is basically the same as `metaphor-node` but reflects new
-features associated with Metaphor's rename to Exa. New site is https://exa.ai
+The official JavaScript SDK for [Exa](https://exa.ai), the web search API built for AI.
 
-https://www.npmjs.com/package/exa-js
+[Documentation](https://docs.exa.ai) &nbsp;|&nbsp; [Dashboard](https://dashboard.exa.ai)
 
-## Installation
+## Install
 
-```
+```bash
 npm install exa-js
 ```
 
-## Initialization
+## Quick Start
 
-```js
+```ts
 import Exa from "exa-js";
 
 const exa = new Exa(process.env.EXA_API_KEY);
+
+// Search the web
+const { results } = await exa.search("best coffee shops in SF");
+
+// Get page contents
+const { results } = await exa.getContents(["https://example.com"]);
+
+// Find similar pages
+const { results } = await exa.findSimilar("https://example.com");
+
+// Get answers with citations
+const { answer } = await exa.answer("What is the capital of France?");
 ```
 
-### Common commands
+## Search
 
-```js
-// Basic search
-const basicResults = await exa.search("This is a Exa query:");
+Find webpages using natural language queries.
 
-// Search with date filters
-const dateFilteredResults = await exa.search("This is a Exa query:", {
-  startPublishedDate: "2019-01-01",
-  endPublishedDate: "2019-01-31",
-});
-
-// Search with domain filters
-const domainFilteredResults = await exa.search("This is a Exa query:", {
-  includeDomains: ["www.cnn.com", "www.nytimes.com"],
-});
-
-// Search and get text contents
-const searchAndTextResults = await exa.searchAndContents(
-  "This is a Exa query:",
-  { text: true }
-);
-
-// Search and get contents with contents options
-const searchAndCustomContentsResults = await exa.searchAndContents(
-  "This is a Exa query:",
-  {
-    text: { maxCharacters: 3000 },
-  }
-);
-
-// Find similar documents
-const similarResults = await exa.findSimilar("https://example.com");
-
-// Find similar excluding source domain
-const similarExcludingSourceResults = await exa.findSimilar(
-  "https://example.com",
-  { excludeSourceDomain: true }
-);
-
-// Find similar with contents
-const similarWithContentsResults = await exa.findSimilarAndContents(
-  "https://example.com",
-  { text: true }
-);
-
-// Get text contents
-const textContentsResults = await exa.getContents(["urls"], { text: true });
-
-// Get contents with contents options
-const customContentsResults = await exa.getContents(["urls"], {
-  text: { includeHtmlTags: true, maxCharacters: 3000 },
-});
-
-// Get an answer to a question
-const answerResult = await exa.answer(
-  "What is the population of New York City?"
-);
-
-// Get an answer with streaming
-for await (const chunk of exa.streamAnswer(
-  "What is the population of New York City?"
-)) {
-  if (chunk.content) {
-    process.stdout.write(chunk.content);
-  }
-  if (chunk.citations) {
-    console.log("\nCitations:", chunk.citations);
-  }
-}
-
-// Get an answer with output schema
-const answerResult = await exa.answer(
-  "What is the population of New York City?",
-  {
-    outputSchema: {
-      type: "object",
-      required: ["answer"],
-      additionalProperties: false,
-      properties: {
-        answer: {
-          type: "number",
-        },
-      },
-    },
-  }
-);
-```
-
-### `exa.search(query: string, options?: SearchOptions): Promise<SearchResponse>`
-
-Performs a search on the Exa system with the given parameters.
-
-```javascript
-const response = await exa.search("funny article about tech culture", {
-  numResults: 5,
-  includeDomains: ["nytimes.com", "wsj.com"],
-  startPublishedDate: "2023-06-12",
+```ts
+const { results } = await exa.search("interesting articles about space", {
+  numResults: 10,
+  includeDomains: ["nasa.gov", "space.com"],
+  startPublishedDate: "2024-01-01",
 });
 ```
 
-### `exa.findSimilar(url: string, options?: FindSimilarOptions): Promise<SearchResponse>`
+## Contents
 
-Finds content similar to the specified URL.
+Get clean text, highlights, or summaries from any URL.
 
-```javascript
-const response = await exa.findSimilar(
-  "https://waitbutwhy.com/2014/05/fermi-paradox.html",
+```ts
+const { results } = await exa.getContents(["https://example.com"], {
+  text: true,
+  highlights: true,
+  summary: true,
+});
+```
+
+## Find Similar
+
+Discover pages similar to a given URL.
+
+```ts
+const { results } = await exa.findSimilar(
+  "https://paulgraham.com/greatwork.html",
   {
     numResults: 10,
+    excludeSourceDomain: true,
   }
 );
 ```
 
-### `exa.getContents(urls: string[] | Result[]): Promise<GetContentsResponse>`
+## Answer
 
-Retrieves the contents of the specified documents.
+Get answers to questions with citations from the web.
 
-```javascript
-const response = await exa.getContents([
-  "https://blog.samaltman.com/how-to-be-successful",
-]);
+```ts
+const response = await exa.answer("What caused the 2008 financial crisis?");
+
+console.log(response.answer);
+console.log(response.citations);
 ```
 
-### `exa.answer(query: string, options?: AnswerOptions): Promise<AnswerResponse>`
+## Streaming
 
-Generates an answer to a query using search results as context.
+Stream answers in real-time.
 
-```javascript
-const response = await exa.answer("What is the population of New York City?", {
-  text: true,
-});
-```
-
-### `exa.streamAnswer(query: string, options?: { text?: boolean }): AsyncGenerator<AnswerStreamChunk>`
-
-Streams an answer as it's being generated, yielding chunks of text and citations. This is useful for providing real-time updates in chat interfaces or displaying partial results as they become available.
-
-```javascript
-// Basic streaming example
-for await (const chunk of exa.streamAnswer("What is quantum computing?")) {
+```ts
+for await (const chunk of exa.streamAnswer("Explain quantum computing")) {
   if (chunk.content) {
     process.stdout.write(chunk.content);
   }
-  if (chunk.citations) {
-    console.log("\nCitations:", chunk.citations);
-  }
-}
-
-for await (const chunk of exa.streamAnswer("What is quantum computing?", {
-  text: true,
-})) {
 }
 ```
 
-Each chunk contains:
+## Research
 
-- `content`: A string containing the next piece of generated text
-- `citations`: An array of citation objects containing source information
+Run autonomous research tasks that return structured data.
 
-### `exa.research.createTask({ instructions, schema }: { instructions: string, output?: { schema?: object }}): Promise<{id: string}>`
-
-Exa's research agent can autonomously gather information and return a structured JSON object that conforms to a schema you provide.
-
-```javascript
-import Exa from "exa-js";
-
-const exa = new Exa(process.env.EXA_API_KEY);
-
-const schema = {
-  type: "object",
-  required: ["answer"],
-  properties: {
-    answer: { type: "string" },
+```ts
+const { id } = await exa.research.createTask({
+  instructions: "Find the top 5 AI startups founded in 2024",
+  output: {
+    schema: {
+      type: "object",
+      properties: {
+        startups: { type: "array", items: { type: "string" } },
+      },
+    },
   },
-  additionalProperties: false,
-};
-
-const { id: taskId } = await exa.research.createTask({
-  instructions: "In ≤3 sentences, explain quantum computing.",
-  output: { schema },
 });
-const result = await exa.research.pollTask(taskId);
+
+const result = await exa.research.pollTask(id);
 ```
 
-Use the `status` field to poll long-running tasks if needed.
+## TypeScript
 
-# Contributing
+Full TypeScript support with types for all methods.
 
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+```ts
+import Exa from "exa-js";
+import type { SearchResponse, RegularSearchOptions } from "exa-js";
+```
+
+## Links
+
+- [Documentation](https://docs.exa.ai)
+- [API Reference](https://docs.exa.ai/reference)
+- [Examples](./examples)
+- [Discord](https://discord.gg/exa)
+
+## Contributing
+
+Pull requests welcome! For major changes, open an issue first.
+
+## License
+
+[MIT](LICENSE)
