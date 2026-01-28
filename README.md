@@ -1,8 +1,6 @@
 # Exa JavaScript SDK
 
 [![npm version](https://img.shields.io/npm/v/exa-js.svg)](https://www.npmjs.com/package/exa-js)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/exa-js)](https://bundlephobia.com/package/exa-js)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 The official JavaScript SDK for [Exa](https://exa.ai), the web search API built for AI.
 
