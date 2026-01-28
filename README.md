@@ -23,10 +23,10 @@ const exa = new Exa(process.env.EXA_API_KEY);
 const { results } = await exa.search("best coffee shops in SF");
 
 // Get page contents
-const { results } = await exa.getContents(["https://example.com"]);
+const { results } = await exa.getContents(["https://www.adept.ai/"]);
 
 // Find similar pages
-const { results } = await exa.findSimilar("https://example.com");
+const { results } = await exa.findSimilar("https://paulgraham.com/greatwork.html");
 
 // Get answers with citations
 const { answer } = await exa.answer("What is the capital of France?");
@@ -49,7 +49,7 @@ const { results } = await exa.search("interesting articles about space", {
 Get clean text, highlights, or summaries from any URL.
 
 ```ts
-const { results } = await exa.getContents(["https://example.com"], {
+const { results } = await exa.getContents(["https://openai.com/research"], {
   text: true,
   highlights: true,
   summary: true,
