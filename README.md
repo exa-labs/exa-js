@@ -108,19 +108,17 @@ for await (const chunk of exa.streamAnswer("Explain quantum computing")) {
 Run autonomous research tasks that return structured data.
 
 ```ts
-const { id } = await exa.research.createTask({
+const { researchId } = await exa.research.create({
   instructions: "Find the top 5 AI startups founded in 2024",
-  output: {
-    schema: {
-      type: "object",
-      properties: {
-        startups: { type: "array", items: { type: "string" } },
-      },
+  outputSchema: {
+    type: "object",
+    properties: {
+      startups: { type: "array", items: { type: "string" } },
     },
   },
 });
 
-const result = await exa.research.pollTask(id);
+const result = await exa.research.pollUntilFinished(researchId);
 ```
 
 ## TypeScript
