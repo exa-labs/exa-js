@@ -128,4 +128,42 @@ export class WebsetMonitorsClient extends WebsetsBaseClient {
   async delete(id: string): Promise<Monitor> {
     return this.request<Monitor>(`/v0/monitors/${id}`, "DELETE");
   }
+
+  /**
+   * Iterate through all Monitors, handling pagination automatically
+   * @param options Pagination and filtering options
+   * @returns Async generator of Monitors
+   */
+  async *listAll(options?: ListMonitorsOptions): AsyncGenerator<Monitor> {
+    let cursor: string | undefined = undefined;
+    const pageOptions = options ? { ...options } : {};
+
+    while (true) {
+      pageOptions.cursor = cursor;
+      const response = await this.list(pageOptions);
+
+      for (const monitor of response.data) {
+        yield monitor;
+      }
+
+      if (!response.hasMore || !response.nextCursor) {
+        break;
+      }
+
+      cursor = response.nextCursor;
+    }
+  }
+
+  /**
+   * Collect all Monitors into an array
+   * @param options Pagination and filtering options
+   * @returns Promise resolving to an array of all Monitors
+   */
+  async getAll(options?: ListMonitorsOptions): Promise<Monitor[]> {
+    const monitors: Monitor[] = [];
+    for await (const monitor of this.listAll(options)) {
+      monitors.push(monitor);
+    }
+    return monitors;
+  }
 }
