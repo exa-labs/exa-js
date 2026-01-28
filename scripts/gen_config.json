@@ -36,7 +36,7 @@
   },
   "type_field_overrides": {
     "RegularSearchOptions": [
-      {"name": "type", "type": "\"keyword\" | \"neural\" | \"auto\" | \"hybrid\" | \"fast\" | \"deep\"", "description": "The type of search to perform. Default is \"auto\"."},
+      {"name": "type", "type": "\"auto\" | \"fast\" | \"deep\" | \"neural\"", "description": "The type of search to perform. Default is \"auto\"."},
       {"name": "numResults", "type": "number", "description": "Number of search results to return. Default 10. Max 10 for basic plans."},
       {"name": "includeDomains", "type": "string[]", "description": "List of domains to include in the search."},
       {"name": "excludeDomains", "type": "string[]", "description": "List of domains to exclude in the search."},
@@ -133,8 +133,8 @@
     ]
   },
     "method_notes": {
-      "search": "The `options.type` parameter accepts: `\"keyword\"`, `\"neural\"`, `\"auto\"` (default), `\"hybrid\"`, `\"fast\"`, or `\"deep\"`. See [RegularSearchOptions](#regularsearchoptions) for all available options.",
-      "searchAndContents": "The `options.type` parameter accepts: `\"keyword\"`, `\"neural\"`, `\"auto\"` (default), `\"hybrid\"`, `\"fast\"`, or `\"deep\"`. See [RegularSearchOptions](#regularsearchoptions) for all available options.",
+      "search": "The `options.type` parameter accepts: `\"auto\"` (default), `\"fast\"`, `\"deep\"`, or `\"neural\"`. See [RegularSearchOptions](#regularsearchoptions) for all available options.",
+      "searchAndContents": "The `options.type` parameter accepts: `\"auto\"` (default), `\"fast\"`, `\"deep\"`, or `\"neural\"`. See [RegularSearchOptions](#regularsearchoptions) for all available options.",
       "findSimilar": "See [FindSimilarOptions](#findsimilaroptions) for all available options including `excludeSourceDomain`.",
       "findSimilarAndContents": "See [FindSimilarOptions](#findsimilaroptions) for all available options including `excludeSourceDomain`.",
       "research.get": "When called with `stream: true`, returns an `AsyncGenerator<ResearchStreamEvent>` for real-time SSE updates instead of a `Promise<Research>`.",
