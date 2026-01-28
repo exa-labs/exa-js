@@ -90,18 +90,10 @@ const result = await exa.findSimilar(
 
 ## Answer
 
-Get answers to questions with citations from the web.
-
 ```ts
 const response = await exa.answer("What caused the 2008 financial crisis?");
-
 console.log(response.answer);
-console.log(response.citations);
 ```
-
-## Streaming
-
-Stream answers in real-time.
 
 ```ts
 for await (const chunk of exa.streamAnswer("Explain quantum computing")) {
