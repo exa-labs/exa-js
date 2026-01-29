@@ -198,11 +198,13 @@ export type TextContentsOptions = {
  * @property {string} [query] - The query string to use for highlights search.
  * @property {number} [numSentences] - The number of sentences to return for each highlight.
  * @property {number} [highlightsPerUrl] - The number of highlights to return for each URL.
+ * @property {"strip" | "keep"} [linkPolicy] - Whether to strip or keep links in the highlights.
  */
 export type HighlightsContentsOptions = {
   query?: string;
   numSentences?: number;
   highlightsPerUrl?: number;
+  linkPolicy?: "strip" | "keep";
 };
 
 /**
