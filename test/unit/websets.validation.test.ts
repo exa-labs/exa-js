@@ -126,7 +126,6 @@ describe("Websets Client Method Validation", () => {
       externalId: null,
       imports: [],
       monitors: [],
-      streams: [],
       title: "",
       searches: [],
       enrichments: [],
