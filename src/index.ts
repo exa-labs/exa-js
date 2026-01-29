@@ -1120,6 +1120,7 @@ export class Exa {
       model?: "exa" | "exa-pro";
       systemPrompt?: string;
       outputSchema: ZodSchema<T>;
+      userLocation?: string;
     }
   ): AsyncGenerator<AnswerStreamChunk>;
 
@@ -1149,6 +1150,7 @@ export class Exa {
       model?: "exa" | "exa-pro";
       systemPrompt?: string;
       outputSchema?: Record<string, unknown>;
+      userLocation?: string;
     }
   ): AsyncGenerator<AnswerStreamChunk>;
 
@@ -1159,6 +1161,7 @@ export class Exa {
       model?: "exa" | "exa-pro";
       systemPrompt?: string;
       outputSchema?: Record<string, unknown> | ZodSchema<T>;
+      userLocation?: string;
     }
   ): AsyncGenerator<AnswerStreamChunk> {
     // Convert Zod schema to JSON schema if needed
@@ -1175,6 +1178,7 @@ export class Exa {
       model: options?.model ?? "exa",
       systemPrompt: options?.systemPrompt,
       outputSchema,
+      userLocation: options?.userLocation,
     };
 
     const response = await fetchImpl(this.baseURL + "/answer", {
