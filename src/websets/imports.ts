@@ -255,4 +255,42 @@ export class ImportsClient extends WebsetsBaseClient {
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
   }
+
+  /**
+   * Iterate through all Imports, handling pagination automatically
+   * @param options Pagination options
+   * @returns Async generator of Imports
+   */
+  async *listAll(options?: PaginationParams): AsyncGenerator<Import> {
+    let cursor: string | undefined = undefined;
+    const pageOptions = options ? { ...options } : {};
+
+    while (true) {
+      pageOptions.cursor = cursor;
+      const response = await this.list(pageOptions);
+
+      for (const importItem of response.data) {
+        yield importItem;
+      }
+
+      if (!response.hasMore || !response.nextCursor) {
+        break;
+      }
+
+      cursor = response.nextCursor;
+    }
+  }
+
+  /**
+   * Collect all Imports into an array
+   * @param options Pagination options
+   * @returns Promise resolving to an array of all Imports
+   */
+  async getAll(options?: PaginationParams): Promise<Import[]> {
+    const imports: Import[] = [];
+    for await (const importItem of this.listAll(options)) {
+      imports.push(importItem);
+    }
+    return imports;
+  }
 }

@@ -60,4 +60,42 @@ export class EventsClient extends WebsetsBaseClient {
   async get(id: string): Promise<Event> {
     return this.request<Event>(`/v0/events/${id}`, "GET");
   }
+
+  /**
+   * Iterate through all Events, handling pagination automatically
+   * @param options Filtering and pagination options
+   * @returns Async generator of Events
+   */
+  async *listAll(options?: ListEventsOptions): AsyncGenerator<Event> {
+    let cursor: string | undefined = undefined;
+    const pageOptions = options ? { ...options } : {};
+
+    while (true) {
+      pageOptions.cursor = cursor;
+      const response = await this.list(pageOptions);
+
+      for (const event of response.data) {
+        yield event;
+      }
+
+      if (!response.hasMore || !response.nextCursor) {
+        break;
+      }
+
+      cursor = response.nextCursor;
+    }
+  }
+
+  /**
+   * Collect all Events into an array
+   * @param options Filtering and pagination options
+   * @returns Promise resolving to an array of all Events
+   */
+  async getAll(options?: ListEventsOptions): Promise<Event[]> {
+    const events: Event[] = [];
+    for await (const event of this.listAll(options)) {
+      events.push(event);
+    }
+    return events;
+  }
 }
