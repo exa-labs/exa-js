@@ -451,6 +451,8 @@ export type SearchResult<T extends ContentsOptions> = {
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
+ * @property {string} [resolvedSearchType] - The resolved search type ('neural' or 'keyword') when using 'auto' search.
+ * @property {number} [searchTime] - Time taken for the search in milliseconds.
  */
 export type SearchResponse<T extends ContentsOptions> = {
   results: SearchResult<T>[];
@@ -459,6 +461,8 @@ export type SearchResponse<T extends ContentsOptions> = {
   requestId: string;
   statuses?: Array<Status>;
   costDollars?: CostDollars;
+  resolvedSearchType?: string;
+  searchTime?: number;
 };
 
 export type Status = {
