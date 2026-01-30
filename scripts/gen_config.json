@@ -145,7 +145,7 @@
     "searchAndContents": "const result = await exa.searchAndContents(\"AI in healthcare\", {\n  text: true,\n  highlights: true,\n  numResults: 5\n});",
     "findSimilar": "const result = await exa.findSimilar(\"https://www.example.com/article\", {\n  numResults: 10,\n  excludeSourceDomain: true\n});",
     "findSimilarAndContents": "const result = await exa.findSimilarAndContents(\"https://www.example.com/article\", {\n  text: true,\n  highlights: true,\n  numResults: 5\n});",
-    "getContents": "const result = await exa.getContents([\n  \"https://www.example.com/article1\",\n  \"https://www.example.com/article2\"\n], {\n  text: { maxCharacters: 1000 },\n  highlights: { query: \"AI\", numSentences: 2 }\n});",
+    "getContents": "const result = await exa.getContents([\n  \"https://www.example.com/article1\",\n  \"https://www.example.com/article2\"\n], {\n  text: { maxCharacters: 1000 },\n  highlights: { query: \"AI\", maxCharacters: 200 }\n});",
     "answer": "const result = await exa.answer(\"What is the capital of France?\", {\n  text: true,\n  model: \"exa\"\n});",
     "streamAnswer": "for await (const chunk of exa.streamAnswer(\"What is quantum computing?\", {\n  text: true,\n  model: \"exa\"\n})) {\n  if (chunk.content) process.stdout.write(chunk.content);\n  if (chunk.citations) console.log(\"Citations:\", chunk.citations);\n}",
     "research.create": "const task = await exa.research.create({\n  instructions: \"Research the latest AI developments\",\n  model: \"exa-research-fast\"\n});",
