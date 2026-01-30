@@ -219,6 +219,39 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
+
+  it("should handle highlights with maxCharacters option", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://example.com",
+          id: "test-id",
+          highlights: ["highlight 1", "highlight 2"],
+          highlightScores: [0.9, 0.8],
+        },
+      ],
+      requestId: "req-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.searchAndContents("latest AI developments", {
+      highlights: { maxCharacters: 200, query: "key points" },
+      numResults: 2,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "latest AI developments",
+      contents: {
+        highlights: { maxCharacters: 200, query: "key points" },
+      },
+      numResults: 2,
+    });
+    expect(result).toEqual(mockResponse);
+  });
   it("should handle text and highlights together", async () => {
     const mockResponse = {
       results: [
