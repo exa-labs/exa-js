@@ -196,12 +196,16 @@ export type TextContentsOptions = {
  * to your initial query, and may vary in quantity and length.
  * @typedef {Object} HighlightsContentsOptions
  * @property {string} [query] - The query string to use for highlights search.
- * @property {number} [numSentences] - The number of sentences to return for each highlight.
- * @property {number} [highlightsPerUrl] - The number of highlights to return for each URL.
+ * @property {number} [maxCharacters] - Maximum total characters across all highlights per URL. Characters are distributed across multiple non-contiguous highlights (default 5). If the full page is shorter than maxCharacters, the entire page is returned. Default is 2000.
+ * @property {number} [numSentences] - Deprecated: use maxCharacters instead. The number of sentences to return for each highlight.
+ * @property {number} [highlightsPerUrl] - Deprecated: use maxCharacters instead. The number of highlights to return for each URL.
  */
 export type HighlightsContentsOptions = {
   query?: string;
+  maxCharacters?: number;
+  /** @deprecated Use maxCharacters instead */
   numSentences?: number;
+  /** @deprecated Use maxCharacters instead */
   highlightsPerUrl?: number;
 };
 
