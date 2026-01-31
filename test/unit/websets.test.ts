@@ -46,7 +46,6 @@ describe("Websets API", () => {
       externalId: null,
       metadata: {},
       imports: [],
-      streams: [],
       title: "Test Webset",
     };
 
@@ -104,6 +103,7 @@ describe("Websets API", () => {
           ],
         },
       ],
+      items: [],
     };
 
     const websetsClient = getProtectedClient(exa.websets);
@@ -115,6 +115,7 @@ describe("Websets API", () => {
       search: {
         query: "AI companies founded after 2020",
         entity: { type: "company" as const },
+        count: 10,
       },
     };
     const result = await exa.websets.preview(previewParams);
@@ -145,6 +146,7 @@ describe("Websets API", () => {
         ],
       },
       enrichments: [],
+      items: [],
     };
 
     const websetsClient = getProtectedClient(exa.websets);
@@ -155,6 +157,7 @@ describe("Websets API", () => {
     const previewParams = {
       search: {
         query: "AI companies",
+        count: 10,
       },
     };
     const result = await exa.websets.preview(previewParams, { search: true });
@@ -177,6 +180,7 @@ describe("Websets API", () => {
         criteria: [],
       },
       enrichments: [],
+      items: [],
     };
 
     const websetsClient = getProtectedClient(exa.websets);
@@ -187,6 +191,7 @@ describe("Websets API", () => {
     const previewParams = {
       search: {
         query: "AI companies",
+        count: 10,
       },
     };
     const result = await exa.websets.preview(previewParams, { search: false });
@@ -213,7 +218,6 @@ describe("Websets API", () => {
       externalId: null,
       metadata: {},
       imports: [],
-      streams: [],
       title: "Scoped Webset",
     };
 
@@ -260,7 +264,6 @@ describe("Websets API", () => {
       externalId: null,
       metadata: {},
       imports: [],
-      streams: [],
       title: "Test Webset",
     };
 
@@ -289,7 +292,6 @@ describe("Websets API", () => {
       enrichments: [],
       monitors: [],
       imports: [],
-      streams: [],
       title: "Test Webset",
       createdAt: "2023-01-01T00:00:00Z",
       updatedAt: "2023-01-01T00:00:00Z",
@@ -328,7 +330,6 @@ describe("Websets API", () => {
       enrichments: [],
       monitors: [],
       imports: [],
-      streams: [],
       title: "Test Webset",
       metadata: { updated: "true" },
       createdAt: "2023-01-01T00:00:00Z",
@@ -361,7 +362,6 @@ describe("Websets API", () => {
       enrichments: [],
       monitors: [],
       imports: [],
-      streams: [],
       title: "Test Webset",
       createdAt: "2023-01-01T00:00:00Z",
       updatedAt: "2023-01-01T00:00:00Z",
@@ -559,7 +559,6 @@ describe("Websets API", () => {
       externalId: null,
       metadata: {},
       imports: [],
-      streams: [],
       title: null,
     };
     const mockIdleResponse: Webset = {
@@ -570,7 +569,6 @@ describe("Websets API", () => {
       enrichments: [],
       monitors: [],
       imports: [],
-      streams: [],
       title: "Test Webset",
       createdAt: "2023-01-01T00:00:00Z",
       updatedAt: "2023-01-01T00:00:00Z",
@@ -625,7 +623,6 @@ describe("Websets API", () => {
         enrichments: [],
         monitors: [],
         imports: [],
-        streams: [],
         title: "Test Webset",
         createdAt: "2023-01-01T00:00:00Z",
         updatedAt: "2023-01-01T00:00:00Z",
@@ -673,7 +670,6 @@ describe("Websets API", () => {
         enrichments: [],
         monitors: [],
         imports: [],
-        streams: [],
         title: "Test Webset",
         createdAt: "2023-01-01T00:00:00Z",
         updatedAt: "2023-01-01T00:00:00Z",
