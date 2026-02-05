@@ -118,10 +118,10 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
 };
 
 /**
- * Search options for non-deep search types (keyword, neural, auto, hybrid, fast)
+ * Search options for non-deep search types (keyword, neural, auto, hybrid, fast, instant)
  */
 type NonDeepSearchOptions = BaseRegularSearchOptions & {
-  type?: "keyword" | "neural" | "auto" | "hybrid" | "fast";
+  type?: "keyword" | "neural" | "auto" | "hybrid" | "fast" | "instant";
 };
 
 /**
