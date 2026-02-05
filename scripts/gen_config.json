@@ -62,7 +62,7 @@
       {"name": "subpages", "type": "number", "description": "Number of subpages to return for each result."},
       {"name": "subpageTarget", "type": "string | string[]", "description": "Text used to match/rank subpages in the returned list."},
       {"name": "extras", "type": "ExtrasOptions", "description": "Miscellaneous data derived from results."},
-      {"name": "context", "type": "ContextOptions | true", "description": "Options for retrieving context."}
+      {"name": "context", "type": "ContextOptions | true", "description": "Deprecated. Use `highlights` or `text` instead. Will be removed in a future version."}
     ],
     "SearchResult": [
       {"name": "title", "type": "string | null", "description": "The title of the search result."},
@@ -82,7 +82,7 @@
     "SearchResponse": [
       {"name": "results", "type": "SearchResult<T>[]", "description": "The list of search results."},
       {"name": "requestId", "type": "string", "description": "The request ID for the search."},
-      {"name": "context", "type": "string", "description": "The context for the search (for deep search)."},
+      {"name": "context", "type": "string", "description": "Deprecated. The combined context string. Use `highlights` or `text` on individual results instead."},
       {"name": "autoDate", "type": "string", "description": "The autoprompt date, if applicable."},
       {"name": "statuses", "type": "Status[]", "description": "Status information for each result."},
       {"name": "costDollars", "type": "CostDollars", "description": "The cost breakdown for this request."}

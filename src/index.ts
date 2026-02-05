@@ -31,6 +31,7 @@ export type ContentsOptions = {
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
   livecrawl?: LivecrawlOptions;
+  /** @deprecated Use `highlights` or `text` instead. Will be removed in a future version. */
   context?: ContextOptions | true;
   livecrawlTimeout?: number;
   maxAgeHours?: number;
@@ -93,15 +94,16 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
 };
 
 /**
- * Contents options for deep search - context is always returned and cannot be disabled
+ * Contents options for deep search.
+ * @deprecated The `context` field is deprecated. Use `highlights` or `text` instead.
  */
 type DeepContentsOptions = Omit<ContentsOptions, "context"> & {
+  /** @deprecated Use `highlights` or `text` instead. Will be removed in a future version. */
   context?: Omit<ContextOptions, never> | true;
 };
 
 /**
  * Search options for deep search type, which supports additional queries.
- * Note: context is always returned by the API for deep search and cannot be set to false.
  */
 type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
   type: "deep";
@@ -225,6 +227,8 @@ export type SummaryContentsOptions = {
 export type JSONSchema = Record<string, unknown>;
 
 /**
+ * @deprecated Use `highlights` or `text` instead. The `context` option is deprecated and will be removed in a future version.
+ *
  * Options for retrieving the context from a list of search results. The context is a string
  * representation of all the search results.
  * @typedef {Object} ContextOptions
@@ -450,7 +454,7 @@ export type SearchResult<T extends ContentsOptions> = {
  * Represents a search response object.
  * @typedef {Object} SearchResponse
  * @property {Result[]} results - The list of search results.
- * @property {string} [context] - The context for the search.
+ * @property {string} [context] - Deprecated. The context for the search.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
@@ -459,6 +463,7 @@ export type SearchResult<T extends ContentsOptions> = {
  */
 export type SearchResponse<T extends ContentsOptions> = {
   results: SearchResult<T>[];
+  /** @deprecated Use `highlights` or `text` on individual results instead. Will be removed in a future version. */
   context?: string;
   autoDate?: string;
   requestId: string;
