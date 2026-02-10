@@ -212,13 +212,16 @@ describe("Search API", () => {
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
       query: "latest AI developments",
       contents: {
-        highlights: { numSentences: 2, highlightsPerUrl: 3, query: "key points" },
+        highlights: {
+          numSentences: 2,
+          highlightsPerUrl: 3,
+          query: "key points",
+        },
       },
       numResults: 2,
     });
     expect(result).toEqual(mockResponse);
   });
-
 
   it("should handle highlights with maxCharacters option", async () => {
     const mockResponse = {
@@ -443,6 +446,41 @@ describe("Search API", () => {
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
       query: "quick search query",
       type: "fast",
+      numResults: 10,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should handle instant search type with default text contents", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Instant Search Result",
+          url: "https://example.com",
+          id: "instant-id",
+          text: "Instant search text content",
+        },
+      ],
+      requestId: "req-instant-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("instant search query", {
+      type: "instant",
+      numResults: 10,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "instant search query",
+      type: "instant",
       numResults: 10,
       contents: {
         text: {
