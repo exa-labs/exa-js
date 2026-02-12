@@ -114,6 +114,12 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
    */
   additionalQueries?: string[];
   /**
+   * Deep search effort level.
+   * - "medium" (default): Faster, cheaper searches using deep_lite service.
+   * - "high": Maximum quality using full deep service.
+   */
+  effort?: "medium" | "high";
+  /**
    * Options for retrieving page contents. For deep search, context is always returned.
    */
   contents?: DeepContentsOptions;
