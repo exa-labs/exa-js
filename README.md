@@ -63,7 +63,6 @@ const result = await exa.search("interesting articles about space", {
 const deepResult = await exa.search("Who leads OpenAI's safety team?", {
   type: "deep",
   answer: true,
-  effort: "high",
   outputSchema: {
     type: "object",
     properties: {
