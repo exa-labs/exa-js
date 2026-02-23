@@ -64,7 +64,7 @@ const deepResult = await exa.search("Who leads OpenAI's safety team?", {
   type: "deep",
   answer: true,
   effort: "high",
-  structuredOutputs: {
+  outputSchema: {
     type: "object",
     properties: {
       leader: { type: "string" },

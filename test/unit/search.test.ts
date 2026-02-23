@@ -594,7 +594,7 @@ describe("Search API", () => {
     expect(result.context).toBeDefined();
   });
 
-  it("should pass answer, structuredOutputs, and effort for deep search", async () => {
+  it("should pass answer, outputSchema, and effort for deep search", async () => {
     const mockResponse = {
       results: [
         {
@@ -618,7 +618,7 @@ describe("Search API", () => {
     const result = await exa.search("exa company profile", {
       type: "deep",
       answer: true,
-      structuredOutputs: {
+      outputSchema: {
         type: "object",
         properties: {
           company: { type: "string" },
@@ -634,7 +634,7 @@ describe("Search API", () => {
       query: "exa company profile",
       type: "deep",
       answer: true,
-      structuredOutputs: {
+      outputSchema: {
         type: "object",
         properties: {
           company: { type: "string" },

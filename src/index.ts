@@ -128,7 +128,7 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
    * JSON schema for structured answer output.
    * If provided, the response `answer` field will match this schema.
    */
-  structuredOutputs?: Record<string, unknown>;
+  outputSchema?: Record<string, unknown>;
   /**
    * Deep search effort level.
    * - "medium": default behavior
@@ -477,7 +477,7 @@ export type SearchResult<T extends ContentsOptions> = {
  * @typedef {Object} SearchResponse
  * @property {Result[]} results - The list of search results.
  * @property {string} [context] - Deprecated. The context for the search.
- * @property {string | Object} [answer] - Deep search synthesized answer text (or object when using structuredOutputs).
+ * @property {string | Object} [answer] - Deep search synthesized answer text (or object when using outputSchema).
  * @property {DeepSearchCitation[]} [citations] - Citation metadata for deep-search answer mode.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
