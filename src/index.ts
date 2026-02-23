@@ -94,6 +94,13 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
 };
 
 /**
+ * Effort mode for deep search.
+ * - medium: default budget
+ * - high: expanded search + reasoning budget
+ */
+export type DeepSearchEffort = "medium" | "high";
+
+/**
  * Contents options for deep search.
  * @deprecated The `context` field is deprecated. Use `highlights` or `text` instead.
  */
@@ -113,6 +120,21 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
    * @example ["machine learning", "ML algorithms", "neural networks"]
    */
   additionalQueries?: string[];
+  /**
+   * When true, deep search returns a cited answer in the response.
+   */
+  answer?: boolean;
+  /**
+   * JSON schema for structured answer output.
+   * If provided, the response `answer` field will match this schema.
+   */
+  structuredOutputs?: Record<string, unknown>;
+  /**
+   * Deep search effort level.
+   * - "medium": default behavior
+   * - "high": more search rounds and deeper reasoning
+   */
+  effort?: DeepSearchEffort;
   /**
    * Options for retrieving page contents. For deep search, context is always returned.
    */
@@ -455,6 +477,8 @@ export type SearchResult<T extends ContentsOptions> = {
  * @typedef {Object} SearchResponse
  * @property {Result[]} results - The list of search results.
  * @property {string} [context] - Deprecated. The context for the search.
+ * @property {string | Object} [answer] - Deep search synthesized answer text (or object when using structuredOutputs).
+ * @property {DeepSearchCitation[]} [citations] - Citation metadata for deep-search answer mode.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
@@ -465,12 +489,20 @@ export type SearchResponse<T extends ContentsOptions> = {
   results: SearchResult<T>[];
   /** @deprecated Use `highlights` or `text` on individual results instead. Will be removed in a future version. */
   context?: string;
+  answer?: string | Record<string, unknown>;
+  citations?: DeepSearchCitation[];
   autoDate?: string;
   requestId: string;
   statuses?: Array<Status>;
   costDollars?: CostDollars;
   resolvedSearchType?: string;
   searchTime?: number;
+};
+
+export type DeepSearchCitation = {
+  index: number;
+  url: string;
+  title?: string;
 };
 
 export type Status = {

@@ -59,6 +59,23 @@ const result = await exa.search("interesting articles about space", {
 });
 ```
 
+```ts
+const deepResult = await exa.search("Who leads OpenAI's safety team?", {
+  type: "deep",
+  answer: true,
+  effort: "high",
+  structuredOutputs: {
+    type: "object",
+    properties: {
+      leader: { type: "string" },
+      title: { type: "string" },
+      sourceCount: { type: "number" }
+    },
+    required: ["leader", "title"]
+  }
+});
+```
+
 ## Contents
 
 Get clean text, highlights, or summaries from any URL.
