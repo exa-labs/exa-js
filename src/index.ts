@@ -95,10 +95,11 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
 
 /**
  * Effort mode for deep search.
- * - medium: default budget
- * - high: expanded search + reasoning budget
+ * - lite: default budget
+ * - base: expanded search + reasoning budget
+ * - max: highest compute budget
  */
-export type DeepSearchEffort = "medium" | "high";
+export type DeepSearchEffort = "lite" | "base" | "max";
 
 /**
  * Contents options for deep search.
@@ -131,8 +132,9 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
   outputSchema?: Record<string, unknown>;
   /**
    * Deep search effort level.
-   * - "medium": default behavior
-   * - "high": more search rounds and deeper reasoning
+   * - "lite": default behavior
+   * - "base": more search rounds and deeper reasoning
+   * - "max": highest compute budget
    */
   effort?: DeepSearchEffort;
   /**

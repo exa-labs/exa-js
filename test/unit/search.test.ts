@@ -626,7 +626,7 @@ describe("Search API", () => {
         },
         required: ["company", "founded"],
       },
-      effort: "high",
+      effort: "base",
       numResults: 5,
     });
 
@@ -642,7 +642,7 @@ describe("Search API", () => {
         },
         required: ["company", "founded"],
       },
-      effort: "high",
+      effort: "base",
       numResults: 5,
       contents: {
         text: {
