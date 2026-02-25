@@ -593,4 +593,69 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
     expect(result.context).toBeDefined();
   });
+
+  it("should pass answer, outputSchema, and effort for deep search", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Deep Structured Result",
+          url: "https://example.com/structured",
+          id: "deep-structured-id",
+          text: "Deep structured result text",
+        },
+      ],
+      answer: { company: "Exa", founded: 2021 },
+      citations: [
+        { index: 1, url: "https://example.com/structured", title: "Structured Source" },
+      ],
+      requestId: "req-deep-structured-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("exa company profile", {
+      type: "deep",
+      answer: true,
+      outputSchema: {
+        type: "object",
+        properties: {
+          company: { type: "string" },
+          founded: { type: "number" },
+        },
+        required: ["company", "founded"],
+      },
+      effort: "base",
+      numResults: 5,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "exa company profile",
+      type: "deep",
+      answer: true,
+      outputSchema: {
+        type: "object",
+        properties: {
+          company: { type: "string" },
+          founded: { type: "number" },
+        },
+        required: ["company", "founded"],
+      },
+      effort: "base",
+      numResults: 5,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
+    });
+    expect(result).toEqual(mockResponse);
+    expect(result.answer).toEqual({ company: "Exa", founded: 2021 });
+    expect(result.citations?.[0]).toEqual({
+      index: 1,
+      url: "https://example.com/structured",
+      title: "Structured Source",
+    });
+  });
 });
