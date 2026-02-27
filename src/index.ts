@@ -96,6 +96,41 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
 export type DeepSearchType = "deep" | "deep-reasoning" | "deep-max";
 
 /**
+ * Deep search output schema mode for plain text responses.
+ */
+export type DeepTextOutputSchema = {
+  type: "text";
+  /**
+   * Optional formatting guidance for text output.
+   */
+  description?: string;
+};
+
+/**
+ * Deep search output schema mode for structured JSON object responses.
+ */
+export type DeepObjectOutputSchema = {
+  type: "object";
+  /**
+   * JSON-schema-style properties for the result object.
+   */
+  properties?: Record<string, unknown>;
+  /**
+   * Required property names.
+   */
+  required?: string[];
+};
+
+/**
+ * Deep search output schema.
+ * - `type: "text"` returns plain text in `output.content` (with optional description guidance).
+ * - `type: "object"` returns structured JSON in `output.content`.
+ *
+ * Note: For object schemas, the API enforces a maximum nesting depth of 2 and a maximum of 10 total properties.
+ */
+export type DeepOutputSchema = DeepTextOutputSchema | DeepObjectOutputSchema;
+
+/**
  * Contents options for deep search.
  * @deprecated The `context` field is deprecated. Use `highlights` or `text` instead.
  */
@@ -116,10 +151,13 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
    */
   additionalQueries?: string[];
   /**
-   * JSON schema for structured output.
-   * If provided, the response `output.content` field will match this schema.
+   * Output schema for deep search responses.
+   * - `type: "text"` for plain text output (optionally guided by `description`)
+   * - `type: "object"` for structured JSON output
+   *
+   * Note: For object schemas, the API enforces max depth 2 and max 10 total properties.
    */
-  outputSchema?: Record<string, unknown>;
+  outputSchema?: DeepOutputSchema;
   /**
    * Options for retrieving page contents.
    */

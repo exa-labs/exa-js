@@ -76,6 +76,14 @@ const deepResult = await exa.search("Who leads OpenAI's safety team?", {
 console.log(deepResult.output?.content);
 ```
 
+Deep `outputSchema` modes:
+- `type: "text"`: return plain text in `output.content` (optionally guided by `description`)
+- `type: "object"`: return structured JSON in `output.content`
+
+For `type: "object"`, deep search currently enforces:
+- max nesting depth: `2`
+- max total properties: `10`
+
 Deep search variants:
 - `deep`: light mode
 - `deep-reasoning`: base reasoning mode
