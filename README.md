@@ -73,7 +73,7 @@ const deepResult = await exa.search("Who leads OpenAI's safety team?", {
   }
 });
 
-console.log(deepResult.output);
+console.log(deepResult.output?.content);
 ```
 
 Deep search variants:
