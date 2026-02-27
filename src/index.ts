@@ -121,7 +121,7 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
    */
   outputSchema?: Record<string, unknown>;
   /**
-   * Options for retrieving page contents. For deep search variants, context is always returned.
+   * Options for retrieving page contents.
    */
   contents?: DeepContentsOptions;
 };
