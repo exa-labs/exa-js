@@ -18,7 +18,7 @@ const DEFAULT_MAX_CHARACTERS = 10_000;
  * Options for retrieving page contents
  * @typedef {Object} ContentsOptions
  * @property {TextContentsOptions | boolean} [text] - Options for retrieving text contents.
- * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights. Deep search variants ("deep", "deep-reasoning", "deep-max") support custom highlight options, including `maxCharacters`.
+ * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights.
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
  * @property {number} [maxAgeHours] - Maximum age of cached content in hours. If content is older, it will be fetched fresh. Special values: 0 = always fetch fresh content, -1 = never fetch fresh (use cached content only). Example: 168 = fetch fresh for pages older than 7 days.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
