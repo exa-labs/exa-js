@@ -686,4 +686,43 @@ describe("Search API", () => {
       expect(result.context).toBeDefined();
     }
   );
+
+  it("should pass deep highlights maxCharacters options through contents", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Deep Highlights Result",
+          url: "https://example.com/deep-highlights",
+          id: "deep-highlights-id",
+          highlights: ["highlight 1", "highlight 2"],
+          highlightScores: [0.91, 0.83],
+        },
+      ],
+      requestId: "req-deep-highlights-123",
+    };
+
+    const requestSpy = vi.spyOn(exa, "request").mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("latest battery breakthroughs", {
+      type: "deep",
+      contents: {
+        highlights: {
+          query: "battery breakthroughs",
+          maxCharacters: 1200,
+        },
+      },
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "latest battery breakthroughs",
+      type: "deep",
+      contents: {
+        highlights: {
+          query: "battery breakthroughs",
+          maxCharacters: 1200,
+        },
+      },
+    });
+    expect(result).toEqual(mockResponse);
+  });
 });
