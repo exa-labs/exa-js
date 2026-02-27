@@ -594,7 +594,7 @@ describe("Search API", () => {
     expect(result.context).toBeDefined();
   });
 
-  it("should pass answer, outputSchema, and effort for deep search", async () => {
+  it("should pass outputSchema for deep search", async () => {
     const mockResponse = {
       results: [
         {
@@ -604,10 +604,10 @@ describe("Search API", () => {
           text: "Deep structured result text",
         },
       ],
-      answer: { company: "Exa", founded: 2021 },
-      citations: [
-        { index: 1, url: "https://example.com/structured", title: "Structured Source" },
-      ],
+      output: {
+        content: { company: "Exa", founded: 2021 },
+        citations: [{ url: "https://example.com/structured", title: "Deep Structured Result" }],
+      },
       requestId: "req-deep-structured-123",
     };
 
@@ -617,7 +617,6 @@ describe("Search API", () => {
 
     const result = await exa.search("exa company profile", {
       type: "deep",
-      answer: true,
       outputSchema: {
         type: "object",
         properties: {
@@ -626,14 +625,12 @@ describe("Search API", () => {
         },
         required: ["company", "founded"],
       },
-      effort: "base",
       numResults: 5,
     });
 
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
       query: "exa company profile",
       type: "deep",
-      answer: true,
       outputSchema: {
         type: "object",
         properties: {
@@ -642,7 +639,6 @@ describe("Search API", () => {
         },
         required: ["company", "founded"],
       },
-      effort: "base",
       numResults: 5,
       contents: {
         text: {
@@ -651,11 +647,88 @@ describe("Search API", () => {
       },
     });
     expect(result).toEqual(mockResponse);
-    expect(result.answer).toEqual({ company: "Exa", founded: 2021 });
-    expect(result.citations?.[0]).toEqual({
-      index: 1,
-      url: "https://example.com/structured",
-      title: "Structured Source",
+    expect(result.output).toEqual({
+      content: { company: "Exa", founded: 2021 },
+      citations: [{ url: "https://example.com/structured", title: "Deep Structured Result" }],
     });
+  });
+
+  it.each(["deep-reasoning", "deep-max"] as const)(
+    "should pass additionalQueries for %s search type",
+    async (deepType) => {
+      const mockResponse = {
+        results: [
+          {
+            title: "Deep Search Result",
+            url: "https://example.com",
+            id: "deep-search-id",
+            text: "Deep search result text",
+          },
+        ],
+        context: "Deep search context string",
+        requestId: "req-deep-variant-123",
+      };
+
+      const requestSpy = vi.spyOn(exa, "request").mockResolvedValueOnce(mockResponse);
+
+      const result = await exa.search("machine learning", {
+        type: deepType,
+        additionalQueries: ["ML algorithms", "neural networks", "AI models"],
+        numResults: 5,
+      });
+
+      expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+        query: "machine learning",
+        type: deepType,
+        additionalQueries: ["ML algorithms", "neural networks", "AI models"],
+        numResults: 5,
+        contents: {
+          text: {
+            maxCharacters: 10000,
+          },
+        },
+      });
+      expect(result).toEqual(mockResponse);
+      expect(result.context).toBeDefined();
+    }
+  );
+
+  it("should pass deep highlights maxCharacters options through contents", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Deep Highlights Result",
+          url: "https://example.com/deep-highlights",
+          id: "deep-highlights-id",
+          highlights: ["highlight 1", "highlight 2"],
+          highlightScores: [0.91, 0.83],
+        },
+      ],
+      requestId: "req-deep-highlights-123",
+    };
+
+    const requestSpy = vi.spyOn(exa, "request").mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("latest battery breakthroughs", {
+      type: "deep",
+      contents: {
+        highlights: {
+          query: "battery breakthroughs",
+          maxCharacters: 1200,
+        },
+      },
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "latest battery breakthroughs",
+      type: "deep",
+      contents: {
+        highlights: {
+          query: "battery breakthroughs",
+          maxCharacters: 1200,
+        },
+      },
+    });
+    expect(result).toEqual(mockResponse);
   });
 });

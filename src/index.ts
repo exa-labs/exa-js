@@ -18,7 +18,7 @@ const DEFAULT_MAX_CHARACTERS = 10_000;
  * Options for retrieving page contents
  * @typedef {Object} ContentsOptions
  * @property {TextContentsOptions | boolean} [text] - Options for retrieving text contents.
- * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights. NOTE: For search type "deep", only "true" is allowed. "query", "maxCharacters", "numSentences" and "highlightsPerUrl" will not be respected.
+ * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights.
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
  * @property {number} [maxAgeHours] - Maximum age of cached content in hours. If content is older, it will be fetched fresh. Special values: 0 = always fetch fresh content, -1 = never fetch fresh (use cached content only). Example: 168 = fetch fresh for pages older than 7 days.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
@@ -45,7 +45,7 @@ export type ContentsOptions = {
  * Options for performing a search query
  * @typedef {Object} SearchOptions
  * @property {ContentsOptions | boolean} [contents] - Options for retrieving page contents for each result returned. Default is { text: { maxCharacters: 10_000 } }.
- * @property {number} [numResults] - Number of search results to return. Default 10. Max 10 for basic plans. For deep search, recommend leaving blank - number of results will be determined dynamically for your query.
+ * @property {number} [numResults] - Number of search results to return. Default 10.
  * @property {string[]} [includeDomains] - List of domains to include in the search.
  * @property {string[]} [excludeDomains] - List of domains to exclude in the search.
  * @property {string} [startCrawlDate] - Start date for results based on crawl date.
@@ -93,13 +93,7 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
   useAutoprompt?: boolean;
 };
 
-/**
- * Effort mode for deep search.
- * - lite: default budget
- * - base: expanded search + reasoning budget
- * - max: highest compute budget
- */
-export type DeepSearchEffort = "lite" | "base" | "max";
+export type DeepSearchType = "deep" | "deep-reasoning" | "deep-max";
 
 /**
  * Contents options for deep search.
@@ -114,31 +108,20 @@ type DeepContentsOptions = Omit<ContentsOptions, "context"> & {
  * Search options for deep search type, which supports additional queries.
  */
 type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
-  type: "deep";
+  type: DeepSearchType;
   /**
-   * Alternative query formulations for deep search to skip automatic LLM-based query expansion.
+   * Alternative query formulations for deep search variants to skip automatic LLM-based query expansion.
    * Max 5 queries.
    * @example ["machine learning", "ML algorithms", "neural networks"]
    */
   additionalQueries?: string[];
   /**
-   * When true, deep search returns a cited answer in the response.
-   */
-  answer?: boolean;
-  /**
-   * JSON schema for structured answer output.
-   * If provided, the response `answer` field will match this schema.
+   * JSON schema for structured output.
+   * If provided, the response `output.content` field will match this schema.
    */
   outputSchema?: Record<string, unknown>;
   /**
-   * Deep search effort level.
-   * - "lite": default behavior
-   * - "base": more search rounds and deeper reasoning
-   * - "max": highest compute budget
-   */
-  effort?: DeepSearchEffort;
-  /**
-   * Options for retrieving page contents. For deep search, context is always returned.
+   * Options for retrieving page contents.
    */
   contents?: DeepContentsOptions;
 };
@@ -152,7 +135,7 @@ type NonDeepSearchOptions = BaseRegularSearchOptions & {
 
 /**
  * Search options for performing a search query.
- * Uses a discriminated union to ensure additionalQueries is only allowed when type is "deep".
+ * Uses a discriminated union to ensure additionalQueries is only allowed when type is a deep search variant.
  */
 export type RegularSearchOptions = DeepSearchOptions | NonDeepSearchOptions;
 
@@ -218,8 +201,7 @@ export type TextContentsOptions = {
 
 /**
  * Options for retrieving highlights from page.
- * NOTE: For search type "deep", these options will not be respected. Highlights will be generated with respect
- * to your initial query, and may vary in quantity and length.
+ * Deep search variants also support these options for returned highlights.
  * @typedef {Object} HighlightsContentsOptions
  * @property {string} [query] - The query string to use for highlights search.
  * @property {number} [maxCharacters] - The maximum number of characters to return for highlights.
@@ -474,13 +456,22 @@ export type SearchResult<T extends ContentsOptions> = {
   entities?: Entity[];
 } & ContentsResultComponent<T>;
 
+export type DeepSearchOutputCitation = {
+  url: string;
+  title: string;
+};
+
+export type DeepSearchOutput = {
+  content: string | Record<string, unknown>;
+  citations: DeepSearchOutputCitation[];
+};
+
 /**
  * Represents a search response object.
  * @typedef {Object} SearchResponse
  * @property {Result[]} results - The list of search results.
  * @property {string} [context] - Deprecated. The context for the search.
- * @property {string | Object} [answer] - Deep search synthesized answer text (or object when using outputSchema).
- * @property {DeepSearchCitation[]} [citations] - Citation metadata for deep-search answer mode.
+ * @property {DeepSearchOutput} [output] - Deep search synthesized output object with `content` and `citations`.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
@@ -491,20 +482,13 @@ export type SearchResponse<T extends ContentsOptions> = {
   results: SearchResult<T>[];
   /** @deprecated Use `highlights` or `text` on individual results instead. Will be removed in a future version. */
   context?: string;
-  answer?: string | Record<string, unknown>;
-  citations?: DeepSearchCitation[];
+  output?: DeepSearchOutput;
   autoDate?: string;
   requestId: string;
   statuses?: Array<Status>;
   costDollars?: CostDollars;
   resolvedSearchType?: string;
   searchTime?: number;
-};
-
-export type DeepSearchCitation = {
-  index: number;
-  url: string;
-  title?: string;
 };
 
 export type Status = {
