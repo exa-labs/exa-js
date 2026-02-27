@@ -605,9 +605,6 @@ describe("Search API", () => {
         },
       ],
       answer: { company: "Exa", founded: 2021 },
-      citations: [
-        { index: 1, url: "https://example.com/structured", title: "Structured Source" },
-      ],
       requestId: "req-deep-structured-123",
     };
 
@@ -648,11 +645,6 @@ describe("Search API", () => {
     });
     expect(result).toEqual(mockResponse);
     expect(result.answer).toEqual({ company: "Exa", founded: 2021 });
-    expect(result.citations?.[0]).toEqual({
-      index: 1,
-      url: "https://example.com/structured",
-      title: "Structured Source",
-    });
   });
 
   it.each(["deep-reasoning", "deep-max"] as const)(

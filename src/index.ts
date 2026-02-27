@@ -463,7 +463,6 @@ export type SearchResult<T extends ContentsOptions> = {
  * @property {Result[]} results - The list of search results.
  * @property {string} [context] - Deprecated. The context for the search.
  * @property {string | Object} [answer] - Deep search synthesized answer text (or object when using outputSchema).
- * @property {DeepSearchCitation[]} [citations] - Citation metadata for deep-search answer mode.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
@@ -475,19 +474,12 @@ export type SearchResponse<T extends ContentsOptions> = {
   /** @deprecated Use `highlights` or `text` on individual results instead. Will be removed in a future version. */
   context?: string;
   answer?: string | Record<string, unknown>;
-  citations?: DeepSearchCitation[];
   autoDate?: string;
   requestId: string;
   statuses?: Array<Status>;
   costDollars?: CostDollars;
   resolvedSearchType?: string;
   searchTime?: number;
-};
-
-export type DeepSearchCitation = {
-  index: number;
-  url: string;
-  title?: string;
 };
 
 export type Status = {
