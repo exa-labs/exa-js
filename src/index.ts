@@ -116,8 +116,8 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
    */
   additionalQueries?: string[];
   /**
-   * JSON schema for structured answer output.
-   * If provided, the response `answer` field will match this schema.
+   * JSON schema for structured output.
+   * If provided, the response `output` field will match this schema.
    */
   outputSchema?: Record<string, unknown>;
   /**
@@ -462,7 +462,7 @@ export type SearchResult<T extends ContentsOptions> = {
  * @typedef {Object} SearchResponse
  * @property {Result[]} results - The list of search results.
  * @property {string} [context] - Deprecated. The context for the search.
- * @property {string | Object} [answer] - Deep search synthesized answer text (or object when using outputSchema).
+ * @property {string | Object} [output] - Deep search synthesized output text (or object when using outputSchema).
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
@@ -473,7 +473,7 @@ export type SearchResponse<T extends ContentsOptions> = {
   results: SearchResult<T>[];
   /** @deprecated Use `highlights` or `text` on individual results instead. Will be removed in a future version. */
   context?: string;
-  answer?: string | Record<string, unknown>;
+  output?: string | Record<string, unknown>;
   autoDate?: string;
   requestId: string;
   statuses?: Array<Status>;
