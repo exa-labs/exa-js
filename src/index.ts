@@ -45,7 +45,7 @@ export type ContentsOptions = {
  * Options for performing a search query
  * @typedef {Object} SearchOptions
  * @property {ContentsOptions | boolean} [contents] - Options for retrieving page contents for each result returned. Default is { text: { maxCharacters: 10_000 } }.
- * @property {number} [numResults] - Number of search results to return. Default 10. Max 10 for basic plans. For deep search variants, recommend leaving blank - number of results will be determined dynamically for your query.
+ * @property {number} [numResults] - Number of search results to return. Default 10.
  * @property {string[]} [includeDomains] - List of domains to include in the search.
  * @property {string[]} [excludeDomains] - List of domains to exclude in the search.
  * @property {string} [startCrawlDate] - Start date for results based on crawl date.
