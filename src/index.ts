@@ -116,10 +116,6 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
    */
   additionalQueries?: string[];
   /**
-   * When true, deep search returns a cited answer in the response.
-   */
-  answer?: boolean;
-  /**
    * JSON schema for structured answer output.
    * If provided, the response `answer` field will match this schema.
    */

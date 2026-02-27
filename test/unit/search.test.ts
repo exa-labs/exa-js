@@ -594,7 +594,7 @@ describe("Search API", () => {
     expect(result.context).toBeDefined();
   });
 
-  it("should pass answer and outputSchema for deep search", async () => {
+  it("should pass outputSchema for deep search", async () => {
     const mockResponse = {
       results: [
         {
@@ -617,7 +617,6 @@ describe("Search API", () => {
 
     const result = await exa.search("exa company profile", {
       type: "deep",
-      answer: true,
       outputSchema: {
         type: "object",
         properties: {
@@ -632,7 +631,6 @@ describe("Search API", () => {
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
       query: "exa company profile",
       type: "deep",
-      answer: true,
       outputSchema: {
         type: "object",
         properties: {
