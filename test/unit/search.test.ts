@@ -606,7 +606,15 @@ describe("Search API", () => {
       ],
       output: {
         content: { company: "Exa", founded: 2021 },
-        citations: [{ url: "https://example.com/structured", title: "Deep Structured Result" }],
+        grounding: [
+          {
+            field: "company",
+            citations: [
+              { url: "https://example.com/structured", title: "Deep Structured Result" },
+            ],
+            confidence: "high",
+          },
+        ],
       },
       requestId: "req-deep-structured-123",
     };
@@ -649,7 +657,13 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
     expect(result.output).toEqual({
       content: { company: "Exa", founded: 2021 },
-      citations: [{ url: "https://example.com/structured", title: "Deep Structured Result" }],
+      grounding: [
+        {
+          field: "company",
+          citations: [{ url: "https://example.com/structured", title: "Deep Structured Result" }],
+          confidence: "high",
+        },
+      ],
     });
   });
 
