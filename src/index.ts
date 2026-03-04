@@ -494,14 +494,22 @@ export type SearchResult<T extends ContentsOptions> = {
   entities?: Entity[];
 } & ContentsResultComponent<T>;
 
-export type DeepSearchOutputCitation = {
+export type DeepSearchOutputGroundingCitation = {
   url: string;
   title: string;
 };
 
+export type DeepSearchOutputGroundingConfidence = "low" | "medium" | "high";
+
+export type DeepSearchOutputGrounding = {
+  field: string;
+  citations: DeepSearchOutputGroundingCitation[];
+  confidence: DeepSearchOutputGroundingConfidence;
+};
+
 export type DeepSearchOutput = {
   content: string | Record<string, unknown>;
-  citations: DeepSearchOutputCitation[];
+  grounding: DeepSearchOutputGrounding[];
 };
 
 /**
@@ -509,7 +517,7 @@ export type DeepSearchOutput = {
  * @typedef {Object} SearchResponse
  * @property {Result[]} results - The list of search results.
  * @property {string} [context] - Deprecated. The context for the search.
- * @property {DeepSearchOutput} [output] - Deep search synthesized output object with `content` and `citations`.
+ * @property {DeepSearchOutput} [output] - Deep search synthesized output object with `content` and `grounding`.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
