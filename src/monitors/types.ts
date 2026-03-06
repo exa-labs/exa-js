@@ -16,10 +16,11 @@ export type SearchMonitorRunStatus =
 export type SearchMonitorRunFailReason =
   | "api_key_invalid"
   | "insufficient_credits"
-  | "rate_limit_exceeded"
-  | "internal_error"
-  | "timeout"
-  | "search_failed";
+  | "invalid_params"
+  | "rate_limited"
+  | "search_unavailable"
+  | "search_failed"
+  | "internal_error";
 
 export type SearchMonitorWebhookEvent =
   | "monitor.created"
@@ -52,15 +53,13 @@ export interface SearchMonitorWebhook {
 
 export interface GroundingCitation {
   url: string;
-  title?: string | null;
-  startIndex?: number | null;
-  endIndex?: number | null;
+  title: string;
 }
 
 export interface GroundingEntry {
-  url: string;
-  title?: string | null;
-  citations?: GroundingCitation[];
+  field: string;
+  citations: GroundingCitation[];
+  confidence: "low" | "medium" | "high";
 }
 
 export interface SearchMonitorRunOutput {
