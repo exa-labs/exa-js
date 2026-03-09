@@ -1770,6 +1770,8 @@ export interface components {
        * @description The date and time the webset was created
        */
       createdAt: string;
+      /** @description The URL to view the webset in the Exa dashboard */
+      dashboardUrl: string;
       /** @description The Enrichments to apply to the Webset Items. */
       enrichments: components["schemas"]["WebsetEnrichment"][];
       /** @description The Excludes sources (existing imports or websets) that apply to all operations within this Webset. Any results found within these sources will be omitted across all search and import operations. */
