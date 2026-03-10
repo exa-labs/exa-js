@@ -151,8 +151,8 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
    */
   additionalQueries?: string[];
   /**
-   * Additional instructions for deep-search synthesis.
-   * Use this to prefer certain sources, call out disagreements, or constrain output style.
+   * Additional instructions that guide both deep-search planning and the final returned synthesis.
+   * Use this to prefer certain sources, emphasize novelty, avoid duplicates, or constrain output style.
    */
   systemPrompt?: string;
   /**
