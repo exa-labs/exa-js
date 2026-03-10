@@ -62,6 +62,7 @@ const result = await exa.search("interesting articles about space", {
 ```ts
 const deepResult = await exa.search("Who leads OpenAI's safety team?", {
   type: "deep",
+  systemPrompt: "Prefer official OpenAI sources and call out uncertainty.",
   outputSchema: {
     type: "object",
     properties: {
@@ -79,6 +80,8 @@ console.log(deepResult.output?.content);
 Deep `outputSchema` modes:
 - `type: "text"`: return plain text in `output.content` (optionally guided by `description`)
 - `type: "object"`: return structured JSON in `output.content`
+
+Deep search also supports `systemPrompt` for synthesis instructions such as preferred sources, tone, or conflict handling.
 
 For `type: "object"`, deep search currently enforces:
 - max nesting depth: `2`

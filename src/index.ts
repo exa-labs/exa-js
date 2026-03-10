@@ -151,6 +151,11 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
    */
   additionalQueries?: string[];
   /**
+   * Additional instructions for deep-search synthesis.
+   * Use this to prefer certain sources, call out disagreements, or constrain output style.
+   */
+  systemPrompt?: string;
+  /**
    * Output schema for deep search responses.
    * - `type: "text"` for plain text output (optionally guided by `description`)
    * - `type: "object"` for structured JSON output

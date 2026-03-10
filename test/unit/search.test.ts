@@ -667,6 +667,41 @@ describe("Search API", () => {
     });
   });
 
+  it("should pass systemPrompt for deep search", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Deep Search Result",
+          url: "https://example.com/deep-system-prompt",
+          id: "deep-system-prompt-id",
+          text: "Deep search result text",
+        },
+      ],
+      requestId: "req-deep-system-prompt-123",
+    };
+
+    const requestSpy = vi.spyOn(exa, "request").mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("compare recent model launches", {
+      type: "deep-reasoning",
+      systemPrompt: "Prefer official model announcements and call out conflicting claims.",
+      numResults: 5,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "compare recent model launches",
+      type: "deep-reasoning",
+      systemPrompt: "Prefer official model announcements and call out conflicting claims.",
+      numResults: 5,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
   it.each(["deep-reasoning", "deep-max"] as const)(
     "should pass additionalQueries for %s search type",
     async (deepType) => {
