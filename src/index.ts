@@ -93,7 +93,7 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
   useAutoprompt?: boolean;
 };
 
-export type DeepSearchType = "deep" | "deep-reasoning" | "deep-max";
+export type DeepSearchType = "deep" | "deep-reasoning";
 
 /**
  * Deep search output schema mode for plain text responses.

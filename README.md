@@ -62,7 +62,7 @@ const result = await exa.search("interesting articles about space", {
 ```ts
 const deepResult = await exa.search("Who leads OpenAI's safety team?", {
   type: "deep",
-  systemPrompt: "Prefer official OpenAI sources and call out uncertainty.",
+  systemPrompt: "Prefer official sources and avoid duplicate results",
   outputSchema: {
     type: "object",
     properties: {
@@ -90,7 +90,6 @@ For `type: "object"`, deep search currently enforces:
 Deep search variants:
 - `deep`: light mode
 - `deep-reasoning`: base reasoning mode
-- `deep-max`: max-effort mode
 
 ## Contents
 

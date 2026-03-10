@@ -684,14 +684,14 @@ describe("Search API", () => {
 
     const result = await exa.search("compare recent model launches", {
       type: "deep-reasoning",
-      systemPrompt: "Prefer official model announcements and call out conflicting claims.",
+      systemPrompt: "Prefer official sources and avoid duplicate results",
       numResults: 5,
     });
 
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
       query: "compare recent model launches",
       type: "deep-reasoning",
-      systemPrompt: "Prefer official model announcements and call out conflicting claims.",
+      systemPrompt: "Prefer official sources and avoid duplicate results",
       numResults: 5,
       contents: {
         text: {
@@ -702,45 +702,42 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it.each(["deep-reasoning", "deep-max"] as const)(
-    "should pass additionalQueries for %s search type",
-    async (deepType) => {
-      const mockResponse = {
-        results: [
-          {
-            title: "Deep Search Result",
-            url: "https://example.com",
-            id: "deep-search-id",
-            text: "Deep search result text",
-          },
-        ],
-        context: "Deep search context string",
-        requestId: "req-deep-variant-123",
-      };
-
-      const requestSpy = vi.spyOn(exa, "request").mockResolvedValueOnce(mockResponse);
-
-      const result = await exa.search("machine learning", {
-        type: deepType,
-        additionalQueries: ["ML algorithms", "neural networks", "AI models"],
-        numResults: 5,
-      });
-
-      expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
-        query: "machine learning",
-        type: deepType,
-        additionalQueries: ["ML algorithms", "neural networks", "AI models"],
-        numResults: 5,
-        contents: {
-          text: {
-            maxCharacters: 10000,
-          },
+  it("should pass additionalQueries for deep-reasoning search type", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Deep Search Result",
+          url: "https://example.com",
+          id: "deep-search-id",
+          text: "Deep search result text",
         },
-      });
-      expect(result).toEqual(mockResponse);
-      expect(result.context).toBeDefined();
-    }
-  );
+      ],
+      context: "Deep search context string",
+      requestId: "req-deep-variant-123",
+    };
+
+    const requestSpy = vi.spyOn(exa, "request").mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("machine learning", {
+      type: "deep-reasoning",
+      additionalQueries: ["ML algorithms", "neural networks", "AI models"],
+      numResults: 5,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "machine learning",
+      type: "deep-reasoning",
+      additionalQueries: ["ML algorithms", "neural networks", "AI models"],
+      numResults: 5,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
+    });
+    expect(result).toEqual(mockResponse);
+    expect(result.context).toBeDefined();
+  });
 
   it("should pass deep highlights maxCharacters options through contents", async () => {
     const mockResponse = {
