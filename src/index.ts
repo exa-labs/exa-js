@@ -91,14 +91,23 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
    */
   moderation?: boolean;
   useAutoprompt?: boolean;
+  /**
+   * Output schema for synthesized `/search` responses.
+   * Supported for all search types.
+   * - `type: "text"` for plain text output (optionally guided by `description`)
+   * - `type: "object"` for structured JSON output
+   *
+   * Note: For object schemas, the API enforces max depth 2 and max 10 total properties.
+   */
+  outputSchema?: SearchOutputSchema;
 };
 
 export type DeepSearchType = "deep" | "deep-reasoning";
 
 /**
- * Deep search output schema mode for plain text responses.
+ * Search output schema mode for plain text responses.
  */
-export type DeepTextOutputSchema = {
+export type SearchTextOutputSchema = {
   type: "text";
   /**
    * Optional formatting guidance for text output.
@@ -107,9 +116,9 @@ export type DeepTextOutputSchema = {
 };
 
 /**
- * Deep search output schema mode for structured JSON object responses.
+ * Search output schema mode for structured JSON object responses.
  */
-export type DeepObjectOutputSchema = {
+export type SearchObjectOutputSchema = {
   type: "object";
   /**
    * JSON-schema-style properties for the result object.
@@ -122,13 +131,16 @@ export type DeepObjectOutputSchema = {
 };
 
 /**
- * Deep search output schema.
+ * Search output schema.
  * - `type: "text"` returns plain text in `output.content` (with optional description guidance).
  * - `type: "object"` returns structured JSON in `output.content`.
  *
  * Note: For object schemas, the API enforces a maximum nesting depth of 2 and a maximum of 10 total properties.
  */
-export type DeepOutputSchema = DeepTextOutputSchema | DeepObjectOutputSchema;
+export type SearchOutputSchema = SearchTextOutputSchema | SearchObjectOutputSchema;
+export type DeepTextOutputSchema = SearchTextOutputSchema;
+export type DeepObjectOutputSchema = SearchObjectOutputSchema;
+export type DeepOutputSchema = SearchOutputSchema;
 
 /**
  * Contents options for deep search.
@@ -155,14 +167,6 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
    * Use this to prefer certain sources, emphasize novelty, avoid duplicates, or constrain output style.
    */
   systemPrompt?: string;
-  /**
-   * Output schema for deep search responses.
-   * - `type: "text"` for plain text output (optionally guided by `description`)
-   * - `type: "object"` for structured JSON output
-   *
-   * Note: For object schemas, the API enforces max depth 2 and max 10 total properties.
-   */
-  outputSchema?: DeepOutputSchema;
   /**
    * Options for retrieving page contents.
    */
@@ -499,30 +503,34 @@ export type SearchResult<T extends ContentsOptions> = {
   entities?: Entity[];
 } & ContentsResultComponent<T>;
 
-export type DeepSearchOutputGroundingCitation = {
+export type SearchOutputGroundingCitation = {
   url: string;
   title: string;
 };
 
-export type DeepSearchOutputGroundingConfidence = "low" | "medium" | "high";
+export type SearchOutputGroundingConfidence = "low" | "medium" | "high";
 
-export type DeepSearchOutputGrounding = {
+export type SearchOutputGrounding = {
   field: string;
-  citations: DeepSearchOutputGroundingCitation[];
-  confidence: DeepSearchOutputGroundingConfidence;
+  citations: SearchOutputGroundingCitation[];
+  confidence: SearchOutputGroundingConfidence;
 };
 
-export type DeepSearchOutput = {
+export type SearchOutput = {
   content: string | Record<string, unknown>;
-  grounding: DeepSearchOutputGrounding[];
+  grounding: SearchOutputGrounding[];
 };
+export type DeepSearchOutputGroundingCitation = SearchOutputGroundingCitation;
+export type DeepSearchOutputGroundingConfidence = SearchOutputGroundingConfidence;
+export type DeepSearchOutputGrounding = SearchOutputGrounding;
+export type DeepSearchOutput = SearchOutput;
 
 /**
  * Represents a search response object.
  * @typedef {Object} SearchResponse
  * @property {Result[]} results - The list of search results.
  * @property {string} [context] - Deprecated. The context for the search.
- * @property {DeepSearchOutput} [output] - Deep search synthesized output object with `content` and `grounding`.
+ * @property {SearchOutput} [output] - Synthesized `/search` output object with `content` and `grounding`.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
@@ -533,7 +541,7 @@ export type SearchResponse<T extends ContentsOptions> = {
   results: SearchResult<T>[];
   /** @deprecated Use `highlights` or `text` on individual results instead. Will be removed in a future version. */
   context?: string;
-  output?: DeepSearchOutput;
+  output?: SearchOutput;
   autoDate?: string;
   requestId: string;
   statuses?: Array<Status>;

@@ -667,6 +667,77 @@ describe("Search API", () => {
     });
   });
 
+  it("should pass outputSchema for auto search", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Structured Result",
+          url: "https://example.com/structured-auto",
+          id: "structured-auto-id",
+          text: "Structured result text",
+        },
+      ],
+      output: {
+        content: { company: "Exa", founded: 2021 },
+        grounding: [
+          {
+            field: "company",
+            citations: [
+              { url: "https://example.com/structured-auto", title: "Structured Result" },
+            ],
+            confidence: "high",
+          },
+        ],
+      },
+      requestId: "req-structured-auto-123",
+    };
+
+    const requestSpy = vi.spyOn(exa, "request").mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("exa company profile", {
+      type: "auto",
+      outputSchema: {
+        type: "object",
+        properties: {
+          company: { type: "string" },
+          founded: { type: "number" },
+        },
+        required: ["company", "founded"],
+      },
+      numResults: 5,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "exa company profile",
+      type: "auto",
+      outputSchema: {
+        type: "object",
+        properties: {
+          company: { type: "string" },
+          founded: { type: "number" },
+        },
+        required: ["company", "founded"],
+      },
+      numResults: 5,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
+    });
+    expect(result).toEqual(mockResponse);
+    expect(result.output).toEqual({
+      content: { company: "Exa", founded: 2021 },
+      grounding: [
+        {
+          field: "company",
+          citations: [{ url: "https://example.com/structured-auto", title: "Structured Result" }],
+          confidence: "high",
+        },
+      ],
+    });
+  });
+
   it("should pass systemPrompt for deep search", async () => {
     const mockResponse = {
       results: [
