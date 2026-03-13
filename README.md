@@ -20,7 +20,7 @@ import Exa from "exa-js";
 const exa = new Exa(process.env.EXA_API_KEY);
 
 // Search the web
-const searchResult = await exa.search(
+const result = await exa.search(
   "blog post about artificial intelligence",
   {
     type: "auto",
