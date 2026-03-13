@@ -96,11 +96,13 @@ async function extractCompanyData() {
   console.log("=".repeat(40));
 
   try {
-    const response = await exa.searchAndContents(
+    const response = await exa.search(
       "news articles about AI companies",
       {
-        summary: {
-          schema: CompanyInformation,
+        contents: {
+          summary: {
+            schema: CompanyInformation,
+          },
         },
         category: "company",
         numResults: 5,
@@ -156,11 +158,13 @@ async function extractResearchPapers() {
   console.log("=".repeat(40));
 
   try {
-    const response = await exa.searchAndContents(
+    const response = await exa.search(
       "transformer architecture attention mechanism research papers",
       {
-        summary: {
-          schema: ResearchPaper,
+        contents: {
+          summary: {
+            schema: ResearchPaper,
+          },
         },
         category: "research paper",
         numResults: 5,
@@ -222,11 +226,13 @@ async function extractProductInfo() {
   console.log("=".repeat(40));
 
   try {
-    const response = await exa.searchAndContents(
+    const response = await exa.search(
       "mechanical keyboards reviews",
       {
-        summary: {
-          schema: ProductInformation,
+        contents: {
+          summary: {
+            schema: ProductInformation,
+          },
         },
         numResults: 5,
       }
@@ -278,11 +284,13 @@ async function extractNewsEvents() {
   console.log("=".repeat(40));
 
   try {
-    const response = await exa.searchAndContents(
+    const response = await exa.search(
       "artificial intelligence breakthrough news",
       {
-        summary: {
-          schema: NewsEvent,
+        contents: {
+          summary: {
+            schema: NewsEvent,
+          },
         },
         numResults: 5,
       }
@@ -319,11 +327,13 @@ async function extractStartupProfiles() {
   console.log("=".repeat(40));
 
   try {
-    const response = await exa.searchAndContents(
+    const response = await exa.search(
       "fintech startup funding news",
       {
-        summary: {
-          schema: StartupProfile,
+        contents: {
+          summary: {
+            schema: StartupProfile,
+          },
         },
         numResults: 5,
       }

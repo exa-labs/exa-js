@@ -8,7 +8,12 @@ const port = 8000;
 
 app.get("/", async (req: Request, res: Response) => {
   const exaRes = await exa.search(
-    "If you're looking for the hottest AI agent startup, check this out:"
+    "If you're looking for the hottest AI agent startup, check this out:",
+    {
+      contents: {
+        highlights: true,
+      },
+    }
   );
 
   res.json(exaRes);

@@ -8,7 +8,9 @@ function App() {
   const [count, setCount] = useState(0);
   useEffect(() => {
     const exa = new Exa("your_key");
-    exa.search("hottest ai startups");
+    void exa.search("hottest ai startups", {
+      contents: false,
+    });
   }, []);
 
   return (

@@ -25,17 +25,7 @@ const result = await exa.search(
   {
     type: "auto",
     contents: {
-      text: true
-    }
-  }
-);
-
-// Find similar pages
-const result = await exa.findSimilar(
-  "https://paulgraham.com/greatwork.html",
-  {
-    contents: {
-      text: true
+      highlights: true
     }
   }
 );
@@ -54,7 +44,7 @@ const result = await exa.search("interesting articles about space", {
   includeDomains: ["nasa.gov", "space.com"],
   startPublishedDate: "2024-01-01",
   contents: {
-    text: true
+    highlights: true
   }
 });
 ```
@@ -96,28 +86,11 @@ Deep search variants:
 Get clean text, highlights, or summaries from any URL.
 
 ```ts
-const { results } = await exa.getContents(["https://openai.com/research"], {
+const { results } = await exa.getContents(["https://docs.exa.ai"], {
   text: true,
   highlights: true,
   summary: true,
 });
-```
-
-## Find Similar
-
-Discover pages similar to a given URL.
-
-```ts
-const result = await exa.findSimilar(
-  "https://paulgraham.com/greatwork.html",
-  {
-    numResults: 10,
-    excludeSourceDomain: true,
-    contents: {
-      text: true
-    }
-  }
-);
 ```
 
 ## Answer
@@ -133,24 +106,6 @@ for await (const chunk of exa.streamAnswer("Explain quantum computing")) {
     process.stdout.write(chunk.content);
   }
 }
-```
-
-## Research
-
-Run autonomous research tasks that return structured data.
-
-```ts
-const { researchId } = await exa.research.create({
-  instructions: "Find the top 5 AI startups founded in 2024",
-  outputSchema: {
-    type: "object",
-    properties: {
-      startups: { type: "array", items: { type: "string" } },
-    },
-  },
-});
-
-const result = await exa.research.pollUntilFinished(researchId);
 ```
 
 ## TypeScript
