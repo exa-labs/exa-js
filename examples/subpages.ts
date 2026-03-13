@@ -11,6 +11,7 @@ async function runExamples() {
         numResults: 5,
         subpages: 5,
         subpageTarget: "about",
+        highlights: true,
       }
     );
     console.log(
@@ -18,24 +19,11 @@ async function runExamples() {
       JSON.stringify(search, null, 2)
     );
 
-    // Find similar with subpages
-    const similar = await exa.findSimilarAndContents(
-      "https://www.tesla.com/models",
-      {
-        subpages: 3,
-        numResults: 1,
-      }
-    );
-    console.log(
-      "Find similar results with subpages:",
-      JSON.stringify(similar, null, 2)
-    );
-
     // Get contents with subpages
     if (search.results.length > 0) {
       const contents = await exa.getContents([search.results[0].id], {
         subpages: 2,
-        text: true,
+        highlights: true,
       });
       console.log(
         "Get contents results with subpages:",

@@ -9,7 +9,10 @@ async function runSearchExamples() {
     console.log("Search results:", searchResponse.results);
 
     // Search with contents
-    const searchWithContentsResponse = await exa.searchAndContents("latest AI developments", { text: true });
+    const searchWithContentsResponse = await exa.searchAndContents(
+      "latest AI developments",
+      { highlights: true }
+    );
     console.log("Search results with contents:", searchWithContentsResponse.results);
   } catch (error) {
     console.error("Error in search examples:", error);
