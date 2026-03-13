@@ -54,7 +54,7 @@ Please generate a list of ${n} search queries that would be useful for writing a
 async function getSearchResults(queries, linksPerQuery = 2) {
     let results = [];
     for (const query of queries) {
-        const searchResponse = await exa.searchAndContents(query, {
+        const searchResponse = await exa.search(query, {
             numResults: linksPerQuery,
             useAutoprompt: false,
         });
@@ -110,4 +110,3 @@ runExamples();
 
 // Or, to research a specific topic:
 // researcher("llama antibodies").then(console.log);
-

@@ -5,13 +5,15 @@ const exa = new Exa(process.env.EXA_API_KEY);
 async function runExamples() {
   try {
     // Search with subpages
-    const search = await exa.searchAndContents(
+    const search = await exa.search(
       "canonical url for the homepage of a fintech startup",
       {
         numResults: 5,
-        subpages: 5,
-        subpageTarget: "about",
-        highlights: true,
+        contents: {
+          subpages: 5,
+          subpageTarget: "about",
+          highlights: true,
+        },
       }
     );
     console.log(

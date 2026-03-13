@@ -12,9 +12,9 @@ async function runSearchExamples() {
     );
 
     // Search with contents
-    const searchWithContentsResponse = await exa.searchAndContents(
+    const searchWithContentsResponse = await exa.search(
       "latest AI developments",
-      { highlights: true }
+      { contents: { highlights: true } }
     );
     console.log(
       "Search results with contents:",

@@ -5,9 +5,11 @@ const exa = new Exa(process.env.EXA_API_KEY);
 async function runLinksExample() {
   try {
     // Search with links
-    const search = await exa.searchAndContents("latest Tesla electric vehicles", { 
+    const search = await exa.search("latest Tesla electric vehicles", {
       numResults: 1,
-      extras: { links: 10 }  // Get up to 10 links from each result
+      contents: {
+        extras: { links: 10 }, // Get up to 10 links from each result
+      },
     });
     console.log("Search results with links:", JSON.stringify(search, null, 2));
 
