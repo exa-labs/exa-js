@@ -5,7 +5,9 @@ const exa = new Exa(process.env.EXA_API_KEY);
 async function runGetContentsExample() {
   try {
     // First, perform a search to get some document URLs
-    const searchResponse = await exa.search("latest AI developments");
+    const searchResponse = await exa.search("latest AI developments", {
+      contents: false,
+    });
     const documentUrls = searchResponse.results.map(result => result.url);
 
     // Get contents for the found documents
