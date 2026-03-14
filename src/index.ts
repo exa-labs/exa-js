@@ -13,6 +13,16 @@ const HeadersImpl =
   typeof global !== "undefined" && global.Headers ? global.Headers : Headers;
 
 const DEFAULT_MAX_CHARACTERS = 10_000;
+const DEFAULT_MAX_RETRIES = 2;
+const INITIAL_RETRY_DELAY_MS = 1000;
+
+function isRetryableStatusCode(status: number): boolean {
+  return status === 429 || status === 502 || status === 503 || status === 504;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /**
  * Options for retrieving page contents
@@ -769,7 +779,6 @@ export class Exa {
     params?: Record<string, any>,
     headers?: Record<string, string>
   ): Promise<T> {
-    // Build URL with query parameters if provided
     let url = this.baseURL + endpoint;
     if (params && Object.keys(params).length > 0) {
       const searchParams = new URLSearchParams();
@@ -799,45 +808,75 @@ export class Exa {
       combinedHeaders = { ...combinedHeaders, ...headers };
     }
 
-    const response = await fetchImpl(url, {
-      method,
-      headers: combinedHeaders,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    let lastError: ExaError | undefined;
 
-    if (!response.ok) {
-      const errorData = await response.json();
-
-      if (!errorData.statusCode) {
-        errorData.statusCode = response.status;
-      }
-      if (!errorData.timestamp) {
-        errorData.timestamp = new Date().toISOString();
-      }
-      if (!errorData.path) {
-        errorData.path = endpoint;
+    for (let attempt = 0; attempt <= DEFAULT_MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        await sleep(INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1));
       }
 
-      // For other APIs, throw a simple ExaError with just message and status
-      let message = errorData.error || "Unknown error";
-      if (errorData.message) {
-        message += (message.length > 0 ? ". " : "") + errorData.message;
+      let response: Response;
+      try {
+        response = await fetchImpl(url, {
+          method,
+          headers: combinedHeaders,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+      } catch (err) {
+        lastError = new ExaError(
+          `Network error: ${err instanceof Error ? err.message : String(err)}`,
+          0,
+          new Date().toISOString(),
+          endpoint
+        );
+        continue;
       }
-      throw new ExaError(
-        message,
-        response.status,
-        errorData.timestamp,
-        errorData.path
-      );
+
+      if (!response.ok) {
+        let message: string;
+        let timestamp: string = new Date().toISOString();
+        let path: string = endpoint;
+
+        try {
+          const errorData = await response.json();
+          if (errorData.timestamp) timestamp = errorData.timestamp;
+          if (errorData.path) path = errorData.path;
+          message = errorData.error || "Unknown error";
+          if (errorData.message) {
+            message += (message.length > 0 ? ". " : "") + errorData.message;
+          }
+        } catch {
+          const text = await response.text().catch(() => "");
+          message = `HTTP ${response.status}: Non-JSON response (${text.slice(0, 200)})`;
+        }
+
+        lastError = new ExaError(message, response.status, timestamp, path);
+
+        if (isRetryableStatusCode(response.status)) {
+          continue;
+        }
+        throw lastError;
+      }
+
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.includes("text/event-stream")) {
+        return (await this.parseSSEStream<T>(response)) as T;
+      }
+
+      try {
+        return (await response.json()) as T;
+      } catch {
+        const text = await response.text().catch(() => "");
+        throw new ExaError(
+          `Expected JSON response but received non-JSON body (${text.slice(0, 200)})`,
+          response.status,
+          new Date().toISOString(),
+          endpoint
+        );
+      }
     }
 
-    // If the server responded with an SSE stream, parse it and return the final payload.
-    const contentType = response.headers.get("content-type") || "";
-    if (contentType.includes("text/event-stream")) {
-      return (await this.parseSSEStream<T>(response)) as T;
-    }
-
-    return (await response.json()) as T;
+    throw lastError!;
   }
 
   async rawRequest(
