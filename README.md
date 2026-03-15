@@ -50,9 +50,8 @@ const result = await exa.search("interesting articles about space", {
 ```
 
 ```ts
-const deepResult = await exa.search("Who leads OpenAI's safety team?", {
-  type: "deep",
-  systemPrompt: "Prefer official sources and avoid duplicate results",
+const structuredResult = await exa.search("Who leads OpenAI's safety team?", {
+  type: "auto",
   outputSchema: {
     type: "object",
     properties: {
@@ -64,18 +63,22 @@ const deepResult = await exa.search("Who leads OpenAI's safety team?", {
   }
 });
 
-console.log(deepResult.output?.content);
+console.log(structuredResult.output?.content);
 ```
 
-Deep `outputSchema` modes:
+`/search` `outputSchema` modes:
 - `type: "text"`: return plain text in `output.content` (optionally guided by `description`)
 - `type: "object"`: return structured JSON in `output.content`
 
-Deep search also supports `systemPrompt` to guide both the search process and the final returned result, for example by preferring certain sources, emphasizing novel findings, avoiding duplicates, or constraining output style.
+All search types support `outputSchema`, including `auto`, `fast`, `instant`, `keyword`, `neural`, `deep`, and `deep-reasoning`.
 
-For `type: "object"`, deep search currently enforces:
+For `type: "object"`, `/search` currently enforces:
 - max nesting depth: `2`
 - max total properties: `10`
+
+Deep search variants add:
+- `systemPrompt` to guide both search planning and the final returned synthesis
+- `additionalQueries` to seed specific search expansions
 
 Deep search variants:
 - `deep`: light mode
