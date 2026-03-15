@@ -1,3 +1,7 @@
+import {
+  SearchMonitorRunsClient,
+  SearchMonitorsClient,
+} from "../../src/monitors/client";
 import { WebsetsBaseClient } from "../../src/websets/base";
 import { WebsetsClient } from "../../src/websets/client";
 import { WebsetEnrichmentsClient } from "../../src/websets/enrichments";
@@ -31,7 +35,9 @@ export function getProtectedClient<
     | WebsetMonitorsClient
     | WebsetMonitorRunsClient
     | WebsetWebhooksClient
-    | EventsClient,
+    | EventsClient
+    | SearchMonitorsClient
+    | SearchMonitorRunsClient,
 >(client: T): WithProtectedAccess<T> {
   return client as WithProtectedAccess<T>;
 }
@@ -49,6 +55,8 @@ export function getProtectedClientInstance(
     | WebsetMonitorRunsClient
     | WebsetWebhooksClient
     | EventsClient
+    | SearchMonitorsClient
+    | SearchMonitorRunsClient
 ) {
   return client;
 }

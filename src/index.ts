@@ -2,6 +2,7 @@ import fetch, { Headers } from "cross-fetch";
 import { ZodSchema } from "zod";
 import packageJson from "../package.json";
 import { ExaError, HttpStatusCode } from "./errors";
+import { SearchMonitorsClient } from "./monitors/client";
 import { ResearchClient } from "./research/client";
 import { WebsetsClient } from "./websets/client";
 import { isZodSchema, zodToJsonSchema } from "./zod-utils";
@@ -656,6 +657,11 @@ export class Exa {
   research: ResearchClient;
 
   /**
+   * Search Monitors API client
+   */
+  monitors: SearchMonitorsClient;
+
+  /**
    * Helper method to separate out the contents-specific options from the rest.
    */
   private extractContentsOptions<T extends ContentsOptions>(
@@ -751,6 +757,8 @@ export class Exa {
     this.websets = new WebsetsClient(this);
     // Initialize the Research client
     this.research = new ResearchClient(this);
+    // Initialize the Search Monitors client
+    this.monitors = new SearchMonitorsClient(this);
   }
 
   /**
@@ -1455,6 +1463,8 @@ export class Exa {
 export * from "./websets";
 // Re-export Research related types and client
 export * from "./research";
+// Re-export Search Monitors related types and client
+export * from "./monitors";
 
 // Export the main class
 export default Exa;
