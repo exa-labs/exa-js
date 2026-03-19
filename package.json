@@ -37,7 +37,6 @@
     "version:stable": "npm version patch",
     "publish:beta": "npm run version:beta && npm run build:beta && npm publish --tag beta",
     "publish:stable": "npm run version:stable && npm run build && npm publish",
-    "prepare": "npm run build",
     "prepublishOnly": "npm run build"
   },
   "license": "MIT",
