@@ -2,6 +2,8 @@
  * Types for the Search Monitors API
  */
 
+import type { ContentsOptions } from "../index";
+
 // --- Enums / Literal types ---
 
 export type SearchMonitorStatus = "active" | "paused" | "disabled";
@@ -36,8 +38,7 @@ export interface SearchMonitorSearch {
   numResults?: number;
   includeDomains?: string[];
   excludeDomains?: string[];
-  includeText?: string[];
-  excludeText?: string[];
+  contents?: ContentsOptions;
 }
 
 export interface SearchMonitorTrigger {
