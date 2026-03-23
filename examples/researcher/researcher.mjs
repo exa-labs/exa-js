@@ -54,9 +54,10 @@ Please generate a list of ${n} search queries that would be useful for writing a
 async function getSearchResults(queries, linksPerQuery = 2) {
     let results = [];
     for (const query of queries) {
-        const searchResponse = await exa.searchAndContents(query, {
+        const searchResponse = await exa.search(query, {
             numResults: linksPerQuery,
             useAutoprompt: false,
+            contents: { highlights: true },
         });
         results.push(...searchResponse.results);
     }
@@ -65,8 +66,10 @@ async function getSearchResults(queries, linksPerQuery = 2) {
 async function synthesizeReport(topic, searchContents, contentSlice = 750) {
     const inputData = searchContents
         .map(
-            (item) =>
-                `--START ITEM--\nURL: ${item.url}\nCONTENT: ${item.text.slice(0, contentSlice)}\n--END ITEM--\n`,
+            (item) => {
+                const highlights = (item.highlights ?? []).join(" ");
+                return `--START ITEM--\nURL: ${item.url}\nCONTENT: ${highlights.slice(0, contentSlice)}\n--END ITEM--\n`;
+            },
         )
         .join("");
     return await getLLMResponse({
@@ -110,4 +113,3 @@ runExamples();
 
 // Or, to research a specific topic:
 // researcher("llama antibodies").then(console.log);
-

@@ -25,17 +25,7 @@ const result = await exa.search(
   {
     type: "auto",
     contents: {
-      text: true
-    }
-  }
-);
-
-// Find similar pages
-const result = await exa.findSimilar(
-  "https://paulgraham.com/greatwork.html",
-  {
-    contents: {
-      text: true
+      highlights: true
     }
   }
 );
@@ -54,7 +44,7 @@ const result = await exa.search("interesting articles about space", {
   includeDomains: ["nasa.gov", "space.com"],
   startPublishedDate: "2024-01-01",
   contents: {
-    text: true
+    highlights: true
   }
 });
 ```
@@ -62,6 +52,7 @@ const result = await exa.search("interesting articles about space", {
 ```ts
 const deepResult = await exa.search("Who leads OpenAI's safety team?", {
   type: "deep",
+  systemPrompt: "Prefer official sources and avoid duplicate results",
   outputSchema: {
     type: "object",
     properties: {
@@ -80,6 +71,8 @@ Deep `outputSchema` modes:
 - `type: "text"`: return plain text in `output.content` (optionally guided by `description`)
 - `type: "object"`: return structured JSON in `output.content`
 
+Deep search also supports `systemPrompt` to guide both the search process and the final returned result, for example by preferring certain sources, emphasizing novel findings, avoiding duplicates, or constraining output style.
+
 For `type: "object"`, deep search currently enforces:
 - max nesting depth: `2`
 - max total properties: `10`
@@ -87,35 +80,17 @@ For `type: "object"`, deep search currently enforces:
 Deep search variants:
 - `deep`: light mode
 - `deep-reasoning`: base reasoning mode
-- `deep-max`: max-effort mode
 
 ## Contents
 
 Get clean text, highlights, or summaries from any URL.
 
 ```ts
-const { results } = await exa.getContents(["https://openai.com/research"], {
+const { results } = await exa.getContents(["https://docs.exa.ai"], {
   text: true,
   highlights: true,
   summary: true,
 });
-```
-
-## Find Similar
-
-Discover pages similar to a given URL.
-
-```ts
-const result = await exa.findSimilar(
-  "https://paulgraham.com/greatwork.html",
-  {
-    numResults: 10,
-    excludeSourceDomain: true,
-    contents: {
-      text: true
-    }
-  }
-);
 ```
 
 ## Answer
@@ -131,24 +106,6 @@ for await (const chunk of exa.streamAnswer("Explain quantum computing")) {
     process.stdout.write(chunk.content);
   }
 }
-```
-
-## Research
-
-Run autonomous research tasks that return structured data.
-
-```ts
-const { researchId } = await exa.research.create({
-  instructions: "Find the top 5 AI startups founded in 2024",
-  outputSchema: {
-    type: "object",
-    properties: {
-      startups: { type: "array", items: { type: "string" } },
-    },
-  },
-});
-
-const result = await exa.research.pollUntilFinished(researchId);
 ```
 
 ## TypeScript

@@ -200,7 +200,7 @@ Now it's time to use Exa to do the search, either neural or keyword:
 async function getSearchResults(queries, type, linksPerQuery=2){
     let results = [];
     for (const query of queries){
-        const searchResponse = await exa.search(query, { type, numResults: linksPerQuery, useAutoprompt: false });
+        const searchResponse = await exa.search(query, { type, numResults: linksPerQuery, useAutoprompt: false, contents: { highlights: true } });
         results.push(...searchResponse.results);
     }
     return results;

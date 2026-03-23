@@ -94,7 +94,7 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
   useAutoprompt?: boolean;
 };
 
-export type DeepSearchType = "deep" | "deep-reasoning" | "deep-max";
+export type DeepSearchType = "deep" | "deep-reasoning";
 
 /**
  * Deep search output schema mode for plain text responses.
@@ -151,6 +151,11 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
    * @example ["machine learning", "ML algorithms", "neural networks"]
    */
   additionalQueries?: string[];
+  /**
+   * Additional instructions that guide both deep-search planning and the final returned synthesis.
+   * Use this to prefer certain sources, emphasize novelty, avoid duplicates, or constrain output style.
+   */
+  systemPrompt?: string;
   /**
    * Output schema for deep search responses.
    * - `type: "text"` for plain text output (optionally guided by `description`)

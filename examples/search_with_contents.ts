@@ -5,19 +5,18 @@ const exa = new Exa(process.env.EXA_API_KEY);
 async function runSearchExamples() {
   try {
     // Search without contents
-    const searchResponse = await exa.searchAndContents(
-      "latest AI developments",
-      { text: true }
-    );
+    const searchResponse = await exa.search("latest AI developments", {
+      contents: false,
+    });
     console.log(
       "Search results:",
       searchResponse.results.map((it) => it)
     );
 
     // Search with contents
-    const searchWithContentsResponse = await exa.searchAndContents(
+    const searchWithContentsResponse = await exa.search(
       "latest AI developments",
-      { text: true }
+      { contents: { highlights: true } }
     );
     console.log(
       "Search results with contents:",

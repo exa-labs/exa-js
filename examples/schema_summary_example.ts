@@ -43,11 +43,13 @@ async function runSchemaSummaryExample() {
 
     // Search and get structured summary using the schema.
     console.log("Searching for company information with structured schema...");
-    const searchResponse = await exa.searchAndContents(
+    const searchResponse = await exa.search(
       "OpenAI company information",
       {
-        summary: {
-          schema: companySchema,
+        contents: {
+          summary: {
+            schema: companySchema,
+          },
         },
         category: "company",
         numResults: 3,
