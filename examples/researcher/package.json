@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "exa-js": "^1.0.3",
+    "exa-js": "file:../..",
     "openai": "^4.20.1"
   },
   "overrides": {
