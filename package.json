@@ -1,6 +1,6 @@
 {
   "name": "exa-js",
-  "version": "2.8.0",
+  "version": "2.10.0",
   "description": "Exa SDK for Node.js and the browser",
   "publishConfig": {
     "access": "public"
@@ -27,7 +27,7 @@
     "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "typecheck": "tsc --noEmit",
-    "typecheck:examples": "tsc --noEmit examples/**/*.ts",
+    "typecheck:examples": "tsc -p examples/tsconfig.json --noEmit",
     "generate:types:websets": "openapi-typescript https://raw.githubusercontent.com/exa-labs/openapi-spec/refs/heads/master/exa-websets-spec.yaml  --enum --root-types --alphabetize --root-types-no-schema-prefix --output ./src/websets/openapi.ts && npm run format:websets",
     "format": "prettier --write \"src/**/*.ts\" \"examples/**/*.ts\"",
     "format:websets": "prettier --write src/websets/openapi.ts",
