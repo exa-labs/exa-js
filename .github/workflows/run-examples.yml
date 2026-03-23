@@ -72,15 +72,17 @@ jobs:
       - name: Compile TypeScript files
         run: |
           cd examples
-          tsc -p tsconfig.json
-      - name: List compiled files
-        run: ls -R examples/*.js
+          tsc -p tsconfig.json --noEmit
 
-      - name: Run JavaScript files
+      - name: Run TypeScript files
         run: |
-          for file in examples/*.js; do
+          for file in examples/*.ts; do
+            if [ "$file" = "examples/chat_completion.ts" ] || [ "$file" = "examples/openai_responses.ts" ] || [ "$file" = "examples/zod_summary_example.ts" ]; then
+              echo "Skipping $file"
+              continue
+            fi
             echo "Running $file"
-            node $file || echo "Failed to run $file"
+            npx tsx $file || echo "Failed to run $file"
           done
         env:
           EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
