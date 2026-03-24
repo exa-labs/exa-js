@@ -44,7 +44,7 @@
       {"name": "endCrawlDate", "type": "string", "description": "End date for results based on crawl date (ISO format)."},
       {"name": "startPublishedDate", "type": "string", "description": "Start date for results based on published date (ISO format)."},
       {"name": "endPublishedDate", "type": "string", "description": "End date for results based on published date (ISO format)."},
-      {"name": "category", "type": "\"company\" | \"research paper\" | \"news\" | \"pdf\" | \"tweet\" | \"personal site\" | \"financial report\" | \"people\"", "description": "A data category to focus on."},
+      {"name": "category", "type": "\"company\" | \"research paper\" | \"news\" | \"pdf\" | \"personal site\" | \"financial report\" | \"people\"", "description": "A data category to focus on."},
       {"name": "includeText", "type": "string[]", "description": "List of strings that must be present in webpage text. Max 1 string of up to 5 words."},
       {"name": "excludeText", "type": "string[]", "description": "List of strings that must not be present in webpage text. Max 1 string of up to 5 words."},
       {"name": "contents", "type": "ContentsOptions", "description": "Options for retrieving page contents for each result."},
