@@ -42,9 +42,8 @@ export interface SearchMonitorSearch {
 }
 
 export interface SearchMonitorTrigger {
-  type: "cron";
-  expression: string;
-  timezone?: string;
+  type: "interval";
+  period: string;
 }
 
 export interface SearchMonitorWebhook {

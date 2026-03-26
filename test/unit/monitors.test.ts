@@ -25,9 +25,8 @@ describe("Search Monitors API", () => {
       includeDomains: ["techcrunch.com"],
     },
     trigger: {
-      type: "cron",
-      expression: "0 9 * * 1",
-      timezone: "America/New_York",
+      type: "interval",
+      period: "7d",
     },
     outputSchema: null,
     metadata: { team: "research" },
@@ -89,9 +88,8 @@ describe("Search Monitors API", () => {
           includeDomains: ["techcrunch.com"],
         },
         trigger: {
-          type: "cron",
-          expression: "0 9 * * 1",
-          timezone: "America/New_York",
+          type: "interval",
+          period: "7d",
         },
         metadata: { team: "research" },
         webhook: {
