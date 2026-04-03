@@ -1,5 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Exa from "../../src";
+import Exa, { type SearchStreamChunk } from "../../src";
+
+function createSseResponse(lines: string[]): Response {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      for (const line of lines) {
+        controller.enqueue(encoder.encode(`${line}\n`));
+      }
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    status: 200,
+    headers: { "content-type": "text/event-stream" },
+  });
+}
 
 /**
  * Test suite for search endpoints.
@@ -806,6 +823,68 @@ describe("Search API", () => {
       },
     });
     expect(result).toEqual(mockResponse);
+  });
+
+  it("should reject search with stream and direct callers to streamSearch", async () => {
+    await expect(
+      exa.search("compare recent model launches", {
+        type: "auto",
+        stream: true,
+      })
+    ).rejects.toThrow(/streamSearch/);
+  });
+
+  it("should stream search results as OpenAI-style chat completion chunks", async () => {
+    const rawRequestSpy = vi.spyOn(exa, "rawRequest").mockResolvedValueOnce(
+      createSseResponse([
+        'data: {"choices":[{"delta":{"content":"Hello"}}]}',
+        'data: {"citations":[{"id":"1","url":"https://example.com","title":"Example"}]}',
+      ])
+    );
+
+    const chunks: SearchStreamChunk[] = [];
+    for await (const chunk of exa.streamSearch("compare recent model launches", {
+      type: "auto",
+      systemPrompt: "Prefer official sources",
+      outputSchema: {
+        type: "text",
+        description: "Short answer",
+      },
+    })) {
+      chunks.push(chunk);
+    }
+
+    expect(rawRequestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "compare recent model launches",
+      type: "auto",
+      systemPrompt: "Prefer official sources",
+      outputSchema: {
+        type: "text",
+        description: "Short answer",
+      },
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
+      stream: true,
+    });
+    expect(chunks).toEqual([
+      { content: "Hello", citations: undefined },
+      {
+        content: undefined,
+        citations: [
+          {
+            id: "1",
+            url: "https://example.com",
+            title: "Example",
+            publishedDate: undefined,
+            author: undefined,
+            text: undefined,
+          },
+        ],
+      },
+    ]);
   });
 
   it("should pass additionalQueries for deep-reasoning search type", async () => {

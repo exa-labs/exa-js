@@ -67,11 +67,22 @@ const resultWithOutput = await exa.search("Who leads OpenAI's safety team?", {
 console.log(resultWithOutput.output?.content);
 ```
 
+```ts
+for await (const chunk of exa.streamSearch("Who leads OpenAI's safety team?", {
+  type: "auto"
+})) {
+  if (chunk.content) {
+    process.stdout.write(chunk.content);
+  }
+}
+```
+
 Search `outputSchema` modes:
 - `type: "text"`: return plain text in `output.content` (optionally guided by `description`)
 - `type: "object"`: return structured JSON in `output.content`
 
 `systemPrompt` and `outputSchema` are supported on every search type.
+Search streaming is available via `streamSearch(...)`, which yields OpenAI-style chat completion chunks.
 
 For `type: "object"`, search currently enforces:
 - max nesting depth: `2`
