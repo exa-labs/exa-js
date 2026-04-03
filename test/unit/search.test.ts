@@ -667,6 +667,77 @@ describe("Search API", () => {
     });
   });
 
+  it("should pass outputSchema for fast search", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Fast Structured Result",
+          url: "https://example.com/fast-structured",
+          id: "fast-structured-id",
+          text: "Fast structured result text",
+        },
+      ],
+      output: {
+        content: { summary: "Fast search synthesis" },
+        grounding: [
+          {
+            field: "summary",
+            citations: [
+              { url: "https://example.com/fast-structured", title: "Fast Structured Result" },
+            ],
+            confidence: "high",
+          },
+        ],
+      },
+      requestId: "req-fast-structured-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("exa company profile", {
+      type: "fast",
+      outputSchema: {
+        type: "object",
+        properties: {
+          summary: { type: "string" },
+        },
+        required: ["summary"],
+      },
+      numResults: 5,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "exa company profile",
+      type: "fast",
+      outputSchema: {
+        type: "object",
+        properties: {
+          summary: { type: "string" },
+        },
+        required: ["summary"],
+      },
+      numResults: 5,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
+    });
+    expect(result).toEqual(mockResponse);
+    expect(result.output).toEqual({
+      content: { summary: "Fast search synthesis" },
+      grounding: [
+        {
+          field: "summary",
+          citations: [{ url: "https://example.com/fast-structured", title: "Fast Structured Result" }],
+          confidence: "high",
+        },
+      ],
+    });
+  });
+
   it("should pass systemPrompt for deep search", async () => {
     const mockResponse = {
       results: [
@@ -691,6 +762,41 @@ describe("Search API", () => {
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
       query: "compare recent model launches",
       type: "deep-reasoning",
+      systemPrompt: "Prefer official sources and avoid duplicate results",
+      numResults: 5,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should pass systemPrompt for auto search", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Auto Search Result",
+          url: "https://example.com/auto-system-prompt",
+          id: "auto-system-prompt-id",
+          text: "Auto search result text",
+        },
+      ],
+      requestId: "req-auto-system-prompt-123",
+    };
+
+    const requestSpy = vi.spyOn(exa, "request").mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("compare recent model launches", {
+      type: "auto",
+      systemPrompt: "Prefer official sources and avoid duplicate results",
+      numResults: 5,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "compare recent model launches",
+      type: "auto",
       systemPrompt: "Prefer official sources and avoid duplicate results",
       numResults: 5,
       contents: {
@@ -727,6 +833,43 @@ describe("Search API", () => {
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
       query: "machine learning",
       type: "deep-reasoning",
+      additionalQueries: ["ML algorithms", "neural networks", "AI models"],
+      numResults: 5,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
+    });
+    expect(result).toEqual(mockResponse);
+    expect(result.context).toBeDefined();
+  });
+
+  it("should pass additionalQueries for deep-lite search type", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Deep Lite Search Result",
+          url: "https://example.com",
+          id: "deep-lite-search-id",
+          text: "Deep lite search result text",
+        },
+      ],
+      context: "Deep lite search context string",
+      requestId: "req-deep-lite-123",
+    };
+
+    const requestSpy = vi.spyOn(exa, "request").mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("machine learning", {
+      type: "deep-lite",
+      additionalQueries: ["ML algorithms", "neural networks", "AI models"],
+      numResults: 5,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "machine learning",
+      type: "deep-lite",
       additionalQueries: ["ML algorithms", "neural networks", "AI models"],
       numResults: 5,
       contents: {
