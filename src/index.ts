@@ -58,6 +58,7 @@ export type ContentsOptions = {
  * @property {string[]} [excludeText] - List of strings that must not be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  * @property {string[]} [flags] - Experimental flags
  * @property {string} [userLocation] - The two-letter ISO country code of the user, e.g. US.
+ * @property {boolean} [stream] - Whether to stream back OpenAI-style chat completion chunks. Use `streamSearch()` instead of `search({ stream: true })`.
  */
 export type BaseSearchOptions = {
   contents?: ContentsOptions;
@@ -80,6 +81,7 @@ export type BaseSearchOptions = {
   excludeText?: string[];
   flags?: string[];
   userLocation?: string;
+  stream?: boolean;
 };
 
 /**
@@ -91,9 +93,22 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
    */
   moderation?: boolean;
   useAutoprompt?: boolean;
+  /**
+   * Additional instructions that guide both the search process and the final returned synthesis.
+   * Use this to prefer certain sources, emphasize novelty, avoid duplicates, or constrain output style.
+   */
+  systemPrompt?: string;
+  /**
+   * Output schema for search responses. When provided, the API returns synthesized output in `output`.
+   * - `type: "text"` for plain text output (optionally guided by `description`)
+   * - `type: "object"` for structured JSON output
+   *
+   * Note: For object schemas, the API enforces max depth 2 and max 10 total properties.
+   */
+  outputSchema?: DeepOutputSchema;
 };
 
-export type DeepSearchType = "deep" | "deep-reasoning";
+export type DeepSearchType = "deep-lite" | "deep" | "deep-reasoning";
 
 /**
  * Deep search output schema mode for plain text responses.
@@ -122,7 +137,7 @@ export type DeepObjectOutputSchema = {
 };
 
 /**
- * Deep search output schema.
+ * Search output schema.
  * - `type: "text"` returns plain text in `output.content` (with optional description guidance).
  * - `type: "object"` returns structured JSON in `output.content`.
  *
@@ -140,7 +155,7 @@ type DeepContentsOptions = Omit<ContentsOptions, "context"> & {
 };
 
 /**
- * Search options for deep search type, which supports additional queries.
+ * Search options for deep search types, which additionally support additional queries.
  */
 type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
   type: DeepSearchType;
@@ -150,19 +165,6 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
    * @example ["machine learning", "ML algorithms", "neural networks"]
    */
   additionalQueries?: string[];
-  /**
-   * Additional instructions that guide both deep-search planning and the final returned synthesis.
-   * Use this to prefer certain sources, emphasize novelty, avoid duplicates, or constrain output style.
-   */
-  systemPrompt?: string;
-  /**
-   * Output schema for deep search responses.
-   * - `type: "text"` for plain text output (optionally guided by `description`)
-   * - `type: "object"` for structured JSON output
-   *
-   * Note: For object schemas, the API enforces max depth 2 and max 10 total properties.
-   */
-  outputSchema?: DeepOutputSchema;
   /**
    * Options for retrieving page contents.
    */
@@ -522,7 +524,7 @@ export type DeepSearchOutput = {
  * @typedef {Object} SearchResponse
  * @property {Result[]} results - The list of search results.
  * @property {string} [context] - Deprecated. The context for the search.
- * @property {DeepSearchOutput} [output] - Deep search synthesized output object with `content` and `grounding`.
+ * @property {DeepSearchOutput} [output] - Search synthesized output object returned when `outputSchema` is provided.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
@@ -598,6 +600,8 @@ export type AnswerStreamChunk = {
     text?: string;
   }>;
 };
+
+export type SearchStreamChunk = AnswerStreamChunk;
 
 /**
  * Represents a streaming answer response chunk from the /answer endpoint.
@@ -728,6 +732,35 @@ export class Exa {
       contentsOptions,
       restOptions: rest as Omit<T, keyof ContentsOptions>,
     };
+  }
+
+  private buildSearchRequestBody(
+    query: string,
+    options?: RegularSearchOptions & {
+      contents?: ContentsOptions | false | null | undefined;
+    }
+  ): Record<string, unknown> {
+    const requestOptions = { ...(options ?? {}) } as Record<string, unknown>;
+    delete requestOptions.stream;
+
+    if (options === undefined || !("contents" in options)) {
+      return {
+        query,
+        ...requestOptions,
+        contents: { text: { maxCharacters: DEFAULT_MAX_CHARACTERS } },
+      };
+    }
+
+    if (
+      options.contents === false ||
+      options.contents === null ||
+      options.contents === undefined
+    ) {
+      delete requestOptions.contents;
+      return { query, ...requestOptions };
+    }
+
+    return { query, ...requestOptions };
   }
 
   /**
@@ -931,25 +964,39 @@ export class Exa {
     query: string,
     options?: RegularSearchOptions & { contents?: T | false | null | undefined }
   ): Promise<SearchResponse<T | { text: true } | {}>> {
-    if (options === undefined || !("contents" in options)) {
-      return await this.request("/search", "POST", {
-        query,
-        ...options,
-        contents: { text: { maxCharacters: DEFAULT_MAX_CHARACTERS } },
-      });
+    if (options?.stream) {
+      throw new ExaError(
+        "For streaming responses, please use streamSearch() instead:\n\n" +
+          "for await (const chunk of exa.streamSearch(query)) {\n" +
+          "  // Handle chunks\n" +
+          "}",
+        HttpStatusCode.BadRequest
+      );
     }
 
-    // If contents is false, null, or undefined, don't send it to the API
-    if (
-      options.contents === false ||
-      options.contents === null ||
-      options.contents === undefined
-    ) {
-      const { contents, ...restOptions } = options;
-      return await this.request("/search", "POST", { query, ...restOptions });
-    }
+    return await this.request(
+      "/search",
+      "POST",
+      this.buildSearchRequestBody(query, options)
+    );
+  }
 
-    return await this.request("/search", "POST", { query, ...options });
+  /**
+   * Stream a search response as an async generator of OpenAI-style chat completion chunks.
+   *
+   * Each iteration yields a chunk with partial text (`content`) or new citations.
+   * Use this if you'd like to read synthesized search output incrementally.
+   */
+  streamSearch(
+    query: string,
+    options?: RegularSearchOptions & {
+      contents?: ContentsOptions | false | null | undefined;
+    }
+  ): AsyncGenerator<SearchStreamChunk> {
+    return this.streamChatCompletions("/search", {
+      ...this.buildSearchRequestBody(query, options),
+      stream: true,
+    });
   }
 
   /**
@@ -1269,11 +1316,14 @@ export class Exa {
       userLocation: options?.userLocation,
     };
 
-    const response = await fetchImpl(this.baseURL + "/answer", {
-      method: "POST",
-      headers: this.headers,
-      body: JSON.stringify(body),
-    });
+    yield* this.streamChatCompletions("/answer", body);
+  }
+
+  private async *streamChatCompletions(
+    endpoint: string,
+    body: Record<string, unknown>
+  ): AsyncGenerator<AnswerStreamChunk> {
+    const response = await this.rawRequest(endpoint, "POST", body);
 
     if (!response.ok) {
       const message = await response.text();
