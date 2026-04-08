@@ -108,7 +108,7 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
   outputSchema?: DeepOutputSchema;
 };
 
-export type DeepSearchType = "deep-lite" | "deep" | "deep-reasoning";
+export type DeepSearchType = "deep-lite" | "deep" | "deep-reasoning" | "deep-max";
 
 /**
  * Deep search output schema mode for plain text responses.
