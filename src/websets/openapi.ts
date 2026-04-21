@@ -807,6 +807,8 @@ export interface components {
           /** @enum {string} */
           source: WebsetExcludeSource;
         }[];
+        /** @description Optional soft cap for people searches. When set, the search will try to include at most this many matching people from the same current employer company. */
+        maxPeoplePerCompany?: number;
         /** @description Natural language search query describing what you are looking for.
          *
          *     Be specific and descriptive about your requirements, characteristics, and any constraints that help narrow down the results.
@@ -863,6 +865,8 @@ export interface components {
       metadata?: {
         [key: string]: string;
       };
+      /** @description Optional soft cap for people searches. When set, the search will try to include at most this many matching people from the same current employer company. */
+      maxPeoplePerCompany?: number;
       /** @description Natural language search query describing what you are looking for.
        *
        *     Be specific and descriptive about your requirements, characteristics, and any constraints that help narrow down the results.
@@ -2141,6 +2145,8 @@ export interface components {
       }[];
       /** @description The unique identifier for the search */
       id: string;
+      /** @description The soft cap requested for matching people from the same current employer company, or null when no cap was requested. */
+      maxPeoplePerCompany: number | null;
       /**
        * @description Set of key-value pairs you want to associate with this object.
        * @default {}
