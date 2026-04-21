@@ -59,6 +59,8 @@ describe("Websets API", () => {
       search: {
         query: "Test query",
         count: 10,
+        entity: { type: "person" as const },
+        maxPeoplePerCompany: 2,
       },
     };
     const result = await exa.websets.create(createParams);
@@ -398,6 +400,7 @@ describe("Websets API", () => {
       entity: { type: "company" },
       metadata: {},
       exclude: [],
+      maxPeoplePerCompany: 2,
       recall: null,
       scope: [],
     };
@@ -411,6 +414,8 @@ describe("Websets API", () => {
       query: "Test search",
       count: 10,
       behavior: WebsetSearchBehavior.override,
+      entity: { type: "person" as const },
+      maxPeoplePerCompany: 2,
     };
     const result = await exa.websets.searches.create("ws_123456", searchParams);
 
