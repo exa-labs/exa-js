@@ -54,7 +54,8 @@
       {"name": "additionalQueries", "type": "string[]", "description": "Alternative query formulations for deep search. Max 5 queries. Only for type: \"deep\"."}
     ],
     "ContentsOptions": [
-      {"name": "text", "type": "TextContentsOptions | true", "description": "Options for retrieving text contents."},
+      {"name": "text", "type": "TextContentsOptions | true", "description": "Options for retrieving highlight-backed text on search and getContents, or full page text on findSimilar."},
+      {"name": "fullText", "type": "TextContentsOptions | true", "description": "Options for retrieving full page text on search and getContents."},
       {"name": "highlights", "type": "HighlightsContentsOptions | true", "description": "Options for retrieving highlights."},
       {"name": "summary", "type": "SummaryContentsOptions | true", "description": "Options for retrieving summary."},
       {"name": "maxAgeHours", "type": "number", "description": "Maximum age of cached content in hours. If content is older, it will be fetched fresh. Special values: 0 = always fetch fresh content, -1 = never fetch fresh (cache only). Example: 168 = fetch fresh for pages older than 7 days."},
@@ -73,7 +74,8 @@
       {"name": "score", "type": "number", "description": "Similarity score between the query/url and the result."},
       {"name": "image", "type": "string", "description": "A representative image for the content, if any."},
       {"name": "favicon", "type": "string", "description": "A favicon for the site, if any."},
-      {"name": "text", "type": "string", "description": "The text content of the page (if text option enabled)."},
+      {"name": "text", "type": "string", "description": "Highlight-backed text on search and getContents, or full page text on findSimilar (if text option enabled)."},
+      {"name": "fullText", "type": "string", "description": "Full page text content (if fullText option enabled)."},
       {"name": "highlights", "type": "string[]", "description": "Highlighted text snippets (if highlights option enabled)."},
       {"name": "highlightScores", "type": "number[]", "description": "Scores for each highlight."},
       {"name": "summary", "type": "string", "description": "Summary of the content (if summary option enabled)."},
@@ -145,7 +147,7 @@
     "searchAndContents": "const result = await exa.searchAndContents(\"AI in healthcare\", {\n  text: true,\n  highlights: true,\n  numResults: 5\n});",
     "findSimilar": "const result = await exa.findSimilar(\"https://www.example.com/article\", {\n  numResults: 10,\n  excludeSourceDomain: true\n});",
     "findSimilarAndContents": "const result = await exa.findSimilarAndContents(\"https://www.example.com/article\", {\n  text: true,\n  highlights: true,\n  numResults: 5\n});",
-    "getContents": "const result = await exa.getContents([\n  \"https://www.example.com/article1\",\n  \"https://www.example.com/article2\"\n], {\n  text: { maxCharacters: 1000 },\n  highlights: { query: \"AI\", maxCharacters: 200 }\n});",
+    "getContents": "const result = await exa.getContents([\n  \"https://www.example.com/article1\",\n  \"https://www.example.com/article2\"\n], {\n  fullText: { maxCharacters: 1000 },\n  highlights: { query: \"AI\", maxCharacters: 200 }\n});",
     "answer": "const result = await exa.answer(\"What is the capital of France?\", {\n  text: true,\n  model: \"exa\"\n});",
     "streamAnswer": "for await (const chunk of exa.streamAnswer(\"What is quantum computing?\", {\n  text: true,\n  model: \"exa\"\n})) {\n  if (chunk.content) process.stdout.write(chunk.content);\n  if (chunk.citations) console.log(\"Citations:\", chunk.citations);\n}",
     "research.create": "const task = await exa.research.create({\n  instructions: \"Research the latest AI developments\",\n  model: \"exa-research-fast\"\n});",
@@ -221,7 +223,7 @@
           "url": "https://example.com/article",
           "id": "https://example.com/article",
           "title": "Example Article",
-          "text": "The full text content of the article..."
+          "fullText": "The full text content of the article..."
         }
       ]
     },

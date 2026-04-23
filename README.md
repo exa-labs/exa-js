@@ -95,11 +95,11 @@ Deep search variants that also support `additionalQueries`:
 
 ## Contents
 
-Get clean text, highlights, or summaries from any URL.
+Get clean highlight-backed text, full text, highlights, or summaries from any URL.
 
 ```ts
 const { results } = await exa.getContents(["https://docs.exa.ai"], {
-  text: true,
+  fullText: true,
   highlights: true,
   summary: true,
 });
