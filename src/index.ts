@@ -18,7 +18,8 @@ const DEFAULT_MAX_CHARACTERS = 10_000;
 /**
  * Options for retrieving page contents
  * @typedef {Object} ContentsOptions
- * @property {TextContentsOptions | boolean} [text] - Options for retrieving text contents.
+ * @property {TextContentsOptions | boolean} [text] - Options for retrieving highlight-backed text on search, truncated full page text on getContents unless query is set, or full page text on findSimilar.
+ * @property {TextContentsOptions | boolean} [fullText] - Options for retrieving full page text on search and getContents.
  * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights.
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
  * @property {number} [maxAgeHours] - Maximum age of cached content in hours. If content is older, it will be fetched fresh. Special values: 0 = always fetch fresh content, -1 = never fetch fresh (use cached content only). Example: 168 = fetch fresh for pages older than 7 days.
@@ -29,6 +30,7 @@ const DEFAULT_MAX_CHARACTERS = 10_000;
  */
 export type ContentsOptions = {
   text?: TextContentsOptions | true;
+  fullText?: TextContentsOptions | true;
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
   livecrawl?: LivecrawlOptions;
@@ -230,6 +232,7 @@ export type SectionTag =
 /**
  * Options for retrieving text from page.
  * @typedef {Object} TextContentsOptions
+ * @property {string} [query] - Optional guiding query. On getContents, setting query makes text return focused excerpts instead of truncated full page text.
  * @property {number} [maxCharacters] - The maximum number of characters to return.
  * @property {boolean} [includeHtmlTags] - If true, includes HTML tags in the returned text. Default: false
  * @property {VerbosityOptions} [verbosity] - Controls verbosity level of returned content. Default: "compact". Requires maxAgeHours: 0.
@@ -237,6 +240,7 @@ export type SectionTag =
  * @property {SectionTag[]} [excludeSections] - Exclude content from these semantic sections. Requires maxAgeHours: 0.
  */
 export type TextContentsOptions = {
+  query?: string;
   maxCharacters?: number;
   includeHtmlTags?: boolean;
   verbosity?: VerbosityOptions;
@@ -291,9 +295,15 @@ export type ContextOptions = {
 
 /**
  * @typedef {Object} TextResponse
- * @property {string} text - Text from page
+ * @property {string} text - Highlight-backed text from the page on search, truncated full page text on getContents unless query is set, or full page text on findSimilar.
  */
 export type TextResponse = { text: string };
+
+/**
+ * @typedef {Object} FullTextResponse
+ * @property {string} fullText - Full page text from the page.
+ */
+export type FullTextResponse = { fullText: string };
 
 /**
  * @typedef {Object} HighlightsResponse
@@ -338,6 +348,7 @@ export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
  */
 export type ContentsResultComponent<T extends ContentsOptions> =
   (T["text"] extends object | true ? TextResponse : {}) &
+    (T["fullText"] extends object | true ? FullTextResponse : {}) &
     (T["highlights"] extends object | true ? HighlightsResponse : {}) &
     (T["summary"] extends object | true ? SummaryResponse : {}) &
     (T["subpages"] extends number ? SubpagesResponse<T> : {}) &
@@ -675,6 +686,7 @@ export class Exa {
   } {
     const {
       text,
+      fullText,
       highlights,
       summary,
       subpages,
@@ -689,9 +701,10 @@ export class Exa {
 
     const contentsOptions: ContentsOptions = {};
 
-    // Default: if none of text, summary, or highlights is provided, we retrieve text
+    // Default: if none of text, fullText, summary, or highlights is provided, we retrieve text
     if (
       text === undefined &&
+      fullText === undefined &&
       summary === undefined &&
       highlights === undefined &&
       extras === undefined
@@ -700,6 +713,7 @@ export class Exa {
     }
 
     if (text !== undefined) contentsOptions.text = text;
+    if (fullText !== undefined) contentsOptions.fullText = fullText;
     if (highlights !== undefined) contentsOptions.highlights = highlights;
     if (summary !== undefined) {
       // Handle zod schema conversion for summary

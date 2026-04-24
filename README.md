@@ -95,7 +95,7 @@ Deep search variants that also support `additionalQueries`:
 
 ## Contents
 
-Get clean text, highlights, or summaries from any URL.
+Get clean text, full text, highlights, or summaries from any URL. Add `query` inside `text` to return focused excerpts instead of truncated full page text.
 
 ```ts
 const { results } = await exa.getContents(["https://docs.exa.ai"], {

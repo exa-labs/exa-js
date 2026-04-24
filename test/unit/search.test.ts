@@ -308,6 +308,38 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it("should handle fullText with searchAndContents", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://example.com",
+          id: "test-id",
+          fullText: "Full page text content",
+        },
+      ],
+      requestId: "req-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.searchAndContents("latest AI developments", {
+      fullText: { maxCharacters: 1000 },
+      numResults: 2,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "latest AI developments",
+      contents: {
+        fullText: { maxCharacters: 1000 },
+      },
+      numResults: 2,
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
   it("should handle highlights via search contents option", async () => {
     const mockResponse = {
       results: [
@@ -333,6 +365,62 @@ describe("Search API", () => {
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
       query: "test query",
       contents: { highlights: { numSentences: 2 } },
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should pass fullText through getContents", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://example.com",
+          id: "test-id",
+          fullText: "Full page text content",
+        },
+      ],
+      requestId: "req-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.getContents(["https://example.com"], {
+      fullText: { maxCharacters: 1000 },
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/contents", "POST", {
+      urls: ["https://example.com"],
+      fullText: { maxCharacters: 1000 },
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should pass query-guided text through getContents", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://example.com",
+          id: "test-id",
+          text: "Focused text excerpt",
+        },
+      ],
+      requestId: "req-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.getContents(["https://example.com"], {
+      text: { query: "when did they graduate", maxCharacters: 1000 },
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/contents", "POST", {
+      urls: ["https://example.com"],
+      text: { query: "when did they graduate", maxCharacters: 1000 },
     });
     expect(result).toEqual(mockResponse);
   });
