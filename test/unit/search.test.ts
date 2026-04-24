@@ -397,6 +397,34 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it("should pass query-guided text through getContents", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://example.com",
+          id: "test-id",
+          text: "Focused text excerpt",
+        },
+      ],
+      requestId: "req-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.getContents(["https://example.com"], {
+      text: { query: "when did they graduate", maxCharacters: 1000 },
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/contents", "POST", {
+      urls: ["https://example.com"],
+      text: { query: "when did they graduate", maxCharacters: 1000 },
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
   it("should default to text with maxCharacters when no content options provided", async () => {
     const mockResponse = {
       results: [

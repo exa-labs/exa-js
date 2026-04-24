@@ -18,7 +18,7 @@ const DEFAULT_MAX_CHARACTERS = 10_000;
 /**
  * Options for retrieving page contents
  * @typedef {Object} ContentsOptions
- * @property {TextContentsOptions | boolean} [text] - Options for retrieving highlight-backed text on search and getContents, or full page text on findSimilar.
+ * @property {TextContentsOptions | boolean} [text] - Options for retrieving highlight-backed text on search, truncated full page text on getContents unless query is set, or full page text on findSimilar.
  * @property {TextContentsOptions | boolean} [fullText] - Options for retrieving full page text on search and getContents.
  * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights.
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
@@ -232,6 +232,7 @@ export type SectionTag =
 /**
  * Options for retrieving text from page.
  * @typedef {Object} TextContentsOptions
+ * @property {string} [query] - Optional guiding query. On getContents, setting query makes text return focused excerpts instead of truncated full page text.
  * @property {number} [maxCharacters] - The maximum number of characters to return.
  * @property {boolean} [includeHtmlTags] - If true, includes HTML tags in the returned text. Default: false
  * @property {VerbosityOptions} [verbosity] - Controls verbosity level of returned content. Default: "compact". Requires maxAgeHours: 0.
@@ -239,6 +240,7 @@ export type SectionTag =
  * @property {SectionTag[]} [excludeSections] - Exclude content from these semantic sections. Requires maxAgeHours: 0.
  */
 export type TextContentsOptions = {
+  query?: string;
   maxCharacters?: number;
   includeHtmlTags?: boolean;
   verbosity?: VerbosityOptions;
@@ -293,7 +295,7 @@ export type ContextOptions = {
 
 /**
  * @typedef {Object} TextResponse
- * @property {string} text - Highlight-backed text from the page on search and getContents, or full page text on findSimilar.
+ * @property {string} text - Highlight-backed text from the page on search, truncated full page text on getContents unless query is set, or full page text on findSimilar.
  */
 export type TextResponse = { text: string };
 
