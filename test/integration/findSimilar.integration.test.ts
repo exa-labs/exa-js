@@ -24,8 +24,8 @@ describe("FindSimilar Contents Options", () => {
     expect(response.results).not.toHaveLength(0);
 
     const sampleResult = response.results[0];
-    expect(sampleResult.text).toBeUndefined();
-    expect(sampleResult.summary).toBeUndefined();
+    expect((sampleResult as Record<string, unknown>).text).toBeUndefined();
+    expect((sampleResult as Record<string, unknown>).summary).toBeUndefined();
   });
 
   it("Returns text contents when explicitly requested", async () => {
@@ -63,7 +63,7 @@ describe("FindSimilar Contents Options", () => {
     const sampleResult = response.results[0];
     expect(sampleResult.summary).toBeDefined();
     expect(sampleResult.summary.length).toBeGreaterThan(10);
-    expect(sampleResult.text).toBeUndefined();
+    expect((sampleResult as Record<string, unknown>).text).toBeUndefined();
   }, 15000);
 
   it("Returns both text and summary when both are requested", async () => {
