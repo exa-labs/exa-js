@@ -3,10 +3,11 @@ import Exa from "../../src";
 
 const exa = new Exa(process.env.EXA_API_KEY);
 
-describe("FindSimilar Contents Options", () => {
+describe("Deprecated findSimilar contents compatibility", () => {
   const testUrl = "https://en.wikipedia.org/wiki/Ant";
 
-  it("Defaults to providing text contents with 10,000 max characters", async () => {
+  it("preserves deprecated default text contents with 10,000 max characters", async () => {
+    // DEPRECATED METHOD: compatibility coverage for legacy URL-similarity behavior.
     const response = await exa.findSimilar(testUrl, { numResults: 2 });
     expect(response.results).not.toHaveLength(0);
 
@@ -16,7 +17,8 @@ describe("FindSimilar Contents Options", () => {
     expect(sampleResult.text.length).toBeLessThanOrEqual(10_000);
   });
 
-  it("Returns no contents when explicitly set to false", async () => {
+  it("preserves deprecated no-contents option when explicitly set to false", async () => {
+    // DEPRECATED METHOD: compatibility coverage for legacy URL-similarity behavior.
     const response = await exa.findSimilar(testUrl, {
       contents: false,
       numResults: 2,
@@ -28,7 +30,8 @@ describe("FindSimilar Contents Options", () => {
     expect(sampleResult.summary).toBeUndefined();
   });
 
-  it("Returns text contents when explicitly requested", async () => {
+  it("preserves deprecated text contents when explicitly requested", async () => {
+    // DEPRECATED METHOD: compatibility coverage for legacy URL-similarity behavior.
     const response = await exa.findSimilar(testUrl, {
       contents: { text: true },
       numResults: 2,
@@ -40,8 +43,9 @@ describe("FindSimilar Contents Options", () => {
     expect(sampleResult.text.length).toBeGreaterThan(100);
   });
 
-  it("Returns text contents with custom maxCharacters", async () => {
+  it("preserves deprecated text contents with custom maxCharacters", async () => {
     const maxChars = 500;
+    // DEPRECATED METHOD: compatibility coverage for legacy URL-similarity behavior.
     const response = await exa.findSimilar(testUrl, {
       contents: { text: { maxCharacters: maxChars } },
       numResults: 2,
@@ -53,7 +57,8 @@ describe("FindSimilar Contents Options", () => {
     expect(sampleResult.text.length).toBeLessThanOrEqual(maxChars);
   });
 
-  it("Returns summary when requested", async () => {
+  it("preserves deprecated summary contents when requested", async () => {
+    // DEPRECATED METHOD: compatibility coverage for legacy URL-similarity behavior.
     const response = await exa.findSimilar(testUrl, {
       contents: { summary: true },
       numResults: 2,
@@ -66,7 +71,8 @@ describe("FindSimilar Contents Options", () => {
     expect(sampleResult.text).toBeUndefined();
   }, 15000);
 
-  it("Returns both text and summary when both are requested", async () => {
+  it("preserves deprecated text and summary contents when both are requested", async () => {
+    // DEPRECATED METHOD: compatibility coverage for legacy URL-similarity behavior.
     const response = await exa.findSimilar(testUrl, {
       contents: {
         text: { maxCharacters: 1000 },
@@ -84,7 +90,8 @@ describe("FindSimilar Contents Options", () => {
     expect(sampleResult.summary.length).toBeGreaterThan(10);
   }, 20000);
 
-  it("Defaults to text when passing other options without contents", async () => {
+  it("preserves deprecated default text when passing other options without contents", async () => {
+    // DEPRECATED METHOD: compatibility coverage for legacy URL-similarity behavior.
     const response = await exa.findSimilar(testUrl, {
       numResults: 3,
       excludeSourceDomain: true,
@@ -96,4 +103,3 @@ describe("FindSimilar Contents Options", () => {
     expect(sampleResult.text.length).toBeGreaterThan(100);
   });
 });
-

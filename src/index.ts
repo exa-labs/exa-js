@@ -191,6 +191,9 @@ type NonDeepSearchOptions = BaseRegularSearchOptions & {
 export type RegularSearchOptions = DeepSearchOptions | NonDeepSearchOptions;
 
 /**
+ * DEPRECATED: Used only by deprecated `findSimilar()` APIs. Use `search()` and `RegularSearchOptions` for new search flows. Will be removed in a future version.
+ * @deprecated Use `search()` and `RegularSearchOptions` for new search flows. There is no direct replacement for URL-based similarity.
+ *
  * Options for finding similar links.
  * @typedef {Object} FindSimilarOptions
  * @property {boolean} [excludeSourceDomain] - If true, excludes links from the base domain of the input.
@@ -1055,6 +1058,9 @@ export class Exa {
   }
 
   /**
+   * DEPRECATED: Use `search()` for new discovery flows. There is no direct replacement for URL-based similarity.
+   * @deprecated Use `search()` for new discovery flows. This legacy URL-similarity method will be removed in a future version.
+   *
    * Finds similar links to the provided URL.
    * By default, returns text contents. Use contents: false to opt-out.
    *
@@ -1065,6 +1071,9 @@ export class Exa {
     url: string
   ): Promise<SearchResponse<{ text: { maxCharacters: 10_000 } }>>;
   /**
+   * DEPRECATED: Use `search()` for new discovery flows. There is no direct replacement for URL-based similarity.
+   * @deprecated Use `search()` for new discovery flows. This legacy URL-similarity method will be removed in a future version.
+   *
    * Finds similar links to the provided URL without contents.
    *
    * @param {string} url - The URL for which to find similar links.
@@ -1076,6 +1085,9 @@ export class Exa {
     options: FindSimilarOptions & { contents: false | null | undefined }
   ): Promise<SearchResponse<{}>>;
   /**
+   * DEPRECATED: Use `search()` with `contents` for new discovery flows. There is no direct replacement for URL-based similarity.
+   * @deprecated Use `search()` with `contents` for new discovery flows. This legacy URL-similarity method will be removed in a future version.
+   *
    * Finds similar links to the provided URL with specific contents.
    *
    * @param {string} url - The URL for which to find similar links.
@@ -1087,6 +1099,9 @@ export class Exa {
     options: FindSimilarOptions & { contents: T }
   ): Promise<SearchResponse<T>>;
   /**
+   * DEPRECATED: Use `search()` for new discovery flows. There is no direct replacement for URL-based similarity.
+   * @deprecated Use `search()` for new discovery flows. This legacy URL-similarity method will be removed in a future version.
+   *
    * Finds similar links to the provided URL.
    * When no contents option is specified, returns text contents by default.
    *
@@ -1102,6 +1117,7 @@ export class Exa {
     url: string,
     options?: FindSimilarOptions & { contents?: T | false | null | undefined }
   ): Promise<SearchResponse<T | { text: { maxCharacters: 10_000 } } | {}>> {
+    // DEPRECATED METHOD: preserve legacy URL-similarity endpoint for compatibility.
     if (options === undefined || !("contents" in options)) {
       // No options or no contents property → default to text contents
       return await this.request("/findSimilar", "POST", {
@@ -1129,13 +1145,13 @@ export class Exa {
   }
 
   /**
-   * DEPRECATED: Use `findSimilar()` instead. This legacy wrapper will be removed in a future version.
-   * @deprecated Use `findSimilar()` instead. The findSimilar method now returns text contents by default.
+   * DEPRECATED: Use `search()` for new discovery flows instead. This legacy wrapper will be removed in a future version.
+   * @deprecated Use `search()` for new discovery flows instead. There is no direct replacement for URL-based similarity.
    *
    * Migration examples:
-   * - `findSimilarAndContents(url)` → `findSimilar(url)`
-   * - `findSimilarAndContents(url, { text: true })` → `findSimilar(url, { contents: { text: true } })`
-   * - `findSimilarAndContents(url, { summary: true })` → `findSimilar(url, { contents: { summary: true } })`
+   * - `findSimilarAndContents(url)` → `search(query)`
+   * - `findSimilarAndContents(url, { text: true })` → `search(query, { contents: { text: true } })`
+   * - `findSimilarAndContents(url, { summary: true })` → `search(query, { contents: { summary: true } })`
    *
    * Compatibility wrapper for the legacy top-level contents options shape.
    * @param {string} url - The URL for which to find similar links.
