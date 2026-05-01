@@ -66,7 +66,7 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it("should perform searchAndContents with text option", async () => {
+  it("should preserve deprecated searchAndContents text option for compatibility", async () => {
     const mockResponse = {
       results: [
         {
@@ -83,6 +83,7 @@ describe("Search API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
+    // DEPRECATED METHOD: compatibility coverage for legacy top-level contents options.
     const result = await exa.searchAndContents("latest AI developments", {
       text: true,
       numResults: 2,
@@ -98,7 +99,7 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it("should properly nest context option under contents", async () => {
+  it("should preserve deprecated searchAndContents context option for compatibility", async () => {
     const mockResponse = {
       results: [
         {
@@ -108,6 +109,7 @@ describe("Search API", () => {
           text: "Sample text content",
         },
       ],
+      // DEPRECATED FIELD: response context remains covered for compatibility.
       context: "This is the context string",
       requestId: "req-123",
     };
@@ -116,8 +118,10 @@ describe("Search API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
+    // DEPRECATED METHOD: compatibility coverage for legacy top-level contents options.
     const result = await exa.searchAndContents("latest AI developments", {
       text: true,
+      // DEPRECATED FIELD: callers should use contents.text or contents.highlights instead.
       context: true,
       numResults: 2,
     });
@@ -126,6 +130,7 @@ describe("Search API", () => {
       query: "latest AI developments",
       contents: {
         text: true,
+        // DEPRECATED FIELD: compatibility expectation only.
         context: true,
       },
       numResults: 2,
@@ -133,7 +138,7 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it("should handle multiple content options correctly", async () => {
+  it("should preserve deprecated searchAndContents context object option for compatibility", async () => {
     const mockResponse = {
       results: [
         {
@@ -151,9 +156,11 @@ describe("Search API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
+    // DEPRECATED METHOD: compatibility coverage for legacy top-level contents options.
     const result = await exa.searchAndContents("latest AI developments", {
       text: { maxCharacters: 1000 },
       summary: { query: "Summarize this" },
+      // DEPRECATED FIELD: callers should use contents.text or contents.highlights instead.
       context: { maxCharacters: 500 },
       numResults: 3,
     });
@@ -163,6 +170,7 @@ describe("Search API", () => {
       contents: {
         text: { maxCharacters: 1000 },
         summary: { query: "Summarize this" },
+        // DEPRECATED FIELD: compatibility expectation only.
         context: { maxCharacters: 500 },
       },
       numResults: 3,
@@ -170,7 +178,7 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it("should handle highlights option with searchAndContents", async () => {
+  it("should preserve deprecated searchAndContents highlights option for compatibility", async () => {
     const mockResponse = {
       results: [
         {
@@ -188,6 +196,7 @@ describe("Search API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
+    // DEPRECATED METHOD: compatibility coverage for legacy top-level contents options.
     const result = await exa.searchAndContents("latest AI developments", {
       highlights: true,
       numResults: 2,
@@ -203,7 +212,7 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it("should handle highlights with detailed options", async () => {
+  it("should preserve deprecated searchAndContents highlights sizing fields for compatibility", async () => {
     const mockResponse = {
       results: [
         {
@@ -221,7 +230,9 @@ describe("Search API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
+    // DEPRECATED METHOD: compatibility coverage for legacy top-level contents options.
     const result = await exa.searchAndContents("latest AI developments", {
+      // DEPRECATED FIELDS: callers should use highlights.maxCharacters instead.
       highlights: { numSentences: 2, highlightsPerUrl: 3, query: "key points" },
       numResults: 2,
     });
@@ -230,6 +241,7 @@ describe("Search API", () => {
       query: "latest AI developments",
       contents: {
         highlights: {
+          // DEPRECATED FIELDS: compatibility expectation only.
           numSentences: 2,
           highlightsPerUrl: 3,
           query: "key points",
@@ -240,7 +252,7 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it("should handle highlights with maxCharacters option", async () => {
+  it("should preserve deprecated searchAndContents highlights maxCharacters option for compatibility", async () => {
     const mockResponse = {
       results: [
         {
@@ -258,6 +270,7 @@ describe("Search API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
+    // DEPRECATED METHOD: compatibility coverage for legacy top-level contents options.
     const result = await exa.searchAndContents("latest AI developments", {
       highlights: { maxCharacters: 200, query: "key points" },
       numResults: 2,
@@ -272,7 +285,7 @@ describe("Search API", () => {
     });
     expect(result).toEqual(mockResponse);
   });
-  it("should handle text and highlights together", async () => {
+  it("should preserve deprecated searchAndContents text and highlights options for compatibility", async () => {
     const mockResponse = {
       results: [
         {
@@ -291,6 +304,7 @@ describe("Search API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
+    // DEPRECATED METHOD: compatibility coverage for legacy top-level contents options.
     const result = await exa.searchAndContents("latest AI developments", {
       text: true,
       highlights: true,
@@ -327,17 +341,17 @@ describe("Search API", () => {
       .mockResolvedValueOnce(mockResponse);
 
     const result = await exa.search("test query", {
-      contents: { highlights: { numSentences: 2 } },
+      contents: { highlights: { maxCharacters: 500 } },
     });
 
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
       query: "test query",
-      contents: { highlights: { numSentences: 2 } },
+      contents: { highlights: { maxCharacters: 500 } },
     });
     expect(result).toEqual(mockResponse);
   });
 
-  it("should default to text with maxCharacters when no content options provided", async () => {
+  it("should preserve deprecated searchAndContents default text behavior for compatibility", async () => {
     const mockResponse = {
       results: [
         {
@@ -354,6 +368,7 @@ describe("Search API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
+    // DEPRECATED METHOD: compatibility coverage for legacy top-level contents options.
     const result = await exa.searchAndContents("test query");
 
     expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
@@ -367,7 +382,7 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it("should handle findSimilarAndContents with context", async () => {
+  it("should preserve deprecated findSimilarAndContents context for compatibility", async () => {
     const mockResponse = {
       results: [
         {
@@ -377,6 +392,7 @@ describe("Search API", () => {
           text: "Similar content",
         },
       ],
+      // DEPRECATED FIELD: response context remains covered for compatibility.
       context: "Context for similar results",
       requestId: "req-456",
     };
@@ -385,8 +401,10 @@ describe("Search API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
+    // DEPRECATED METHOD: compatibility coverage for legacy top-level contents options.
     const result = await exa.findSimilarAndContents("https://example.com", {
       text: true,
+      // DEPRECATED FIELD: callers should use contents.text or contents.highlights instead.
       context: true,
       numResults: 5,
     });
@@ -395,6 +413,7 @@ describe("Search API", () => {
       url: "https://example.com",
       contents: {
         text: true,
+        // DEPRECATED FIELD: compatibility expectation only.
         context: true,
       },
       numResults: 5,
@@ -402,7 +421,7 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it("should handle livecrawl preferred option in contents", async () => {
+  it("should preserve deprecated searchAndContents livecrawl options for compatibility", async () => {
     const mockResponse = {
       results: [
         {
@@ -419,6 +438,7 @@ describe("Search API", () => {
       .spyOn(exa, "request")
       .mockResolvedValueOnce(mockResponse);
 
+    // DEPRECATED METHOD: compatibility coverage for legacy top-level contents options.
     const result = await exa.searchAndContents("latest AI developments", {
       text: true,
       livecrawl: "preferred",
@@ -582,7 +602,6 @@ describe("Search API", () => {
           text: "Deep search result text",
         },
       ],
-      context: "Deep search context string",
       requestId: "req-deep-123",
     };
 
@@ -608,7 +627,6 @@ describe("Search API", () => {
       },
     });
     expect(result).toEqual(mockResponse);
-    expect(result.context).toBeDefined();
   });
 
   it("should pass outputSchema for deep search", async () => {
@@ -897,7 +915,6 @@ describe("Search API", () => {
           text: "Deep search result text",
         },
       ],
-      context: "Deep search context string",
       requestId: "req-deep-variant-123",
     };
 
@@ -921,7 +938,6 @@ describe("Search API", () => {
       },
     });
     expect(result).toEqual(mockResponse);
-    expect(result.context).toBeDefined();
   });
 
   it("should pass additionalQueries for deep-lite search type", async () => {
@@ -934,7 +950,6 @@ describe("Search API", () => {
           text: "Deep lite search result text",
         },
       ],
-      context: "Deep lite search context string",
       requestId: "req-deep-lite-123",
     };
 
@@ -958,7 +973,6 @@ describe("Search API", () => {
       },
     });
     expect(result).toEqual(mockResponse);
-    expect(result.context).toBeDefined();
   });
 
   it("should pass deep highlights maxCharacters options through contents", async () => {

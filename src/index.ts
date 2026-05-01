@@ -21,6 +21,7 @@ const DEFAULT_MAX_CHARACTERS = 10_000;
  * @property {TextContentsOptions | boolean} [text] - Options for retrieving text contents.
  * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights.
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
+ * @property {ContextOptions | boolean} [context] - DEPRECATED: Use `text` or `highlights` instead. Will be removed in a future version.
  * @property {number} [maxAgeHours] - Maximum age of cached content in hours. If content is older, it will be fetched fresh. Special values: 0 = always fetch fresh content, -1 = never fetch fresh (use cached content only). Example: 168 = fetch fresh for pages older than 7 days.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
  * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result.
@@ -32,7 +33,10 @@ export type ContentsOptions = {
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
   livecrawl?: LivecrawlOptions;
-  /** @deprecated Use `highlights` or `text` instead. Will be removed in a future version. */
+  /**
+   * DEPRECATED: Use `text` or `highlights` instead. Will be removed in a future version.
+   * @deprecated Use `text` or `highlights` instead. This legacy `context` field will be removed in a future version.
+   */
   context?: ContextOptions | true;
   livecrawlTimeout?: number;
   maxAgeHours?: number;
@@ -147,11 +151,13 @@ export type DeepOutputSchema = DeepTextOutputSchema | DeepObjectOutputSchema;
 
 /**
  * Contents options for deep search.
- * @deprecated The `context` field is deprecated. Use `highlights` or `text` instead.
  */
 type DeepContentsOptions = Omit<ContentsOptions, "context"> & {
-  /** @deprecated Use `highlights` or `text` instead. Will be removed in a future version. */
-  context?: Omit<ContextOptions, never> | true;
+  /**
+   * DEPRECATED: Use `text` or `highlights` instead. Will be removed in a future version.
+   * @deprecated Use `text` or `highlights` instead. This legacy `context` field will be removed in a future version.
+   */
+  context?: ContextOptions | true;
 };
 
 /**
@@ -250,22 +256,28 @@ export type TextContentsOptions = {
  * @typedef {Object} HighlightsContentsOptions
  * @property {string} [query] - The query string to use for highlights search.
  * @property {number} [maxCharacters] - The maximum number of characters to return for highlights.
- * @property {number} [numSentences] - Deprecated. Use maxCharacters instead.
- * @property {number} [highlightsPerUrl] - Deprecated. Use maxCharacters instead.
+ * @property {number} [numSentences] - DEPRECATED: Use maxCharacters instead.
+ * @property {number} [highlightsPerUrl] - DEPRECATED: Use maxCharacters instead.
  */
 export type HighlightsContentsOptions = {
   query?: string;
   maxCharacters?: number;
-  /** @deprecated Use maxCharacters instead */
+  /**
+   * DEPRECATED: Use `maxCharacters` instead. Will be removed in a future version.
+   * @deprecated Use `maxCharacters` instead. This legacy sizing field will be removed in a future version.
+   */
   numSentences?: number;
-  /** @deprecated Use maxCharacters instead */
+  /**
+   * DEPRECATED: Use `maxCharacters` instead. Will be removed in a future version.
+   * @deprecated Use `maxCharacters` instead. This legacy sizing field will be removed in a future version.
+   */
   highlightsPerUrl?: number;
 };
 /**
  * Options for retrieving summary from page.
  * @typedef {Object} SummaryContentsOptions
  * @property {string} [query] - The query string to use for summary generation.
- * @property {JSONSchema} [schema] - JSON schema for structured output from summary.
+ * @property {Record<string, unknown> | ZodSchema} [schema] - JSON schema for structured output from summary.
  */
 export type SummaryContentsOptions = {
   query?: string;
@@ -273,12 +285,14 @@ export type SummaryContentsOptions = {
 };
 
 /**
- * @deprecated Use Record<string, unknown> instead.
+ * DEPRECATED: Use `Record<string, unknown>` instead. Will be removed in a future version.
+ * @deprecated Use `Record<string, unknown>` instead.
  */
 export type JSONSchema = Record<string, unknown>;
 
 /**
- * @deprecated Use `highlights` or `text` instead. The `context` option is deprecated and will be removed in a future version.
+ * DEPRECATED: Use `text` or `highlights` instead. Will be removed in a future version.
+ * @deprecated Use `text` or `highlights` instead. The `context` option will be removed in a future version.
  *
  * Options for retrieving the context from a list of search results. The context is a string
  * representation of all the search results.
@@ -523,7 +537,7 @@ export type DeepSearchOutput = {
  * Represents a search response object.
  * @typedef {Object} SearchResponse
  * @property {Result[]} results - The list of search results.
- * @property {string} [context] - Deprecated. The context for the search.
+ * @property {string} [context] - DEPRECATED: Use `text` or `highlights` on individual results instead. Will be removed in a future version.
  * @property {DeepSearchOutput} [output] - Search synthesized output object returned when `outputSchema` is provided.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
@@ -533,7 +547,10 @@ export type DeepSearchOutput = {
  */
 export type SearchResponse<T extends ContentsOptions> = {
   results: SearchResult<T>[];
-  /** @deprecated Use `highlights` or `text` on individual results instead. Will be removed in a future version. */
+  /**
+   * DEPRECATED: Use `text` or `highlights` on individual results instead. Will be removed in a future version.
+   * @deprecated Use `text` or `highlights` on individual results instead. This legacy `context` field will be removed in a future version.
+   */
   context?: string;
   output?: DeepSearchOutput;
   autoDate?: string;
@@ -683,6 +700,7 @@ export class Exa {
       livecrawl,
       livecrawlTimeout,
       maxAgeHours,
+      // DEPRECATED FIELD: preserve legacy `context` only for backward compatibility.
       context,
       ...rest
     } = options;
@@ -726,6 +744,7 @@ export class Exa {
     if (livecrawlTimeout !== undefined)
       contentsOptions.livecrawlTimeout = livecrawlTimeout;
     if (maxAgeHours !== undefined) contentsOptions.maxAgeHours = maxAgeHours;
+    // DEPRECATED FIELD: pass through only so existing callers do not break.
     if (context !== undefined) contentsOptions.context = context;
 
     return {
@@ -1000,6 +1019,7 @@ export class Exa {
   }
 
   /**
+   * DEPRECATED: Use `search()` instead. This legacy wrapper will be removed in a future version.
    * @deprecated Use `search()` instead. The search method now returns text contents by default.
    *
    * Migration examples:
@@ -1007,7 +1027,7 @@ export class Exa {
    * - `searchAndContents(query, { text: true })` → `search(query, { contents: { text: true } })`
    * - `searchAndContents(query, { summary: true })` → `search(query, { contents: { summary: true } })`
    *
-   * Performs a search with an Exa prompt-engineered query and returns the contents of the documents.
+   * Compatibility wrapper for the legacy top-level contents options shape.
    *
    * @param {string} query - The query string.
    * @param {RegularSearchOptions & T} [options] - Additional search + contents options
@@ -1109,6 +1129,7 @@ export class Exa {
   }
 
   /**
+   * DEPRECATED: Use `findSimilar()` instead. This legacy wrapper will be removed in a future version.
    * @deprecated Use `findSimilar()` instead. The findSimilar method now returns text contents by default.
    *
    * Migration examples:
@@ -1116,7 +1137,7 @@ export class Exa {
    * - `findSimilarAndContents(url, { text: true })` → `findSimilar(url, { contents: { text: true } })`
    * - `findSimilarAndContents(url, { summary: true })` → `findSimilar(url, { contents: { summary: true } })`
    *
-   * Finds similar links to the provided URL and returns the contents of the documents.
+   * Compatibility wrapper for the legacy top-level contents options shape.
    * @param {string} url - The URL for which to find similar links.
    * @param {FindSimilarOptions & T} [options] - Additional options for finding similar links + contents.
    * @returns {Promise<SearchResponse<T>>} A list of similar search results, including requested contents.
