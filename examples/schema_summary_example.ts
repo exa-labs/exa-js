@@ -1,11 +1,11 @@
-import Exa, { JSONSchema } from "../src/index";
+import Exa from "../src/index";
 
 const exa = new Exa(process.env.EXA_API_KEY);
 
 async function runSchemaSummaryExample() {
   try {
     // Define a JSON schema for structured company information.
-    const companySchema: JSONSchema = {
+    const companySchema: Record<string, unknown> = {
       $schema: "http://json-schema.org/draft-07/schema#",
       title: "Company Information",
       type: "object",

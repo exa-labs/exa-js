@@ -62,7 +62,7 @@
       {"name": "subpages", "type": "number", "description": "Number of subpages to return for each result."},
       {"name": "subpageTarget", "type": "string | string[]", "description": "Text used to match/rank subpages in the returned list."},
       {"name": "extras", "type": "ExtrasOptions", "description": "Miscellaneous data derived from results."},
-      {"name": "context", "type": "ContextOptions | true", "description": "Deprecated. Use `highlights` or `text` instead. Will be removed in a future version."}
+      {"name": "context", "type": "ContextOptions | true", "description": "DEPRECATED: Use `text` or `highlights` instead. Will be removed in a future version."}
     ],
     "SearchResult": [
       {"name": "title", "type": "string | null", "description": "The title of the search result."},
@@ -82,7 +82,7 @@
     "SearchResponse": [
       {"name": "results", "type": "SearchResult<T>[]", "description": "The list of search results."},
       {"name": "requestId", "type": "string", "description": "The request ID for the search."},
-      {"name": "context", "type": "string", "description": "Deprecated. The combined context string. Use `highlights` or `text` on individual results instead."},
+      {"name": "context", "type": "string", "description": "DEPRECATED: Use `text` or `highlights` on individual results instead. Will be removed in a future version."},
       {"name": "autoDate", "type": "string", "description": "The autoprompt date, if applicable."},
       {"name": "statuses", "type": "Status[]", "description": "Status information for each result."},
       {"name": "costDollars", "type": "CostDollars", "description": "The cost breakdown for this request."}
@@ -134,17 +134,17 @@
   },
     "method_notes": {
       "search": "The `options.type` parameter accepts: `\"auto\"` (default), `\"fast\"`, `\"deep\"`, or `\"neural\"`. See [RegularSearchOptions](#regularsearchoptions) for all available options.",
-      "searchAndContents": "The `options.type` parameter accepts: `\"auto\"` (default), `\"fast\"`, `\"deep\"`, or `\"neural\"`. See [RegularSearchOptions](#regularsearchoptions) for all available options.",
-      "findSimilar": "See [FindSimilarOptions](#findsimilaroptions) for all available options including `excludeSourceDomain`.",
-      "findSimilarAndContents": "See [FindSimilarOptions](#findsimilaroptions) for all available options including `excludeSourceDomain`.",
+      "searchAndContents": "DEPRECATED: Use `search()` instead. Pass content options under `contents`, for example `exa.search(query, { contents: { text: true } })`. Will be removed in a future version.",
+      "findSimilar": "DEPRECATED: Use `search()` for new discovery flows. There is no direct replacement for URL-based similarity. Will be removed in a future version.",
+      "findSimilarAndContents": "DEPRECATED: Use `search()` instead for new discovery flows. Pass content options under `contents`, for example `exa.search(query, { contents: { text: true } })`. There is no direct replacement for URL-based similarity. Will be removed in a future version.",
       "research.get": "When called with `stream: true`, returns an `AsyncGenerator<ResearchStreamEvent>` for real-time SSE updates instead of a `Promise<Research>`.",
       "research.pollUntilFinished": "Options include `pollInterval` (default 1000ms), `timeoutMs` (default 10 minutes), and `events` (boolean to include event log)."
     },
   "input_examples": {
     "search": "const result = await exa.search(\"hottest AI startups\", {\n  numResults: 10\n});",
-    "searchAndContents": "const result = await exa.searchAndContents(\"AI in healthcare\", {\n  text: true,\n  highlights: true,\n  numResults: 5\n});",
-    "findSimilar": "const result = await exa.findSimilar(\"https://www.example.com/article\", {\n  numResults: 10,\n  excludeSourceDomain: true\n});",
-    "findSimilarAndContents": "const result = await exa.findSimilarAndContents(\"https://www.example.com/article\", {\n  text: true,\n  highlights: true,\n  numResults: 5\n});",
+    "searchAndContents": "// DEPRECATED: use exa.search with contents instead.\nconst result = await exa.search(\"AI in healthcare\", {\n  contents: {\n    text: true,\n    highlights: true\n  },\n  numResults: 5\n});",
+    "findSimilar": "// DEPRECATED: use exa.search for new discovery flows instead.\nconst result = await exa.search(\"articles about AI and machine learning\", {\n  numResults: 10\n});",
+    "findSimilarAndContents": "// DEPRECATED: use exa.search with contents for new discovery flows instead.\nconst result = await exa.search(\"articles about AI and machine learning\", {\n  contents: {\n    text: true,\n    highlights: true\n  },\n  numResults: 5\n});",
     "getContents": "const result = await exa.getContents([\n  \"https://www.example.com/article1\",\n  \"https://www.example.com/article2\"\n], {\n  text: { maxCharacters: 1000 },\n  highlights: { query: \"AI\", maxCharacters: 200 }\n});",
     "answer": "const result = await exa.answer(\"What is the capital of France?\", {\n  text: true,\n  model: \"exa\"\n});",
     "streamAnswer": "for await (const chunk of exa.streamAnswer(\"What is quantum computing?\", {\n  text: true,\n  model: \"exa\"\n})) {\n  if (chunk.content) process.stdout.write(chunk.content);\n  if (chunk.citations) console.log(\"Citations:\", chunk.citations);\n}",
