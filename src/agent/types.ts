@@ -1,0 +1,163 @@
+/**
+ * Types for the Exa Agent API.
+ */
+
+import { ZodSchema } from "zod";
+
+export const AGENT_BETA_HEADER = "agent-2026-05-07";
+
+export interface AgentBetaOptions {
+  betas: string[];
+}
+
+export type AgentRunStatus =
+  | "queued"
+  | "running"
+  | "completed"
+  | "failed"
+  | "cancelled";
+
+export type AgentStopReason =
+  | "schema_satisfied"
+  | "budget_reached"
+  | "error"
+  | "cancelled";
+
+export type AgentConfidence = "low" | "medium" | "high";
+
+export type AgentEffort = "low" | "medium" | "high" | "xhigh" | "auto";
+
+export interface AgentInput {
+  data?: Record<string, unknown>[];
+  exclusion?: Record<string, unknown>[];
+  [key: string]: unknown;
+}
+
+export interface AgentGroundingCitation {
+  url: string;
+  title?: string | null;
+  [key: string]: unknown;
+}
+
+export interface AgentGroundingEntry {
+  field: string;
+  citations: AgentGroundingCitation[];
+  score?: number | null;
+  confidence?: AgentConfidence | null;
+  [key: string]: unknown;
+}
+
+export interface AgentOutput {
+  text?: string | null;
+  structured?: unknown;
+  grounding?: AgentGroundingEntry[] | null;
+  [key: string]: unknown;
+}
+
+export interface AgentUsage {
+  agentComputeUnits?: number;
+  searches?: number;
+  emails?: number;
+  phoneNumbers?: number;
+  [key: string]: unknown;
+}
+
+export interface AgentCostDollars {
+  total?: number;
+  agentCompute?: number;
+  search?: number;
+  emails?: number;
+  phoneNumbers?: number;
+  [key: string]: unknown;
+}
+
+export interface AgentError {
+  type?: string;
+  code?: string;
+  message?: string;
+  path?: string;
+  keyword?: string;
+  expected?: unknown;
+  actual?: unknown;
+  [key: string]: unknown;
+}
+
+export interface AgentRun {
+  id: string;
+  object?: string;
+  status: AgentRunStatus;
+  stopReason?: AgentStopReason | null;
+  createdAt?: string;
+  completedAt?: string | null;
+  request?: Record<string, unknown>;
+  output?: AgentOutput | null;
+  usage?: AgentUsage;
+  costDollars?: AgentCostDollars;
+  error?: AgentError;
+  [key: string]: unknown;
+}
+
+export type AgentRunTyped<T> = Omit<AgentRun, "output"> & {
+  output?: (Omit<AgentOutput, "structured"> & { structured?: T }) | null;
+};
+
+export interface ListAgentRunsParams extends AgentBetaOptions {
+  cursor?: string;
+  limit?: number;
+}
+
+export interface ListAgentRunsResponse {
+  object?: string;
+  data: AgentRun[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+
+export interface DeletedAgentRun {
+  id: string;
+  object?: string;
+  deleted: boolean;
+}
+
+export interface AgentEvent {
+  id?: string;
+  event: string;
+  data: Record<string, unknown>;
+  createdAt?: string;
+  [key: string]: unknown;
+}
+
+export interface ListAgentRunEventsParams extends AgentBetaOptions {
+  cursor?: string;
+  limit?: number;
+}
+
+export interface ListAgentRunEventsResponse {
+  object?: string;
+  data: AgentEvent[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+
+export interface CreateAgentRunParams {
+  betas: string[];
+  query: string;
+  systemPrompt?: string;
+  input?: AgentInput;
+  outputSchema?: Record<string, unknown>;
+  effort?: AgentEffort;
+  previousRunId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export type CreateAgentRunParamsTyped<T> = Omit<
+  CreateAgentRunParams,
+  "outputSchema"
+> & {
+  outputSchema?: T;
+};
+
+export type AgentCreateOptions<T = Record<string, unknown>> =
+  CreateAgentRunParamsTyped<Record<string, unknown> | ZodSchema<T>> & {
+    stream?: boolean;
+  };
