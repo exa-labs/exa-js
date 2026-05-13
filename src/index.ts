@@ -1,6 +1,7 @@
 import fetch, { Headers } from "cross-fetch";
 import { ZodSchema } from "zod";
 import packageJson from "../package.json";
+import { BetaClient } from "./agent/client";
 import { ExaError, HttpStatusCode } from "./errors";
 import { SearchMonitorsClient } from "./monitors/client";
 import { ResearchClient } from "./research/client";
@@ -685,6 +686,11 @@ export class Exa {
   monitors: SearchMonitorsClient;
 
   /**
+   * Beta API clients
+   */
+  beta: BetaClient;
+
+  /**
    * Helper method to separate out the contents-specific options from the rest.
    */
   private extractContentsOptions<T extends ContentsOptions>(
@@ -813,6 +819,8 @@ export class Exa {
     this.research = new ResearchClient(this);
     // Initialize the Search Monitors client
     this.monitors = new SearchMonitorsClient(this);
+    // Initialize beta clients
+    this.beta = new BetaClient(this);
   }
 
   /**
@@ -909,7 +917,8 @@ export class Exa {
     queryParams?: Record<
       string,
       string | number | boolean | string[] | undefined
-    >
+    >,
+    headers?: Record<string, string>
   ): Promise<Response> {
     let url = this.baseURL + endpoint;
 
@@ -927,9 +936,23 @@ export class Exa {
       url += `?${searchParams.toString()}`;
     }
 
+    let combinedHeaders: Record<string, string> = {};
+
+    if (this.headers instanceof HeadersImpl) {
+      this.headers.forEach((value, key) => {
+        combinedHeaders[key] = value;
+      });
+    } else {
+      combinedHeaders = { ...(this.headers as Record<string, string>) };
+    }
+
+    if (headers) {
+      combinedHeaders = { ...combinedHeaders, ...headers };
+    }
+
     const response = await fetchImpl(url, {
       method,
-      headers: this.headers,
+      headers: combinedHeaders,
       body: body ? JSON.stringify(body) : undefined,
     });
 
@@ -1551,6 +1574,8 @@ export * from "./websets";
 export * from "./research";
 // Re-export Search Monitors related types and client
 export * from "./monitors";
+// Re-export Agent related types and client
+export * from "./agent";
 
 // Export the main class
 export default Exa;

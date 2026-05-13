@@ -20,15 +20,12 @@ import Exa from "exa-js";
 const exa = new Exa(process.env.EXA_API_KEY);
 
 // Search the web
-const result = await exa.search(
-  "blog post about artificial intelligence",
-  {
-    type: "auto",
-    contents: {
-      highlights: true
-    }
-  }
-);
+const result = await exa.search("blog post about artificial intelligence", {
+  type: "auto",
+  contents: {
+    highlights: true,
+  },
+});
 
 // Get answers with citations
 const { answer } = await exa.answer("What is the capital of France?");
@@ -44,8 +41,8 @@ const result = await exa.search("interesting articles about space", {
   includeDomains: ["nasa.gov", "space.com"],
   startPublishedDate: "2024-01-01",
   contents: {
-    highlights: true
-  }
+    highlights: true,
+  },
 });
 ```
 
@@ -58,10 +55,10 @@ const resultWithOutput = await exa.search("Who leads OpenAI's safety team?", {
     properties: {
       leader: { type: "string" },
       title: { type: "string" },
-      sourceCount: { type: "number" }
+      sourceCount: { type: "number" },
     },
-    required: ["leader", "title"]
-  }
+    required: ["leader", "title"],
+  },
 });
 
 console.log(resultWithOutput.output?.content);
@@ -69,7 +66,7 @@ console.log(resultWithOutput.output?.content);
 
 ```ts
 for await (const chunk of exa.streamSearch("Who leads OpenAI's safety team?", {
-  type: "auto"
+  type: "auto",
 })) {
   if (chunk.content) {
     process.stdout.write(chunk.content);
@@ -78,6 +75,7 @@ for await (const chunk of exa.streamSearch("Who leads OpenAI's safety team?", {
 ```
 
 Search `outputSchema` modes:
+
 - `type: "text"`: return plain text in `output.content` (optionally guided by `description`)
 - `type: "object"`: return structured JSON in `output.content`
 
@@ -85,10 +83,12 @@ Search `outputSchema` modes:
 Search streaming is available via `streamSearch(...)`, which yields OpenAI-style chat completion chunks.
 
 For `type: "object"`, search currently enforces:
+
 - max nesting depth: `2`
 - max total properties: `10`
 
 Deep search variants that also support `additionalQueries`:
+
 - `deep-lite`
 - `deep`
 - `deep-reasoning`
@@ -118,6 +118,41 @@ for await (const chunk of exa.streamAnswer("Explain quantum computing")) {
     process.stdout.write(chunk.content);
   }
 }
+```
+
+## Agent API (Beta)
+
+```ts
+const run = await exa.beta.agent.runs.create({
+  betas: ["agent-2026-05-07"],
+  query:
+    "Find engineering leaders at AI infrastructure companies that raised a Series A or B in the last 6 months.",
+  outputSchema: {
+    type: "object",
+    properties: {
+      people: {
+        type: "array",
+        maxItems: 10,
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            contact_email: { type: "string", format: "email" },
+            linkedin_url: { type: "string", format: "uri" },
+          },
+          required: ["name", "linkedin_url"],
+        },
+      },
+    },
+    required: ["people"],
+  },
+  effort: "auto",
+});
+
+const completedRun = await exa.beta.agent.runs.pollUntilFinished(run.id, {
+  betas: ["agent-2026-05-07"],
+});
+console.log(completedRun.output?.structured);
 ```
 
 ## TypeScript
