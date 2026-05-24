@@ -460,6 +460,11 @@ export type EntityPersonPropertiesCompanyRef = {
   name?: string | null;
 };
 
+/** Reference to an institution in education history. */
+export type EntityPersonPropertiesInstitutionRef = {
+  name?: string | null;
+};
+
 /** A single work history entry for a person. */
 export type EntityPersonPropertiesWorkHistoryEntry = {
   title?: string | null;
@@ -468,11 +473,19 @@ export type EntityPersonPropertiesWorkHistoryEntry = {
   company?: EntityPersonPropertiesCompanyRef | null;
 };
 
+/** A single education history entry for a person. */
+export type EntityPersonPropertiesEducationHistoryEntry = {
+  degree?: string | null;
+  dates?: EntityDateRange | null;
+  institution?: EntityPersonPropertiesInstitutionRef | null;
+};
+
 /** Structured properties for a person entity. */
 export type EntityPersonProperties = {
   name?: string | null;
   location?: string | null;
   workHistory?: EntityPersonPropertiesWorkHistoryEntry[];
+  educationHistory?: EntityPersonPropertiesEducationHistoryEntry[];
 };
 
 /** Structured entity data for a company. */
