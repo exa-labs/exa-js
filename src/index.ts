@@ -823,6 +823,31 @@ export class Exa {
     this.beta = new BetaClient(this);
   }
 
+  private async parseJsonResponse<T>(
+    response: Response,
+    endpoint: string
+  ): Promise<T> {
+    const responseText = await response.text();
+
+    try {
+      return JSON.parse(responseText) as T;
+    } catch (error) {
+      const preview = responseText
+        ? responseText.slice(0, 300).replace(/\s+/g, " ").trim()
+        : "<empty response body>";
+      const message = response.ok
+        ? `Invalid JSON response from Exa API at ${endpoint}: ${preview}`
+        : `Exa API request failed with non-JSON response at ${endpoint}: ${preview}`;
+
+      throw new ExaError(
+        message,
+        response.status,
+        new Date().toISOString(),
+        endpoint
+      );
+    }
+  }
+
   /**
    * Makes a request to the Exa API.
    * @param {string} endpoint - The API endpoint to call.
@@ -876,7 +901,10 @@ export class Exa {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await this.parseJsonResponse<Record<string, any>>(
+        response,
+        endpoint
+      );
 
       if (!errorData.statusCode) {
         errorData.statusCode = response.status;
@@ -907,7 +935,7 @@ export class Exa {
       return (await this.parseSSEStream<T>(response)) as T;
     }
 
-    return (await response.json()) as T;
+    return await this.parseJsonResponse<T>(response, endpoint);
   }
 
   async rawRequest(
