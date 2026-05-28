@@ -16,6 +16,47 @@ const HeadersImpl =
 
 const DEFAULT_MAX_CHARACTERS = 10_000;
 
+// Longest snippet of a non-JSON response body to include in error messages.
+const NON_JSON_BODY_SNIPPET_LENGTH = 500;
+
+/**
+ * Reads a fetch Response body once and attempts to parse it as JSON.
+ *
+ * API gateways and proxies (Cloudflare, load balancers, nginx) sometimes
+ * return HTML or plain-text error pages even when the SDK expects JSON.
+ * Calling `response.json()` on those bodies throws an opaque
+ * `SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON`
+ * that hides the real HTTP status. Reading the body as text first lets the
+ * caller surface the actual status and a snippet of the response instead.
+ *
+ * @returns The parsed JSON value (or `undefined` when the body is empty or not
+ *   valid JSON) alongside the raw response text.
+ */
+async function readResponseBody(
+  response: Response
+): Promise<{ json: any; text: string }> {
+  const text = await response.text();
+  if (!text) {
+    return { json: undefined, text };
+  }
+  try {
+    return { json: JSON.parse(text), text };
+  } catch {
+    return { json: undefined, text };
+  }
+}
+
+/**
+ * Collapses whitespace and truncates a non-JSON response body so it stays
+ * readable when embedded in an error message.
+ */
+function truncateResponseBody(text: string): string {
+  const collapsed = text.replace(/\s+/g, " ").trim();
+  return collapsed.length > NON_JSON_BODY_SNIPPET_LENGTH
+    ? `${collapsed.slice(0, NON_JSON_BODY_SNIPPET_LENGTH)}…`
+    : collapsed;
+}
+
 /**
  * Options for retrieving page contents
  * @typedef {Object} ContentsOptions
@@ -876,8 +917,25 @@ export class Exa {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const { json, text } = await readResponseBody(response);
 
+      // Gateways/proxies can return non-JSON (e.g. HTML) error pages. Surface
+      // the real status and a snippet of the body rather than throwing an
+      // opaque JSON parse error that hides the underlying failure.
+      if (!json || typeof json !== "object") {
+        const snippet = truncateResponseBody(text);
+        const message = snippet
+          ? `Request failed with status ${response.status}. Response body was not valid JSON: ${snippet}`
+          : `Request failed with status ${response.status}.`;
+        throw new ExaError(
+          message,
+          response.status,
+          new Date().toISOString(),
+          endpoint
+        );
+      }
+
+      const errorData = json;
       if (!errorData.statusCode) {
         errorData.statusCode = response.status;
       }
@@ -907,7 +965,20 @@ export class Exa {
       return (await this.parseSSEStream<T>(response)) as T;
     }
 
-    return (await response.json()) as T;
+    const { json, text } = await readResponseBody(response);
+
+    // A successful status with a non-JSON body usually means a proxy returned
+    // an error/redirect page; surface it instead of an opaque parse error.
+    if (json === undefined && text) {
+      throw new ExaError(
+        `Expected a JSON response but received a non-JSON body (status ${response.status}): ${truncateResponseBody(text)}`,
+        response.status,
+        new Date().toISOString(),
+        endpoint
+      );
+    }
+
+    return json as T;
   }
 
   async rawRequest(
