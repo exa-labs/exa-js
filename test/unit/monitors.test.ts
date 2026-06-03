@@ -283,6 +283,25 @@ describe("Search Monitors API", () => {
       expect(result).toEqual(mockResponse);
     });
 
+    it("should accept structured object content for outputSchema runs", async () => {
+      const structuredContent = { summary: "AI breakthroughs", count: 3 };
+      const mockResponse: SearchMonitorRun = {
+        ...createMockMonitorRun(),
+        output: {
+          results: null,
+          content: structuredContent,
+          grounding: null,
+        },
+      };
+
+      const runsClient = getProtectedClient(exa.monitors.runs);
+      vi.spyOn(runsClient, "request").mockResolvedValueOnce(mockResponse);
+
+      const result = await exa.monitors.runs.get("sm_123456", "run_123456");
+
+      expect(result.output?.content).toEqual(structuredContent);
+    });
+
     it("should paginate through all runs with listAll", async () => {
       const run1 = { ...createMockMonitorRun(), id: "run_1" };
       const run2 = { ...createMockMonitorRun(), id: "run_2" };
