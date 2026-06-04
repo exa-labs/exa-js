@@ -1,0 +1,78 @@
+name: release-please
+
+# Release automation for exa-js.
+#
+# Flow: merges to `master` (with conventional-commit titles) keep a single
+# "Release PR" up to date (version bump + CHANGELOG). Merging that Release PR is
+# the human approval; release-please then creates the git tag + GitHub Release,
+# which gates the publish job below. Publishing uses npm Trusted Publishing
+# (OIDC) — there is no npm token stored anywhere.
+
+on:
+  push:
+    branches: [master]
+
+permissions: {}
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the git tag + GitHub Release
+      pull-requests: write # open / update the Release PR
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      version: ${{ steps.release.outputs.version }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }} # built-in token, not a stored secret
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  publish:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    environment: publishing_env_for_npm_registry
+    permissions:
+      contents: read
+      id-token: write # OIDC trusted publishing; no npm token anywhere
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+
+      - name: Ensure npm 11.5.1+ (required for OIDC publishing)
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build --if-present
+
+      - name: Run tests
+        run: npm test
+        env:
+          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
+
+      - name: Publish to npm
+        run: npm publish
+
+      - name: Notify Slack (optional)
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          [ -z "$SLACK_WEBHOOK_URL" ] && { echo "SLACK_WEBHOOK_URL not set; skipping notification"; exit 0; }
+          V="${{ needs.release-please.outputs.version }}"
+          curl -fsSL -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\":rocket: Published *exa-js@${V}* — https://www.npmjs.com/package/exa-js/v/${V}\"}" \
+            "$SLACK_WEBHOOK_URL"
