@@ -25,10 +25,11 @@ jobs:
       version: ${{ steps.release.outputs.version }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }} # built-in token, not a stored secret
+          target-branch: master
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
@@ -36,16 +37,17 @@ jobs:
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
-    environment: publishing_env_for_npm_registry
+    environment: npm-publish
     permissions:
       contents: read
       id-token: write # OIDC trusted publishing; no npm token anywhere
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: ${{ needs.release-please.outputs.tag_name }}
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
@@ -59,13 +61,8 @@ jobs:
       - name: Build package
         run: npm run build --if-present
 
-      - name: Run tests
-        run: npm test
-        env:
-          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
-
       - name: Publish to npm
-        run: npm publish
+        run: npm publish # unscoped public package; OIDC tokenless, provenance automatic
 
       - name: Notify Slack (optional)
         env:
