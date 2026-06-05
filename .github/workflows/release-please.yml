@@ -1,0 +1,45 @@
+name: release-please
+
+# Release automation for exa-js.
+#
+# Flow: merges to `master` (with conventional-commit titles) keep a single
+# "Release PR" up to date (version bump + CHANGELOG). Merging that Release PR is
+# the human approval; release-please then creates the git tag + GitHub Release,
+# which triggers the publish job below. Publishing reuses the existing
+# publish.yml workflow (OIDC / npm Trusted Publishing) — no npm token anywhere.
+
+on:
+  push:
+    branches: [master]
+
+permissions: {}
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the git tag + GitHub Release
+      pull-requests: write # open / update the Release PR
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }} # built-in token, not a stored secret
+          target-branch: master
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  publish:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: read
+      id-token: write # OIDC trusted publishing in the reusable workflow
+    # Reuse the existing OIDC publish workflow (env publishing_env_for_npm_registry).
+    uses: ./.github/workflows/publish.yml
+    with:
+      ref: ${{ needs.release-please.outputs.tag_name }}
+    secrets: inherit
