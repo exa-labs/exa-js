@@ -1,0 +1,58 @@
+name: Publish to npm
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Git ref to publish (defaults to caller ref)'
+        required: false
+        type: string
+    secrets:
+      EXA_API_KEY:
+        required: true
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref/branch/tag to publish (defaults to selected ref)'
+        required: false
+        type: string
+
+jobs:
+  publish:
+  # I connected the environment to the npm registry in the npm settings and we use OIDC tokens to authenticate the github action
+    runs-on: ubuntu-latest
+    environment: publishing_env_for_npm_registry
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+          scope: '@exa-labs'
+
+      - name: Ensure npm 11.5.1+
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build --if-present
+
+      - name: Run tests
+        run: npm test
+        env:
+          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
+
+      - name: Publish to npm
+        run: npm publish
+
