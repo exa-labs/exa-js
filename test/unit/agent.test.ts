@@ -47,7 +47,7 @@ describe("Agent API", () => {
         },
       ],
     },
-    usage: { agentComputeUnits: 100, searches: 2 },
+    usage: { agentComputeUnits: 0.1, searches: 2 },
     costDollars: { total: 0.02, agentCompute: 0.01, search: 0.01 },
   });
 
@@ -79,8 +79,8 @@ describe("Agent API", () => {
       query: "Find recent funding rounds.",
       systemPrompt: "Prefer primary sources.",
       input: { data: [{ company: "Example AI" }] },
-      outputSchema: { type: "object" },
-      effort: "high",
+      outputSchema: { type: "object" as const },
+      effort: "high" as const,
       metadata: { workflow: "funding-watch" },
     };
     const result = await exa.beta.agent.runs.create(params);
