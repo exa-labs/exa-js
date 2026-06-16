@@ -69,13 +69,17 @@ describe("Agent API", () => {
     expect((exa.agent as any).run).toBeUndefined();
   });
 
-  it("keeps the beta Agent namespace as an alias", () => {
-    expect(AgentBetaClient).toBe(AgentClient);
-    expect(exa.agent).toBeInstanceOf(AgentBetaClient);
-    expect(exa.beta.agent).toBe(exa.agent);
-    expect(exa.beta.agent.runs).toBe(exa.agent.runs);
+  it("keeps the beta Agent namespace as a compatibility wrapper", () => {
+    expect(AgentBetaClient).not.toBe(AgentClient);
+    expect(exa.agent).toBeInstanceOf(AgentClient);
+    expect(exa.beta.agent).toBeInstanceOf(AgentBetaClient);
+    expect(exa.beta.agent).toBeInstanceOf(AgentClient);
+    expect(exa.beta.agent).not.toBe(exa.agent);
+    expect(exa.beta.agent.runs).not.toBe(exa.agent.runs);
     expect(new AgentBetaClient(exa).runs).toBeDefined();
+    expect(new AgentBetaClient(exa.agent).runs).toBeDefined();
     expect(new BetaClient(exa).agent.runs).toBeDefined();
+    expect(new BetaClient(exa.agent).agent.runs).toBeDefined();
 
     if (false) {
       // @ts-expect-error betas are only accepted through exa.beta.agent.
@@ -117,8 +121,8 @@ describe("Agent API", () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it("passes legacy betas through when creating an Agent run from the beta namespace", async () => {
-    const runClient = getProtectedClient(exa.agent.runs);
+  it("sends legacy beta values as headers when creating an Agent run from the beta namespace", async () => {
+    const runClient = getProtectedClient(exa.beta.agent.runs);
     const requestSpy = vi
       .spyOn(runClient, "request")
       .mockResolvedValueOnce(createMockRun());
@@ -129,7 +133,34 @@ describe("Agent API", () => {
     });
 
     const payload = requestSpy.mock.calls[0][2] as Record<string, any>;
-    expect(payload.betas).toEqual([AGENT_BETA_HEADER]);
+    expect(payload).toEqual({ query: "Find recent funding rounds." });
+    expect(requestSpy).toHaveBeenCalledWith(
+      "",
+      "POST",
+      { query: "Find recent funding rounds." },
+      undefined,
+      { "Exa-Beta": AGENT_BETA_HEADER }
+    );
+  });
+
+  it("omits legacy beta headers when beta values are empty", async () => {
+    const runClient = getProtectedClient(exa.beta.agent.runs);
+    const requestSpy = vi
+      .spyOn(runClient, "request")
+      .mockResolvedValueOnce(createMockRun());
+
+    await exa.beta.agent.runs.create({
+      betas: [],
+      query: "Find recent funding rounds.",
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "",
+      "POST",
+      { query: "Find recent funding rounds." },
+      undefined,
+      undefined
+    );
   });
 
   it("converts zod output schemas before creating an Agent run", async () => {
@@ -224,6 +255,33 @@ describe("Agent API", () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it("lists Agent runs with legacy beta headers from the beta namespace", async () => {
+    const mockResponse: ListAgentRunsResponse = {
+      object: "list",
+      data: [createMockRun()],
+      hasMore: false,
+      nextCursor: null,
+    };
+    const runClient = getProtectedClient(exa.beta.agent.runs);
+    const requestSpy = vi
+      .spyOn(runClient, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.beta.agent.runs.list({
+      betas: [AGENT_BETA_HEADER],
+      limit: 10,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "",
+      "GET",
+      undefined,
+      { limit: 10 },
+      { "Exa-Beta": AGENT_BETA_HEADER }
+    );
+    expect(result).toEqual(mockResponse);
+  });
+
   it("paginates through Agent runs with listAll and getAll", async () => {
     const runClient = getProtectedClient(exa.agent.runs);
     const requestSpy = vi
@@ -269,6 +327,56 @@ describe("Agent API", () => {
     });
   });
 
+  it("preserves legacy beta headers while paginating through the beta namespace", async () => {
+    const runClient = getProtectedClient(exa.beta.agent.runs);
+    const requestSpy = vi
+      .spyOn(runClient, "request")
+      .mockResolvedValueOnce({
+        object: "list",
+        data: [{ ...createMockRun(), id: "agent_run_1" }],
+        hasMore: true,
+        nextCursor: "cursor_2",
+      })
+      .mockResolvedValueOnce({
+        object: "list",
+        data: [{ ...createMockRun(), id: "agent_run_2" }],
+        hasMore: false,
+        nextCursor: null,
+      });
+
+    const listed = [];
+    for await (const run of exa.beta.agent.runs.listAll({
+      betas: [AGENT_BETA_HEADER],
+      limit: 1,
+    })) {
+      listed.push(run.id);
+    }
+
+    expect(listed).toEqual(["agent_run_1", "agent_run_2"]);
+    expect(requestSpy).toHaveBeenNthCalledWith(
+      1,
+      "",
+      "GET",
+      undefined,
+      {
+        limit: 1,
+        cursor: undefined,
+      },
+      { "Exa-Beta": AGENT_BETA_HEADER }
+    );
+    expect(requestSpy).toHaveBeenNthCalledWith(
+      2,
+      "",
+      "GET",
+      undefined,
+      {
+        limit: 1,
+        cursor: "cursor_2",
+      },
+      { "Exa-Beta": AGENT_BETA_HEADER }
+    );
+  });
+
   it("cancels and deletes Agent runs", async () => {
     const cancelled: AgentRun = {
       ...createMockRun(),
@@ -294,6 +402,60 @@ describe("Agent API", () => {
       "POST"
     );
     expect(requestSpy).toHaveBeenNthCalledWith(2, "/agent_run_123", "DELETE");
+  });
+
+  it("gets, cancels, and deletes Agent runs with legacy beta headers from the beta namespace", async () => {
+    const cancelled: AgentRun = {
+      ...createMockRun(),
+      status: "cancelled",
+      stopReason: "cancelled",
+    };
+    const deleted: DeletedAgentRun = {
+      id: "agent_run_123",
+      object: "agent_run.deleted",
+      deleted: true,
+    };
+    const runClient = getProtectedClient(exa.beta.agent.runs);
+    const requestSpy = vi
+      .spyOn(runClient, "request")
+      .mockResolvedValueOnce(createMockRun())
+      .mockResolvedValueOnce(cancelled)
+      .mockResolvedValueOnce(deleted);
+
+    await exa.beta.agent.runs.get("agent_run_123", {
+      betas: [AGENT_BETA_HEADER],
+    });
+    await exa.beta.agent.runs.cancel("agent_run_123", {
+      betas: [AGENT_BETA_HEADER],
+    });
+    await exa.beta.agent.runs.delete("agent_run_123", {
+      betas: [AGENT_BETA_HEADER],
+    });
+
+    expect(requestSpy).toHaveBeenNthCalledWith(
+      1,
+      "/agent_run_123",
+      "GET",
+      undefined,
+      undefined,
+      { "Exa-Beta": AGENT_BETA_HEADER }
+    );
+    expect(requestSpy).toHaveBeenNthCalledWith(
+      2,
+      "/agent_run_123/cancel",
+      "POST",
+      undefined,
+      undefined,
+      { "Exa-Beta": AGENT_BETA_HEADER }
+    );
+    expect(requestSpy).toHaveBeenNthCalledWith(
+      3,
+      "/agent_run_123",
+      "DELETE",
+      undefined,
+      undefined,
+      { "Exa-Beta": AGENT_BETA_HEADER }
+    );
   });
 
   it("lists Agent run events", async () => {
@@ -328,6 +490,40 @@ describe("Agent API", () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it("lists Agent run events with legacy beta headers from the beta namespace", async () => {
+    const mockResponse: ListAgentRunEventsResponse = {
+      object: "list",
+      data: [
+        {
+          id: "1",
+          event: "agent_run.created",
+          data: { id: "agent_run_123", status: "queued" },
+          createdAt: "2026-05-07T18:31:00.000Z",
+        },
+      ],
+      hasMore: false,
+      nextCursor: null,
+    };
+    const eventsClient = getProtectedClient(exa.beta.agent.runs.events);
+    const requestSpy = vi
+      .spyOn(eventsClient, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.beta.agent.runs.events.list("agent_run_123", {
+      betas: [AGENT_BETA_HEADER],
+      limit: 20,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/agent_run_123/events",
+      "GET",
+      undefined,
+      { limit: 20 },
+      { "Exa-Beta": AGENT_BETA_HEADER }
+    );
+    expect(result).toEqual(mockResponse);
+  });
+
   it("streams created Agent run events with SSE headers", async () => {
     const response = createSseResponse([
       'id: 1\nevent: agent_run.created\ndata: {"id":"agent_run_123","status":"queued"}\n\n',
@@ -354,6 +550,46 @@ describe("Agent API", () => {
       { query: "Find companies." },
       undefined,
       {
+        Accept: "text/event-stream",
+      }
+    );
+    expect(collected).toEqual([
+      {
+        id: "1",
+        event: "agent_run.created",
+        data: { id: "agent_run_123", status: "queued" },
+      },
+    ]);
+  });
+
+  it("streams created Agent run events with SSE and legacy beta headers from the beta namespace", async () => {
+    const response = createSseResponse([
+      'id: 1\nevent: agent_run.created\ndata: {"id":"agent_run_123","status":"queued"}\n\n',
+    ]);
+    const rawRequestSpy = vi
+      .spyOn(exa, "rawRequest")
+      .mockResolvedValueOnce(response);
+
+    const events = await exa.beta.agent.runs.create({
+      betas: [AGENT_BETA_HEADER],
+      query: "Find companies.",
+      stream: true,
+    });
+
+    const collected = [];
+    for await (const event of events) {
+      collected.push(event);
+    }
+    const reader = response.body?.getReader();
+    reader?.releaseLock();
+
+    expect(rawRequestSpy).toHaveBeenCalledWith(
+      "/agent/runs",
+      "POST",
+      { query: "Find companies." },
+      undefined,
+      {
+        "Exa-Beta": AGENT_BETA_HEADER,
         Accept: "text/event-stream",
       }
     );
@@ -427,6 +663,47 @@ describe("Agent API", () => {
       status: "completed",
     });
     expect(getSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("polls with legacy beta headers from the beta namespace", async () => {
+    vi.useFakeTimers();
+    const runClient = getProtectedClient(exa.beta.agent.runs);
+    const requestSpy = vi
+      .spyOn(runClient, "request")
+      .mockResolvedValueOnce({ ...createMockRun(), status: "running" })
+      .mockResolvedValueOnce({ ...createMockRun(), status: "completed" });
+
+    const resultPromise = exa.beta.agent.runs.pollUntilFinished(
+      "agent_run_123",
+      {
+        betas: [AGENT_BETA_HEADER],
+        pollInterval: 5,
+        timeoutMs: 1000,
+      }
+    );
+
+    await vi.advanceTimersByTimeAsync(5);
+
+    await expect(resultPromise).resolves.toMatchObject({
+      id: "agent_run_123",
+      status: "completed",
+    });
+    expect(requestSpy).toHaveBeenNthCalledWith(
+      1,
+      "/agent_run_123",
+      "GET",
+      undefined,
+      undefined,
+      { "Exa-Beta": AGENT_BETA_HEADER }
+    );
+    expect(requestSpy).toHaveBeenNthCalledWith(
+      2,
+      "/agent_run_123",
+      "GET",
+      undefined,
+      undefined,
+      { "Exa-Beta": AGENT_BETA_HEADER }
+    );
   });
 
   it("throws when Agent polling times out", async () => {

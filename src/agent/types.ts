@@ -5,13 +5,15 @@
 import { ZodSchema } from "zod";
 
 /**
- * @deprecated Agent API beta header is no longer required by the SDK.
+ * @deprecated Agent API beta header is no longer required for `exa.agent`.
+ * Retained for legacy `exa.beta.agent` compatibility.
  */
 export const AGENT_BETA_HEADER = "agent-2026-05-07";
 
 export interface AgentBetaOptions {
   /**
-   * @deprecated Agent API beta header is no longer required by the SDK.
+   * @deprecated Agent API beta header is no longer required for `exa.agent`.
+   * Values supplied to `exa.beta.agent` are sent as the `Exa-Beta` header.
    */
   betas?: string[];
 }
