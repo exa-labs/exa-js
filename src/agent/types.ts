@@ -4,10 +4,16 @@
 
 import { ZodSchema } from "zod";
 
+/**
+ * @deprecated Agent API beta header is no longer required by the SDK.
+ */
 export const AGENT_BETA_HEADER = "agent-2026-05-07";
 
 export interface AgentBetaOptions {
-  betas: string[];
+  /**
+   * @deprecated Agent API beta header is no longer required by the SDK.
+   */
+  betas?: string[];
 }
 
 export type AgentRunStatus =
@@ -101,7 +107,7 @@ export type AgentRunTyped<T> = Omit<AgentRun, "output"> & {
   output?: (Omit<AgentOutput, "structured"> & { structured?: T }) | null;
 };
 
-export interface ListAgentRunsParams extends AgentBetaOptions {
+export interface ListAgentRunsParams {
   cursor?: string;
   limit?: number;
 }
@@ -127,7 +133,7 @@ export interface AgentEvent {
   [key: string]: unknown;
 }
 
-export interface ListAgentRunEventsParams extends AgentBetaOptions {
+export interface ListAgentRunEventsParams {
   cursor?: string;
   limit?: number;
 }
@@ -140,7 +146,6 @@ export interface ListAgentRunEventsResponse {
 }
 
 export interface CreateAgentRunParams {
-  betas: string[];
   query: string;
   systemPrompt?: string;
   input?: AgentInput;

@@ -120,11 +120,10 @@ for await (const chunk of exa.streamAnswer("Explain quantum computing")) {
 }
 ```
 
-## Agent API (Beta)
+## Agent API
 
 ```ts
-const run = await exa.beta.agent.runs.create({
-  betas: ["agent-2026-05-07"],
+const run = await exa.agent.runs.create({
   query:
     "Find engineering leaders at AI infrastructure companies that raised a Series A or B in the last 6 months.",
   outputSchema: {
@@ -149,9 +148,7 @@ const run = await exa.beta.agent.runs.create({
   effort: "auto",
 });
 
-const completedRun = await exa.beta.agent.runs.pollUntilFinished(run.id, {
-  betas: ["agent-2026-05-07"],
-});
+const completedRun = await exa.agent.runs.pollUntilFinished(run.id);
 console.log(completedRun.output?.structured);
 ```
 
