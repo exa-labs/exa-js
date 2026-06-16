@@ -21,6 +21,6 @@ export class ResponsesClient {
       ...params,
     };
 
-    return this.client.request<Response>("/v1/responses", "POST", payload);
+    return this.client.request<Response>("/responses", "POST", payload);
   }
 }

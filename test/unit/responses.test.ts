@@ -62,7 +62,7 @@ describe("Responses API", () => {
     });
 
     expect(response.output_text).toBe("Returned 1 company.");
-    expect(requestSpy).toHaveBeenCalledWith("/v1/responses", "POST", {
+    expect(requestSpy).toHaveBeenCalledWith("/responses", "POST", {
       input: "Find recent funding rounds.",
       model: "agent",
       reasoning: { effort: "minimal" },
