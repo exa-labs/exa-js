@@ -36,7 +36,7 @@ function createMockResponse(): Response {
     parallel_tool_calls: true,
     temperature: 1,
     top_p: 1,
-    reasoning: { effort: "low", summary: null },
+    reasoning: { effort: "minimal", summary: null },
     usage: null,
   };
 }
@@ -56,7 +56,7 @@ describe("Responses API", () => {
 
     const response = await exa.responses.create({
       input: "Find recent funding rounds.",
-      reasoning: { effort: "low" },
+      reasoning: { effort: "minimal" },
       temperature: 0,
       tools: [{ type: "function", name: "ignored_tool" }],
     });
@@ -65,7 +65,7 @@ describe("Responses API", () => {
     expect(requestSpy).toHaveBeenCalledWith("/v1/responses", "POST", {
       input: "Find recent funding rounds.",
       model: "agent",
-      reasoning: { effort: "low" },
+      reasoning: { effort: "minimal" },
       temperature: 0,
       tools: [{ type: "function", name: "ignored_tool" }],
     });

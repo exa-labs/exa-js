@@ -4,7 +4,13 @@
 
 export type AgentResponseModel = "agent" | "exa-agent";
 
-export type AgentResponseEffort = "low" | "medium" | "high" | "xhigh" | "auto";
+export type AgentResponseEffort =
+  | "minimal"
+  | "low"
+  | "medium"
+  | "high"
+  | "xhigh"
+  | "auto";
 
 export type ResponseStatus =
   | "completed"
