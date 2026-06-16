@@ -5,6 +5,7 @@ import { BetaClient } from "./agent/client";
 import { ExaError, HttpStatusCode } from "./errors";
 import { SearchMonitorsClient } from "./monitors/client";
 import { ResearchClient } from "./research/client";
+import { ResponsesClient } from "./responses/client";
 import { WebsetsClient } from "./websets/client";
 import { isZodSchema, zodToJsonSchema } from "./zod-utils";
 
@@ -727,6 +728,11 @@ export class Exa {
   monitors: SearchMonitorsClient;
 
   /**
+   * OpenAI-compatible Responses API client
+   */
+  responses: ResponsesClient;
+
+  /**
    * Beta API clients
    */
   beta: BetaClient;
@@ -860,6 +866,8 @@ export class Exa {
     this.research = new ResearchClient(this);
     // Initialize the Search Monitors client
     this.monitors = new SearchMonitorsClient(this);
+    // Initialize the OpenAI-compatible Responses client
+    this.responses = new ResponsesClient(this);
     // Initialize beta clients
     this.beta = new BetaClient(this);
   }
@@ -1645,6 +1653,8 @@ export * from "./websets";
 export * from "./research";
 // Re-export Search Monitors related types and client
 export * from "./monitors";
+// Re-export Responses related types and client
+export * from "./responses";
 // Re-export Agent related types and client
 export * from "./agent";
 
