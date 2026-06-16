@@ -21,6 +21,32 @@ import {
   ListAgentRunsResponse,
 } from "./types";
 
+type WithBetaOptions<T> = T & AgentBetaOptions;
+
+function headersForBetas(betas?: string[]): Record<string, string> | undefined {
+  const betaValues = betas?.filter(Boolean);
+  if (!betaValues?.length) return undefined;
+  return { "Exa-Beta": betaValues.join(",") };
+}
+
+function buildAgentRunPayload<T>(params: AgentCreateOptions<T>): {
+  stream?: boolean;
+  payload: Record<string, unknown>;
+} {
+  const { stream, outputSchema, ...rest } = params;
+  let schema = outputSchema;
+  if (schema && isZodSchema(schema)) {
+    schema = zodToJsonSchema(schema as ZodSchema<T>);
+  }
+
+  const payload: Record<string, unknown> = { ...rest };
+  if (schema) {
+    payload.outputSchema = schema;
+  }
+
+  return { stream, payload };
+}
+
 async function* streamAgentEvents(
   response: Response
 ): AsyncGenerator<AgentEvent> {
@@ -94,12 +120,11 @@ export class AgentRunEventsClient extends AgentBaseClient {
    */
   async list(
     runId: string,
-    options: ListAgentRunEventsParams
+    options?: ListAgentRunEventsParams
   ): Promise<ListAgentRunEventsResponse> {
     const params = this.buildPaginationParams(options);
     return this.request<ListAgentRunEventsResponse>(
       `/${runId}/events`,
-      options.betas,
       "GET",
       undefined,
       params
@@ -131,28 +156,12 @@ export class AgentRunsClient extends AgentBaseClient {
   async create<T>(
     params: AgentCreateOptions<T>
   ): Promise<AgentRun | AgentRunTyped<T> | AsyncGenerator<AgentEvent>> {
-    const { stream, outputSchema, betas, ...rest } = params;
-    let schema = outputSchema;
-    if (schema && isZodSchema(schema)) {
-      schema = zodToJsonSchema(schema as ZodSchema<T>);
-    }
-
-    const payload: Record<string, unknown> = { ...rest };
-    if (schema) {
-      payload.outputSchema = schema;
-    }
+    const { stream, payload } = buildAgentRunPayload(params);
 
     if (stream) {
-      const response = await this.rawRequest(
-        "",
-        betas,
-        "POST",
-        payload,
-        undefined,
-        {
-          Accept: "text/event-stream",
-        }
-      );
+      const response = await this.rawRequest("", "POST", payload, undefined, {
+        Accept: "text/event-stream",
+      });
       if (!response.ok) {
         const message = await response.text();
         throw new ExaError(
@@ -165,36 +174,30 @@ export class AgentRunsClient extends AgentBaseClient {
       return streamAgentEvents(response);
     }
 
-    return this.request<AgentRunTyped<T>>("", betas, "POST", payload);
+    return this.request<AgentRunTyped<T>>("", "POST", payload);
   }
 
   /**
    * Get an Agent run by ID.
    */
-  async get(runId: string, options: AgentBetaOptions): Promise<AgentRun> {
-    return this.request<AgentRun>(`/${runId}`, options.betas, "GET");
+  async get(runId: string): Promise<AgentRun> {
+    return this.request<AgentRun>(`/${runId}`, "GET");
   }
 
   /**
    * List Agent runs.
    */
-  async list(options: ListAgentRunsParams): Promise<ListAgentRunsResponse> {
+  async list(options?: ListAgentRunsParams): Promise<ListAgentRunsResponse> {
     const params = this.buildPaginationParams(options);
-    return this.request<ListAgentRunsResponse>(
-      "",
-      options.betas,
-      "GET",
-      undefined,
-      params
-    );
+    return this.request<ListAgentRunsResponse>("", "GET", undefined, params);
   }
 
   /**
    * Iterate through all Agent runs, handling pagination automatically.
    */
-  async *listAll(options: ListAgentRunsParams): AsyncGenerator<AgentRun> {
+  async *listAll(options?: ListAgentRunsParams): AsyncGenerator<AgentRun> {
     let cursor: string | undefined = undefined;
-    const pageOptions = { ...options };
+    const pageOptions = options ? { ...options } : {};
 
     while (true) {
       pageOptions.cursor = cursor;
@@ -215,7 +218,7 @@ export class AgentRunsClient extends AgentBaseClient {
   /**
    * Collect all Agent runs into an array.
    */
-  async getAll(options: ListAgentRunsParams): Promise<AgentRun[]> {
+  async getAll(options?: ListAgentRunsParams): Promise<AgentRun[]> {
     const runs: AgentRun[] = [];
     for await (const run of this.listAll(options)) {
       runs.push(run);
@@ -226,18 +229,15 @@ export class AgentRunsClient extends AgentBaseClient {
   /**
    * Cancel a queued or running Agent run.
    */
-  async cancel(runId: string, options: AgentBetaOptions): Promise<AgentRun> {
-    return this.request<AgentRun>(`/${runId}/cancel`, options.betas, "POST");
+  async cancel(runId: string): Promise<AgentRun> {
+    return this.request<AgentRun>(`/${runId}/cancel`, "POST");
   }
 
   /**
    * Delete a stored Agent run.
    */
-  async delete(
-    runId: string,
-    options: AgentBetaOptions
-  ): Promise<DeletedAgentRun> {
-    return this.request<DeletedAgentRun>(`/${runId}`, options.betas, "DELETE");
+  async delete(runId: string): Promise<DeletedAgentRun> {
+    return this.request<DeletedAgentRun>(`/${runId}`, "DELETE");
   }
 
   /**
@@ -245,7 +245,7 @@ export class AgentRunsClient extends AgentBaseClient {
    */
   async pollUntilFinished(
     runId: string,
-    options: AgentBetaOptions & {
+    options?: {
       pollInterval?: number;
       timeoutMs?: number;
     }
@@ -255,7 +255,7 @@ export class AgentRunsClient extends AgentBaseClient {
     const startTime = Date.now();
 
     while (true) {
-      const run = await this.get(runId, { betas: options.betas });
+      const run = await this.get(runId);
       if (
         run.status === "completed" ||
         run.status === "failed" ||
@@ -277,24 +277,247 @@ export class AgentRunsClient extends AgentBaseClient {
   }
 }
 
-export class AgentBetaClient {
+export class AgentClient {
+  /**
+   * @internal
+   */
+  readonly client: Exa;
+
   /**
    * Client for Agent runs.
    */
   runs: AgentRunsClient;
 
   constructor(client: Exa) {
+    this.client = client;
     this.runs = new AgentRunsClient(client);
+  }
+}
+
+export class AgentBetaRunEventsClient extends AgentRunEventsClient {
+  /**
+   * List stored events for an Agent run.
+   *
+   * @deprecated Use exa.agent.runs.events instead.
+   */
+  async list(
+    runId: string,
+    options?: WithBetaOptions<ListAgentRunEventsParams>
+  ): Promise<ListAgentRunEventsResponse> {
+    const { betas, ...pagination } = options ?? {};
+    const params = this.buildPaginationParams(pagination);
+    return this.request<ListAgentRunEventsResponse>(
+      `/${runId}/events`,
+      "GET",
+      undefined,
+      params,
+      headersForBetas(betas)
+    );
+  }
+}
+
+export class AgentBetaRunsClient extends AgentRunsClient {
+  /**
+   * @deprecated Use exa.agent.runs.events instead.
+   */
+  events: AgentBetaRunEventsClient;
+
+  constructor(client: Exa) {
+    super(client);
+    this.events = new AgentBetaRunEventsClient(client);
+  }
+
+  async create<T>(
+    params: WithBetaOptions<AgentCreateOptions<T>> & { stream: true }
+  ): Promise<AsyncGenerator<AgentEvent>>;
+  async create<T>(
+    params: WithBetaOptions<AgentCreateOptions<T>> & { stream?: false }
+  ): Promise<AgentRunTyped<T>>;
+  async create(
+    params: CreateAgentRunParams & AgentBetaOptions
+  ): Promise<AgentRun>;
+  async create<T>(
+    params: WithBetaOptions<AgentCreateOptions<T>>
+  ): Promise<AgentRun | AgentRunTyped<T> | AsyncGenerator<AgentEvent>> {
+    const { betas, ...createParams } = params;
+    const { stream, payload } = buildAgentRunPayload(
+      createParams as AgentCreateOptions<T>
+    );
+    const headers = headersForBetas(betas);
+
+    if (stream) {
+      const response = await this.rawRequest("", "POST", payload, undefined, {
+        ...headers,
+        Accept: "text/event-stream",
+      });
+      if (!response.ok) {
+        const message = await response.text();
+        throw new ExaError(
+          message || `Request failed with status code ${response.status}`,
+          response.status,
+          new Date().toISOString(),
+          "/agent/runs"
+        );
+      }
+      return streamAgentEvents(response);
+    }
+
+    return this.request<AgentRunTyped<T>>(
+      "",
+      "POST",
+      payload,
+      undefined,
+      headers
+    );
+  }
+
+  async get(runId: string, options?: AgentBetaOptions): Promise<AgentRun> {
+    return this.request<AgentRun>(
+      `/${runId}`,
+      "GET",
+      undefined,
+      undefined,
+      headersForBetas(options?.betas)
+    );
+  }
+
+  async list(
+    options?: WithBetaOptions<ListAgentRunsParams>
+  ): Promise<ListAgentRunsResponse> {
+    const { betas, ...pagination } = options ?? {};
+    const params = this.buildPaginationParams(pagination);
+    return this.request<ListAgentRunsResponse>(
+      "",
+      "GET",
+      undefined,
+      params,
+      headersForBetas(betas)
+    );
+  }
+
+  async *listAll(
+    options?: WithBetaOptions<ListAgentRunsParams>
+  ): AsyncGenerator<AgentRun> {
+    let cursor: string | undefined = undefined;
+    const { betas, ...pagination } = options ?? {};
+    const pageOptions: ListAgentRunsParams = { ...pagination };
+
+    while (true) {
+      pageOptions.cursor = cursor;
+      const response = await this.list({ ...pageOptions, betas });
+
+      for (const run of response.data) {
+        yield run;
+      }
+
+      if (!response.hasMore || !response.nextCursor) {
+        break;
+      }
+
+      cursor = response.nextCursor;
+    }
+  }
+
+  async getAll(
+    options?: WithBetaOptions<ListAgentRunsParams>
+  ): Promise<AgentRun[]> {
+    const runs: AgentRun[] = [];
+    for await (const run of this.listAll(options)) {
+      runs.push(run);
+    }
+    return runs;
+  }
+
+  async cancel(runId: string, options?: AgentBetaOptions): Promise<AgentRun> {
+    return this.request<AgentRun>(
+      `/${runId}/cancel`,
+      "POST",
+      undefined,
+      undefined,
+      headersForBetas(options?.betas)
+    );
+  }
+
+  async delete(
+    runId: string,
+    options?: AgentBetaOptions
+  ): Promise<DeletedAgentRun> {
+    return this.request<DeletedAgentRun>(
+      `/${runId}`,
+      "DELETE",
+      undefined,
+      undefined,
+      headersForBetas(options?.betas)
+    );
+  }
+
+  async pollUntilFinished(
+    runId: string,
+    options?: WithBetaOptions<{
+      pollInterval?: number;
+      timeoutMs?: number;
+    }>
+  ): Promise<AgentRun & { status: "completed" | "failed" | "cancelled" }> {
+    const pollInterval = options?.pollInterval ?? 1000;
+    const timeoutMs = options?.timeoutMs ?? 60 * 60 * 1000;
+    const startTime = Date.now();
+    const headers = headersForBetas(options?.betas);
+
+    while (true) {
+      const run = await this.request<AgentRun>(
+        `/${runId}`,
+        "GET",
+        undefined,
+        undefined,
+        headers
+      );
+      if (
+        run.status === "completed" ||
+        run.status === "failed" ||
+        run.status === "cancelled"
+      ) {
+        return run as AgentRun & {
+          status: "completed" | "failed" | "cancelled";
+        };
+      }
+
+      if (Date.now() - startTime > timeoutMs) {
+        throw new Error(
+          `Polling timeout: Agent run ${runId} did not complete within ${timeoutMs}ms`
+        );
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+    }
+  }
+}
+
+/**
+ * @deprecated Use AgentClient instead.
+ */
+export class AgentBetaClient extends AgentClient {
+  /**
+   * @deprecated Use exa.agent.runs instead.
+   */
+  runs: AgentBetaRunsClient;
+
+  constructor(clientOrAgent: Exa | AgentClient) {
+    const client =
+      clientOrAgent instanceof AgentClient
+        ? clientOrAgent.client
+        : clientOrAgent;
+    super(client);
+    this.runs = new AgentBetaRunsClient(client);
   }
 }
 
 export class BetaClient {
   /**
-   * Beta Agent namespace.
+   * @deprecated Use exa.agent instead.
    */
   agent: AgentBetaClient;
 
-  constructor(client: Exa) {
-    this.agent = new AgentBetaClient(client);
+  constructor(clientOrAgent: Exa | AgentClient) {
+    this.agent = new AgentBetaClient(clientOrAgent);
   }
 }

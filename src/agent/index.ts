@@ -3,6 +3,7 @@
  */
 
 export {
+  AgentClient,
   AgentBetaClient,
   AgentRunsClient,
   AgentRunEventsClient,

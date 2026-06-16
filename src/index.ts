@@ -1,7 +1,7 @@
 import fetch, { Headers } from "cross-fetch";
 import { ZodSchema } from "zod";
 import packageJson from "../package.json";
-import { BetaClient } from "./agent/client";
+import { AgentClient, BetaClient } from "./agent/client";
 import { ExaError, HttpStatusCode } from "./errors";
 import { SearchMonitorsClient } from "./monitors/client";
 import { ResearchClient } from "./research/client";
@@ -727,6 +727,11 @@ export class Exa {
   monitors: SearchMonitorsClient;
 
   /**
+   * Agent API client
+   */
+  agent: AgentClient;
+
+  /**
    * Beta API clients
    */
   beta: BetaClient;
@@ -860,8 +865,10 @@ export class Exa {
     this.research = new ResearchClient(this);
     // Initialize the Search Monitors client
     this.monitors = new SearchMonitorsClient(this);
+    // Initialize the Agent client
+    this.agent = new AgentClient(this);
     // Initialize beta clients
-    this.beta = new BetaClient(this);
+    this.beta = new BetaClient(this.agent);
   }
 
   /**

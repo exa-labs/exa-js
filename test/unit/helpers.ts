@@ -2,7 +2,12 @@ import {
   SearchMonitorRunsClient,
   SearchMonitorsClient,
 } from "../../src/monitors/client";
-import { AgentRunsClient, AgentRunEventsClient } from "../../src/agent/client";
+import {
+  AgentBetaRunEventsClient,
+  AgentBetaRunsClient,
+  AgentRunsClient,
+  AgentRunEventsClient,
+} from "../../src/agent/client";
 import { WebsetsBaseClient } from "../../src/websets/base";
 import { WebsetsClient } from "../../src/websets/client";
 import { WebsetEnrichmentsClient } from "../../src/websets/enrichments";
@@ -39,6 +44,8 @@ export function getProtectedClient<
     | EventsClient
     | SearchMonitorsClient
     | SearchMonitorRunsClient
+    | AgentBetaRunsClient
+    | AgentBetaRunEventsClient
     | AgentRunsClient
     | AgentRunEventsClient,
 >(client: T): WithProtectedAccess<T> {
@@ -60,6 +67,8 @@ export function getProtectedClientInstance(
     | EventsClient
     | SearchMonitorsClient
     | SearchMonitorRunsClient
+    | AgentBetaRunsClient
+    | AgentBetaRunEventsClient
     | AgentRunsClient
     | AgentRunEventsClient
 ) {
