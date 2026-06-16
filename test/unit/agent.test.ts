@@ -112,7 +112,7 @@ describe("Agent API", () => {
       systemPrompt: "Prefer primary sources.",
       input: { data: [{ company: "Example AI" }] },
       outputSchema: { type: "object" as const },
-      effort: "high" as const,
+      effort: "minimal" as const,
       metadata: { workflow: "funding-watch" },
     };
     const result = await exa.agent.runs.create(params);
