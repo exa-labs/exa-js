@@ -43,7 +43,8 @@ export type AgentDataSourceProvider =
   | "baselayer"
   | "affiliate"
   | "particle_news"
-  | "jinko";
+  | "jinko"
+  | (string & {});
 
 /** Exa Connect data source to enable for an Agent run. */
 export interface AgentDataSource {
