@@ -146,10 +146,14 @@ const run = await exa.agent.runs.create({
     required: ["people"],
   },
   effort: "auto",
+  // Optionally enable Exa Connect data providers for the run.
+  dataSources: [{ provider: "financial_datasets" }],
 });
 
 const completedRun = await exa.agent.runs.pollUntilFinished(run.id);
 console.log(completedRun.output?.structured);
+// Per-provider tool-call counts and cost for any Exa Connect data sources used.
+console.log(completedRun.usage?.dataSources, completedRun.costDollars?.dataSources);
 ```
 
 ## TypeScript

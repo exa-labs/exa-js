@@ -121,6 +121,36 @@ describe("Agent API", () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it("passes Exa Connect data sources through and round-trips per-provider usage", async () => {
+    // Typing this literal as AgentRun proves AgentUsage/AgentCostDollars accept
+    // the new per-provider `dataSources` maps at compile time.
+    const mockResponse: AgentRun = {
+      ...createMockRun(),
+      usage: { agentComputeUnits: 0.1, dataSources: { financial_datasets: 3 } },
+      costDollars: { total: 0.05, dataSources: { financial_datasets: 0.04 } },
+    };
+    const runClient = getProtectedClient(exa.agent.runs);
+    const requestSpy = vi
+      .spyOn(runClient, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.agent.runs.create({
+      query: "Find recent financials for Acme.",
+      dataSources: [
+        { provider: "financial_datasets" },
+        // provider is a plain string, so any provider slug is accepted.
+        { provider: "custom_provider" },
+      ],
+    });
+
+    const payload = requestSpy.mock.calls[0][2] as Record<string, any>;
+    expect(payload.dataSources).toEqual([
+      { provider: "financial_datasets" },
+      { provider: "custom_provider" },
+    ]);
+    expect(result).toEqual(mockResponse);
+  });
+
   it("sends legacy beta values as headers when creating an Agent run from the beta namespace", async () => {
     const runClient = getProtectedClient(exa.beta.agent.runs);
     const requestSpy = vi
