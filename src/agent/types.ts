@@ -35,6 +35,22 @@ export type AgentConfidence = "low" | "medium" | "high";
 
 export type AgentEffort = "low" | "medium" | "high" | "xhigh" | "auto";
 
+/** Identifier of an Exa Connect data provider. */
+export type AgentDataSourceProvider =
+  | "fiber_ai"
+  | "financial_datasets"
+  | "similar_web"
+  | "baselayer"
+  | "affiliate"
+  | "particle_news"
+  | "jinko";
+
+/** Exa Connect data source to enable for an Agent run. */
+export interface AgentDataSource {
+  /** Exa Connect data provider to enable for the run. */
+  provider: AgentDataSourceProvider;
+}
+
 export interface AgentInput {
   data?: Record<string, unknown>[];
   exclusion?: Record<string, unknown>[];
@@ -67,6 +83,8 @@ export interface AgentUsage {
   searches?: number;
   emails?: number;
   phoneNumbers?: number;
+  /** Per-provider tool call counts for Exa Connect data sources used during the run. */
+  dataSources?: Record<string, number>;
   [key: string]: unknown;
 }
 
@@ -76,6 +94,8 @@ export interface AgentCostDollars {
   search?: number;
   emails?: number;
   phoneNumbers?: number;
+  /** Per-provider cost in dollars for Exa Connect data sources used during the run. */
+  dataSources?: Record<string, number>;
   [key: string]: unknown;
 }
 
@@ -155,6 +175,8 @@ export interface CreateAgentRunParams {
   effort?: AgentEffort;
   previousRunId?: string;
   metadata?: Record<string, unknown>;
+  /** Exa Connect data providers to enable for the run. Each entry enables all of that provider's tools. */
+  dataSources?: AgentDataSource[];
 }
 
 export type CreateAgentRunParamsTyped<T> = Omit<

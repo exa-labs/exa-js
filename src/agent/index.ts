@@ -15,6 +15,8 @@ export type {
   AgentBetaOptions,
   AgentCreateOptions,
   AgentConfidence,
+  AgentDataSource,
+  AgentDataSourceProvider,
   AgentEffort,
   AgentError,
   AgentEvent,
