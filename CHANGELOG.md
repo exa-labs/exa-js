@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.15.0](https://github.com/exa-labs/exa-js/compare/v2.14.0...v2.15.0) (2026-06-24)
+
+
+### Features
+
+* **agent:** add Exa Connect dataSources support ([e01e44a](https://github.com/exa-labs/exa-js/commit/e01e44a7aa399523105b7027416c08693179493d))
+* **agent:** add Exa Connect dataSources support ([0738df4](https://github.com/exa-labs/exa-js/commit/0738df406742e440830a577b7613b5a1d00f7692))
+* **agent:** widen AgentDataSourceProvider to accept arbitrary strings ([57e4dd1](https://github.com/exa-labs/exa-js/commit/57e4dd1cdebb101ffd051a30dad40baae73295aa))
+
 ## [2.14.0](https://github.com/exa-labs/exa-js/compare/v2.13.1...v2.14.0) (2026-06-16)
 
 
