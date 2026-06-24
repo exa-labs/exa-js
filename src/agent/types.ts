@@ -35,16 +35,12 @@ export type AgentConfidence = "low" | "medium" | "high";
 
 export type AgentEffort = "low" | "medium" | "high" | "xhigh" | "auto";
 
-/** Identifier of an Exa Connect data provider. */
-export type AgentDataSourceProvider =
-  | "fiber_ai"
-  | "financial_datasets"
-  | "similar_web"
-  | "baselayer"
-  | "affiliate"
-  | "particle_news"
-  | "jinko"
-  | (string & {});
+/**
+ * Identifier of an Exa Connect data provider, e.g. `"fiber_ai"`,
+ * `"financial_datasets"`, `"similar_web"`, `"baselayer"`, `"affiliate"`,
+ * `"particle_news"`, or `"jinko"`.
+ */
+export type AgentDataSourceProvider = string;
 
 /** Exa Connect data source to enable for an Agent run. */
 export interface AgentDataSource {

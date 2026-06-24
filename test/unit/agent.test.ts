@@ -138,7 +138,7 @@ describe("Agent API", () => {
       query: "Find recent financials for Acme.",
       dataSources: [
         { provider: "financial_datasets" },
-        // Arbitrary provider strings are accepted by the widened union.
+        // provider is a plain string, so any provider slug is accepted.
         { provider: "custom_provider" },
       ],
     });
