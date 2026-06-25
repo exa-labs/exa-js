@@ -117,7 +117,8 @@
     "EntityPersonProperties": [
       {"name": "name", "type": "string | null", "description": "The person's name."},
       {"name": "location", "type": "string | null", "description": "The person's location."},
-      {"name": "workHistory", "type": "EntityPersonPropertiesWorkHistoryEntry[]", "description": "The person's work history."}
+      {"name": "workHistory", "type": "EntityPersonPropertiesWorkHistoryEntry[]", "description": "The person's work history."},
+      {"name": "educationHistory", "type": "EntityPersonPropertiesEducationEntry[]", "description": "The person's education history."}
     ],
     "CompanyEntity": [
       {"name": "id", "type": "string", "description": "Unique identifier for the entity."},
