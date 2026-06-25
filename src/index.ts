@@ -106,7 +106,11 @@ export type ContentsOptions = {
  * @property {string} [userLocation] - The two-letter ISO country code of the user, e.g. US.
  * @property {boolean} [stream] - Whether to stream back OpenAI-style chat completion chunks. Use `streamSearch()` instead of `search({ stream: true })`.
  */
-export type BaseSearchOptions = {
+export type RequestOptions = {
+  signal?: AbortSignal;
+};
+
+export type BaseSearchOptions = RequestOptions & {
   contents?: ContentsOptions;
   numResults?: number;
   includeDomains?: string[];
@@ -621,7 +625,7 @@ export type Status = {
  * @property {string} [systemPrompt] - A system prompt to guide the LLM's behavior when generating the answer.
  * @property {Object} [outputSchema] - A JSON Schema specification for the structure you expect the output to take
  */
-export type AnswerOptions = {
+export type AnswerOptions = RequestOptions & {
   stream?: boolean;
   text?: boolean;
   model?: "exa";
@@ -885,7 +889,8 @@ export class Exa {
     method: string,
     body?: any,
     params?: Record<string, any>,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
+    signal?: AbortSignal
   ): Promise<T> {
     // Build URL with query parameters if provided
     let url = this.baseURL + endpoint;
@@ -917,10 +922,22 @@ export class Exa {
       combinedHeaders = { ...combinedHeaders, ...headers };
     }
 
+    let requestBody = body;
+    let requestSignal = signal;
+
+    if (body && typeof body === "object" && !Array.isArray(body) && "signal" in body) {
+      const { signal: embeddedSignal, ...restBody } = body as {
+        signal?: AbortSignal;
+      } & Record<string, unknown>;
+      requestBody = restBody;
+      requestSignal ??= embeddedSignal;
+    }
+
     const response = await fetchImpl(url, {
       method,
       headers: combinedHeaders,
-      body: body ? JSON.stringify(body) : undefined,
+      body: requestBody ? JSON.stringify(requestBody) : undefined,
+      signal: requestSignal,
     });
 
     if (!response.ok) {
@@ -996,7 +1013,8 @@ export class Exa {
       string,
       string | number | boolean | string[] | undefined
     >,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
+    signal?: AbortSignal
   ): Promise<Response> {
     let url = this.baseURL + endpoint;
 
@@ -1028,10 +1046,22 @@ export class Exa {
       combinedHeaders = { ...combinedHeaders, ...headers };
     }
 
+    let requestBody = body;
+    let requestSignal = signal;
+
+    if (body && typeof body === "object" && !Array.isArray(body) && "signal" in body) {
+      const { signal: embeddedSignal, ...restBody } = body as {
+        signal?: AbortSignal;
+      } & Record<string, unknown>;
+      requestBody = restBody;
+      requestSignal ??= embeddedSignal;
+    }
+
     const response = await fetchImpl(url, {
       method,
       headers: combinedHeaders,
-      body: body ? JSON.stringify(body) : undefined,
+      body: requestBody ? JSON.stringify(requestBody) : undefined,
+      signal: requestSignal,
     });
 
     return response;
@@ -1288,7 +1318,7 @@ export class Exa {
    */
   async getContents<T extends ContentsOptions>(
     urls: string | string[] | SearchResult<T>[],
-    options?: T
+    options?: T & RequestOptions
   ): Promise<SearchResponse<T>> {
     if (!urls || (Array.isArray(urls) && urls.length === 0)) {
       throw new ExaError(
@@ -1377,6 +1407,7 @@ export class Exa {
       systemPrompt: options?.systemPrompt,
       outputSchema,
       userLocation: options?.userLocation,
+      signal: options?.signal,
     };
 
     return await this.request("/answer", "POST", requestBody);
@@ -1394,6 +1425,7 @@ export class Exa {
       systemPrompt?: string;
       outputSchema: ZodSchema<T>;
       userLocation?: string;
+      signal?: AbortSignal;
     }
   ): AsyncGenerator<AnswerStreamChunk>;
 
@@ -1424,6 +1456,7 @@ export class Exa {
       systemPrompt?: string;
       outputSchema?: Record<string, unknown>;
       userLocation?: string;
+      signal?: AbortSignal;
     }
   ): AsyncGenerator<AnswerStreamChunk>;
 
@@ -1435,6 +1468,7 @@ export class Exa {
       systemPrompt?: string;
       outputSchema?: Record<string, unknown> | ZodSchema<T>;
       userLocation?: string;
+      signal?: AbortSignal;
     }
   ): AsyncGenerator<AnswerStreamChunk> {
     // Convert Zod schema to JSON schema if needed
@@ -1452,6 +1486,7 @@ export class Exa {
       systemPrompt: options?.systemPrompt,
       outputSchema,
       userLocation: options?.userLocation,
+      signal: options?.signal,
     };
 
     yield* this.streamChatCompletions("/answer", body);
