@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.15.1](https://github.com/exa-labs/exa-js/compare/v2.15.0...v2.15.1) (2026-06-30)
+
+
+### Bug Fixes
+
+* **agent:** preserve typed Agent run fields with outputSchema ([8bc13da](https://github.com/exa-labs/exa-js/commit/8bc13daed7df5aaa1a5c84ccd682e0df946008c1))
+
 ## [2.15.0](https://github.com/exa-labs/exa-js/compare/v2.14.0...v2.15.0) (2026-06-24)
 
 
