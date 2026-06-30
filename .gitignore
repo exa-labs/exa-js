@@ -2,6 +2,7 @@ node_modules
 .DS_Store
 dist
 *.log
+*.env
 
 tests
 
@@ -9,5 +10,6 @@ tests
 .aider*
 
 .env
-.env.local
+.env.*
+!.env.example
 personal/
