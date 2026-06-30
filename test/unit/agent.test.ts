@@ -1,4 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+  vi,
+} from "vitest";
 import { z } from "zod";
 import Exa from "../../src";
 import {
@@ -210,6 +218,32 @@ describe("Agent API", () => {
     expect(payload.outputSchema.type).toBe("object");
     expect(payload.outputSchema.properties.companyName.type).toBe("string");
     expect(payload.betas).toBeUndefined();
+  });
+
+  it("preserves typed run fields when outputSchema is provided", async () => {
+    const runClient = getProtectedClient(exa.agent.runs);
+    vi.spyOn(runClient, "request").mockResolvedValueOnce(createMockRun());
+    vi.spyOn(exa.agent.runs, "get").mockResolvedValueOnce(createMockRun());
+
+    const run = await exa.agent.runs.create({
+      query: "Find recent funding rounds.",
+      outputSchema: z.object({
+        companies: z.array(
+          z.object({
+            name: z.string(),
+          })
+        ),
+      }),
+    });
+
+    expectTypeOf(run.id).toEqualTypeOf<string>();
+    expectTypeOf(run.status).toEqualTypeOf<AgentRun["status"]>();
+    expectTypeOf(run.output?.structured).toEqualTypeOf<
+      { companies: { name: string }[] } | undefined
+    >();
+
+    const completedRun = await exa.agent.runs.pollUntilFinished(run.id);
+    expect(completedRun.id).toBe("agent_run_123");
   });
 
   it("accepts contact fields in output schemas", async () => {

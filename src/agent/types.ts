@@ -122,8 +122,8 @@ export interface AgentRun {
   [key: string]: unknown;
 }
 
-export type AgentRunTyped<T> = Omit<AgentRun, "output"> & {
-  output?: (Omit<AgentOutput, "structured"> & { structured?: T }) | null;
+export type AgentRunTyped<T> = AgentRun & {
+  output?: (AgentOutput & { structured?: T }) | null;
 };
 
 export interface ListAgentRunsParams {
