@@ -794,7 +794,11 @@ describe("Agent API", () => {
     const runClient = getProtectedClient(exa.agent.runs);
     const requestSpy = vi
       .spyOn(runClient, "request")
-      .mockResolvedValueOnce({ ...createMockRun(), status: "completed" });
+      .mockResolvedValueOnce({ ...createMockRun(), status: "running" });
+    vi.spyOn(exa.agent.runs, "pollUntilFinished").mockResolvedValueOnce({
+      ...createMockRun(),
+      status: "completed",
+    });
 
     const result = await exa.agent.runs.createAndWait({
       query: "Find companies.",

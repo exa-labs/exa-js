@@ -356,9 +356,6 @@ export class AgentRunsClient extends AgentBaseClient {
     const run = (await this.create(
       createParams as AgentCreateOptions<T> & { stream?: false }
     )) as AgentRunTyped<T>;
-    if (isTerminalAgentRunStatus((run as AgentRun).status)) {
-      return ensureCompletedRun(run as AgentTerminalRunTyped<T>);
-    }
     const runId = (run as AgentRun).id;
     const terminalRun = (await this.pollUntilFinished(
       runId,
@@ -595,9 +592,6 @@ export class AgentBetaRunsClient extends AgentRunsClient {
       ...createParams,
       betas,
     })) as AgentRunTyped<T>;
-    if (isTerminalAgentRunStatus((run as AgentRun).status)) {
-      return ensureCompletedRun(run as AgentTerminalRunTyped<T>);
-    }
     const runId = (run as AgentRun).id;
     const terminalRun = (await this.pollUntilFinished(runId, {
       ...createAndWaitPollOptions(options),
