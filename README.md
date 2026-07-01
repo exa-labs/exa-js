@@ -123,37 +123,44 @@ for await (const chunk of exa.streamAnswer("Explain quantum computing")) {
 ## Agent API
 
 ```ts
-const run = await exa.agent.runs.create({
-  query:
-    "Find engineering leaders at AI infrastructure companies that raised a Series A or B in the last 6 months.",
-  outputSchema: {
-    type: "object",
-    properties: {
-      people: {
-        type: "array",
-        maxItems: 10,
-        items: {
-          type: "object",
-          properties: {
-            name: { type: "string" },
-            contact_email: { type: "string", format: "email" },
-            linkedin_url: { type: "string", format: "uri" },
+const completedRun = await exa.agent.runs.createAndWait(
+  {
+    query:
+      "Find engineering leaders at AI infrastructure companies that raised a Series A or B in the last 6 months.",
+    outputSchema: {
+      type: "object",
+      properties: {
+        people: {
+          type: "array",
+          maxItems: 10,
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              contact_email: { type: "string", format: "email" },
+              linkedin_url: { type: "string", format: "uri" },
+            },
+            required: ["name", "linkedin_url"],
           },
-          required: ["name", "linkedin_url"],
         },
       },
+      required: ["people"],
     },
-    required: ["people"],
+    effort: "auto",
+    // Optionally enable Exa Connect data providers for the run.
+    dataSources: [{ provider: "financial_datasets" }],
   },
-  effort: "auto",
-  // Optionally enable Exa Connect data providers for the run.
-  dataSources: [{ provider: "financial_datasets" }],
-});
+  {
+    timeoutMs: 600_000,
+  }
+);
 
-const completedRun = await exa.agent.runs.pollUntilFinished(run.id);
 console.log(completedRun.output?.structured);
 // Per-provider tool-call counts and cost for any Exa Connect data sources used.
-console.log(completedRun.usage?.dataSources, completedRun.costDollars?.dataSources);
+console.log(
+  completedRun.usage?.dataSources,
+  completedRun.costDollars?.dataSources
+);
 ```
 
 ## TypeScript
