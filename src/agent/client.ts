@@ -31,6 +31,11 @@ type AgentCompletedRun = AgentRun & { status: "completed" };
 type AgentCompletedRunTyped<T> = AgentRunTyped<T> & {
   status: "completed";
 };
+const TERMINAL_AGENT_RUN_STATUSES = new Set<AgentTerminalStatus>([
+  "completed",
+  "failed",
+  "cancelled",
+]);
 export type AgentWaitOptions = {
   pollInterval?: number;
   timeoutMs?: number;
@@ -62,12 +67,10 @@ function headersForBetas(betas?: string[]): Record<string, string> | undefined {
   return { "Exa-Beta": betaValues.join(",") };
 }
 
-function agentCreateParamsWithoutStream<T>(
-  params: Omit<AgentCreateOptions<T>, "stream">
-): Omit<AgentCreateOptions<T>, "stream"> {
-  const copy = { ...params };
-  delete (copy as { stream?: unknown }).stream;
-  return copy;
+function isTerminalAgentRunStatus(
+  status: AgentRun["status"]
+): status is AgentTerminalStatus {
+  return TERMINAL_AGENT_RUN_STATUSES.has(status as AgentTerminalStatus);
 }
 
 function ensureCompletedRun<T>(
@@ -306,11 +309,7 @@ export class AgentRunsClient extends AgentBaseClient {
 
     while (true) {
       const run = await this.get(runId);
-      if (
-        run.status === "completed" ||
-        run.status === "failed" ||
-        run.status === "cancelled"
-      ) {
+      if (isTerminalAgentRunStatus(run.status)) {
         return run as AgentTerminalRun;
       }
 
@@ -339,17 +338,12 @@ export class AgentRunsClient extends AgentBaseClient {
     params: Omit<AgentCreateOptions<T>, "stream">,
     options?: AgentWaitOptions
   ): Promise<AgentCompletedRunTyped<T>> {
-    const createParams = agentCreateParamsWithoutStream(params);
+    const { stream: _stream, ...createParams } =
+      params as AgentCreateOptions<T>;
     const run = (await this.create(
-      createParams as AgentCreateOptions<T> & {
-        stream?: false;
-      }
+      createParams as AgentCreateOptions<T> & { stream?: false }
     )) as AgentRunTyped<T>;
-    if (
-      run.status === "completed" ||
-      run.status === "failed" ||
-      run.status === "cancelled"
-    ) {
+    if (isTerminalAgentRunStatus((run as AgentRun).status)) {
       return ensureCompletedRun(run as AgentTerminalRunTyped<T>);
     }
     const runId = (run as AgentRun).id;
@@ -552,11 +546,7 @@ export class AgentBetaRunsClient extends AgentRunsClient {
         undefined,
         headers
       );
-      if (
-        run.status === "completed" ||
-        run.status === "failed" ||
-        run.status === "cancelled"
-      ) {
+      if (isTerminalAgentRunStatus(run.status)) {
         return run as AgentTerminalRun;
       }
 
@@ -582,19 +572,16 @@ export class AgentBetaRunsClient extends AgentRunsClient {
     params: WithBetaOptions<Omit<AgentCreateOptions<T>, "stream">>,
     options?: AgentWaitOptions
   ): Promise<AgentCompletedRunTyped<T>> {
-    const { betas, ...createParams } = params;
-    const safeCreateParams = agentCreateParamsWithoutStream(
-      createParams as Omit<AgentCreateOptions<T>, "stream">
-    );
+    const {
+      betas,
+      stream: _stream,
+      ...createParams
+    } = params as WithBetaOptions<AgentCreateOptions<T>>;
     const run = (await this.create({
-      ...safeCreateParams,
+      ...createParams,
       betas,
     })) as AgentRunTyped<T>;
-    if (
-      run.status === "completed" ||
-      run.status === "failed" ||
-      run.status === "cancelled"
-    ) {
+    if (isTerminalAgentRunStatus((run as AgentRun).status)) {
       return ensureCompletedRun(run as AgentTerminalRunTyped<T>);
     }
     const runId = (run as AgentRun).id;
