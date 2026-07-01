@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.16.0](https://github.com/exa-labs/exa-js/compare/v2.15.1...v2.16.0) (2026-07-01)
+
+
+### Features
+
+* **agent:** add create and wait helper ([b8bc069](https://github.com/exa-labs/exa-js/commit/b8bc069927e8267a2ddf18d4c5ad2fd93255c2ec))
+* **agent:** add createAndWait helper ([fc317ab](https://github.com/exa-labs/exa-js/commit/fc317ab4799dbace137d83d798c0013aa4c360e2))
+
+
+### Bug Fixes
+
+* **agent:** use two minute create and wait timeout ([b60a920](https://github.com/exa-labs/exa-js/commit/b60a9206697445548d98f593b9ca59b76d5c2e6e))
+* rename provider to similarweb ([e3193d4](https://github.com/exa-labs/exa-js/commit/e3193d4a4324b8f53f552659994f98aef0dbd1e5))
+
 ## [2.15.1](https://github.com/exa-labs/exa-js/compare/v2.15.0...v2.15.1) (2026-06-30)
 
 
