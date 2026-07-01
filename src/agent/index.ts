@@ -6,9 +6,13 @@ export {
   AgentClient,
   AgentBetaClient,
   AgentRunsClient,
+  AgentRunCancelledError,
+  AgentRunFailedError,
   AgentRunEventsClient,
   BetaClient,
 } from "./client";
+
+export type { AgentWaitOptions } from "./client";
 
 export type {
   AgentCostDollars,

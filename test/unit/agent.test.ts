@@ -14,6 +14,8 @@ import {
   AgentClient,
   AGENT_BETA_HEADER,
   BetaClient,
+  AgentRunCancelledError,
+  AgentRunFailedError,
 } from "../../src/agent";
 import {
   AgentRun,
@@ -99,6 +101,15 @@ describe("Agent API", () => {
       // @ts-expect-error betas are only accepted through exa.beta.agent.
       exa.agent.runs.get("agent_run_123", { betas: [] });
       exa.beta.agent.runs.get("agent_run_123", {
+        betas: [AGENT_BETA_HEADER],
+      });
+      exa.agent.runs.createAndWait({
+        query: "Find companies.",
+        // @ts-expect-error betas are only accepted through exa.beta.agent.
+        betas: [],
+      });
+      exa.beta.agent.runs.createAndWait({
+        query: "Find companies.",
         betas: [AGENT_BETA_HEADER],
       });
       new AgentBetaClient(exa).runs.create({
@@ -729,6 +740,111 @@ describe("Agent API", () => {
     expect(getSpy).toHaveBeenCalledTimes(2);
   });
 
+  it("creates an Agent run and waits until it reaches a terminal status", async () => {
+    const runClient = getProtectedClient(exa.agent.runs);
+    const requestSpy = vi
+      .spyOn(runClient, "request")
+      .mockResolvedValueOnce({ ...createMockRun(), status: "running" })
+      .mockResolvedValueOnce({ ...createMockRun(), status: "completed" });
+
+    const result = await exa.agent.runs.createAndWait(
+      {
+        query: "Find companies.",
+        outputSchema: { type: "object" },
+      },
+      { pollInterval: 5, timeoutMs: 1000 }
+    );
+
+    expect(result.status).toBe("completed");
+    expect(requestSpy).toHaveBeenNthCalledWith(1, "", "POST", {
+      query: "Find companies.",
+      outputSchema: { type: "object" },
+    });
+    expect(requestSpy).toHaveBeenNthCalledWith(2, "/agent_run_123", "GET");
+  });
+
+  it("uses two minute timeout defaults for createAndWait polling", async () => {
+    const runClient = getProtectedClient(exa.agent.runs);
+    vi.spyOn(runClient, "request").mockResolvedValueOnce({
+      ...createMockRun(),
+      status: "running",
+    });
+    const pollSpy = vi
+      .spyOn(exa.agent.runs, "pollUntilFinished")
+      .mockResolvedValueOnce({ ...createMockRun(), status: "completed" });
+
+    await exa.agent.runs.createAndWait({ query: "Find companies." });
+
+    expect(pollSpy).toHaveBeenCalledWith("agent_run_123", {
+      pollInterval: 1000,
+      timeoutMs: 120000,
+    });
+  });
+
+  it("throws by default when createAndWait reaches a failed run", async () => {
+    const runClient = getProtectedClient(exa.agent.runs);
+    const failedRun: AgentRun = {
+      ...createMockRun(),
+      status: "failed",
+      error: { message: "Could not produce a final answer." },
+    };
+    vi.spyOn(runClient, "request")
+      .mockResolvedValueOnce({ ...createMockRun(), status: "running" })
+      .mockResolvedValueOnce(failedRun);
+
+    const promise = exa.agent.runs.createAndWait(
+      { query: "Find companies." },
+      { pollInterval: 5, timeoutMs: 1000 }
+    );
+
+    await expect(promise).rejects.toBeInstanceOf(AgentRunFailedError);
+    await expect(promise).rejects.toMatchObject({
+      name: "AgentRunFailedError",
+      message: "Could not produce a final answer.",
+      run: failedRun,
+    });
+  });
+
+  it("throws by default when createAndWait reaches a cancelled run", async () => {
+    const runClient = getProtectedClient(exa.agent.runs);
+    const cancelledRun: AgentRun = {
+      ...createMockRun(),
+      status: "cancelled",
+      stopReason: "cancelled",
+    };
+    vi.spyOn(runClient, "request")
+      .mockResolvedValueOnce({ ...createMockRun(), status: "running" })
+      .mockResolvedValueOnce(cancelledRun);
+
+    await expect(
+      exa.agent.runs.createAndWait(
+        { query: "Find companies." },
+        { pollInterval: 5, timeoutMs: 1000 }
+      )
+    ).rejects.toBeInstanceOf(AgentRunCancelledError);
+  });
+
+  it("ignores a runtime stream flag in createAndWait", async () => {
+    const runClient = getProtectedClient(exa.agent.runs);
+    const requestSpy = vi
+      .spyOn(runClient, "request")
+      .mockResolvedValueOnce({ ...createMockRun(), status: "running" });
+    vi.spyOn(exa.agent.runs, "pollUntilFinished").mockResolvedValueOnce({
+      ...createMockRun(),
+      status: "completed",
+    });
+
+    const result = await exa.agent.runs.createAndWait({
+      query: "Find companies.",
+      stream: true,
+    } as any);
+
+    expect(result.status).toBe("completed");
+    expect(requestSpy).toHaveBeenCalledWith("", "POST", {
+      query: "Find companies.",
+    });
+  });
+
   it("polls with legacy beta headers from the beta namespace", async () => {
     vi.useFakeTimers();
     const runClient = getProtectedClient(exa.beta.agent.runs);
@@ -757,6 +873,40 @@ describe("Agent API", () => {
       "/agent_run_123",
       "GET",
       undefined,
+      undefined,
+      { "Exa-Beta": AGENT_BETA_HEADER }
+    );
+    expect(requestSpy).toHaveBeenNthCalledWith(
+      2,
+      "/agent_run_123",
+      "GET",
+      undefined,
+      undefined,
+      { "Exa-Beta": AGENT_BETA_HEADER }
+    );
+  });
+
+  it("creates and waits with legacy beta headers from the beta namespace", async () => {
+    const runClient = getProtectedClient(exa.beta.agent.runs);
+    const requestSpy = vi
+      .spyOn(runClient, "request")
+      .mockResolvedValueOnce({ ...createMockRun(), status: "running" })
+      .mockResolvedValueOnce({ ...createMockRun(), status: "completed" });
+
+    const result = await exa.beta.agent.runs.createAndWait(
+      {
+        betas: [AGENT_BETA_HEADER],
+        query: "Find companies.",
+      },
+      { pollInterval: 5, timeoutMs: 1000 }
+    );
+
+    expect(result.status).toBe("completed");
+    expect(requestSpy).toHaveBeenNthCalledWith(
+      1,
+      "",
+      "POST",
+      { query: "Find companies." },
       undefined,
       { "Exa-Beta": AGENT_BETA_HEADER }
     );

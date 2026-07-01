@@ -22,11 +22,79 @@ import {
 } from "./types";
 
 type WithBetaOptions<T> = T & AgentBetaOptions;
+type AgentTerminalStatus = "completed" | "failed" | "cancelled";
+type AgentTerminalRun = AgentRun & { status: AgentTerminalStatus };
+type AgentTerminalRunTyped<T> = AgentRunTyped<T> & {
+  status: AgentTerminalStatus;
+};
+type AgentCompletedRun = AgentRun & { status: "completed" };
+type AgentCompletedRunTyped<T> = AgentRunTyped<T> & {
+  status: "completed";
+};
+const DEFAULT_AGENT_POLL_INTERVAL_MS = 1000;
+const DEFAULT_AGENT_POLL_TIMEOUT_MS = 60 * 60 * 1000;
+const DEFAULT_AGENT_CREATE_AND_WAIT_TIMEOUT_MS = 2 * 60 * 1000;
+const TERMINAL_AGENT_RUN_STATUSES = new Set<AgentTerminalStatus>([
+  "completed",
+  "failed",
+  "cancelled",
+]);
+export type AgentWaitOptions = {
+  pollInterval?: number;
+  timeoutMs?: number;
+};
+
+export class AgentRunFailedError extends Error {
+  run: AgentRun & { status: "failed" };
+
+  constructor(run: AgentRun & { status: "failed" }) {
+    super(run.error?.message ?? `Agent run ${run.id} failed`);
+    this.name = "AgentRunFailedError";
+    this.run = run;
+  }
+}
+
+export class AgentRunCancelledError extends Error {
+  run: AgentRun & { status: "cancelled" };
+
+  constructor(run: AgentRun & { status: "cancelled" }) {
+    super(`Agent run ${run.id} was cancelled`);
+    this.name = "AgentRunCancelledError";
+    this.run = run;
+  }
+}
 
 function headersForBetas(betas?: string[]): Record<string, string> | undefined {
   const betaValues = betas?.filter(Boolean);
   if (!betaValues?.length) return undefined;
   return { "Exa-Beta": betaValues.join(",") };
+}
+
+function isTerminalAgentRunStatus(
+  status: AgentRun["status"]
+): status is AgentTerminalStatus {
+  return TERMINAL_AGENT_RUN_STATUSES.has(status as AgentTerminalStatus);
+}
+
+function ensureCompletedRun<T>(
+  run: AgentTerminalRunTyped<T>
+): AgentCompletedRunTyped<T> {
+  if (run.status === "failed") {
+    throw new AgentRunFailedError(run as AgentRun & { status: "failed" });
+  }
+  if (run.status === "cancelled") {
+    throw new AgentRunCancelledError(run as AgentRun & { status: "cancelled" });
+  }
+  return run as AgentCompletedRunTyped<T>;
+}
+
+function createAndWaitPollOptions(
+  options?: AgentWaitOptions
+): AgentWaitOptions {
+  return {
+    pollInterval: options?.pollInterval ?? DEFAULT_AGENT_POLL_INTERVAL_MS,
+    timeoutMs: options?.timeoutMs ?? DEFAULT_AGENT_CREATE_AND_WAIT_TIMEOUT_MS,
+  };
 }
 
 function buildAgentRunPayload<T>(params: AgentCreateOptions<T>): {
@@ -245,25 +313,17 @@ export class AgentRunsClient extends AgentBaseClient {
    */
   async pollUntilFinished(
     runId: string,
-    options?: {
-      pollInterval?: number;
-      timeoutMs?: number;
-    }
-  ): Promise<AgentRun & { status: "completed" | "failed" | "cancelled" }> {
-    const pollInterval = options?.pollInterval ?? 1000;
-    const timeoutMs = options?.timeoutMs ?? 60 * 60 * 1000;
+    options?: AgentWaitOptions
+  ): Promise<AgentTerminalRun> {
+    const pollInterval =
+      options?.pollInterval ?? DEFAULT_AGENT_POLL_INTERVAL_MS;
+    const timeoutMs = options?.timeoutMs ?? DEFAULT_AGENT_POLL_TIMEOUT_MS;
     const startTime = Date.now();
 
     while (true) {
       const run = await this.get(runId);
-      if (
-        run.status === "completed" ||
-        run.status === "failed" ||
-        run.status === "cancelled"
-      ) {
-        return run as AgentRun & {
-          status: "completed" | "failed" | "cancelled";
-        };
+      if (isTerminalAgentRunStatus(run.status)) {
+        return run as AgentTerminalRun;
       }
 
       if (Date.now() - startTime > timeoutMs) {
@@ -274,6 +334,34 @@ export class AgentRunsClient extends AgentBaseClient {
 
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
+  }
+
+  /**
+   * Create an Agent run and wait until it reaches a terminal status.
+   */
+  async createAndWait<T>(
+    params: Omit<AgentCreateOptions<T>, "stream">,
+    options?: AgentWaitOptions
+  ): Promise<AgentCompletedRunTyped<T>>;
+  async createAndWait(
+    params: CreateAgentRunParams,
+    options?: AgentWaitOptions
+  ): Promise<AgentCompletedRun>;
+  async createAndWait<T>(
+    params: Omit<AgentCreateOptions<T>, "stream">,
+    options?: AgentWaitOptions
+  ): Promise<AgentCompletedRunTyped<T>> {
+    const { stream: _stream, ...createParams } =
+      params as AgentCreateOptions<T>;
+    const run = (await this.create(
+      createParams as AgentCreateOptions<T> & { stream?: false }
+    )) as AgentRunTyped<T>;
+    const runId = (run as AgentRun).id;
+    const terminalRun = (await this.pollUntilFinished(
+      runId,
+      createAndWaitPollOptions(options)
+    )) as AgentTerminalRunTyped<T>;
+    return ensureCompletedRun(terminalRun);
   }
 }
 
@@ -453,13 +541,11 @@ export class AgentBetaRunsClient extends AgentRunsClient {
 
   async pollUntilFinished(
     runId: string,
-    options?: WithBetaOptions<{
-      pollInterval?: number;
-      timeoutMs?: number;
-    }>
-  ): Promise<AgentRun & { status: "completed" | "failed" | "cancelled" }> {
-    const pollInterval = options?.pollInterval ?? 1000;
-    const timeoutMs = options?.timeoutMs ?? 60 * 60 * 1000;
+    options?: WithBetaOptions<AgentWaitOptions>
+  ): Promise<AgentTerminalRun> {
+    const pollInterval =
+      options?.pollInterval ?? DEFAULT_AGENT_POLL_INTERVAL_MS;
+    const timeoutMs = options?.timeoutMs ?? DEFAULT_AGENT_POLL_TIMEOUT_MS;
     const startTime = Date.now();
     const headers = headersForBetas(options?.betas);
 
@@ -471,14 +557,8 @@ export class AgentBetaRunsClient extends AgentRunsClient {
         undefined,
         headers
       );
-      if (
-        run.status === "completed" ||
-        run.status === "failed" ||
-        run.status === "cancelled"
-      ) {
-        return run as AgentRun & {
-          status: "completed" | "failed" | "cancelled";
-        };
+      if (isTerminalAgentRunStatus(run.status)) {
+        return run as AgentTerminalRun;
       }
 
       if (Date.now() - startTime > timeoutMs) {
@@ -489,6 +569,35 @@ export class AgentBetaRunsClient extends AgentRunsClient {
 
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
+  }
+
+  async createAndWait<T>(
+    params: WithBetaOptions<Omit<AgentCreateOptions<T>, "stream">>,
+    options?: AgentWaitOptions
+  ): Promise<AgentCompletedRunTyped<T>>;
+  async createAndWait(
+    params: CreateAgentRunParams & AgentBetaOptions,
+    options?: AgentWaitOptions
+  ): Promise<AgentCompletedRun>;
+  async createAndWait<T>(
+    params: WithBetaOptions<Omit<AgentCreateOptions<T>, "stream">>,
+    options?: AgentWaitOptions
+  ): Promise<AgentCompletedRunTyped<T>> {
+    const {
+      betas,
+      stream: _stream,
+      ...createParams
+    } = params as WithBetaOptions<AgentCreateOptions<T>>;
+    const run = (await this.create({
+      ...createParams,
+      betas,
+    })) as AgentRunTyped<T>;
+    const runId = (run as AgentRun).id;
+    const terminalRun = (await this.pollUntilFinished(runId, {
+      ...createAndWaitPollOptions(options),
+      betas,
+    })) as AgentTerminalRunTyped<T>;
+    return ensureCompletedRun(terminalRun);
   }
 }
 
