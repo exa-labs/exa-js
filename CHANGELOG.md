@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.15.2](https://github.com/exa-labs/exa-js/compare/v2.15.1...v2.15.2) (2026-07-01)
+
+
+### Bug Fixes
+
+* rename provider to similarweb ([e3193d4](https://github.com/exa-labs/exa-js/commit/e3193d4a4324b8f53f552659994f98aef0dbd1e5))
+
 ## [2.15.1](https://github.com/exa-labs/exa-js/compare/v2.15.0...v2.15.1) (2026-06-30)
 
 
