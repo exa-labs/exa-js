@@ -31,6 +31,9 @@ type AgentCompletedRun = AgentRun & { status: "completed" };
 type AgentCompletedRunTyped<T> = AgentRunTyped<T> & {
   status: "completed";
 };
+const DEFAULT_AGENT_POLL_INTERVAL_MS = 1000;
+const DEFAULT_AGENT_POLL_TIMEOUT_MS = 60 * 60 * 1000;
+const DEFAULT_AGENT_CREATE_AND_WAIT_TIMEOUT_MS = 2 * 60 * 1000;
 const TERMINAL_AGENT_RUN_STATUSES = new Set<AgentTerminalStatus>([
   "completed",
   "failed",
@@ -83,6 +86,15 @@ function ensureCompletedRun<T>(
     throw new AgentRunCancelledError(run as AgentRun & { status: "cancelled" });
   }
   return run as AgentCompletedRunTyped<T>;
+}
+
+function createAndWaitPollOptions(
+  options?: AgentWaitOptions
+): AgentWaitOptions {
+  return {
+    pollInterval: options?.pollInterval ?? DEFAULT_AGENT_POLL_INTERVAL_MS,
+    timeoutMs: options?.timeoutMs ?? DEFAULT_AGENT_CREATE_AND_WAIT_TIMEOUT_MS,
+  };
 }
 
 function buildAgentRunPayload<T>(params: AgentCreateOptions<T>): {
@@ -303,8 +315,9 @@ export class AgentRunsClient extends AgentBaseClient {
     runId: string,
     options?: AgentWaitOptions
   ): Promise<AgentTerminalRun> {
-    const pollInterval = options?.pollInterval ?? 1000;
-    const timeoutMs = options?.timeoutMs ?? 60 * 60 * 1000;
+    const pollInterval =
+      options?.pollInterval ?? DEFAULT_AGENT_POLL_INTERVAL_MS;
+    const timeoutMs = options?.timeoutMs ?? DEFAULT_AGENT_POLL_TIMEOUT_MS;
     const startTime = Date.now();
 
     while (true) {
@@ -349,7 +362,7 @@ export class AgentRunsClient extends AgentBaseClient {
     const runId = (run as AgentRun).id;
     const terminalRun = (await this.pollUntilFinished(
       runId,
-      options
+      createAndWaitPollOptions(options)
     )) as AgentTerminalRunTyped<T>;
     return ensureCompletedRun(terminalRun);
   }
@@ -533,8 +546,9 @@ export class AgentBetaRunsClient extends AgentRunsClient {
     runId: string,
     options?: WithBetaOptions<AgentWaitOptions>
   ): Promise<AgentTerminalRun> {
-    const pollInterval = options?.pollInterval ?? 1000;
-    const timeoutMs = options?.timeoutMs ?? 60 * 60 * 1000;
+    const pollInterval =
+      options?.pollInterval ?? DEFAULT_AGENT_POLL_INTERVAL_MS;
+    const timeoutMs = options?.timeoutMs ?? DEFAULT_AGENT_POLL_TIMEOUT_MS;
     const startTime = Date.now();
     const headers = headersForBetas(options?.betas);
 
@@ -586,7 +600,7 @@ export class AgentBetaRunsClient extends AgentRunsClient {
     }
     const runId = (run as AgentRun).id;
     const terminalRun = (await this.pollUntilFinished(runId, {
-      ...options,
+      ...createAndWaitPollOptions(options),
       betas,
     })) as AgentTerminalRunTyped<T>;
     return ensureCompletedRun(terminalRun);

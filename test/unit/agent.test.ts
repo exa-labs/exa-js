@@ -729,6 +729,24 @@ describe("Agent API", () => {
     expect(requestSpy).toHaveBeenNthCalledWith(2, "/agent_run_123", "GET");
   });
 
+  it("uses two minute timeout defaults for createAndWait polling", async () => {
+    const runClient = getProtectedClient(exa.agent.runs);
+    vi.spyOn(runClient, "request").mockResolvedValueOnce({
+      ...createMockRun(),
+      status: "running",
+    });
+    const pollSpy = vi
+      .spyOn(exa.agent.runs, "pollUntilFinished")
+      .mockResolvedValueOnce({ ...createMockRun(), status: "completed" });
+
+    await exa.agent.runs.createAndWait({ query: "Find companies." });
+
+    expect(pollSpy).toHaveBeenCalledWith("agent_run_123", {
+      pollInterval: 1000,
+      timeoutMs: 120000,
+    });
+  });
+
   it("throws by default when createAndWait reaches a failed run", async () => {
     const runClient = getProtectedClient(exa.agent.runs);
     const failedRun: AgentRun = {
