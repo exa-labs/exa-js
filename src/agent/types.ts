@@ -37,7 +37,7 @@ export type AgentEffort = "low" | "medium" | "high" | "xhigh" | "auto";
 
 /**
  * Identifier of an Exa Connect data provider, e.g. `"fiber_ai"`,
- * `"financial_datasets"`, `"similar_web"`, `"baselayer"`, `"affiliate"`,
+ * `"financial_datasets"`, `"similarweb"`, `"baselayer"`, `"affiliate"`,
  * `"particle_news"`, or `"jinko"`.
  */
 export type AgentDataSourceProvider = string;
