@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.16.1](https://github.com/exa-labs/exa-js/compare/v2.16.0...v2.16.1) (2026-07-08)
+
+
+### Bug Fixes
+
+* mark startCrawlDate and endCrawlDate as deprecated ([#192](https://github.com/exa-labs/exa-js/issues/192)) ([a53366c](https://github.com/exa-labs/exa-js/commit/a53366cf29b9310b256deeda8db3a82a9b3f8cdd))
+
 ## [2.16.0](https://github.com/exa-labs/exa-js/compare/v2.15.1...v2.16.0) (2026-07-01)
 
 
