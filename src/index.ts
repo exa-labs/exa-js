@@ -95,8 +95,8 @@ export type ContentsOptions = {
  * @property {number} [numResults] - Number of search results to return. Default 10.
  * @property {string[]} [includeDomains] - List of domains to include in the search.
  * @property {string[]} [excludeDomains] - List of domains to exclude in the search.
- * @property {string} [startCrawlDate] - Start date for results based on crawl date.
- * @property {string} [endCrawlDate] - End date for results based on crawl date.
+ * @property {string} [startCrawlDate] - Deprecated and will be removed in a future release. Start date for results based on crawl date.
+ * @property {string} [endCrawlDate] - Deprecated and will be removed in a future release. End date for results based on crawl date.
  * @property {string} [startPublishedDate] - Start date for results based on published date.
  * @property {string} [endPublishedDate] - End date for results based on published date.
  * @property {string} [category] - A data category to focus on, with higher comprehensivity and data cleanliness.
@@ -111,7 +111,9 @@ export type BaseSearchOptions = {
   numResults?: number;
   includeDomains?: string[];
   excludeDomains?: string[];
+  /** @deprecated Will be removed in a future release. Do not use in new code. */
   startCrawlDate?: string;
+  /** @deprecated Will be removed in a future release. Do not use in new code. */
   endCrawlDate?: string;
   startPublishedDate?: string;
   endPublishedDate?: string;
