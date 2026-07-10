@@ -33,7 +33,13 @@ export type AgentStopReason =
 
 export type AgentConfidence = "low" | "medium" | "high";
 
-export type AgentEffort = "low" | "medium" | "high" | "xhigh" | "auto";
+export type AgentEffort =
+  | "minimal"
+  | "low"
+  | "medium"
+  | "high"
+  | "xhigh"
+  | "auto";
 
 /**
  * Identifier of an Exa Connect data provider, e.g. `"fiber_ai"`,
