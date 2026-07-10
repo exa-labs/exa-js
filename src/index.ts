@@ -1,5 +1,5 @@
 import fetch, { Headers } from "cross-fetch";
-import { ZodSchema } from "zod";
+import type { ZodSchema } from "zod";
 import packageJson from "../package.json";
 import { AgentClient, BetaClient } from "./agent/client";
 import { ExaError, HttpStatusCode } from "./errors";
