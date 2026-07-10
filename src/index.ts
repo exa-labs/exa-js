@@ -511,11 +511,19 @@ export type EntityPersonPropertiesWorkHistoryEntry = {
   company?: EntityPersonPropertiesCompanyRef | null;
 };
 
+/** A single education history entry for a person. */
+export type EntityPersonPropertiesEducationEntry = {
+  degree?: string | null;
+  dates?: EntityDateRange | null;
+  institution?: { name?: string | null } | null;
+};
+
 /** Structured properties for a person entity. */
 export type EntityPersonProperties = {
   name?: string | null;
   location?: string | null;
   workHistory?: EntityPersonPropertiesWorkHistoryEntry[];
+  educationHistory?: EntityPersonPropertiesEducationEntry[];
 };
 
 /** Structured entity data for a company. */
