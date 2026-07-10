@@ -106,7 +106,11 @@ export type ContentsOptions = {
  * @property {string} [userLocation] - The two-letter ISO country code of the user, e.g. US.
  * @property {boolean} [stream] - Whether to stream back OpenAI-style chat completion chunks. Use `streamSearch()` instead of `search({ stream: true })`.
  */
-export type BaseSearchOptions = {
+export type RequestOptions = {
+  signal?: AbortSignal;
+};
+
+export type BaseSearchOptions = RequestOptions & {
   contents?: ContentsOptions;
   numResults?: number;
   includeDomains?: string[];
@@ -536,7 +540,6 @@ export type PersonEntity = {
 
 /** Structured entity data for company or person search results. */
 export type Entity = CompanyEntity | PersonEntity;
-
 /**
  * Represents a search result object.
  * @typedef {Object} SearchResult
@@ -623,7 +626,7 @@ export type Status = {
  * @property {string} [systemPrompt] - A system prompt to guide the LLM's behavior when generating the answer.
  * @property {Object} [outputSchema] - A JSON Schema specification for the structure you expect the output to take
  */
-export type AnswerOptions = {
+export type AnswerOptions = RequestOptions & {
   stream?: boolean;
   text?: boolean;
   model?: "exa";
@@ -887,7 +890,8 @@ export class Exa {
     method: string,
     body?: any,
     params?: Record<string, any>,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
+    signal?: AbortSignal
   ): Promise<T> {
     // Build URL with query parameters if provided
     let url = this.baseURL + endpoint;
@@ -919,10 +923,22 @@ export class Exa {
       combinedHeaders = { ...combinedHeaders, ...headers };
     }
 
+    let requestBody = body;
+    let requestSignal = signal;
+
+    if (body && typeof body === "object" && !Array.isArray(body) && "signal" in body) {
+      const { signal: embeddedSignal, ...restBody } = body as {
+        signal?: AbortSignal;
+      } & Record<string, unknown>;
+      requestBody = restBody;
+      requestSignal ??= embeddedSignal;
+    }
+
     const response = await fetchImpl(url, {
       method,
       headers: combinedHeaders,
-      body: body ? JSON.stringify(body) : undefined,
+      body: requestBody ? JSON.stringify(requestBody) : undefined,
+      signal: requestSignal,
     });
 
     if (!response.ok) {
@@ -998,7 +1014,8 @@ export class Exa {
       string,
       string | number | boolean | string[] | undefined
     >,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
+    signal?: AbortSignal
   ): Promise<Response> {
     let url = this.baseURL + endpoint;
 
@@ -1030,10 +1047,22 @@ export class Exa {
       combinedHeaders = { ...combinedHeaders, ...headers };
     }
 
+    let requestBody = body;
+    let requestSignal = signal;
+
+    if (body && typeof body === "object" && !Array.isArray(body) && "signal" in body) {
+      const { signal: embeddedSignal, ...restBody } = body as {
+        signal?: AbortSignal;
+      } & Record<string, unknown>;
+      requestBody = restBody;
+      requestSignal ??= embeddedSignal;
+    }
+
     const response = await fetchImpl(url, {
       method,
       headers: combinedHeaders,
-      body: body ? JSON.stringify(body) : undefined,
+      body: requestBody ? JSON.stringify(requestBody) : undefined,
+      signal: requestSignal,
     });
 
     return response;
@@ -1087,7 +1116,7 @@ export class Exa {
   ): Promise<SearchResponse<{ text: true }>>;
   async search<T extends ContentsOptions>(
     query: string,
-    options?: RegularSearchOptions & { contents?: T | false | null | undefined }
+    options?: RegularSearchOptions & { contents?: T | false | null | undefined; signal?: AbortSignal }
   ): Promise<SearchResponse<T | { text: true } | {}>> {
     if (options?.stream) {
       throw new ExaError(
@@ -1102,7 +1131,10 @@ export class Exa {
     return await this.request(
       "/search",
       "POST",
-      this.buildSearchRequestBody(query, options)
+      this.buildSearchRequestBody(query, options),
+      undefined,
+      undefined,
+      options?.signal
     );
   }
 
@@ -1141,7 +1173,7 @@ export class Exa {
    */
   async searchAndContents<T extends ContentsOptions>(
     query: string,
-    options?: RegularSearchOptions & T
+    options?: RegularSearchOptions & T & { signal?: AbortSignal }
   ): Promise<SearchResponse<T>> {
     const { contentsOptions, restOptions } =
       options === undefined
@@ -1153,11 +1185,18 @@ export class Exa {
           }
         : this.extractContentsOptions(options);
 
-    return await this.request("/search", "POST", {
-      query,
-      contents: contentsOptions,
-      ...restOptions,
-    });
+    return await this.request(
+      "/search",
+      "POST",
+      {
+        query,
+        contents: contentsOptions,
+        ...restOptions,
+      },
+      undefined,
+      undefined,
+      options?.signal
+    );
   }
 
   /**
@@ -1218,16 +1257,23 @@ export class Exa {
   ): Promise<SearchResponse<{ text: true }>>;
   async findSimilar<T extends ContentsOptions>(
     url: string,
-    options?: FindSimilarOptions & { contents?: T | false | null | undefined }
+    options?: FindSimilarOptions & { contents?: T | false | null | undefined; signal?: AbortSignal }
   ): Promise<SearchResponse<T | { text: { maxCharacters: 10_000 } } | {}>> {
     // DEPRECATED METHOD: preserve legacy URL-similarity endpoint for compatibility.
     if (options === undefined || !("contents" in options)) {
       // No options or no contents property → default to text contents
-      return await this.request("/findSimilar", "POST", {
-        url,
-        ...options,
-        contents: { text: { maxCharacters: DEFAULT_MAX_CHARACTERS } },
-      });
+      return await this.request(
+        "/findSimilar",
+        "POST",
+        {
+          url,
+          ...options,
+          contents: { text: { maxCharacters: DEFAULT_MAX_CHARACTERS } },
+        },
+        undefined,
+        undefined,
+        options?.signal
+      );
     }
 
     // If contents is false, null, or undefined, don't send it to the API
@@ -1237,14 +1283,28 @@ export class Exa {
       options.contents === undefined
     ) {
       const { contents, ...restOptions } = options;
-      return await this.request("/findSimilar", "POST", {
-        url,
-        ...restOptions,
-      });
+      return await this.request(
+        "/findSimilar",
+        "POST",
+        {
+          url,
+          ...restOptions,
+        },
+        undefined,
+        undefined,
+        options?.signal
+      );
     }
 
     // Contents property exists with value - pass it through
-    return await this.request("/findSimilar", "POST", { url, ...options });
+    return await this.request(
+      "/findSimilar",
+      "POST",
+      { url, ...options },
+      undefined,
+      undefined,
+      options?.signal
+    );
   }
 
   /**
@@ -1263,7 +1323,7 @@ export class Exa {
    */
   async findSimilarAndContents<T extends ContentsOptions>(
     url: string,
-    options?: FindSimilarOptions & T
+    options?: FindSimilarOptions & T & { signal?: AbortSignal }
   ): Promise<SearchResponse<T>> {
     const { contentsOptions, restOptions } =
       options === undefined
@@ -1275,11 +1335,18 @@ export class Exa {
           }
         : this.extractContentsOptions(options);
 
-    return await this.request("/findSimilar", "POST", {
-      url,
-      contents: contentsOptions,
-      ...restOptions,
-    });
+    return await this.request(
+      "/findSimilar",
+      "POST",
+      {
+        url,
+        contents: contentsOptions,
+        ...restOptions,
+      },
+      undefined,
+      undefined,
+      options?.signal
+    );
   }
 
   /**
@@ -1290,7 +1357,7 @@ export class Exa {
    */
   async getContents<T extends ContentsOptions>(
     urls: string | string[] | SearchResult<T>[],
-    options?: T
+    options?: T & RequestOptions
   ): Promise<SearchResponse<T>> {
     if (!urls || (Array.isArray(urls) && urls.length === 0)) {
       throw new ExaError(
@@ -1314,7 +1381,14 @@ export class Exa {
       ...options,
     };
 
-    return await this.request("/contents", "POST", payload);
+    return await this.request(
+      "/contents",
+      "POST",
+      payload,
+      undefined,
+      undefined,
+      options?.signal
+    );
   }
 
   /**
@@ -1379,6 +1453,7 @@ export class Exa {
       systemPrompt: options?.systemPrompt,
       outputSchema,
       userLocation: options?.userLocation,
+      signal: options?.signal,
     };
 
     return await this.request("/answer", "POST", requestBody);
@@ -1396,6 +1471,7 @@ export class Exa {
       systemPrompt?: string;
       outputSchema: ZodSchema<T>;
       userLocation?: string;
+      signal?: AbortSignal;
     }
   ): AsyncGenerator<AnswerStreamChunk>;
 
@@ -1426,6 +1502,7 @@ export class Exa {
       systemPrompt?: string;
       outputSchema?: Record<string, unknown>;
       userLocation?: string;
+      signal?: AbortSignal;
     }
   ): AsyncGenerator<AnswerStreamChunk>;
 
@@ -1437,6 +1514,7 @@ export class Exa {
       systemPrompt?: string;
       outputSchema?: Record<string, unknown> | ZodSchema<T>;
       userLocation?: string;
+      signal?: AbortSignal;
     }
   ): AsyncGenerator<AnswerStreamChunk> {
     // Convert Zod schema to JSON schema if needed
@@ -1454,6 +1532,7 @@ export class Exa {
       systemPrompt: options?.systemPrompt,
       outputSchema,
       userLocation: options?.userLocation,
+      signal: options?.signal,
     };
 
     yield* this.streamChatCompletions("/answer", body);
@@ -1543,28 +1622,37 @@ export class Exa {
         }>
       | undefined;
 
-    if (
-      chunkData.choices &&
-      chunkData.choices[0] &&
-      chunkData.choices[0].delta
-    ) {
-      content = chunkData.choices[0].delta.content;
-    }
-
-    if (chunkData.citations && chunkData.citations !== "null") {
-      citations = chunkData.citations.map((c: any) => ({
-        id: c.id,
-        url: c.url,
-        title: c.title,
-        publishedDate: c.publishedDate,
-        author: c.author,
-        text: c.text,
-      }));
+    if (chunkData.choices) {
+      // Process OpenAI-style chat completion chunks
+      content = chunkData.choices[0]?.delta?.content ?? undefined;
+    } else {
+      // Process Exa-native answer chunks
+      content = chunkData.answer;
+      citations = chunkData.results?.map(
+        (r: {
+          id: string;
+          url: string;
+          title?: string;
+          publishedDate?: string;
+          author?: string;
+          text?: string;
+        }) => ({
+          id: r.id,
+          url: r.url,
+          title: r.title,
+          publishedDate: r.publishedDate,
+          author: r.author,
+          text: r.text,
+        })
+      );
     }
 
     return { content, citations };
   }
 
+  /**
+   * Parses an SSE stream and aggregates the final result.
+   */
   private async parseSSEStream<T>(response: Response): Promise<T> {
     const reader = response.body?.getReader();
     if (!reader) {
@@ -1577,88 +1665,66 @@ export class Exa {
 
     const decoder = new TextDecoder();
     let buffer = "";
+    let aggregatedAnswer = "";
+    const citations: SearchResult<{}>[] = [];
 
-    return new Promise<T>(async (resolve, reject) => {
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
 
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue;
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
 
-            const jsonStr = line.replace(/^data:\s*/, "").trim();
-            if (!jsonStr || jsonStr === "[DONE]") {
-              continue;
-            }
+          const jsonStr = line.replace(/^data:\s*/, "").trim();
+          if (!jsonStr || jsonStr === "[DONE]") {
+            continue;
+          }
 
-            let chunk: any;
-            try {
-              chunk = JSON.parse(jsonStr);
-            } catch {
-              continue; // Ignore malformed JSON lines
-            }
+          let chunkData: any;
+          try {
+            chunkData = JSON.parse(jsonStr);
+          } catch (err) {
+            continue;
+          }
 
-            switch (chunk.tag) {
-              case "complete":
-                reader.releaseLock();
-                resolve(chunk.data as T);
-                return;
-              case "error": {
-                const message = chunk.error?.message || "Unknown error";
-                reader.releaseLock();
-                reject(
-                  new ExaError(
-                    message,
-                    HttpStatusCode.InternalServerError,
-                    new Date().toISOString()
-                  )
-                );
-                return;
-              }
-              // 'progress' and any other tags are ignored for the blocking variant
-              default:
-                break;
-            }
+          if (chunkData.answer) {
+            aggregatedAnswer += chunkData.answer;
+          }
+          if (chunkData.results) {
+            citations.push(
+              ...chunkData.results.map(
+                (r: {
+                  id: string;
+                  url: string;
+                  title?: string;
+                  publishedDate?: string;
+                  author?: string;
+                }) => ({
+                  id: r.id,
+                  url: r.url,
+                  title: r.title,
+                  publishedDate: r.publishedDate,
+                  author: r.author,
+                })
+              )
+            );
           }
         }
-
-        // If we exit the loop without receiving a completion event
-        reject(
-          new ExaError(
-            "Stream ended without a completion event.",
-            HttpStatusCode.InternalServerError,
-            new Date().toISOString()
-          )
-        );
-      } catch (err) {
-        reject(err as Error);
-      } finally {
-        try {
-          reader.releaseLock();
-        } catch {
-          /* ignore */
-        }
       }
-    });
+    } finally {
+      reader.releaseLock();
+    }
+
+    return {
+      answer: aggregatedAnswer,
+      citations,
+    } as unknown as T;
   }
 }
 
-// Re-export Websets related types and enums
-export * from "./websets";
-// Re-export Research related types and client
-export * from "./research";
-// Re-export Search Monitors related types and client
-export * from "./monitors";
-// Re-export Agent related types and client
-export * from "./agent";
-
-// Export the main class
 export default Exa;
-
-// Re-export errors
-export * from "./errors";
