@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.16.2](https://github.com/exa-labs/exa-js/compare/v2.16.1...v2.16.2) (2026-07-27)
+
+
+### Bug Fixes
+
+* update Category values ([acef60a](https://github.com/exa-labs/exa-js/commit/acef60a44197f7f66ab85b45e779c96b950c8d52))
+* update Category values ([08e3527](https://github.com/exa-labs/exa-js/commit/08e35274bb6b584d1bd85257551867a47b00c2e1))
+
 ## [2.16.1](https://github.com/exa-labs/exa-js/compare/v2.16.0...v2.16.1) (2026-07-08)
 
 
