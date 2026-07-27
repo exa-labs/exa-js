@@ -119,9 +119,8 @@ export type BaseSearchOptions = {
   endPublishedDate?: string;
   category?:
     | "company"
-    | "research paper"
+    | "publication"
     | "news"
-    | "pdf"
     | "personal site"
     | "financial report"
     | "people";

@@ -166,7 +166,7 @@ async function extractResearchPapers() {
             schema: ResearchPaper,
           },
         },
-        category: "research paper",
+        category: "publication",
         numResults: 5,
       }
     );
