@@ -39,8 +39,10 @@ jobs:
           registry-url: https://registry.npmjs.org/
           scope: '@exa-labs'
 
+      # Pin to npm@11 (needs >=11.5.1 for trusted publishing). npm@latest is
+      # npm 12 and requires Node 22+, which breaks this Node 20 job.
       - name: Ensure npm 11.5.1+
-        run: npm install -g npm@latest
+        run: npm install -g npm@11
 
       - name: Install dependencies
         run: npm ci
