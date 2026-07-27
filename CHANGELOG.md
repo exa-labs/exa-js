@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.16.3](https://github.com/exa-labs/exa-js/compare/v2.16.2...v2.16.3) (2026-07-27)
+
+
+### Bug Fixes
+
+* pin publish workflow to npm@11 ([a9cc5b6](https://github.com/exa-labs/exa-js/commit/a9cc5b6deee0f35148169da4f98462553b76eb09))
+* pin publish workflow to npm@11 ([ecd219b](https://github.com/exa-labs/exa-js/commit/ecd219b0d956276ab1646c06c5b0d842a4c99fc0))
+
 ## [2.16.2](https://github.com/exa-labs/exa-js/compare/v2.16.1...v2.16.2) (2026-07-27)
 
 
