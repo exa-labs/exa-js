@@ -6,6 +6,14 @@
  * from news on every refresh, on the monitor's cadence.
  */
 
+/** Beta identifier required for the Agent Monitors API. */
+export const AGENT_MONITORS_BETA_HEADER = "agent-monitors-2026-08-04";
+
+export interface AgentMonitorsBetaOptions {
+  /** Beta feature identifiers to enable for this request. */
+  betas: string[];
+}
+
 export type AgentMonitorStatus =
   | "creating"
   | "pending_first_refresh"

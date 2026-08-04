@@ -377,15 +377,9 @@ export class AgentClient {
    */
   runs: AgentRunsClient;
 
-  /**
-   * Client for Agent Monitors.
-   */
-  monitors: AgentMonitorsClient;
-
   constructor(client: Exa) {
     this.client = client;
     this.runs = new AgentRunsClient(client);
-    this.monitors = new AgentMonitorsClient(client);
   }
 }
 
@@ -608,14 +602,17 @@ export class AgentBetaRunsClient extends AgentRunsClient {
   }
 }
 
-/**
- * @deprecated Use AgentClient instead.
- */
+/** Beta Agent API clients. */
 export class AgentBetaClient extends AgentClient {
   /**
    * @deprecated Use exa.agent.runs instead.
    */
   runs: AgentBetaRunsClient;
+
+  /**
+   * Beta client for Agent Monitors.
+   */
+  monitors: AgentMonitorsClient;
 
   constructor(clientOrAgent: Exa | AgentClient) {
     const client =
@@ -624,12 +621,14 @@ export class AgentBetaClient extends AgentClient {
         : clientOrAgent;
     super(client);
     this.runs = new AgentBetaRunsClient(client);
+    this.monitors = new AgentMonitorsClient(client);
   }
 }
 
 export class BetaClient {
   /**
-   * @deprecated Use exa.agent instead.
+   * Beta Agent namespace. Stable Agent runs remain available here for
+   * backwards compatibility; beta-only Agent products live here exclusively.
    */
   agent: AgentBetaClient;
 

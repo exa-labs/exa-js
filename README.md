@@ -153,7 +153,10 @@ const run = await exa.agent.runs.create({
 const completedRun = await exa.agent.runs.pollUntilFinished(run.id);
 console.log(completedRun.output?.structured);
 // Per-provider tool-call counts and cost for any Exa Connect data sources used.
-console.log(completedRun.usage?.dataSources, completedRun.costDollars?.dataSources);
+console.log(
+  completedRun.usage?.dataSources,
+  completedRun.costDollars?.dataSources
+);
 ```
 
 For Agent Max, use the beta namespace and pass the beta token explicitly:
@@ -169,17 +172,18 @@ const maxRun = await exa.beta.agent.runs.create({
 });
 ```
 
-## Agent Monitors
+## Agent Monitors (Beta)
 
-> Agent Monitors are gated while in preview — contact Exa to enable them for your team.
+Agent Monitors use the beta namespace and require the `agent-monitors-2026-08-04` beta identifier.
 
 An Agent Monitor keeps a table of entities × fields fresh on a cadence: static fields are answered once per entity over the live web, dynamic fields are tracked from news on every refresh.
 
 ```ts
 // Create a monitor. Creation is async: it returns with status "creating"
 // and becomes "active" once the first refresh completes.
-const monitor = await exa.agent.monitors.create(
+const monitor = await exa.beta.agent.monitors.create(
   {
+    betas: ["agent-monitors-2026-08-04"],
     cadence: "7d",
     entities: [
       { name: "Acme Corp", domain: "acme.com" },
@@ -194,33 +198,45 @@ const monitor = await exa.agent.monitors.create(
 );
 
 // Page the monitor's current entities and their contents.
-for await (const { entity, contents } of exa.agent.monitors.entities.listAll(
-  monitor.id
-)) {
+for await (const {
+  entity,
+  contents,
+} of exa.beta.agent.monitors.entities.listAll(monitor.id, {
+  betas: ["agent-monitors-2026-08-04"],
+})) {
   console.log(entity.name, contents);
 }
 
 // Follow the content change feed (resume later from the page's nextCursor).
-const changes = await exa.agent.monitors.changes.list(monitor.id, {
+const changes = await exa.beta.agent.monitors.changes.list(monitor.id, {
+  betas: ["agent-monitors-2026-08-04"],
   since: "2026-01-01T00:00:00Z",
 });
 
 // One-shot stateless snapshot of a past news window — no monitor created.
-const snapshot = await exa.agent.monitors.snapshots.createAndWait({
+const snapshot = await exa.beta.agent.monitors.snapshots.createAndWait({
+  betas: ["agent-monitors-2026-08-04"],
   entities: [{ name: "Acme Corp", domain: "acme.com" }],
-  fields: [{ name: "funding", description: "New funding rounds", type: "dynamic" }],
+  fields: [
+    { name: "funding", description: "New funding rounds", type: "dynamic" },
+  ],
   startDate: "2026-01-01",
   endDate: "2026-01-08",
 });
 console.log(snapshot.data);
 
 // Add entities, inspect refresh progress, clean up.
-await exa.agent.monitors.entities.add(monitor.id, {
+await exa.beta.agent.monitors.entities.add(monitor.id, {
+  betas: ["agent-monitors-2026-08-04"],
   entities: [{ name: "Initech", domain: "initech.com" }],
 });
-const current = await exa.agent.monitors.get(monitor.id);
+const current = await exa.beta.agent.monitors.get(monitor.id, {
+  betas: ["agent-monitors-2026-08-04"],
+});
 console.log(current.status, current.refresh, current.usage);
-await exa.agent.monitors.delete(monitor.id);
+await exa.beta.agent.monitors.delete(monitor.id, {
+  betas: ["agent-monitors-2026-08-04"],
+});
 ```
 
 ## TypeScript

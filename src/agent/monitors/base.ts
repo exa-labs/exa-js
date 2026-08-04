@@ -25,17 +25,27 @@ export class AgentMonitorsBaseClient {
 
   protected async request<T = unknown>(
     endpoint: string,
+    betas: string[],
     method: string = "POST",
     data?: RequestBody,
     params?: QueryParams,
     headers?: Record<string, string>
   ): Promise<T> {
+    if (!betas?.length) {
+      throw new Error(
+        "betas must include the Agent Monitors API beta identifier"
+      );
+    }
+
     return this.client.request<T>(
       `/agent/monitors${endpoint}`,
       method,
       data,
       params,
-      headers
+      {
+        "Exa-Beta": betas.join(","),
+        ...headers,
+      }
     );
   }
 

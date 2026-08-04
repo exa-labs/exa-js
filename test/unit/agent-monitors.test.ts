@@ -17,6 +17,7 @@ import { getProtectedClient } from "./helpers";
 
 describe("Agent Monitors API", () => {
   let exa: Exa;
+  const BETAS = ["agent-monitors-2026-08-04"];
 
   const createMockMonitor = (
     overrides: Partial<AgentMonitor> = {}
@@ -97,10 +98,39 @@ describe("Agent Monitors API", () => {
   });
 
   describe("Monitor Operations", () => {
+    it("exposes monitors only in beta and sends beta values as headers", async () => {
+      expect((exa.agent as any).monitors).toBeUndefined();
+      expect(exa.beta.agent.monitors).toBeDefined();
+
+      const requestSpy = vi
+        .spyOn(exa, "request")
+        .mockResolvedValueOnce(createMockMonitor());
+
+      await exa.beta.agent.monitors.get("agentmon_01hzx3example", {
+        betas: BETAS,
+      });
+
+      expect(requestSpy).toHaveBeenCalledWith(
+        "/agent/monitors/agentmon_01hzx3example",
+        "GET",
+        undefined,
+        undefined,
+        { "Exa-Beta": "agent-monitors-2026-08-04" }
+      );
+    });
+
+    it("rejects an empty beta list", async () => {
+      await expect(
+        exa.beta.agent.monitors.get("agentmon_01hzx3example", { betas: [] })
+      ).rejects.toThrow(
+        "betas must include the Agent Monitors API beta identifier"
+      );
+    });
+
     it("should create an Agent Monitor", async () => {
       const mockResponse = createMockMonitor({ status: "creating" });
 
-      const monitorsClient = getProtectedClient(exa.agent.monitors);
+      const monitorsClient = getProtectedClient(exa.beta.agent.monitors);
       const requestSpy = vi
         .spyOn(monitorsClient, "request")
         .mockResolvedValueOnce(mockResponse);
@@ -125,10 +155,14 @@ describe("Agent Monitors API", () => {
         ],
       };
 
-      const result = await exa.agent.monitors.create(createParams);
+      const result = await exa.beta.agent.monitors.create({
+        ...createParams,
+        betas: BETAS,
+      });
 
       expect(requestSpy).toHaveBeenCalledWith(
         "",
+        BETAS,
         "POST",
         createParams,
         undefined,
@@ -141,7 +175,7 @@ describe("Agent Monitors API", () => {
     it("should send the Idempotency-Key header when creating with idempotencyKey", async () => {
       const mockResponse = createMockMonitor({ status: "creating" });
 
-      const monitorsClient = getProtectedClient(exa.agent.monitors);
+      const monitorsClient = getProtectedClient(exa.beta.agent.monitors);
       const requestSpy = vi
         .spyOn(monitorsClient, "request")
         .mockResolvedValueOnce(mockResponse);
@@ -152,12 +186,16 @@ describe("Agent Monitors API", () => {
         fields: [{ name: "ceo", description: "The company's current CEO" }],
       };
 
-      await exa.agent.monitors.create(createParams, {
-        idempotencyKey: "my-key-1",
-      });
+      await exa.beta.agent.monitors.create(
+        { ...createParams, betas: BETAS },
+        {
+          idempotencyKey: "my-key-1",
+        }
+      );
 
       expect(requestSpy).toHaveBeenCalledWith(
         "",
+        BETAS,
         "POST",
         createParams,
         undefined,
@@ -170,14 +208,21 @@ describe("Agent Monitors API", () => {
     it("should get an Agent Monitor by ID", async () => {
       const mockResponse = createMockMonitor();
 
-      const monitorsClient = getProtectedClient(exa.agent.monitors);
+      const monitorsClient = getProtectedClient(exa.beta.agent.monitors);
       const requestSpy = vi
         .spyOn(monitorsClient, "request")
         .mockResolvedValueOnce(mockResponse);
 
-      const result = await exa.agent.monitors.get("agentmon_01hzx3example");
+      const result = await exa.beta.agent.monitors.get(
+        "agentmon_01hzx3example",
+        { betas: BETAS }
+      );
 
-      expect(requestSpy).toHaveBeenCalledWith("/agentmon_01hzx3example", "GET");
+      expect(requestSpy).toHaveBeenCalledWith(
+        "/agentmon_01hzx3example",
+        BETAS,
+        "GET"
+      );
       expect(result).toEqual(mockResponse);
     });
 
@@ -189,17 +234,18 @@ describe("Agent Monitors API", () => {
         nextCursor: null,
       };
 
-      const monitorsClient = getProtectedClient(exa.agent.monitors);
+      const monitorsClient = getProtectedClient(exa.beta.agent.monitors);
       const requestSpy = vi
         .spyOn(monitorsClient, "request")
         .mockResolvedValueOnce(mockResponse);
 
-      const result = await exa.agent.monitors.list({
+      const result = await exa.beta.agent.monitors.list({
+        betas: BETAS,
         cursor: "agentmon_01hzxcursor",
         limit: 10,
       });
 
-      expect(requestSpy).toHaveBeenCalledWith("", "GET", undefined, {
+      expect(requestSpy).toHaveBeenCalledWith("", BETAS, "GET", undefined, {
         cursor: "agentmon_01hzxcursor",
         limit: 10,
       });
@@ -220,20 +266,20 @@ describe("Agent Monitors API", () => {
         nextCursor: null,
       };
 
-      const monitorsClient = getProtectedClient(exa.agent.monitors);
+      const monitorsClient = getProtectedClient(exa.beta.agent.monitors);
       const requestSpy = vi
         .spyOn(monitorsClient, "request")
         .mockResolvedValueOnce(firstPage)
         .mockResolvedValueOnce(secondPage);
 
-      const monitors = await exa.agent.monitors.getAll();
+      const monitors = await exa.beta.agent.monitors.getAll({ betas: BETAS });
 
       expect(monitors.map((monitor) => monitor.id)).toEqual([
         "agentmon_1",
         "agentmon_2",
       ]);
       expect(requestSpy).toHaveBeenCalledTimes(2);
-      expect(requestSpy).toHaveBeenLastCalledWith("", "GET", undefined, {
+      expect(requestSpy).toHaveBeenLastCalledWith("", BETAS, "GET", undefined, {
         cursor: "agentmon_1",
       });
     });
@@ -245,15 +291,19 @@ describe("Agent Monitors API", () => {
         deleted: true,
       };
 
-      const monitorsClient = getProtectedClient(exa.agent.monitors);
+      const monitorsClient = getProtectedClient(exa.beta.agent.monitors);
       const requestSpy = vi
         .spyOn(monitorsClient, "request")
         .mockResolvedValueOnce(mockResponse);
 
-      const result = await exa.agent.monitors.delete("agentmon_01hzx3example");
+      const result = await exa.beta.agent.monitors.delete(
+        "agentmon_01hzx3example",
+        { betas: BETAS }
+      );
 
       expect(requestSpy).toHaveBeenCalledWith(
         "/agentmon_01hzx3example",
+        BETAS,
         "DELETE"
       );
       expect(result).toEqual(mockResponse);
@@ -264,7 +314,9 @@ describe("Agent Monitors API", () => {
     it("should add entities to a monitor", async () => {
       const mockResponse = createMockMonitor({ entityCount: 3 });
 
-      const entitiesClient = getProtectedClient(exa.agent.monitors.entities);
+      const entitiesClient = getProtectedClient(
+        exa.beta.agent.monitors.entities
+      );
       const requestSpy = vi
         .spyOn(entitiesClient, "request")
         .mockResolvedValueOnce(mockResponse);
@@ -272,13 +324,14 @@ describe("Agent Monitors API", () => {
       const params = {
         entities: [{ name: "Initech", domain: "initech.com" }],
       };
-      const result = await exa.agent.monitors.entities.add(
+      const result = await exa.beta.agent.monitors.entities.add(
         "agentmon_01hzx3example",
-        params
+        { ...params, betas: BETAS }
       );
 
       expect(requestSpy).toHaveBeenCalledWith(
         "/agentmon_01hzx3example/entities",
+        BETAS,
         "POST",
         params
       );
@@ -294,18 +347,26 @@ describe("Agent Monitors API", () => {
         version: 3,
       };
 
-      const entitiesClient = getProtectedClient(exa.agent.monitors.entities);
+      const entitiesClient = getProtectedClient(
+        exa.beta.agent.monitors.entities
+      );
       const requestSpy = vi
         .spyOn(entitiesClient, "request")
         .mockResolvedValueOnce(mockResponse);
 
-      const result = await exa.agent.monitors.entities.list(
+      const result = await exa.beta.agent.monitors.entities.list(
         "agentmon_01hzx3example",
-        { cursor: "abc", limit: 50, since: "2026-01-07T00:00:00.000Z" }
+        {
+          betas: BETAS,
+          cursor: "abc",
+          limit: 50,
+          since: "2026-01-07T00:00:00.000Z",
+        }
       );
 
       expect(requestSpy).toHaveBeenCalledWith(
         "/agentmon_01hzx3example/entities",
+        BETAS,
         "GET",
         undefined,
         { cursor: "abc", limit: 50, since: "2026-01-07T00:00:00.000Z" }
@@ -329,20 +390,24 @@ describe("Agent Monitors API", () => {
         version: 3,
       };
 
-      const entitiesClient = getProtectedClient(exa.agent.monitors.entities);
+      const entitiesClient = getProtectedClient(
+        exa.beta.agent.monitors.entities
+      );
       const requestSpy = vi
         .spyOn(entitiesClient, "request")
         .mockResolvedValueOnce(firstPage)
         .mockResolvedValueOnce(secondPage);
 
-      const entities = await exa.agent.monitors.entities.getAll(
-        "agentmon_01hzx3example"
+      const entities = await exa.beta.agent.monitors.entities.getAll(
+        "agentmon_01hzx3example",
+        { betas: BETAS }
       );
 
       expect(entities).toHaveLength(2);
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(requestSpy).toHaveBeenLastCalledWith(
         "/agentmon_01hzx3example/entities",
+        BETAS,
         "GET",
         undefined,
         { cursor: "cursor-2" }
@@ -360,18 +425,19 @@ describe("Agent Monitors API", () => {
         version: 3,
       };
 
-      const changesClient = getProtectedClient(exa.agent.monitors.changes);
+      const changesClient = getProtectedClient(exa.beta.agent.monitors.changes);
       const requestSpy = vi
         .spyOn(changesClient, "request")
         .mockResolvedValueOnce(mockResponse);
 
-      const result = await exa.agent.monitors.changes.list(
+      const result = await exa.beta.agent.monitors.changes.list(
         "agentmon_01hzx3example",
-        { since: "2026-01-07T00:00:00.000Z" }
+        { betas: BETAS, since: "2026-01-07T00:00:00.000Z" }
       );
 
       expect(requestSpy).toHaveBeenCalledWith(
         "/agentmon_01hzx3example/changes",
+        BETAS,
         "GET",
         undefined,
         { since: "2026-01-07T00:00:00.000Z" }
@@ -396,21 +462,22 @@ describe("Agent Monitors API", () => {
         version: 3,
       };
 
-      const changesClient = getProtectedClient(exa.agent.monitors.changes);
+      const changesClient = getProtectedClient(exa.beta.agent.monitors.changes);
       const requestSpy = vi
         .spyOn(changesClient, "request")
         .mockResolvedValueOnce(firstPage)
         .mockResolvedValueOnce(secondPage);
 
-      const changes = await exa.agent.monitors.changes.getAll(
+      const changes = await exa.beta.agent.monitors.changes.getAll(
         "agentmon_01hzx3example",
-        { cursor: "change-cursor-1" }
+        { betas: BETAS, cursor: "change-cursor-1" }
       );
 
       expect(changes).toHaveLength(2);
       expect(requestSpy).toHaveBeenNthCalledWith(
         1,
         "/agentmon_01hzx3example/changes",
+        BETAS,
         "GET",
         undefined,
         { cursor: "change-cursor-1" }
@@ -418,6 +485,7 @@ describe("Agent Monitors API", () => {
       expect(requestSpy).toHaveBeenNthCalledWith(
         2,
         "/agentmon_01hzx3example/changes",
+        BETAS,
         "GET",
         undefined,
         { cursor: "change-cursor-2" }
@@ -439,15 +507,21 @@ describe("Agent Monitors API", () => {
     it("should start a snapshot job", async () => {
       const mockResponse = runningSnapshot;
 
-      const snapshotsClient = getProtectedClient(exa.agent.monitors.snapshots);
+      const snapshotsClient = getProtectedClient(
+        exa.beta.agent.monitors.snapshots
+      );
       const requestSpy = vi
         .spyOn(snapshotsClient, "request")
         .mockResolvedValueOnce(mockResponse);
 
-      const result = await exa.agent.monitors.snapshots.create(snapshotParams);
+      const result = await exa.beta.agent.monitors.snapshots.create({
+        ...snapshotParams,
+        betas: BETAS,
+      });
 
       expect(requestSpy).toHaveBeenCalledWith(
         "/snapshot",
+        BETAS,
         "POST",
         snapshotParams
       );
@@ -468,17 +542,21 @@ describe("Agent Monitors API", () => {
         warnings: [],
       };
 
-      const snapshotsClient = getProtectedClient(exa.agent.monitors.snapshots);
+      const snapshotsClient = getProtectedClient(
+        exa.beta.agent.monitors.snapshots
+      );
       const requestSpy = vi
         .spyOn(snapshotsClient, "request")
         .mockResolvedValueOnce(mockResponse);
 
-      const result = await exa.agent.monitors.snapshots.get(
-        "agentsnap_01hzx3snap1"
+      const result = await exa.beta.agent.monitors.snapshots.get(
+        "agentsnap_01hzx3snap1",
+        { betas: BETAS }
       );
 
       expect(requestSpy).toHaveBeenCalledWith(
         "/snapshot/agentsnap_01hzx3snap1",
+        BETAS,
         "GET"
       );
       expect(result.status).toBe("completed");
@@ -494,14 +572,16 @@ describe("Agent Monitors API", () => {
         data: [],
       };
 
-      const snapshotsClient = getProtectedClient(exa.agent.monitors.snapshots);
+      const snapshotsClient = getProtectedClient(
+        exa.beta.agent.monitors.snapshots
+      );
       vi.spyOn(snapshotsClient, "request")
         .mockResolvedValueOnce(runningSnapshot)
         .mockResolvedValueOnce(runningSnapshot)
         .mockResolvedValueOnce(completed);
 
-      const result = await exa.agent.monitors.snapshots.createAndWait(
-        snapshotParams,
+      const result = await exa.beta.agent.monitors.snapshots.createAndWait(
+        { ...snapshotParams, betas: BETAS },
         { pollInterval: 1 }
       );
 
@@ -515,26 +595,32 @@ describe("Agent Monitors API", () => {
         error: "newsfeed unavailable",
       };
 
-      const snapshotsClient = getProtectedClient(exa.agent.monitors.snapshots);
+      const snapshotsClient = getProtectedClient(
+        exa.beta.agent.monitors.snapshots
+      );
       vi.spyOn(snapshotsClient, "request")
         .mockResolvedValueOnce(runningSnapshot)
         .mockResolvedValueOnce(failed);
 
       await expect(
-        exa.agent.monitors.snapshots.createAndWait(snapshotParams, {
-          pollInterval: 1,
-        })
+        exa.beta.agent.monitors.snapshots.createAndWait(
+          { ...snapshotParams, betas: BETAS },
+          { pollInterval: 1 }
+        )
       ).rejects.toThrow(AgentMonitorSnapshotFailedError);
     });
 
     it("should time out pollUntilFinished when the snapshot never finishes", async () => {
-      const snapshotsClient = getProtectedClient(exa.agent.monitors.snapshots);
+      const snapshotsClient = getProtectedClient(
+        exa.beta.agent.monitors.snapshots
+      );
       vi.spyOn(snapshotsClient, "request").mockResolvedValue(runningSnapshot);
 
       await expect(
-        exa.agent.monitors.snapshots.pollUntilFinished(
+        exa.beta.agent.monitors.snapshots.pollUntilFinished(
           "agentsnap_01hzx3snap1",
           {
+            betas: BETAS,
             pollInterval: 1,
             timeoutMs: 5,
           }
