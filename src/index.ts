@@ -954,16 +954,42 @@ export class Exa {
         errorData.path = endpoint;
       }
 
-      // For other APIs, throw a simple ExaError with just message and status
-      let message = errorData.error || "Unknown error";
-      if (errorData.message) {
-        message += (message.length > 0 ? ". " : "") + errorData.message;
+      // Structured envelope (`error` is an object): message and metadata live
+      // inside it — e.g. { error: { type, code, message, detail }, requestId }.
+      const envelope =
+        typeof errorData.error === "object" && errorData.error !== null
+          ? (errorData.error as {
+              type?: string;
+              code?: string;
+              message?: string;
+              detail?: unknown;
+              requestId?: string;
+            })
+          : undefined;
+      let message: string;
+      if (envelope) {
+        message = envelope.message || errorData.message || "Unknown error";
+      } else {
+        message = errorData.error || "Unknown error";
+        if (errorData.message) {
+          message += (message.length > 0 ? ". " : "") + errorData.message;
+        }
       }
       throw new ExaError(
         message,
         response.status,
         errorData.timestamp,
-        errorData.path
+        errorData.path,
+        envelope
+          ? {
+              type: envelope.type,
+              code: envelope.code,
+              detail: envelope.detail,
+              requestId: errorData.requestId ?? envelope.requestId,
+            }
+          : errorData.requestId
+            ? { requestId: errorData.requestId }
+            : undefined
       );
     }
 
