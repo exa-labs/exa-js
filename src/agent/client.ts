@@ -7,6 +7,7 @@ import { Exa } from "../index";
 import { ExaError } from "../errors";
 import { isZodSchema, zodToJsonSchema } from "../zod-utils";
 import { AgentBaseClient } from "./base";
+import { AgentMonitorsClient } from "./monitors/client";
 import {
   AgentBetaOptions,
   AgentCreateOptions,
@@ -376,9 +377,15 @@ export class AgentClient {
    */
   runs: AgentRunsClient;
 
+  /**
+   * Client for Agent Monitors.
+   */
+  monitors: AgentMonitorsClient;
+
   constructor(client: Exa) {
     this.client = client;
     this.runs = new AgentRunsClient(client);
+    this.monitors = new AgentMonitorsClient(client);
   }
 }
 

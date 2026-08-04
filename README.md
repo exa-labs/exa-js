@@ -169,6 +169,60 @@ const maxRun = await exa.beta.agent.runs.create({
 });
 ```
 
+## Agent Monitors
+
+> Agent Monitors are gated while in preview — contact Exa to enable them for your team.
+
+An Agent Monitor keeps a table of entities × fields fresh on a cadence: static fields are answered once per entity over the live web, dynamic fields are tracked from news on every refresh.
+
+```ts
+// Create a monitor. Creation is async: it returns with status "creating"
+// and becomes "active" once the first refresh completes.
+const monitor = await exa.agent.monitors.create(
+  {
+    cadence: "7d",
+    entities: [
+      { name: "Acme Corp", domain: "acme.com" },
+      { name: "Globex", domain: "globex.com" },
+    ],
+    fields: [
+      { name: "ceo", description: "The company's current CEO" }, // static by default
+      { name: "funding", description: "New funding rounds", type: "dynamic" },
+    ],
+  },
+  { idempotencyKey: "my-monitor-1" } // safe retries: same key returns the same monitor
+);
+
+// Page the monitor's current entities and their contents.
+for await (const { entity, contents } of exa.agent.monitors.entities.listAll(
+  monitor.id
+)) {
+  console.log(entity.name, contents);
+}
+
+// Follow the content change feed (resume later from the page's nextCursor).
+const changes = await exa.agent.monitors.changes.list(monitor.id, {
+  since: "2026-01-01T00:00:00Z",
+});
+
+// One-shot stateless snapshot of a past news window — no monitor created.
+const snapshot = await exa.agent.monitors.snapshots.createAndWait({
+  entities: [{ name: "Acme Corp", domain: "acme.com" }],
+  fields: [{ name: "funding", description: "New funding rounds", type: "dynamic" }],
+  startDate: "2026-01-01",
+  endDate: "2026-01-08",
+});
+console.log(snapshot.data);
+
+// Add entities, inspect refresh progress, clean up.
+await exa.agent.monitors.entities.add(monitor.id, {
+  entities: [{ name: "Initech", domain: "initech.com" }],
+});
+const current = await exa.agent.monitors.get(monitor.id);
+console.log(current.status, current.refresh, current.usage);
+await exa.agent.monitors.delete(monitor.id);
+```
+
 ## TypeScript
 
 Full TypeScript support with types for all methods.

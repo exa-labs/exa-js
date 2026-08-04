@@ -44,3 +44,5 @@ export type {
 } from "./types";
 
 export { AGENT_BETA_HEADER, AGENT_MAX_EFFORT_BETA } from "./types";
+
+export * from "./monitors";
