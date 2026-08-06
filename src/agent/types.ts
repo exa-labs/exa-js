@@ -10,6 +10,8 @@ import { ZodSchema } from "zod";
  */
 export const AGENT_BETA_HEADER = "agent-2026-05-07";
 
+export const AGENT_MAX_EFFORT_BETA = "agent-max-effort-2026-07-27";
+
 export interface AgentBetaOptions {
   /**
    * @deprecated Agent API beta header is no longer required for `exa.agent`.
@@ -33,7 +35,24 @@ export type AgentStopReason =
 
 export type AgentConfidence = "low" | "medium" | "high";
 
-export type AgentEffort = "low" | "medium" | "high" | "xhigh" | "auto";
+export type AgentEffort =
+  | "minimal"
+  | "low"
+  | "medium"
+  | "high"
+  | "xhigh"
+  | "auto"
+  | "max";
+
+/** Per-run spend ceiling for the metered `auto` and `max` efforts. */
+export interface AgentBudget {
+  /**
+   * Maximum spend for the run in US dollars.
+   * Only accepted by the API for `auto` and `max`; the server validates the
+   * allowed range and applies defaults when omitted.
+   */
+  maxCostDollars?: number;
+}
 
 /**
  * Identifier of an Exa Connect data provider, e.g. `"fiber_ai"`,
@@ -170,6 +189,7 @@ export interface CreateAgentRunParams {
   input?: AgentInput;
   outputSchema?: Record<string, unknown>;
   effort?: AgentEffort;
+  budget?: AgentBudget;
   previousRunId?: string;
   metadata?: Record<string, unknown>;
   /** Exa Connect data providers to enable for the run. Each entry enables all of that provider's tools. */

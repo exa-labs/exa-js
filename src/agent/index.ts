@@ -17,6 +17,7 @@ export type { AgentWaitOptions } from "./client";
 export type {
   AgentCostDollars,
   AgentBetaOptions,
+  AgentBudget,
   AgentCreateOptions,
   AgentConfidence,
   AgentDataSource,
@@ -42,4 +43,4 @@ export type {
   ListAgentRunsResponse,
 } from "./types";
 
-export { AGENT_BETA_HEADER } from "./types";
+export { AGENT_BETA_HEADER, AGENT_MAX_EFFORT_BETA } from "./types";
