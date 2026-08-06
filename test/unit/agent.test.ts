@@ -13,6 +13,7 @@ import {
   AgentBetaClient,
   AgentClient,
   AGENT_BETA_HEADER,
+  AGENT_MAX_EFFORT_BETA,
   BetaClient,
   AgentRunCancelledError,
   AgentRunFailedError,
@@ -189,6 +190,32 @@ describe("Agent API", () => {
       { query: "Find recent funding rounds." },
       undefined,
       { "Exa-Beta": AGENT_BETA_HEADER }
+    );
+  });
+
+  it("sends Agent Max beta values and budget through the beta namespace", async () => {
+    const runClient = getProtectedClient(exa.beta.agent.runs);
+    const requestSpy = vi
+      .spyOn(runClient, "request")
+      .mockResolvedValueOnce(createMockRun());
+
+    await exa.beta.agent.runs.create({
+      betas: [AGENT_MAX_EFFORT_BETA],
+      query: "Find recent funding rounds.",
+      effort: "max",
+      budget: { maxCostDollars: 10 },
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "",
+      "POST",
+      {
+        query: "Find recent funding rounds.",
+        effort: "max",
+        budget: { maxCostDollars: 10 },
+      },
+      undefined,
+      { "Exa-Beta": AGENT_MAX_EFFORT_BETA }
     );
   });
 

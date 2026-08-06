@@ -156,6 +156,19 @@ console.log(completedRun.output?.structured);
 console.log(completedRun.usage?.dataSources, completedRun.costDollars?.dataSources);
 ```
 
+For Agent Max, use the beta namespace and pass the beta token explicitly:
+
+```ts
+import { AGENT_MAX_EFFORT_BETA } from "exa-js";
+
+const maxRun = await exa.beta.agent.runs.create({
+  query: "Find all companies building browser automation tools in the United States.",
+  effort: "max",
+  budget: { maxCostDollars: 10 },
+  betas: [AGENT_MAX_EFFORT_BETA],
+});
+```
+
 ## TypeScript
 
 Full TypeScript support with types for all methods.
