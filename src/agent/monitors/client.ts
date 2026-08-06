@@ -90,7 +90,7 @@ export class AgentMonitorEntitiesClient extends AgentMonitorsBaseClient {
     monitorId: string,
     options: ListAgentMonitorEntitiesParams & AgentMonitorsBetaOptions
   ): AsyncGenerator<AgentMonitorEntityView> {
-    let cursor: string | undefined = undefined;
+    let cursor: string | undefined = options.cursor;
     const { betas, ...pagination } = options;
     const pageOptions: ListAgentMonitorEntitiesParams = { ...pagination };
 
@@ -152,7 +152,7 @@ export class AgentMonitorChangesClient extends AgentMonitorsBaseClient {
     monitorId: string,
     options: ListAgentMonitorChangesParams & AgentMonitorsBetaOptions
   ): AsyncGenerator<AgentMonitorChange> {
-    let cursor: string | undefined = options?.cursor;
+    let cursor: string | undefined = options.cursor;
     const { betas, ...pagination } = options;
     const pageOptions: ListAgentMonitorChangesParams = { ...pagination };
 
@@ -228,8 +228,8 @@ export class AgentMonitorSnapshotsClient extends AgentMonitorsBaseClient {
     options: AgentMonitorSnapshotWaitOptions & AgentMonitorsBetaOptions
   ): Promise<AgentMonitorTerminalSnapshot> {
     const pollInterval =
-      options?.pollInterval ?? DEFAULT_SNAPSHOT_POLL_INTERVAL_MS;
-    const timeoutMs = options?.timeoutMs ?? DEFAULT_SNAPSHOT_POLL_TIMEOUT_MS;
+      options.pollInterval ?? DEFAULT_SNAPSHOT_POLL_INTERVAL_MS;
+    const timeoutMs = options.timeoutMs ?? DEFAULT_SNAPSHOT_POLL_TIMEOUT_MS;
     const startTime = Date.now();
 
     while (true) {
@@ -350,7 +350,7 @@ export class AgentMonitorsClient extends AgentMonitorsBaseClient {
   async *listAll(
     options: ListAgentMonitorsParams & AgentMonitorsBetaOptions
   ): AsyncGenerator<AgentMonitor> {
-    let cursor: string | undefined = undefined;
+    let cursor: string | undefined = options.cursor;
     const { betas, ...pagination } = options;
     const pageOptions: ListAgentMonitorsParams = { ...pagination };
 

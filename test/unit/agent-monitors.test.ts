@@ -123,7 +123,17 @@ describe("Agent Monitors API", () => {
       await expect(
         exa.beta.agent.monitors.get("agentmon_01hzx3example", { betas: [] })
       ).rejects.toThrow(
-        "betas must include the Agent Monitors API beta identifier"
+        'betas must include the Agent Monitors beta identifier ("agent-monitors-2026-08-04")'
+      );
+    });
+
+    it("rejects a beta list that lacks the monitors beta identifier", async () => {
+      await expect(
+        exa.beta.agent.monitors.get("agentmon_01hzx3example", {
+          betas: ["some-other-beta"],
+        })
+      ).rejects.toThrow(
+        'betas must include the Agent Monitors beta identifier ("agent-monitors-2026-08-04")'
       );
     });
 
@@ -284,6 +294,30 @@ describe("Agent Monitors API", () => {
       });
     });
 
+    it("should resume listAll from a provided cursor", async () => {
+      const page: ListAgentMonitorsResponse = {
+        object: "list",
+        data: [createMockMonitor({ id: "agentmon_2" })],
+        hasMore: false,
+        nextCursor: null,
+      };
+
+      const monitorsClient = getProtectedClient(exa.beta.agent.monitors);
+      const requestSpy = vi
+        .spyOn(monitorsClient, "request")
+        .mockResolvedValueOnce(page);
+
+      const monitors = await exa.beta.agent.monitors.getAll({
+        cursor: "agentmon_1",
+        betas: BETAS,
+      });
+
+      expect(monitors.map((monitor) => monitor.id)).toEqual(["agentmon_2"]);
+      expect(requestSpy).toHaveBeenCalledWith("", BETAS, "GET", undefined, {
+        cursor: "agentmon_1",
+      });
+    });
+
     it("should delete an Agent Monitor", async () => {
       const mockResponse: DeletedAgentMonitor = {
         id: "agentmon_01hzx3example",
@@ -406,6 +440,37 @@ describe("Agent Monitors API", () => {
       expect(entities).toHaveLength(2);
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(requestSpy).toHaveBeenLastCalledWith(
+        "/agentmon_01hzx3example/entities",
+        BETAS,
+        "GET",
+        undefined,
+        { cursor: "cursor-2" }
+      );
+    });
+
+    it("should resume entities listAll from a provided cursor", async () => {
+      const page: ListAgentMonitorEntitiesResponse = {
+        object: "list",
+        data: [createMockEntityView()],
+        hasMore: false,
+        nextCursor: null,
+        version: 3,
+      };
+
+      const entitiesClient = getProtectedClient(
+        exa.beta.agent.monitors.entities
+      );
+      const requestSpy = vi
+        .spyOn(entitiesClient, "request")
+        .mockResolvedValueOnce(page);
+
+      const entities = await exa.beta.agent.monitors.entities.getAll(
+        "agentmon_01hzx3example",
+        { cursor: "cursor-2", betas: BETAS }
+      );
+
+      expect(entities).toHaveLength(1);
+      expect(requestSpy).toHaveBeenCalledWith(
         "/agentmon_01hzx3example/entities",
         BETAS,
         "GET",

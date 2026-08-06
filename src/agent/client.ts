@@ -7,6 +7,7 @@ import { Exa } from "../index";
 import { ExaError } from "../errors";
 import { isZodSchema, zodToJsonSchema } from "../zod-utils";
 import { AgentBaseClient } from "./base";
+import { headersForBetas } from "./betas";
 import { AgentMonitorsClient } from "./monitors/client";
 import {
   AgentBetaOptions,
@@ -63,12 +64,6 @@ export class AgentRunCancelledError extends Error {
     this.name = "AgentRunCancelledError";
     this.run = run;
   }
-}
-
-function headersForBetas(betas?: string[]): Record<string, string> | undefined {
-  const betaValues = betas?.filter(Boolean);
-  if (!betaValues?.length) return undefined;
-  return { "Exa-Beta": betaValues.join(",") };
 }
 
 function isTerminalAgentRunStatus(

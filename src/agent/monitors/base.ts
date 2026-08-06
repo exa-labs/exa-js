@@ -3,7 +3,9 @@
  */
 
 import { Exa } from "../../index";
+import { headersForBetas } from "../betas";
 import {
+  AGENT_MONITORS_BETA_HEADER,
   ListAgentMonitorChangesParams,
   ListAgentMonitorEntitiesParams,
   ListAgentMonitorsParams,
@@ -31,9 +33,9 @@ export class AgentMonitorsBaseClient {
     params?: QueryParams,
     headers?: Record<string, string>
   ): Promise<T> {
-    if (!betas?.length) {
+    if (!betas?.includes(AGENT_MONITORS_BETA_HEADER)) {
       throw new Error(
-        "betas must include the Agent Monitors API beta identifier"
+        `betas must include the Agent Monitors beta identifier ("${AGENT_MONITORS_BETA_HEADER}")`
       );
     }
 
@@ -43,7 +45,7 @@ export class AgentMonitorsBaseClient {
       data,
       params,
       {
-        "Exa-Beta": betas.join(","),
+        ...headersForBetas(betas),
         ...headers,
       }
     );
