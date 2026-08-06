@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.17.0](https://github.com/exa-labs/exa-js/compare/v2.16.3...v2.17.0) (2026-08-06)
+
+
+### Features
+
+* **agent:** add max effort and budgets ([caeda73](https://github.com/exa-labs/exa-js/commit/caeda7384ed5fb220b12586384ee35169a7cb4ec))
+* **agent:** add max effort and budgets ([e6c0b7f](https://github.com/exa-labs/exa-js/commit/e6c0b7f7a25fc48454d498cda55041b488bf8cdb))
+
 ## [2.16.3](https://github.com/exa-labs/exa-js/compare/v2.16.2...v2.16.3) (2026-07-27)
 
 
