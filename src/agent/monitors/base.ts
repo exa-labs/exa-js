@@ -2,6 +2,7 @@
  * Base client for the Exa Agent Monitors API.
  */
 
+import { ExaError, HttpStatusCode } from "../../errors";
 import { Exa } from "../../index";
 import { headersForBetas } from "../betas";
 import {
@@ -34,8 +35,9 @@ export class AgentMonitorsBaseClient {
     headers?: Record<string, string>
   ): Promise<T> {
     if (!betas?.includes(AGENT_MONITORS_BETA_HEADER)) {
-      throw new Error(
-        `betas must include the Agent Monitors beta identifier ("${AGENT_MONITORS_BETA_HEADER}")`
+      throw new ExaError(
+        `betas must include the Agent Monitors beta identifier ("${AGENT_MONITORS_BETA_HEADER}")`,
+        HttpStatusCode.BadRequest
       );
     }
 

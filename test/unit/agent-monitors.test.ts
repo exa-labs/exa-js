@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Exa from "../../src";
+import { ExaError } from "../../src/errors";
 import { AgentMonitorSnapshotFailedError } from "../../src/agent/monitors/client";
 import {
   AgentMonitor,
@@ -119,20 +120,26 @@ describe("Agent Monitors API", () => {
       );
     });
 
-    it("rejects an empty beta list", async () => {
-      await expect(
-        exa.beta.agent.monitors.get("agentmon_01hzx3example", { betas: [] })
-      ).rejects.toThrow(
+    it("rejects an empty beta list with an ExaError", async () => {
+      const error = await exa.beta.agent.monitors
+        .get("agentmon_01hzx3example", { betas: [] })
+        .then(() => undefined)
+        .catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(ExaError);
+      expect((error as ExaError).statusCode).toBe(400);
+      expect((error as ExaError).message).toBe(
         'betas must include the Agent Monitors beta identifier ("agent-monitors-2026-08-04")'
       );
     });
 
-    it("rejects a beta list that lacks the monitors beta identifier", async () => {
-      await expect(
-        exa.beta.agent.monitors.get("agentmon_01hzx3example", {
-          betas: ["some-other-beta"],
-        })
-      ).rejects.toThrow(
+    it("rejects a beta list that lacks the monitors beta identifier with an ExaError", async () => {
+      const error = await exa.beta.agent.monitors
+        .get("agentmon_01hzx3example", { betas: ["some-other-beta"] })
+        .then(() => undefined)
+        .catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(ExaError);
+      expect((error as ExaError).statusCode).toBe(400);
+      expect((error as ExaError).message).toBe(
         'betas must include the Agent Monitors beta identifier ("agent-monitors-2026-08-04")'
       );
     });
