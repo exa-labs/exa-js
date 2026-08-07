@@ -954,8 +954,27 @@ export class Exa {
         errorData.path = endpoint;
       }
 
-      // For other APIs, throw a simple ExaError with just message and status
-      let message = errorData.error || "Unknown error";
+      // Two error envelopes exist: the legacy string form
+      // ({ error: "Bad Request", message: "..." }) and the agent surface's
+      // nested object ({ error: { type, code, message } }). Concatenating the
+      // object form would render the message as "[object Object]", so unwrap
+      // it and preserve its structured fields on the thrown error.
+      const errorValue: unknown = errorData.error;
+      let message: string;
+      let type: string | undefined;
+      let code: string | undefined;
+      if (errorValue !== null && typeof errorValue === "object") {
+        const nested = errorValue as Record<string, unknown>;
+        type = typeof nested.type === "string" ? nested.type : undefined;
+        code = typeof nested.code === "string" ? nested.code : undefined;
+        message =
+          typeof nested.message === "string" && nested.message
+            ? nested.message
+            : (code ?? type ?? "Unknown error");
+      } else {
+        message =
+          (typeof errorValue === "string" && errorValue) || "Unknown error";
+      }
       if (errorData.message) {
         message += (message.length > 0 ? ". " : "") + errorData.message;
       }
@@ -963,7 +982,15 @@ export class Exa {
         message,
         response.status,
         errorData.timestamp,
-        errorData.path
+        errorData.path,
+        {
+          type,
+          code,
+          requestId:
+            typeof errorData.requestId === "string"
+              ? errorData.requestId
+              : undefined,
+        }
       );
     }
 
