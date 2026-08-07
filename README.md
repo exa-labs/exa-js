@@ -169,6 +169,30 @@ const maxRun = await exa.beta.agent.runs.create({
 });
 ```
 
+## Cancellation & Timeouts
+
+`search`, `getContents`, `answer`, and their streaming variants accept an `AbortSignal` or a `timeout` in milliseconds:
+
+```ts
+const controller = new AbortController();
+const resultPromise = exa.search("latest AI developments", {
+  signal: controller.signal,
+});
+controller.abort();
+
+const results = await exa.search("latest AI developments", {
+  timeout: 10_000,
+});
+
+await exa.getContents("https://example.com", {
+  text: true,
+  signal: controller.signal,
+  timeout: 30_000,
+});
+```
+
+For low-level calls, pass transport options as the 6th argument to `request` / `rawRequest` (they are not read from the JSON body). Research, websets, and agent clients do not accept `signal` / `timeout` in their option types yet.
+
 ## TypeScript
 
 Full TypeScript support with types for all methods.

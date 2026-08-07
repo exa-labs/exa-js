@@ -14,7 +14,7 @@ describe("Search Contents Options", () => {
     expect(sampleResult.text).toBeDefined();
     expect(sampleResult.text.length).toBeGreaterThan(1_000);
     expect(sampleResult.text.length).toBeLessThanOrEqual(10_000);
-  });
+  }, 15000);
 
   it("Returns no contents when explicitly set to false", async () => {
     const response = await exa.search(testQuery, {
@@ -26,7 +26,7 @@ describe("Search Contents Options", () => {
     const sampleResult = response.results[0];
     expect("text" in sampleResult).toBeFalsy();
     expect("summary" in sampleResult).toBeFalsy();
-  });
+  }, 15000);
 
   it("Returns text contents when explicitly requested", async () => {
     const response = await exa.search(testQuery, {
@@ -38,7 +38,7 @@ describe("Search Contents Options", () => {
     const sampleResult = response.results[0];
     expect(sampleResult.text).toBeDefined();
     expect(sampleResult.text.length).toBeGreaterThan(100);
-  });
+  }, 15000);
 
   it("Returns text contents with custom maxCharacters", async () => {
     const maxChars = 500;
@@ -51,7 +51,7 @@ describe("Search Contents Options", () => {
     const sampleResult = response.results[0];
     expect(sampleResult.text).toBeDefined();
     expect(sampleResult.text.length).toBeLessThanOrEqual(maxChars);
-  });
+  }, 15000);
 
   it("Returns summary when requested", async () => {
     const response = await exa.search(testQuery, {
@@ -109,7 +109,7 @@ describe("Search Contents Options", () => {
     const sampleResult = response.results[0];
     expect(sampleResult.text).toBeDefined();
     expect(sampleResult.text.length).toBeGreaterThan(100);
-  });
+  }, 15000);
 });
 
 describe("Company Category Search", () => {
