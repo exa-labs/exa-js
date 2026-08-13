@@ -32,12 +32,14 @@ describe("Agent Monitors API", () => {
         id: "agentfield_01hzx3field1",
         name: "ceo",
         description: "The company's current CEO",
+        mode: "static",
         type: "static",
       },
       {
         id: "agentfield_01hzx3field2",
         name: "funding",
         description: "New funding rounds",
+        mode: "dynamic",
         type: "dynamic",
       },
     ],
@@ -163,11 +165,11 @@ describe("Agent Monitors API", () => {
           },
         ],
         fields: [
-          { name: "ceo", description: "The company's current CEO" },
+          { name: "funding", description: "New funding rounds" },
           {
-            name: "funding",
-            description: "New funding rounds",
-            type: "dynamic",
+            name: "ceo",
+            description: "The company's current CEO",
+            mode: "static",
           },
         ],
       };
@@ -569,7 +571,7 @@ describe("Agent Monitors API", () => {
     const snapshotParams: CreateAgentMonitorSnapshotParams = {
       entities: [{ name: "Acme Corp", domain: "acme.com" }],
       fields: [
-        { name: "funding", description: "New funding rounds", type: "dynamic" },
+        { name: "funding", description: "New funding rounds", mode: "dynamic" },
       ],
       startDate: "2026-01-01",
       endDate: "2026-01-08",

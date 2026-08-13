@@ -195,8 +195,8 @@ const monitor = await exa.beta.agent.monitors.create(
       { name: "Globex", domain: "globex.com" },
     ],
     fields: [
-      { name: "ceo", description: "The company's current CEO" }, // static by default
-      { name: "funding", description: "New funding rounds", type: "dynamic" },
+      { name: "funding", description: "New funding rounds" }, // dynamic by default
+      { name: "ceo", description: "The company's current CEO", mode: "static" },
     ],
   },
   { idempotencyKey: "my-monitor-1" } // safe retries: same key returns the same monitor
@@ -221,7 +221,7 @@ const snapshot = await exa.beta.agent.monitors.snapshots.createAndWait({
   betas,
   entities: [{ name: "Acme Corp", domain: "acme.com" }],
   fields: [
-    { name: "funding", description: "New funding rounds", type: "dynamic" },
+    { name: "funding", description: "New funding rounds" }, // dynamic by default
   ],
   startDate: "2026-01-01",
   endDate: "2026-01-08",
