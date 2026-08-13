@@ -19,18 +19,23 @@ export type AgentMonitorStatus =
   | "pending_first_refresh"
   | "active";
 
-export type AgentMonitorFieldType = "static" | "dynamic";
+export type AgentMonitorFieldMode = "static" | "dynamic";
+
+/** @deprecated Renamed to {@link AgentMonitorFieldMode}. */
+export type AgentMonitorFieldType = AgentMonitorFieldMode;
 
 /**
- * A field the monitor keeps fresh for every entity. Fields are static
- * (answered once over the live web) unless declared `type: "dynamic"`
- * (tracked from news on every refresh).
+ * A field the monitor keeps fresh for every entity. Fields are dynamic
+ * (tracked from news on every refresh) unless declared `mode: "static"`
+ * (answered once over the live web).
  */
 export interface AgentMonitorField {
   id: string;
   name: string;
   description: string;
-  type: AgentMonitorFieldType;
+  mode: AgentMonitorFieldMode;
+  /** @deprecated Renamed to `mode`; echoes the same value until removed. */
+  type: AgentMonitorFieldMode;
 }
 
 /** An entity tracked by the monitor. */
@@ -138,11 +143,13 @@ export interface CreateAgentMonitorEntityParams {
   description?: string;
 }
 
-/** A field to keep fresh. Static (the default) unless declared `type: "dynamic"`. */
+/** A field to keep fresh. Dynamic (the default) unless declared `mode: "static"`. */
 export interface CreateAgentMonitorFieldParams {
   name: string;
   description: string;
-  type?: AgentMonitorFieldType;
+  mode?: AgentMonitorFieldMode;
+  /** @deprecated Renamed to `mode`; declare one spelling, not both. */
+  type?: AgentMonitorFieldMode;
 }
 
 export interface CreateAgentMonitorParams {
