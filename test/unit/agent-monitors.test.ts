@@ -33,14 +33,14 @@ describe("Agent Monitors API", () => {
         name: "ceo",
         description: "The company's current CEO",
         mode: "static",
-        type: "static",
+        type: "string",
       },
       {
         id: "agentfield_01hzx3field2",
         name: "funding",
         description: "New funding rounds",
         mode: "dynamic",
-        type: "dynamic",
+        type: "string",
       },
     ],
     entityCount: 2,
@@ -62,7 +62,7 @@ describe("Agent Monitors API", () => {
     contents: {
       agentfield_01hzx3field1: {
         value: "Jane Doe",
-        sourceUrls: ["https://acme.com/about"],
+        citations: [{ url: "https://acme.com/about" }],
         updatedAt: "2026-01-08T00:00:00.000Z",
       },
     },
@@ -74,7 +74,7 @@ describe("Agent Monitors API", () => {
     field: { id: "agentfield_01hzx3field2", name: "funding" },
     content: {
       value: "Raised a $30M Series B",
-      sourceUrls: ["https://news.example.com/acme-series-b"],
+      citations: [{ url: "https://news.example.com/acme-series-b" }],
       updatedAt: "2026-01-08T00:00:00.000Z",
     },
     version: 3,
@@ -170,6 +170,11 @@ describe("Agent Monitors API", () => {
             name: "ceo",
             description: "The company's current CEO",
             mode: "static",
+          },
+          {
+            name: "headcount",
+            description: "Current number of employees",
+            type: "number",
           },
         ],
       };
@@ -571,7 +576,7 @@ describe("Agent Monitors API", () => {
     const snapshotParams: CreateAgentMonitorSnapshotParams = {
       entities: [{ name: "Acme Corp", domain: "acme.com" }],
       fields: [
-        { name: "funding", description: "New funding rounds", mode: "dynamic" },
+        { name: "funding", description: "New funding rounds", type: "dynamic" },
       ],
       startDate: "2026-01-01",
       endDate: "2026-01-08",

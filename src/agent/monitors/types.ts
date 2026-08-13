@@ -21,8 +21,15 @@ export type AgentMonitorStatus =
 
 export type AgentMonitorFieldMode = "static" | "dynamic";
 
-/** @deprecated Renamed to {@link AgentMonitorFieldMode}. */
-export type AgentMonitorFieldType = AgentMonitorFieldMode;
+/** The type of a field's cell values. */
+export type AgentMonitorFieldValueType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "date"
+  | "url"
+  | "email"
+  | "phone";
 
 /**
  * A field the monitor keeps fresh for every entity. Fields are dynamic
@@ -33,9 +40,10 @@ export interface AgentMonitorField {
   id: string;
   name: string;
   description: string;
+  /** @deprecated The static/dynamic knob is becoming internal-only. */
   mode: AgentMonitorFieldMode;
-  /** @deprecated Renamed to `mode`; echoes the same value until removed. */
-  type: AgentMonitorFieldMode;
+  /** The type of the field's cell values. */
+  type: AgentMonitorFieldValueType;
 }
 
 /** An entity tracked by the monitor. */
@@ -46,10 +54,18 @@ export interface AgentMonitorEntity {
   canonicalEntityId?: string;
 }
 
+/** One grounding citation for a cell value; the Agent API's citation shape. */
+export interface AgentMonitorCitation {
+  url: string;
+  title?: string;
+  note?: string;
+}
+
 /** One cell value: a field's current content for an entity. */
 export interface AgentMonitorContent {
   value: unknown;
-  sourceUrls?: string[];
+  /** Grounding for the value, in the Agent API's citation shape. */
+  citations?: AgentMonitorCitation[];
   updatedAt: string;
 }
 
@@ -147,9 +163,16 @@ export interface CreateAgentMonitorEntityParams {
 export interface CreateAgentMonitorFieldParams {
   name: string;
   description: string;
+  /**
+   * The type of the field's cell values; defaults to `"string"`. Cell values
+   * are normalized to the declared type best-effort on write, never rejected
+   * — but declaring an unsupported type (e.g. `"object"`) is a 400.
+   * `"static"`/`"dynamic"` are accepted as deprecated aliases of `mode`;
+   * declaring both spellings is a 400.
+   */
+  type?: AgentMonitorFieldValueType | AgentMonitorFieldMode;
+  /** @deprecated The static/dynamic knob is becoming internal-only. */
   mode?: AgentMonitorFieldMode;
-  /** @deprecated Renamed to `mode`; declare one spelling, not both. */
-  type?: AgentMonitorFieldMode;
 }
 
 export interface CreateAgentMonitorParams {
