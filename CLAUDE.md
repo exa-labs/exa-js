@@ -4,12 +4,30 @@
 - Build: `npm run build`
 - Fast Build: `npm run build-fast` (only builds index.ts)
 - Test All: `npm run test`
+- Test Unit / Integration: `npm run test:unit` / `npm run test:integration`
 - Test Single: `npx vitest run test/path/to/test.ts`
+- Typecheck: `npm run typecheck` (examples: `npm run typecheck:examples`)
+- Format: `npm run format`
 - Generate Docs: `npm run generate-docs`
+
+CI installs and tests with pnpm (`pnpm i && pnpm test`).
+
+## Releases
+
+Release Please owns versioning. Never edit the `package.json` version or `CHANGELOG.md`
+by hand, and never run `npm version` / `npm publish` or the legacy `version:*` /
+`publish:*` scripts (see `release-please-config.json` and
+`.github/workflows/release-please.yml`).
+
+- Use Conventional Commit titles (`feat:`, `fix:`, `chore:`, …); they determine the
+  next version and the changelog entry.
+- Merges to `master` keep a single Release PR up to date. Merging that PR creates the
+  tag and GitHub Release, which triggers the npm publish workflow (OIDC trusted
+  publishing).
 
 ## Code Style Guidelines
 - **TypeScript**: ES2020 target, ESNext modules, strict mode
-- **Formatting**: Default Prettier (2.8.4)
+- **Formatting**: Prettier 3.x, configured in `.prettierrc` (double quotes, semicolons, 80 cols, 2-space indent)
 - **Imports**: ES imports, built-in modules first
 - **Types**: 
   - Comprehensive TypeScript types with JSDoc comments
@@ -28,11 +46,6 @@
   - Private helper methods for common functionality
   - Method overloading via optional parameters
 
-## Websets API Implementation
-- The Python SDK has a comprehensive Websets API implementation that needs to be mirrored in TypeScript
-- Key components include:
-  - WebsetsClient with methods for create, get, list, update, delete, cancel, wait_until_idle
-  - Sub-clients for items, searches, enrichments, and webhooks
-  - Extensive type definitions for all request/response objects
-  - Proper handling of pagination for list operations
-  - Support for entity types (company, person, article, research paper, custom)
+## Generated Types
+- Websets types live in `src/websets/openapi.ts` and are generated from the OpenAPI spec
+  with `npm run generate:types:websets` — never hand-edit that file
