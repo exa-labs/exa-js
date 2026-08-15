@@ -43,6 +43,7 @@
   "devDependencies": {
     "@types/node": "~22.14.0",
     "cross-env": "~7.0.3",
+    "nock": "^14.0.15",
     "openapi-typescript": "~7.6.1",
     "prettier": "~3.5.3",
     "ts-morph": "^27.0.2",

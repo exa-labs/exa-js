@@ -66,6 +66,66 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it("forwards AbortSignal on search without serializing it into the request body", async () => {
+    vi.resetModules();
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ results: [], requestId: "req-123" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const { default: FreshExa } = await import("../../src");
+    const freshExa = new FreshExa("test-api-key", "https://api.exa.ai");
+    const controller = new AbortController();
+
+    await freshExa.search("latest AI developments", {
+      numResults: 2,
+      signal: controller.signal,
+    });
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(init.signal).toBe(controller.signal);
+    expect(JSON.parse(String(init.body))).toEqual({
+      query: "latest AI developments",
+      numResults: 2,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
+    });
+  });
+
+  it("forwards AbortSignal on streamSearch", async () => {
+    vi.resetModules();
+    const fetchMock = vi.fn().mockResolvedValue(
+      createSseResponse([
+        'data: {"choices":[{"delta":{"content":"hello"}}]}',
+        "data: [DONE]",
+      ])
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const { default: FreshExa } = await import("../../src");
+    const freshExa = new FreshExa("test-api-key", "https://api.exa.ai");
+    const controller = new AbortController();
+
+    const chunks: SearchStreamChunk[] = [];
+    for await (const chunk of freshExa.streamSearch("latest AI developments", {
+      signal: controller.signal,
+    })) {
+      chunks.push(chunk);
+    }
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(init.signal).toBe(controller.signal);
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      query: "latest AI developments",
+      stream: true,
+    });
+    expect(chunks[0]?.content).toBe("hello");
+  });
+
   it("should preserve deprecated searchAndContents text option for compatibility", async () => {
     const mockResponse = {
       results: [
