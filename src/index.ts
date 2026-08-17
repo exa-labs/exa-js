@@ -7,6 +7,13 @@ import { SearchMonitorsClient } from "./monitors/client";
 import { ResearchClient } from "./research/client";
 import { WebsetsClient } from "./websets/client";
 import { isZodSchema, zodToJsonSchema } from "./zod-utils";
+import { AnthropicTools } from "./tools/anthropic";
+import { OpenAITools } from "./tools/openai";
+import {
+  createSearchTool,
+  ToolRegistry,
+  type ToolNamespace,
+} from "./tools/core";
 
 // Use native fetch in Node.js environments
 const fetchImpl =
@@ -737,6 +744,17 @@ export class Exa {
    */
   beta: BetaClient;
 
+  /** Provider-neutral Exa tools. */
+  tools: ToolNamespace;
+
+  /** OpenAI Chat Completions and Responses API tools. */
+  openai: OpenAITools;
+
+  /** Anthropic Messages API tools. */
+  anthropic: AnthropicTools;
+
+  private readonly toolRegistry = new ToolRegistry();
+
   /**
    * Helper method to separate out the contents-specific options from the rest.
    */
@@ -870,6 +888,11 @@ export class Exa {
     this.agent = new AgentClient(this);
     // Initialize beta clients
     this.beta = new BetaClient(this.agent);
+    this.tools = {
+      search: (options) => createSearchTool(this, this.toolRegistry, options),
+    };
+    this.openai = new OpenAITools(this, this.toolRegistry);
+    this.anthropic = new AnthropicTools(this, this.toolRegistry);
   }
 
   /**
@@ -1655,6 +1678,7 @@ export * from "./research";
 export * from "./monitors";
 // Re-export Agent related types and client
 export * from "./agent";
+export * from "./tools";
 
 // Export the main class
 export default Exa;
