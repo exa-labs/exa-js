@@ -1,0 +1,117 @@
+{"name":"Exa.agent.runs.events.list","signature":"async list( runId: string, options?: ListAgentRunEventsParams ): Promise<ListAgentRunEventsResponse>"}
+{"name":"Exa.agent.runs.create","signature":"async create<T>( params: AgentCreateOptions<T> ): Promise<AgentRun | AgentRunTyped<T> | AsyncGenerator<AgentEvent>>"}
+{"name":"Exa.agent.runs.get","signature":"async get(runId: string): Promise<AgentRun>"}
+{"name":"Exa.agent.runs.list","signature":"async list(options?: ListAgentRunsParams): Promise<ListAgentRunsResponse>"}
+{"name":"Exa.agent.runs.listAll","signature":"async *listAll(options?: ListAgentRunsParams): AsyncGenerator<AgentRun>"}
+{"name":"Exa.agent.runs.getAll","signature":"async getAll(options?: ListAgentRunsParams): Promise<AgentRun[]>"}
+{"name":"Exa.agent.runs.cancel","signature":"async cancel(runId: string): Promise<AgentRun>"}
+{"name":"Exa.agent.runs.delete","signature":"async delete(runId: string): Promise<DeletedAgentRun>"}
+{"name":"Exa.agent.runs.pollUntilFinished","signature":"async pollUntilFinished( runId: string, options?: AgentWaitOptions ): Promise<AgentTerminalRun>"}
+{"name":"Exa.agent.runs.createAndWait","signature":"async createAndWait<T>( params: Omit<AgentCreateOptions<T>, \"stream\">, options?: AgentWaitOptions ): Promise<AgentCompletedRunTyped<T>>"}
+{"name":"Exa.beta.agent.runs.events.list","signature":"async list( runId: string, options?: WithBetaOptions<ListAgentRunEventsParams> ): Promise<ListAgentRunEventsResponse>"}
+{"name":"Exa.beta.agent.runs.create","signature":"async create<T>( params: WithBetaOptions<AgentCreateOptions<T>> ): Promise<AgentRun | AgentRunTyped<T> | AsyncGenerator<AgentEvent>>"}
+{"name":"Exa.beta.agent.runs.get","signature":"async get(id: string): Promise<Webhook>"}
+{"name":"Exa.beta.agent.runs.list","signature":"async list(options?: ListWebhooksOptions): Promise<ListWebhooksResponse>"}
+{"name":"Exa.beta.agent.runs.listAll","signature":"async *listAll(options?: ListWebhooksOptions): AsyncGenerator<Webhook>"}
+{"name":"Exa.beta.agent.runs.getAll","signature":"async getAll(options?: ListWebhooksOptions): Promise<Webhook[]>"}
+{"name":"Exa.beta.agent.runs.cancel","signature":"async cancel(websetId: string, id: string): Promise<WebsetSearch>"}
+{"name":"Exa.beta.agent.runs.delete","signature":"async delete(id: string): Promise<Webhook>"}
+{"name":"Exa.beta.agent.runs.pollUntilFinished","signature":"async pollUntilFinished<T = unknown>( researchId: string, options?:"}
+{"name":"Exa.beta.agent.runs.createAndWait","signature":"async createAndWait<T>( params: WithBetaOptions<Omit<AgentCreateOptions<T>, \"stream\">>, options?: AgentWaitOptions ): Promise<AgentCompletedRunTyped<T>>"}
+{"name":"Exa.agent.monitors.add","signature":"async add( monitorId: string, params: AddAgentMonitorEntitiesParams & AgentMonitorsBetaOptions ): Promise<AgentMonitor>"}
+{"name":"Exa.agent.monitors.list","signature":"async list( monitorId: string, options: ListAgentMonitorEntitiesParams & AgentMonitorsBetaOptions ): Promise<ListAgentMonitorEntitiesResponse>"}
+{"name":"Exa.agent.monitors.listAll","signature":"async *listAll( monitorId: string, options: ListAgentMonitorEntitiesParams & AgentMonitorsBetaOptions ): AsyncGenerator<AgentMonitorEntityView>"}
+{"name":"Exa.agent.monitors.getAll","signature":"async getAll( monitorId: string, options: ListAgentMonitorEntitiesParams & AgentMonitorsBetaOptions ): Promise<AgentMonitorEntityView[]>"}
+{"name":"Exa.agent.monitors.list","signature":"async list( monitorId: string, options: ListAgentMonitorChangesParams & AgentMonitorsBetaOptions ): Promise<ListAgentMonitorChangesResponse>"}
+{"name":"Exa.agent.monitors.listAll","signature":"async *listAll( monitorId: string, options: ListAgentMonitorChangesParams & AgentMonitorsBetaOptions ): AsyncGenerator<AgentMonitorChange>"}
+{"name":"Exa.agent.monitors.getAll","signature":"async getAll( monitorId: string, options: ListAgentMonitorChangesParams & AgentMonitorsBetaOptions ): Promise<AgentMonitorChange[]>"}
+{"name":"Exa.agent.monitors.create","signature":"async create( params: CreateAgentMonitorSnapshotParams & AgentMonitorsBetaOptions ): Promise<AgentMonitorSnapshot>"}
+{"name":"Exa.agent.monitors.get","signature":"async get( snapshotId: string, options: AgentMonitorsBetaOptions ): Promise<AgentMonitorSnapshot>"}
+{"name":"Exa.agent.monitors.pollUntilFinished","signature":"async pollUntilFinished( snapshotId: string, options: AgentMonitorSnapshotWaitOptions & AgentMonitorsBetaOptions ): Promise<AgentMonitorTerminalSnapshot>"}
+{"name":"Exa.agent.monitors.createAndWait","signature":"async createAndWait( params: CreateAgentMonitorSnapshotParams & AgentMonitorsBetaOptions, options?: AgentMonitorSnapshotWaitOptions ): Promise<AgentMonitorCompletedSnapshot>"}
+{"name":"Exa.agent.monitors.create","signature":"async create( params: CreateAgentMonitorParams & AgentMonitorsBetaOptions, options?: CreateAgentMonitorOptions ): Promise<AgentMonitor>"}
+{"name":"Exa.agent.monitors.get","signature":"async get( monitorId: string, options: AgentMonitorsBetaOptions ): Promise<AgentMonitor>"}
+{"name":"Exa.agent.monitors.list","signature":"async list( options: ListAgentMonitorsParams & AgentMonitorsBetaOptions ): Promise<ListAgentMonitorsResponse>"}
+{"name":"Exa.agent.monitors.listAll","signature":"async *listAll( options: ListAgentMonitorsParams & AgentMonitorsBetaOptions ): AsyncGenerator<AgentMonitor>"}
+{"name":"Exa.agent.monitors.getAll","signature":"async getAll( options: ListAgentMonitorsParams & AgentMonitorsBetaOptions ): Promise<AgentMonitor[]>"}
+{"name":"Exa.agent.monitors.delete","signature":"async delete( monitorId: string, options: AgentMonitorsBetaOptions ): Promise<DeletedAgentMonitor>"}
+{"name":"Exa.request","signature":"async request<T = unknown>( endpoint: string, method: string, body?: any, params?: Record<string, any>, headers?: Record<string, string> ): Promise<T>"}
+{"name":"Exa.rawRequest","signature":"protected async rawRequest( endpoint: string, method: string = \"POST\", data?: RequestBody, params?: QueryParams ): Promise<Response>"}
+{"name":"Exa.search","signature":"async search<T extends ContentsOptions>( query: string, options?: RegularSearchOptions &"}
+{"name":"Exa.streamSearch","signature":"streamSearch( query: string, options?: RegularSearchOptions &"}
+{"name":"Exa.searchAndContents","signature":"async searchAndContents<T extends ContentsOptions>( query: string, options?: RegularSearchOptions & T ): Promise<SearchResponse<T>>"}
+{"name":"Exa.findSimilar","signature":"async findSimilar<T extends ContentsOptions>( url: string, options?: FindSimilarOptions &"}
+{"name":"Exa.findSimilarAndContents","signature":"async findSimilarAndContents<T extends ContentsOptions>( url: string, options?: FindSimilarOptions & T ): Promise<SearchResponse<T>>"}
+{"name":"Exa.getContents","signature":"async getContents<T extends ContentsOptions>( urls: string | string[] | SearchResult<T>[], options?: T ): Promise<SearchResponse<T>>"}
+{"name":"Exa.answer","signature":"async answer<T>( query: string, options?: AnswerOptions | AnswerOptionsTyped<ZodSchema<T>> ): Promise<AnswerResponse | AnswerResponseTyped<T>>"}
+{"name":"Exa.streamAnswer","signature":"async *streamAnswer<T>( query: string, options?:"}
+{"name":"Exa.monitors.runs.list","signature":"async list( monitorId: string, options?: ListSearchMonitorRunsParams ): Promise<ListSearchMonitorRunsResponse>"}
+{"name":"Exa.monitors.runs.get","signature":"async get(monitorId: string, runId: string): Promise<SearchMonitorRun>"}
+{"name":"Exa.monitors.runs.listAll","signature":"async *listAll( monitorId: string, options?: ListSearchMonitorRunsParams ): AsyncGenerator<SearchMonitorRun>"}
+{"name":"Exa.monitors.runs.getAll","signature":"async getAll( monitorId: string, options?: ListSearchMonitorRunsParams ): Promise<SearchMonitorRun[]>"}
+{"name":"Exa.monitors.create","signature":"async create( params: CreateSearchMonitorParams ): Promise<CreateSearchMonitorResponse>"}
+{"name":"Exa.monitors.get","signature":"async get(id: string): Promise<SearchMonitor>"}
+{"name":"Exa.monitors.list","signature":"async list( options?: ListSearchMonitorsParams ): Promise<ListSearchMonitorsResponse>"}
+{"name":"Exa.monitors.update","signature":"async update( id: string, params: UpdateSearchMonitorParams ): Promise<SearchMonitor>"}
+{"name":"Exa.monitors.delete","signature":"async delete(id: string): Promise<SearchMonitor>"}
+{"name":"Exa.monitors.trigger","signature":"async trigger(id: string): Promise<TriggerSearchMonitorResponse>"}
+{"name":"Exa.monitors.listAll","signature":"async *listAll( options?: ListSearchMonitorsParams ): AsyncGenerator<SearchMonitor>"}
+{"name":"Exa.monitors.getAll","signature":"async getAll(options?: ListSearchMonitorsParams): Promise<SearchMonitor[]>"}
+{"name":"Exa.research.create","signature":"async create(params: CreateWebhookParameters): Promise<Webhook>"}
+{"name":"Exa.research.get","signature":"get<T = unknown>( researchId: string, options?:"}
+{"name":"Exa.research.list","signature":"async list(options?: ListWebhooksOptions): Promise<ListWebhooksResponse>"}
+{"name":"Exa.research.pollUntilFinished","signature":"async pollUntilFinished<T = unknown>( researchId: string, options?:"}
+{"name":"Exa.websets.create","signature":"async create( params: CreateWebsetParameters, options?:"}
+{"name":"Exa.websets.preview","signature":"async preview( params: PreviewWebsetParameters, options?:"}
+{"name":"Exa.websets.get","signature":"async get(id: string, expand?: Array<\"items\">): Promise<GetWebsetResponse>"}
+{"name":"Exa.websets.list","signature":"async list(options?: ListWebsetsOptions): Promise<ListWebsetsResponse>"}
+{"name":"Exa.websets.listAll","signature":"async *listAll(options?: ListWebsetsOptions): AsyncGenerator<Webset>"}
+{"name":"Exa.websets.getAll","signature":"async getAll(options?: ListWebsetsOptions): Promise<Webset[]>"}
+{"name":"Exa.websets.update","signature":"async update(id: string, params: UpdateWebsetRequest): Promise<Webset>"}
+{"name":"Exa.websets.delete","signature":"async delete(id: string): Promise<Webset>"}
+{"name":"Exa.websets.cancel","signature":"async cancel(id: string): Promise<Webset>"}
+{"name":"Exa.websets.waitUntilIdle","signature":"async waitUntilIdle( id: string, options?: |"}
+{"name":"Exa.websets.enrichments.create","signature":"async create( websetId: string, params: CreateEnrichmentParameters ): Promise<WebsetEnrichment>"}
+{"name":"Exa.websets.enrichments.get","signature":"async get(websetId: string, id: string): Promise<WebsetEnrichment>"}
+{"name":"Exa.websets.enrichments.delete","signature":"async delete(websetId: string, id: string): Promise<WebsetEnrichment>"}
+{"name":"Exa.websets.enrichments.update","signature":"async update( websetId: string, id: string, params: UpdateEnrichmentParameters ): Promise<void>"}
+{"name":"Exa.websets.enrichments.cancel","signature":"async cancel(websetId: string, id: string): Promise<WebsetEnrichment>"}
+{"name":"Exa.websets.events.list","signature":"async list(options?: ListEventsOptions): Promise<ListEventsResponse>"}
+{"name":"Exa.websets.events.get","signature":"async get(id: string): Promise<Event>"}
+{"name":"Exa.websets.events.listAll","signature":"async *listAll(options?: ListEventsOptions): AsyncGenerator<Event>"}
+{"name":"Exa.websets.events.getAll","signature":"async getAll(options?: ListEventsOptions): Promise<Event[]>"}
+{"name":"Exa.websets.imports.create","signature":"async create(params: CreateWebhookParameters): Promise<Webhook>"}
+{"name":"Exa.websets.imports.get","signature":"async get(id: string): Promise<Import>"}
+{"name":"Exa.websets.imports.list","signature":"async list(options?: PaginationParams): Promise<ListImportsResponse>"}
+{"name":"Exa.websets.imports.update","signature":"async update(id: string, params: UpdateImport): Promise<Import>"}
+{"name":"Exa.websets.imports.delete","signature":"async delete(id: string): Promise<Import>"}
+{"name":"Exa.websets.imports.waitUntilCompleted","signature":"async waitUntilCompleted( id: string, options?: WaitUntilCompletedOptions ): Promise<Import>"}
+{"name":"Exa.websets.imports.listAll","signature":"async *listAll(options?: PaginationParams): AsyncGenerator<Import>"}
+{"name":"Exa.websets.imports.getAll","signature":"async getAll(options?: PaginationParams): Promise<Import[]>"}
+{"name":"Exa.websets.items.list","signature":"list( websetId: string, params?: ListWebsetItemsOptions ): Promise<ListWebsetItemResponse>"}
+{"name":"Exa.websets.items.listAll","signature":"async *listAll( websetId: string, options?: ListWebsetItemsOptions ): AsyncGenerator<WebsetItem>"}
+{"name":"Exa.websets.items.getAll","signature":"async getAll( websetId: string, options?: ListWebsetItemsOptions ): Promise<WebsetItem[]>"}
+{"name":"Exa.websets.items.get","signature":"async get(websetId: string, id: string): Promise<WebsetItem>"}
+{"name":"Exa.websets.items.delete","signature":"async delete(websetId: string, id: string): Promise<WebsetItem>"}
+{"name":"Exa.websets.monitors.runs.list","signature":"async list( monitorId: string, options?: PaginationParams ): Promise<ListMonitorRunsResponse>"}
+{"name":"Exa.websets.monitors.runs.get","signature":"async get(monitorId: string, runId: string): Promise<MonitorRun>"}
+{"name":"Exa.websets.monitors.create","signature":"async create(params: CreateMonitorParameters): Promise<Monitor>"}
+{"name":"Exa.websets.monitors.get","signature":"async get(id: string): Promise<Monitor>"}
+{"name":"Exa.websets.monitors.list","signature":"async list(options?: ListMonitorsOptions): Promise<ListMonitorsResponse>"}
+{"name":"Exa.websets.monitors.update","signature":"async update(id: string, params: UpdateMonitor): Promise<Monitor>"}
+{"name":"Exa.websets.monitors.delete","signature":"async delete(id: string): Promise<Monitor>"}
+{"name":"Exa.websets.monitors.listAll","signature":"async *listAll(options?: ListMonitorsOptions): AsyncGenerator<Monitor>"}
+{"name":"Exa.websets.monitors.getAll","signature":"async getAll(options?: ListMonitorsOptions): Promise<Monitor[]>"}
+{"name":"Exa.websets.searches.create","signature":"async create( websetId: string, params: CreateWebsetSearchParameters, options?:"}
+{"name":"Exa.websets.searches.get","signature":"async get(websetId: string, id: string): Promise<WebsetSearch>"}
+{"name":"Exa.websets.searches.cancel","signature":"async cancel(websetId: string, id: string): Promise<WebsetSearch>"}
+{"name":"Exa.websets.webhooks.create","signature":"async create(params: CreateWebhookParameters): Promise<Webhook>"}
+{"name":"Exa.websets.webhooks.get","signature":"async get(id: string): Promise<Webhook>"}
+{"name":"Exa.websets.webhooks.list","signature":"async list(options?: ListWebhooksOptions): Promise<ListWebhooksResponse>"}
+{"name":"Exa.websets.webhooks.listAll","signature":"async *listAll(options?: ListWebhooksOptions): AsyncGenerator<Webhook>"}
+{"name":"Exa.websets.webhooks.getAll","signature":"async getAll(options?: ListWebhooksOptions): Promise<Webhook[]>"}
+{"name":"Exa.websets.webhooks.update","signature":"async update(id: string, params: UpdateWebhookParameters): Promise<Webhook>"}
+{"name":"Exa.websets.webhooks.delete","signature":"async delete(id: string): Promise<Webhook>"}
+{"name":"Exa.websets.webhooks.listAttempts","signature":"async listAttempts( id: string, options?: ListWebhookAttemptsOptions ): Promise<ListWebhookAttemptsResponse>"}
+{"name":"Exa.websets.webhooks.listAllAttempts","signature":"async *listAllAttempts( id: string, options?: ListWebhookAttemptsOptions ): AsyncGenerator<WebhookAttempt>"}
+{"name":"Exa.websets.webhooks.getAllAttempts","signature":"async getAllAttempts( id: string, options?: ListWebhookAttemptsOptions ): Promise<WebhookAttempt[]>"}
