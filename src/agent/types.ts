@@ -61,6 +61,9 @@ export interface AgentBudget {
    * Best-effort maximum duration for the run in seconds.
    * Only accepted by the API for `max`; the server validates the allowed
    * range and may take a little additional time to finish gracefully.
+   * Runs that hit the limit stop with `stopReason: "time_limit_reached"`
+   * (or `"timeout_partial"` if the graceful wrap-up could not finish) and
+   * return partial output.
    */
   maxDurationSeconds?: number;
 }
