@@ -122,7 +122,7 @@ for await (const chunk of exa.streamAnswer("Explain quantum computing")) {
 
 ## Web Search tools
 
-Use Exa as a `web_search` tool in an OpenAI or Anthropic loop. Prefer `search()` with no arguments — that uses `type: "auto"` and `contents: { highlights: true }`.
+Use Exa as a `web_search` tool in an OpenAI or Anthropic loop. Call `search()` with no arguments to get Exa's recommended settings for agentic search (`type: "auto"` and `contents: { highlights: true }`).
 
 ```ts
 import Exa from "exa-js";
@@ -156,6 +156,20 @@ const response = await anthropic.messages.create({
 ```
 
 For the OpenAI Responses API, use `exa.openai.responses.search()` and the same `handleToolCalls` helper.
+
+Pass `name` (and optionally `description`) to rename the tool — for example to run Exa alongside Anthropic's built-in `web_search_20250305` server tool, which reserves the `web_search` name:
+
+```ts
+const response = await anthropic.messages.create({
+  model: "claude-sonnet-4-5",
+  max_tokens: 1024,
+  messages,
+  tools: [
+    { type: "web_search_20250305", name: "web_search", max_uses: 5 },
+    exa.anthropic.search({ name: "exa_web_search" }),
+  ],
+});
+```
 
 ## Agent API
 

@@ -7,6 +7,7 @@ import {
   type ToolJsonSchema,
   ToolRegistry,
   getTool,
+  unknownToolError,
 } from "./core";
 
 type OpenAIToolCall = {
@@ -142,6 +143,14 @@ export class OpenAIResponsesTools {
     return responsesRunnable(createSearchTool(this.exa, this.registry, config));
   }
 
+  /**
+   * Run the function calls in a Responses API response (or output item array)
+   * and return `function_call_output` items. Every function call is answered
+   * so the follow-up request never omits a required output: a call whose name
+   * doesn't match a known tool gets an `Error: unknown tool "<name>"` output.
+   * When handling some tools yourself, replace those error outputs with your
+   * own results before sending the next request.
+   */
   async handleToolCalls(
     responseOrOutputItems: ResponsesOutput | readonly unknown[],
     options?: { tools?: readonly ExaToolSpec[] }
@@ -201,6 +210,15 @@ export class OpenAITools {
     return runnable(createSearchTool(this.exa, this.registry, config));
   }
 
+  /**
+   * Run the tool calls in a Chat Completions assistant message (or Responses
+   * API output) and return the matching tool messages. Every tool call is
+   * answered so the follow-up request never omits a required tool response: a
+   * call whose name doesn't match a known tool gets an
+   * `Error: unknown tool "<name>"` output. When handling some tools yourself,
+   * replace those error outputs with your own results before sending the next
+   * request.
+   */
   async handleToolCalls(
     assistantMessage:
       | OpenAIAssistantMessage
@@ -220,19 +238,17 @@ export class OpenAITools {
   ): Promise<OpenAIToolMessage[]> {
     const tools = this.registry.resolve(options?.tools);
     const calls = (assistantMessage.tool_calls ?? []).filter(isOpenAIToolCall);
-    const messages = await Promise.all(
+    return Promise.all(
       calls.map(async (call) => {
         const tool = getTool(tools, call.function.name);
-        if (!tool) return undefined;
         return {
           role: "tool" as const,
           tool_call_id: call.id,
-          content: await tool.run(parseArguments(call.function.arguments)),
+          content: tool
+            ? await tool.run(parseArguments(call.function.arguments))
+            : unknownToolError(call.function.name),
         };
       })
-    );
-    return messages.filter(
-      (message): message is OpenAIToolMessage => !!message
     );
   }
 
@@ -246,19 +262,17 @@ export class OpenAITools {
         ? (responseOrOutputItems.output ?? [])
         : (responseOrOutputItems as readonly unknown[]);
     const items = rawItems.filter(isResponsesFunctionCall);
-    const outputs = await Promise.all(
+    return Promise.all(
       items.map(async (call) => {
         const tool = getTool(tools, call.name);
-        if (!tool) return undefined;
         return {
           type: "function_call_output" as const,
           call_id: call.call_id,
-          output: await tool.run(parseArguments(call.arguments)),
+          output: tool
+            ? await tool.run(parseArguments(call.arguments))
+            : unknownToolError(call.name),
         };
       })
-    );
-    return outputs.filter(
-      (output): output is ResponsesFunctionCallOutput => !!output
     );
   }
 }

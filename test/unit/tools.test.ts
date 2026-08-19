@@ -122,6 +122,175 @@ describe("LLM tools", () => {
     });
   });
 
+  it("serializes custom names and descriptions for every provider", async () => {
+    const request = vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [],
+    });
+    const description = "Search the web with Exa.";
+    const openaiTool = exa.openai.search({
+      name: "exa_chat_search",
+      description,
+    });
+    const responsesTool = exa.openai.responses.search({
+      name: "exa_responses_search",
+      description,
+    });
+    const anthropicTool = exa.anthropic.search({
+      name: "exa_anthropic_search",
+      description,
+    });
+
+    expect(JSON.parse(JSON.stringify(openaiTool))).toEqual({
+      type: "function",
+      function: {
+        name: "exa_chat_search",
+        description,
+        parameters: openaiTool.jsonSchema,
+      },
+    });
+    expect(openaiTool.definition).toEqual({
+      type: "function",
+      function: {
+        name: "exa_chat_search",
+        description,
+        parameters: openaiTool.jsonSchema,
+      },
+    });
+    expect(JSON.parse(JSON.stringify(responsesTool))).toEqual({
+      type: "function",
+      name: "exa_responses_search",
+      description,
+      parameters: responsesTool.jsonSchema,
+      strict: false,
+    });
+    expect(responsesTool.definition).toEqual({
+      type: "function",
+      name: "exa_responses_search",
+      description,
+      parameters: responsesTool.jsonSchema,
+      strict: false,
+    });
+    expect(JSON.parse(JSON.stringify(anthropicTool))).toEqual({
+      name: "exa_anthropic_search",
+      description,
+      input_schema: anthropicTool.jsonSchema,
+    });
+    expect(anthropicTool.definition).toEqual({
+      name: "exa_anthropic_search",
+      description,
+      input_schema: anthropicTool.jsonSchema,
+    });
+
+    const chatMessages = await exa.openai.handleToolCalls({
+      tool_calls: [
+        {
+          id: "call-1",
+          function: { name: "exa_chat_search", arguments: '{"query":"q"}' },
+        },
+      ],
+    });
+    expect(chatMessages).toEqual([
+      {
+        role: "tool",
+        tool_call_id: "call-1",
+        content: "No search results found.",
+      },
+    ]);
+
+    const responsesOutputs = await exa.openai.responses.handleToolCalls([
+      {
+        type: "function_call",
+        call_id: "call-2",
+        name: "exa_responses_search",
+        arguments: '{"query":"q"}',
+      },
+    ]);
+    expect(responsesOutputs).toEqual([
+      {
+        type: "function_call_output",
+        call_id: "call-2",
+        output: "No search results found.",
+      },
+    ]);
+
+    const toolResults = await exa.anthropic.handleToolUse({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu-3",
+          name: "exa_anthropic_search",
+          input: { query: "q" },
+        },
+      ],
+    });
+    expect(toolResults).toEqual([
+      {
+        type: "tool_result",
+        tool_use_id: "toolu-3",
+        content: "No search results found.",
+      },
+    ]);
+    expect(request).toHaveBeenCalledTimes(3);
+  });
+
+  it("keeps name and description out of the Exa search options", async () => {
+    const request = vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [],
+    });
+    const tool = exa.anthropic.search({
+      name: "exa_web_search",
+      description: "Custom description.",
+      type: "keyword",
+      numResults: 5,
+    });
+
+    await tool.run({ query: "q" });
+
+    expect(request).toHaveBeenCalledWith("/search", "POST", {
+      query: "q",
+      type: "keyword",
+      numResults: 5,
+      contents: { highlights: true },
+    });
+  });
+
+  it("registers differently named search tools side by side", async () => {
+    const request = vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [],
+    });
+    exa.openai.search({ type: "keyword" });
+    exa.openai.search({ name: "exa_neural_search", type: "neural" });
+
+    await exa.openai.handleToolCalls({
+      tool_calls: [
+        {
+          id: "call-1",
+          function: { name: "web_search", arguments: '{"query":"a"}' },
+        },
+        {
+          id: "call-2",
+          function: { name: "exa_neural_search", arguments: '{"query":"b"}' },
+        },
+      ],
+    });
+
+    expect(request).toHaveBeenCalledWith("/search", "POST", {
+      query: "a",
+      type: "keyword",
+      numResults: 10,
+      contents: { highlights: true },
+    });
+    expect(request).toHaveBeenCalledWith("/search", "POST", {
+      query: "b",
+      type: "neural",
+      numResults: 10,
+      contents: { highlights: true },
+    });
+  });
+
   it("handles malformed arguments and unknown tools without throwing", async () => {
     const tool = exa.openai.search();
     const messages = await exa.openai.handleToolCalls({
@@ -137,12 +306,61 @@ describe("LLM tools", () => {
       ],
     });
 
-    expect(messages).toHaveLength(1);
+    expect(messages).toHaveLength(2);
     expect(messages[0]).toMatchObject({
       role: "tool",
       tool_call_id: "call-1",
     });
     expect((messages[0] as { content: string }).content).toMatch(/^Error:/);
+    expect(messages[1]).toEqual({
+      role: "tool",
+      tool_call_id: "call-2",
+      content: 'Error: unknown tool "user_owned_tool"',
+    });
+  });
+
+  it("answers unknown tool calls with error outputs in every handler path", async () => {
+    const chatMessages = await exa.openai.handleToolCalls({
+      tool_calls: [
+        { id: "call-a", function: { name: "mystery_tool", arguments: "{}" } },
+      ],
+    });
+    expect(chatMessages).toEqual([
+      {
+        role: "tool",
+        tool_call_id: "call-a",
+        content: 'Error: unknown tool "mystery_tool"',
+      },
+    ]);
+
+    const responsesOutputs = await exa.openai.responses.handleToolCalls([
+      {
+        type: "function_call",
+        call_id: "call-b",
+        name: "mystery_tool",
+        arguments: "{}",
+      },
+    ]);
+    expect(responsesOutputs).toEqual([
+      {
+        type: "function_call_output",
+        call_id: "call-b",
+        output: 'Error: unknown tool "mystery_tool"',
+      },
+    ]);
+
+    const toolResults = await exa.anthropic.handleToolUse({
+      content: [
+        { type: "tool_use", id: "toolu-c", name: "mystery_tool", input: {} },
+      ],
+    });
+    expect(toolResults).toEqual([
+      {
+        type: "tool_result",
+        tool_use_id: "toolu-c",
+        content: 'Error: unknown tool "mystery_tool"',
+      },
+    ]);
   });
 
   it("runs parallel search tool calls", async () => {

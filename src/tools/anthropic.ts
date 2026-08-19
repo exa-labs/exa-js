@@ -5,6 +5,7 @@ import {
   type SearchToolConfig,
   ToolRegistry,
   getTool,
+  unknownToolError,
 } from "./core";
 import type { ToolDefinition } from "./core";
 
@@ -48,24 +49,32 @@ export class AnthropicTools {
     return runnable(createSearchTool(this.exa, this.registry, config));
   }
 
+  /**
+   * Run the `tool_use` blocks in an assistant message and return the matching
+   * `tool_result` blocks. Every `tool_use` block is answered so the follow-up
+   * request never omits a required result: a block whose name doesn't match a
+   * known tool gets an `Error: unknown tool "<name>"` result. When handling
+   * some tools yourself, replace those error results with your own before
+   * sending the next request.
+   */
   async handleToolUse(
     message: AnthropicMessage,
     options?: { tools?: readonly ExaToolSpec[] }
   ): Promise<AnthropicToolResult[]> {
     const tools = this.registry.resolve(options?.tools);
     const blocks = (message.content ?? []).filter(isAnthropicToolUse);
-    const results = await Promise.all(
+    return Promise.all(
       blocks.map(async (block) => {
         const tool = getTool(tools, block.name);
-        if (!tool) return undefined;
         return {
           type: "tool_result" as const,
           tool_use_id: block.id,
-          content: await tool.run(block.input),
+          content: tool
+            ? await tool.run(block.input)
+            : unknownToolError(block.name),
         };
       })
     );
-    return results.filter((result): result is AnthropicToolResult => !!result);
   }
 }
 

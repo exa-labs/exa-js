@@ -34,7 +34,16 @@ export type ExaToolSpec<Args = unknown, Result = unknown> = {
   run(args: unknown): Promise<string>;
 };
 
-export type SearchToolConfig = RegularSearchOptions;
+export type SearchToolConfig = RegularSearchOptions & {
+  /**
+   * Tool name shown to the model. Defaults to `"web_search"`. Set a custom
+   * name to avoid collisions, e.g. with Anthropic's built-in `web_search`
+   * server tool, or to register multiple differently-configured search tools.
+   */
+  name?: string;
+  /** Tool description shown to the model. */
+  description?: string;
+};
 
 export type ToolNamespace = {
   search(config?: SearchToolConfig): SearchTool;
@@ -128,6 +137,11 @@ export function createSearchTool(
   registry: ToolRegistry,
   config: SearchToolConfig = {}
 ): SearchTool {
+  const {
+    name = "web_search",
+    description = DEFAULT_SEARCH_TOOL_DESCRIPTION,
+    ...searchOptions
+  } = config;
   const inputSchema = z.object({
     query: z
       .string()
@@ -139,13 +153,13 @@ export function createSearchTool(
   delete jsonSchema.$schema;
 
   return createTool(registry, {
-    name: "web_search",
-    description: DEFAULT_SEARCH_TOOL_DESCRIPTION,
+    name,
+    description,
     inputSchema,
     jsonSchema,
     definition: {
-      name: "web_search",
-      description: DEFAULT_SEARCH_TOOL_DESCRIPTION,
+      name,
+      description,
       parameters: jsonSchema,
     },
     execute: ({ query }) => {
@@ -153,7 +167,7 @@ export function createSearchTool(
         type: "auto",
         numResults: 10,
         contents: { highlights: true },
-        ...config,
+        ...searchOptions,
       } as RegularSearchOptions;
       return exa.search(query, options) as Promise<
         SearchResponse<ContentsOptions>
@@ -182,4 +196,8 @@ export function getTool(
   name: string
 ): ExaToolSpec | undefined {
   return tools.get(name);
+}
+
+export function unknownToolError(name: string): string {
+  return `Error: unknown tool "${name}"`;
 }
