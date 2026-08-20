@@ -120,6 +120,57 @@ for await (const chunk of exa.streamAnswer("Explain quantum computing")) {
 }
 ```
 
+## Web Search tools
+
+Use Exa as a `web_search` tool in an OpenAI or Anthropic loop. Call `webSearch()` with no arguments to get Exa's recommended settings for agentic search (`type: "auto"` and `contents: { highlights: true }`).
+
+```ts
+import Exa from "exa-js";
+import { OpenAI } from "openai";
+
+const exa = new Exa(process.env.EXA_API_KEY);
+const openai = new OpenAI();
+
+const messages = [{ role: "user", content: "What's the latest on AI chips?" }];
+
+const completion = await openai.chat.completions.create({
+  model: "gpt-5.6",
+  messages,
+  tools: [exa.openai.webSearch()],
+});
+
+const message = completion.choices[0].message;
+messages.push(message, ...(await exa.openai.handleToolCalls(message)));
+```
+
+```ts
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic();
+const response = await anthropic.messages.create({
+  model: "claude-sonnet-4-5",
+  max_tokens: 1024,
+  messages,
+  tools: [exa.anthropic.webSearch()],
+});
+```
+
+For the OpenAI Responses API, use `exa.openai.responses.webSearch()` and the same `handleToolCalls` helper.
+
+Pass `name` (and optionally `description`) to rename the tool — for example to run Exa alongside Anthropic's built-in `web_search_20250305` server tool, which reserves the `web_search` name:
+
+```ts
+const response = await anthropic.messages.create({
+  model: "claude-sonnet-4-5",
+  max_tokens: 1024,
+  messages,
+  tools: [
+    { type: "web_search_20250305", name: "web_search", max_uses: 5 },
+    exa.anthropic.webSearch({ name: "exa_web_search" }),
+  ],
+});
+```
+
 ## Agent API
 
 ```ts

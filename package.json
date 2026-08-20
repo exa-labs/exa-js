@@ -41,6 +41,7 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "@types/node": "~22.14.0",
     "cross-env": "~7.0.3",
     "openapi-typescript": "~7.6.1",
