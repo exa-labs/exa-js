@@ -19,7 +19,7 @@ type OpenAIAssistantMessage = {
   tool_calls?: readonly unknown[] | null;
 };
 
-type OpenAIToolMessage = {
+export type OpenAIToolMessage = {
   role: "tool";
   tool_call_id: string;
   content: string;
@@ -36,7 +36,7 @@ type ResponsesOutput = {
   output?: readonly unknown[];
 };
 
-type ResponsesFunctionCallOutput = {
+export type ResponsesFunctionCallOutput = {
   type: "function_call_output";
   call_id: string;
   output: string;
@@ -213,14 +213,26 @@ export class OpenAITools {
   }
 
   /**
-   * Run the tool calls in a Chat Completions assistant message (or Responses
-   * API output) and return the matching tool messages. Every tool call is
-   * answered so the follow-up request never omits a required tool response: a
-   * call whose name doesn't match a known tool gets an
-   * `Error: unknown tool "<name>"` output. When handling some tools yourself,
-   * replace those error outputs with your own results before sending the next
-   * request.
+   * Run the tool calls in a Chat Completions assistant message and return the
+   * matching `role: "tool"` messages. Every tool call is answered so the
+   * follow-up request never omits a required tool response: a call whose name
+   * doesn't match a known tool gets an `Error: unknown tool "<name>"` output.
+   * When handling some tools yourself, replace those error outputs with your
+   * own results before sending the next request.
    */
+  handleToolCalls(
+    assistantMessage: OpenAIAssistantMessage,
+    options?: { tools?: readonly ExaToolSpec[] }
+  ): Promise<OpenAIToolMessage[]>;
+  /**
+   * Run the function calls in a Responses API response (or output item array)
+   * and return `function_call_output` items, answering calls whose name
+   * doesn't match a known tool with `Error: unknown tool "<name>"` outputs.
+   */
+  handleToolCalls(
+    responseOrOutputItems: ResponsesOutput | readonly unknown[],
+    options?: { tools?: readonly ExaToolSpec[] }
+  ): Promise<ResponsesFunctionCallOutput[]>;
   async handleToolCalls(
     assistantMessage:
       | OpenAIAssistantMessage

@@ -20,7 +20,7 @@ type AnthropicMessage = {
   content?: readonly unknown[] | null;
 };
 
-type AnthropicToolResult = {
+export type AnthropicToolResult = {
   type: "tool_result";
   tool_use_id: string;
   content: string;

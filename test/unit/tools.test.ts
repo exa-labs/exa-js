@@ -1,3 +1,5 @@
+import type Anthropic from "@anthropic-ai/sdk";
+import type OpenAI from "openai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Exa from "../../src";
 
@@ -443,6 +445,17 @@ describe("LLM tools", () => {
   });
 
   it("formats Anthropic tool results and Responses outputs", async () => {
+    vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [
+        {
+          id: "result-1",
+          title: "Example",
+          url: "https://example.com",
+          text: "Page text",
+        },
+      ],
+    });
     const search = exa.anthropic.webSearch();
     expect(search.definition).not.toHaveProperty("parse");
     expect(search.definition).not.toHaveProperty("run");
@@ -456,27 +469,96 @@ describe("LLM tools", () => {
         },
       ],
     });
-    expect(anthropicResults).toHaveLength(1);
-    expect(anthropicResults[0].type).toBe("tool_result");
+    expect(anthropicResults).toEqual([
+      {
+        type: "tool_result",
+        tool_use_id: "tool-use-1",
+        content: expect.stringContaining("Title: Example"),
+      },
+    ]);
+    expect(anthropicResults[0].content).toContain("Text: Page text");
 
     const responseTool = exa.openai.responses.webSearch();
-    const responseResults = await exa.openai.responses.handleToolCalls([
+    const functionCalls = [
       {
         type: "function_call",
         call_id: "call-1",
         name: responseTool.name,
         arguments: '{"query":"news"}',
       },
-    ]);
-    const unifiedResults = await exa.openai.handleToolCalls([
+    ];
+    const responseResults =
+      await exa.openai.responses.handleToolCalls(functionCalls);
+    const unifiedResults = await exa.openai.handleToolCalls(functionCalls);
+    expect(responseResults).toEqual([
       {
-        type: "function_call",
+        type: "function_call_output",
         call_id: "call-1",
-        name: responseTool.name,
-        arguments: '{"query":"news"}',
+        output: expect.stringContaining("Title: Example"),
       },
     ]);
-    expect(responseResults).toBeDefined();
     expect(unifiedResults).toEqual(responseResults);
+  });
+
+  it("satisfies the provider SDK tool and message types", async () => {
+    vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [],
+    });
+
+    const anthropicTool: Anthropic.Messages.Tool = exa.anthropic.webSearch();
+    const chatTool: OpenAI.Chat.Completions.ChatCompletionTool =
+      exa.openai.webSearch();
+    const responsesTool: OpenAI.Responses.Tool =
+      exa.openai.responses.webSearch();
+
+    const assistantMessage: OpenAI.Chat.Completions.ChatCompletionAssistantMessageParam =
+      {
+        role: "assistant",
+        tool_calls: [
+          {
+            id: "call-1",
+            type: "function",
+            function: {
+              name: chatTool.function.name,
+              arguments: '{"query":"q"}',
+            },
+          },
+        ],
+      };
+    const toolMessages: OpenAI.Chat.Completions.ChatCompletionToolMessageParam[] =
+      await exa.openai.handleToolCalls(assistantMessage);
+    expect(toolMessages).toEqual([
+      {
+        role: "tool",
+        tool_call_id: "call-1",
+        content: "No search results found.",
+      },
+    ]);
+
+    const outputs: OpenAI.Responses.ResponseInputItem.FunctionCallOutput[] =
+      await exa.openai.handleToolCalls([
+        {
+          type: "function_call",
+          call_id: "call-2",
+          name: "web_search",
+          arguments: '{"query":"q"}',
+        },
+      ]);
+    expect(outputs[0].type).toBe("function_call_output");
+
+    const toolResults: Anthropic.Messages.ToolResultBlockParam[] =
+      await exa.anthropic.handleToolUse({
+        content: [
+          {
+            type: "tool_use",
+            id: "toolu-1",
+            name: anthropicTool.name,
+            input: { query: "q" },
+          },
+        ],
+      });
+    expect(toolResults[0].type).toBe("tool_result");
+    expect(responsesTool.type).toBe("function");
   });
 });

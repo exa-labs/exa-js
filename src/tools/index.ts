@@ -9,5 +9,10 @@ export {
   type WebSearchTool,
   type WebSearchToolConfig,
 } from "./core";
-export { AnthropicTools } from "./anthropic";
-export { OpenAITools, OpenAIResponsesTools } from "./openai";
+export { AnthropicTools, type AnthropicToolResult } from "./anthropic";
+export {
+  OpenAITools,
+  OpenAIResponsesTools,
+  type OpenAIToolMessage,
+  type ResponsesFunctionCallOutput,
+} from "./openai";
