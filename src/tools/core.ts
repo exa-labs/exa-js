@@ -34,7 +34,7 @@ export type ExaToolSpec<Args = unknown, Result = unknown> = {
   run(args: unknown): Promise<string>;
 };
 
-export type SearchToolConfig = RegularSearchOptions & {
+export type WebSearchToolConfig = RegularSearchOptions & {
   /**
    * Tool name shown to the model. Defaults to `"web_search"`. Set a custom
    * name to avoid collisions, e.g. with Anthropic's built-in `web_search`
@@ -46,7 +46,7 @@ export type SearchToolConfig = RegularSearchOptions & {
 };
 
 export type ToolNamespace = {
-  search(config?: SearchToolConfig): SearchTool;
+  webSearch(config?: WebSearchToolConfig): WebSearchTool;
 };
 
 type SearchArgs = { query: string };
@@ -59,12 +59,12 @@ type FormattableResult = {
   text?: string;
 };
 
-export type SearchTool = ExaToolSpec<
+export type WebSearchTool = ExaToolSpec<
   SearchArgs,
   SearchResponse<ContentsOptions>
 >;
 
-export const DEFAULT_SEARCH_TOOL_DESCRIPTION =
+export const DEFAULT_WEB_SEARCH_TOOL_DESCRIPTION =
   "Search the web for up-to-date, relevant information. Describe the ideal page rather than listing keywords.";
 
 function formatSearchResponse(
@@ -132,14 +132,14 @@ function createTool<TArgs, TResult>(
 }
 
 /** Create a `web_search` tool. Defaults to `type: "auto"` and highlights. */
-export function createSearchTool(
+export function createWebSearchTool(
   exa: Exa,
   registry: ToolRegistry,
-  config: SearchToolConfig = {}
-): SearchTool {
+  config: WebSearchToolConfig = {}
+): WebSearchTool {
   const {
     name = "web_search",
-    description = DEFAULT_SEARCH_TOOL_DESCRIPTION,
+    description = DEFAULT_WEB_SEARCH_TOOL_DESCRIPTION,
     ...searchOptions
   } = config;
   const inputSchema = z.object({
@@ -174,7 +174,7 @@ export function createSearchTool(
       >;
     },
     format: formatSearchResponse,
-  }) as SearchTool;
+  }) as WebSearchTool;
 }
 
 export class ToolRegistry {

@@ -23,7 +23,7 @@ describe("LLM tools", () => {
       ],
     });
 
-    const tool = exa.tools.search();
+    const tool = exa.tools.webSearch();
     expect(tool.name).toBe("web_search");
     expect(tool.jsonSchema).toMatchObject({
       type: "object",
@@ -46,9 +46,9 @@ describe("LLM tools", () => {
   });
 
   it("serializes each provider tool to its exact wire descriptor", () => {
-    const openaiTool = exa.openai.search();
-    const responsesTool = exa.openai.responses.search();
-    const anthropicTool = exa.anthropic.search();
+    const openaiTool = exa.openai.webSearch();
+    const responsesTool = exa.openai.responses.webSearch();
+    const anthropicTool = exa.anthropic.webSearch();
 
     expect(JSON.parse(JSON.stringify(openaiTool))).toEqual({
       type: "function",
@@ -96,7 +96,7 @@ describe("LLM tools", () => {
       ],
     });
 
-    const tool = exa.openai.search({
+    const tool = exa.openai.webSearch({
       type: "neural",
       numResults: 3,
       contents: { highlights: { maxCharacters: 100 } },
@@ -113,7 +113,7 @@ describe("LLM tools", () => {
         highlights: { maxCharacters: 100 },
       },
     });
-    expect(exa.openai.responses.search({}).definition).toEqual({
+    expect(exa.openai.responses.webSearch({}).definition).toEqual({
       type: "function",
       name: "web_search",
       description: expect.any(String),
@@ -128,15 +128,15 @@ describe("LLM tools", () => {
       results: [],
     });
     const description = "Search the web with Exa.";
-    const openaiTool = exa.openai.search({
+    const openaiTool = exa.openai.webSearch({
       name: "exa_chat_search",
       description,
     });
-    const responsesTool = exa.openai.responses.search({
+    const responsesTool = exa.openai.responses.webSearch({
       name: "exa_responses_search",
       description,
     });
-    const anthropicTool = exa.anthropic.search({
+    const anthropicTool = exa.anthropic.webSearch({
       name: "exa_anthropic_search",
       description,
     });
@@ -239,7 +239,7 @@ describe("LLM tools", () => {
       requestId: "request-1",
       results: [],
     });
-    const tool = exa.anthropic.search({
+    const tool = exa.anthropic.webSearch({
       name: "exa_web_search",
       description: "Custom description.",
       type: "keyword",
@@ -261,8 +261,8 @@ describe("LLM tools", () => {
       requestId: "request-1",
       results: [],
     });
-    exa.openai.search({ type: "keyword" });
-    exa.openai.search({ name: "exa_neural_search", type: "neural" });
+    exa.openai.webSearch({ type: "keyword" });
+    exa.openai.webSearch({ name: "exa_neural_search", type: "neural" });
 
     await exa.openai.handleToolCalls({
       tool_calls: [
@@ -292,7 +292,7 @@ describe("LLM tools", () => {
   });
 
   it("handles malformed arguments and unknown tools without throwing", async () => {
-    const tool = exa.openai.search();
+    const tool = exa.openai.webSearch();
     const messages = await exa.openai.handleToolCalls({
       tool_calls: [
         {
@@ -375,7 +375,7 @@ describe("LLM tools", () => {
         },
       ],
     });
-    const search = exa.openai.search();
+    const search = exa.openai.webSearch();
 
     const messages = await exa.openai.handleToolCalls({
       tool_calls: [
@@ -405,8 +405,8 @@ describe("LLM tools", () => {
       requestId: "request-1",
       results: [],
     });
-    const first = exa.openai.search({ type: "neural" });
-    const second = exa.openai.search({ type: "keyword" });
+    const first = exa.openai.webSearch({ type: "neural" });
+    const second = exa.openai.webSearch({ type: "keyword" });
 
     await exa.openai.handleToolCalls({
       tool_calls: [
@@ -443,7 +443,7 @@ describe("LLM tools", () => {
   });
 
   it("formats Anthropic tool results and Responses outputs", async () => {
-    const search = exa.anthropic.search();
+    const search = exa.anthropic.webSearch();
     expect(search.definition).not.toHaveProperty("parse");
     expect(search.definition).not.toHaveProperty("run");
     const anthropicResults = await exa.anthropic.handleToolUse({
@@ -459,7 +459,7 @@ describe("LLM tools", () => {
     expect(anthropicResults).toHaveLength(1);
     expect(anthropicResults[0].type).toBe("tool_result");
 
-    const responseTool = exa.openai.responses.search();
+    const responseTool = exa.openai.responses.webSearch();
     const responseResults = await exa.openai.responses.handleToolCalls([
       {
         type: "function_call",

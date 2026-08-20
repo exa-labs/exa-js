@@ -10,7 +10,7 @@ import { isZodSchema, zodToJsonSchema } from "./zod-utils";
 import { AnthropicTools } from "./tools/anthropic";
 import { OpenAITools } from "./tools/openai";
 import {
-  createSearchTool,
+  createWebSearchTool,
   ToolRegistry,
   type ToolNamespace,
 } from "./tools/core";
@@ -889,7 +889,8 @@ export class Exa {
     // Initialize beta clients
     this.beta = new BetaClient(this.agent);
     this.tools = {
-      search: (options) => createSearchTool(this, this.toolRegistry, options),
+      webSearch: (options) =>
+        createWebSearchTool(this, this.toolRegistry, options),
     };
     this.openai = new OpenAITools(this, this.toolRegistry);
     this.anthropic = new AnthropicTools(this, this.toolRegistry);

@@ -1,8 +1,8 @@
 import type { Exa } from "../index";
 import {
-  createSearchTool,
+  createWebSearchTool,
   type ExaToolSpec,
-  type SearchToolConfig,
+  type WebSearchToolConfig,
   type ToolDefinition,
   type ToolJsonSchema,
   ToolRegistry,
@@ -139,8 +139,10 @@ export class OpenAIResponsesTools {
   ) {}
 
   /** Responses API `web_search` tool. Defaults to `auto` + highlights. */
-  search(config?: SearchToolConfig) {
-    return responsesRunnable(createSearchTool(this.exa, this.registry, config));
+  webSearch(config?: WebSearchToolConfig) {
+    return responsesRunnable(
+      createWebSearchTool(this.exa, this.registry, config)
+    );
   }
 
   /**
@@ -206,8 +208,8 @@ export class OpenAITools {
   }
 
   /** Chat Completions `web_search` tool. Defaults to `auto` + highlights. */
-  search(config?: SearchToolConfig) {
-    return runnable(createSearchTool(this.exa, this.registry, config));
+  webSearch(config?: WebSearchToolConfig) {
+    return runnable(createWebSearchTool(this.exa, this.registry, config));
   }
 
   /**
