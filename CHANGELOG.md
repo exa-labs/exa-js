@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.18.1](https://github.com/exa-labs/exa-js/compare/v2.18.0...v2.18.1) (2026-08-14)
+
+
+### Bug Fixes
+
+* **agent:** treat monitor field type as the cell value type ([3c25ba9](https://github.com/exa-labs/exa-js/commit/3c25ba9615b2f9e970a13374d0366425b72c399b))
+
+## [2.18.0](https://github.com/exa-labs/exa-js/compare/v2.17.0...v2.18.0) (2026-08-13)
+
+
+### Features
+
+* add Agent Monitors API support (exa.agent.monitors) ([#205](https://github.com/exa-labs/exa-js/issues/205)) ([9235e02](https://github.com/exa-labs/exa-js/commit/9235e0271253cc1ec38f71f9fe55bf49894e47c1))
+
 ## [2.17.0](https://github.com/exa-labs/exa-js/compare/v2.16.3...v2.17.0) (2026-08-06)
 
 

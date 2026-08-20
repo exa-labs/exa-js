@@ -35,6 +35,37 @@ function handle(url: string): {
           message: "Invalid query",
         }),
       };
+    case "/agent-error":
+      return {
+        status: 409,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: {
+            type: "CONFLICT",
+            code: "IDEMPOTENCY_KEY_CONFLICT",
+            message: "Idempotency-Key was already used for a different request",
+            detail: "the key is bound to the body it created",
+          },
+          requestId: "req_e2e123",
+        }),
+      };
+    case "/agent-error-no-message":
+      return {
+        status: 404,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: { type: "NOT_FOUND", code: "MONITOR_NOT_FOUND" },
+        }),
+      };
+    case "/legacy-error-with-request-id":
+      return {
+        status: 429,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: "Rate limited",
+          requestId: "req_legacy1",
+        }),
+      };
     case "/empty-ok":
       return { status: 200, contentType: "application/json", body: "" };
     default:
@@ -88,11 +119,56 @@ describe("Exa.request non-JSON response handling", () => {
   });
 
   it("still surfaces structured JSON API errors unchanged", async () => {
-    const error = await exa.request("/json-error", "POST").catch((e) => e);
+    const error = (await exa
+      .request("/json-error", "POST")
+      .catch((e) => e)) as ExaError;
     expect(error).toBeInstanceOf(ExaError);
     expect(error.statusCode).toBe(400);
     expect(error.message).toBe("Bad Request. Invalid query");
     expect(error.path).toBe("/json-error");
+    expect(error.type).toBeUndefined();
+    expect(error.code).toBeUndefined();
+  });
+
+  it("unwraps a structured error envelope instead of '[object Object]'", async () => {
+    const error = (await exa
+      .request("/agent-error", "POST")
+      .catch((e) => e)) as ExaError;
+    expect(error).toBeInstanceOf(ExaError);
+    expect(error.statusCode).toBe(409);
+    expect(error.message).toBe(
+      "Idempotency-Key was already used for a different request"
+    );
+    expect(error.message).not.toContain("[object Object]");
+    expect(error.type).toBe("CONFLICT");
+    expect(error.code).toBe("IDEMPOTENCY_KEY_CONFLICT");
+    expect(error.detail).toBe("the key is bound to the body it created");
+    expect(error.requestId).toBe("req_e2e123");
+    expect(error.path).toBe("/agent-error");
+  });
+
+  it("falls back to 'Unknown error' when a structured envelope has no message", async () => {
+    const error = (await exa
+      .request("/agent-error-no-message", "GET")
+      .catch((e) => e)) as ExaError;
+    expect(error).toBeInstanceOf(ExaError);
+    expect(error.statusCode).toBe(404);
+    expect(error.message).toBe("Unknown error");
+    expect(error.type).toBe("NOT_FOUND");
+    expect(error.code).toBe("MONITOR_NOT_FOUND");
+    expect(error.requestId).toBeUndefined();
+  });
+
+  it("keeps the legacy string envelope intact and carries a top-level requestId", async () => {
+    const error = (await exa
+      .request("/legacy-error-with-request-id", "GET")
+      .catch((e) => e)) as ExaError;
+    expect(error).toBeInstanceOf(ExaError);
+    expect(error.statusCode).toBe(429);
+    expect(error.message).toBe("Rate limited");
+    expect(error.type).toBeUndefined();
+    expect(error.code).toBeUndefined();
+    expect(error.requestId).toBe("req_legacy1");
   });
 
   it("returns parsed JSON for a normal successful response", async () => {

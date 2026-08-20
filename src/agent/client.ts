@@ -7,6 +7,8 @@ import { Exa } from "../index";
 import { ExaError } from "../errors";
 import { isZodSchema, zodToJsonSchema } from "../zod-utils";
 import { AgentBaseClient } from "./base";
+import { headersForBetas } from "./betas";
+import { AgentMonitorsClient } from "./monitors/client";
 import {
   AgentBetaOptions,
   AgentCreateOptions,
@@ -62,12 +64,6 @@ export class AgentRunCancelledError extends Error {
     this.name = "AgentRunCancelledError";
     this.run = run;
   }
-}
-
-function headersForBetas(betas?: string[]): Record<string, string> | undefined {
-  const betaValues = betas?.filter(Boolean);
-  if (!betaValues?.length) return undefined;
-  return { "Exa-Beta": betaValues.join(",") };
 }
 
 function isTerminalAgentRunStatus(
@@ -601,14 +597,17 @@ export class AgentBetaRunsClient extends AgentRunsClient {
   }
 }
 
-/**
- * @deprecated Use AgentClient instead.
- */
+/** Beta Agent API clients. */
 export class AgentBetaClient extends AgentClient {
   /**
    * @deprecated Use exa.agent.runs instead.
    */
   runs: AgentBetaRunsClient;
+
+  /**
+   * Beta client for Agent Monitors.
+   */
+  monitors: AgentMonitorsClient;
 
   constructor(clientOrAgent: Exa | AgentClient) {
     const client =
@@ -617,12 +616,14 @@ export class AgentBetaClient extends AgentClient {
         : clientOrAgent;
     super(client);
     this.runs = new AgentBetaRunsClient(client);
+    this.monitors = new AgentMonitorsClient(client);
   }
 }
 
 export class BetaClient {
   /**
-   * @deprecated Use exa.agent instead.
+   * Beta Agent namespace. Stable Agent runs remain available here for
+   * backwards compatibility; beta-only Agent products live here exclusively.
    */
   agent: AgentBetaClient;
 

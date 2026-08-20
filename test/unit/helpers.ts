@@ -8,6 +8,12 @@ import {
   AgentRunsClient,
   AgentRunEventsClient,
 } from "../../src/agent/client";
+import {
+  AgentMonitorChangesClient,
+  AgentMonitorEntitiesClient,
+  AgentMonitorSnapshotsClient,
+  AgentMonitorsClient,
+} from "../../src/agent/monitors/client";
 import { WebsetsBaseClient } from "../../src/websets/base";
 import { WebsetsClient } from "../../src/websets/client";
 import { WebsetEnrichmentsClient } from "../../src/websets/enrichments";
@@ -47,7 +53,11 @@ export function getProtectedClient<
     | AgentBetaRunsClient
     | AgentBetaRunEventsClient
     | AgentRunsClient
-    | AgentRunEventsClient,
+    | AgentRunEventsClient
+    | AgentMonitorsClient
+    | AgentMonitorEntitiesClient
+    | AgentMonitorChangesClient
+    | AgentMonitorSnapshotsClient,
 >(client: T): WithProtectedAccess<T> {
   return client as WithProtectedAccess<T>;
 }
@@ -71,6 +81,10 @@ export function getProtectedClientInstance(
     | AgentBetaRunEventsClient
     | AgentRunsClient
     | AgentRunEventsClient
+    | AgentMonitorsClient
+    | AgentMonitorEntitiesClient
+    | AgentMonitorChangesClient
+    | AgentMonitorSnapshotsClient
 ) {
   return client;
 }
