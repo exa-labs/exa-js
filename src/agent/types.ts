@@ -30,6 +30,7 @@ export type AgentRunStatus =
 export type AgentStopReason =
   | "schema_satisfied"
   | "budget_reached"
+  | "stopped"
   | "error"
   | "cancelled";
 

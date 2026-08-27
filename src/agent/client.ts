@@ -10,6 +10,7 @@ import { AgentBaseClient } from "./base";
 import { headersForBetas } from "./betas";
 import { AgentMonitorsClient } from "./monitors/client";
 import {
+  AGENT_MAX_EFFORT_BETA,
   AgentBetaOptions,
   AgentCreateOptions,
   AgentEvent,
@@ -519,6 +520,20 @@ export class AgentBetaRunsClient extends AgentRunsClient {
       undefined,
       undefined,
       headersForBetas(options?.betas)
+    );
+  }
+
+  /**
+   * Stop a running Agent run, completing it early with the results
+   * gathered so far. Only supported for `max` effort runs.
+   */
+  async stop(runId: string, options?: AgentBetaOptions): Promise<AgentRun> {
+    return this.request<AgentRun>(
+      `/${runId}/stop`,
+      "POST",
+      undefined,
+      undefined,
+      headersForBetas(options?.betas ?? [AGENT_MAX_EFFORT_BETA])
     );
   }
 

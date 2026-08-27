@@ -78,6 +78,8 @@ describe("Agent API", () => {
   it("exposes Agent runs under the primary namespace", () => {
     expect(exa.agent.runs).toBeDefined();
     expect((exa.agent as any).run).toBeUndefined();
+    expect((exa.agent.runs as any).stop).toBeUndefined();
+    expect(exa.beta.agent.runs.stop).toBeDefined();
   });
 
   it("keeps the beta Agent namespace as a compatibility wrapper", () => {
@@ -104,6 +106,9 @@ describe("Agent API", () => {
       exa.beta.agent.runs.get("agent_run_123", {
         betas: [AGENT_BETA_HEADER],
       });
+      // @ts-expect-error stop is only available through exa.beta.agent.
+      exa.agent.runs.stop("agent_run_123");
+      exa.beta.agent.runs.stop("agent_run_123");
       exa.agent.runs.createAndWait({
         query: "Find companies.",
         // @ts-expect-error betas are only accepted through exa.beta.agent.
@@ -334,6 +339,23 @@ describe("Agent API", () => {
       undefined,
       undefined,
       undefined
+    );
+  });
+
+  it("stops max-effort runs through the beta namespace", async () => {
+    const runClient = getProtectedClient(exa.beta.agent.runs);
+    const requestSpy = vi
+      .spyOn(runClient, "request")
+      .mockResolvedValueOnce(createMockRun());
+
+    await exa.beta.agent.runs.stop("agent_run_123");
+
+    expect(requestSpy).toHaveBeenCalledWith(
+      "/agent_run_123/stop",
+      "POST",
+      undefined,
+      undefined,
+      { "Exa-Beta": AGENT_MAX_EFFORT_BETA }
     );
   });
 
