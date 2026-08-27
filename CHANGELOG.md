@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.19.0](https://github.com/exa-labs/exa-js/compare/v2.18.1...v2.19.0) (2026-08-27)
+
+
+### Features
+
+* **agent:** add graceful Agent run stopping ([ca872a7](https://github.com/exa-labs/exa-js/commit/ca872a782d246015d458686ebdfc1f107092229e))
+* OpenAI and Anthropic Web Search tool helpers ([#207](https://github.com/exa-labs/exa-js/issues/207)) ([d3213b4](https://github.com/exa-labs/exa-js/commit/d3213b44fe6a158ea9a7e184682e4a407a99bb09))
+
+
+### Bug Fixes
+
+* **ci:** approve esbuild build scripts ([#218](https://github.com/exa-labs/exa-js/issues/218)) ([5e9d901](https://github.com/exa-labs/exa-js/commit/5e9d901c8195846f22d53432e2596f8019ef3345))
+
 ## [2.18.1](https://github.com/exa-labs/exa-js/compare/v2.18.0...v2.18.1) (2026-08-14)
 
 
