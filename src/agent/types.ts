@@ -30,6 +30,8 @@ export type AgentRunStatus =
 export type AgentStopReason =
   | "schema_satisfied"
   | "budget_reached"
+  | "time_limit_reached"
+  | "timeout_partial"
   | "error"
   | "cancelled";
 
@@ -44,7 +46,10 @@ export type AgentEffort =
   | "auto"
   | "max";
 
-/** Per-run spend ceiling for the metered `auto` and `max` efforts. */
+/**
+ * Per-run budget ceilings for the metered efforts: the cost ceiling applies
+ * to `auto` and `max`; the duration ceiling applies to `max` only.
+ */
 export interface AgentBudget {
   /**
    * Maximum spend for the run in US dollars.
@@ -52,6 +57,15 @@ export interface AgentBudget {
    * allowed range and applies defaults when omitted.
    */
   maxCostDollars?: number;
+  /**
+   * Best-effort maximum duration for the run in seconds.
+   * Only accepted by the API for `max`; the server validates the allowed
+   * range and may take a little additional time to finish gracefully.
+   * Runs that hit the limit stop with `stopReason: "time_limit_reached"`
+   * (or `"timeout_partial"` if the graceful wrap-up could not finish) and
+   * return partial output.
+   */
+  maxDurationSeconds?: number;
 }
 
 /**

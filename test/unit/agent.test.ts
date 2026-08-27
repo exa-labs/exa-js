@@ -203,7 +203,7 @@ describe("Agent API", () => {
       betas: [AGENT_MAX_EFFORT_BETA],
       query: "Find recent funding rounds.",
       effort: "max",
-      budget: { maxCostDollars: 10 },
+      budget: { maxCostDollars: 10, maxDurationSeconds: 600 },
     });
 
     expect(requestSpy).toHaveBeenCalledWith(
@@ -212,7 +212,7 @@ describe("Agent API", () => {
       {
         query: "Find recent funding rounds.",
         effort: "max",
-        budget: { maxCostDollars: 10 },
+        budget: { maxCostDollars: 10, maxDurationSeconds: 600 },
       },
       undefined,
       { "Exa-Beta": AGENT_MAX_EFFORT_BETA }
