@@ -45,11 +45,24 @@ export type WebSearchToolConfig = RegularSearchOptions & {
   description?: string;
 };
 
+export type GetContentsToolConfig = ContentsOptions & {
+  /**
+   * Tool name shown to the model. Defaults to `"get_contents"`. Set a custom
+   * name to avoid collisions, or to register multiple differently-configured
+   * contents tools.
+   */
+  name?: string;
+  /** Tool description shown to the model. */
+  description?: string;
+};
+
 export type ToolNamespace = {
   webSearch(config?: WebSearchToolConfig): WebSearchTool;
+  getContents(config?: GetContentsToolConfig): GetContentsTool;
 };
 
 type SearchArgs = { query: string };
+type GetContentsArgs = { urls: string[] };
 type FormattableResult = {
   title?: string | null;
   url?: string;
@@ -57,6 +70,7 @@ type FormattableResult = {
   author?: string;
   highlights?: string[];
   text?: string;
+  summary?: string;
 };
 
 export type WebSearchTool = ExaToolSpec<
@@ -64,11 +78,20 @@ export type WebSearchTool = ExaToolSpec<
   SearchResponse<ContentsOptions>
 >;
 
+export type GetContentsTool = ExaToolSpec<
+  GetContentsArgs,
+  SearchResponse<ContentsOptions>
+>;
+
 export const DEFAULT_WEB_SEARCH_TOOL_DESCRIPTION =
   "Search the web for up-to-date, relevant information. Describe the ideal page rather than listing keywords.";
 
-function formatSearchResponse(
-  response: SearchResponse<ContentsOptions>
+export const DEFAULT_GET_CONTENTS_TOOL_DESCRIPTION =
+  "Read the full contents of web pages you already have URLs for, such as pages returned by a search or mentioned by the user.";
+
+function formatResults(
+  response: SearchResponse<ContentsOptions>,
+  emptyMessage: string
 ): string {
   const formatted = (response.results as FormattableResult[])
     .map((result) => {
@@ -78,6 +101,9 @@ function formatSearchResponse(
         `Published: ${result.publishedDate || "N/A"}`,
         `Author: ${result.author || "N/A"}`,
       ];
+      if (result.summary) {
+        lines.push(`Summary: ${result.summary}`);
+      }
       if (result.highlights && result.highlights.length > 0) {
         lines.push(`Highlights:\n${result.highlights.join("\n")}`);
       } else if (result.text) {
@@ -86,7 +112,19 @@ function formatSearchResponse(
       return lines.join("\n");
     })
     .join("\n\n---\n\n");
-  return formatted || "No search results found.";
+  return formatted || emptyMessage;
+}
+
+function formatSearchResponse(
+  response: SearchResponse<ContentsOptions>
+): string {
+  return formatResults(response, "No search results found.");
+}
+
+function formatContentsResponse(
+  response: SearchResponse<ContentsOptions>
+): string {
+  return formatResults(response, "No contents found.");
 }
 
 function registerTool<T extends ExaToolSpec>(
@@ -175,6 +213,49 @@ export function createWebSearchTool(
     },
     format: formatSearchResponse,
   }) as WebSearchTool;
+}
+
+/**
+ * Create a `get_contents` tool that reads pages the model already has URLs for.
+ * Inherits `exa.getContents` defaults, which return page text when no content
+ * option is configured.
+ */
+export function createGetContentsTool(
+  exa: Exa,
+  registry: ToolRegistry,
+  config: GetContentsToolConfig = {}
+): GetContentsTool {
+  const {
+    name = "get_contents",
+    description = DEFAULT_GET_CONTENTS_TOOL_DESCRIPTION,
+    ...contentsOptions
+  } = config;
+  const inputSchema = z.object({
+    urls: z
+      .array(z.string())
+      .describe(
+        "Absolute URLs of the pages to read, including the scheme. Pass several URLs to read them in a single call."
+      ),
+  });
+  const jsonSchema = zodToJsonSchema(inputSchema) as ToolJsonSchema;
+  delete jsonSchema.$schema;
+
+  return createTool(registry, {
+    name,
+    description,
+    inputSchema,
+    jsonSchema,
+    definition: {
+      name,
+      description,
+      parameters: jsonSchema,
+    },
+    execute: ({ urls }) =>
+      exa.getContents(urls, contentsOptions) as Promise<
+        SearchResponse<ContentsOptions>
+      >,
+    format: formatContentsResponse,
+  }) as GetContentsTool;
 }
 
 export class ToolRegistry {

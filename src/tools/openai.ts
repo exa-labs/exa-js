@@ -1,7 +1,9 @@
 import type { Exa } from "../index";
 import {
+  createGetContentsTool,
   createWebSearchTool,
   type ExaToolSpec,
+  type GetContentsToolConfig,
   type WebSearchToolConfig,
   type ToolDefinition,
   type ToolJsonSchema,
@@ -145,6 +147,13 @@ export class OpenAIResponsesTools {
     );
   }
 
+  /** Responses API `get_contents` tool for reading pages by URL. */
+  getContents(config?: GetContentsToolConfig) {
+    return responsesRunnable(
+      createGetContentsTool(this.exa, this.registry, config)
+    );
+  }
+
   /**
    * Run the function calls in a Responses API response (or output item array)
    * and return `function_call_output` items. Every function call is answered
@@ -210,6 +219,11 @@ export class OpenAITools {
   /** Chat Completions `web_search` tool. Defaults to `auto` + highlights. */
   webSearch(config?: WebSearchToolConfig) {
     return runnable(createWebSearchTool(this.exa, this.registry, config));
+  }
+
+  /** Chat Completions `get_contents` tool for reading pages by URL. */
+  getContents(config?: GetContentsToolConfig) {
+    return runnable(createGetContentsTool(this.exa, this.registry, config));
   }
 
   /**

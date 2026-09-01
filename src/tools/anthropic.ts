@@ -1,7 +1,9 @@
 import type { Exa } from "../index";
 import {
+  createGetContentsTool,
   createWebSearchTool,
   type ExaToolSpec,
+  type GetContentsToolConfig,
   type WebSearchToolConfig,
   ToolRegistry,
   getTool,
@@ -47,6 +49,11 @@ export class AnthropicTools {
   /** Anthropic `web_search` tool. Defaults to `auto` + highlights. */
   webSearch(config?: WebSearchToolConfig) {
     return runnable(createWebSearchTool(this.exa, this.registry, config));
+  }
+
+  /** Anthropic `get_contents` tool for reading pages by URL. */
+  getContents(config?: GetContentsToolConfig) {
+    return runnable(createGetContentsTool(this.exa, this.registry, config));
   }
 
   /**
