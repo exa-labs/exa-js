@@ -561,4 +561,158 @@ describe("LLM tools", () => {
     expect(toolResults[0].type).toBe("tool_result");
     expect(responsesTool.type).toBe("function");
   });
+
+  it("creates a urls-only neutral contents tool", async () => {
+    const request = vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [
+        {
+          id: "result-1",
+          title: "Example",
+          url: "https://example.com",
+          text: "Page text",
+        },
+      ],
+    });
+
+    const tool = exa.tools.getContents();
+    expect(tool.name).toBe("get_contents");
+    expect(tool.jsonSchema).toMatchObject({
+      type: "object",
+      required: ["urls"],
+    });
+    expect(tool.jsonSchema).not.toHaveProperty("$schema");
+    expect(tool.definition).not.toHaveProperty("run");
+
+    const output = await tool.run({ urls: ["https://example.com"] });
+    expect(output).toContain("Title: Example");
+    expect(output).toContain("Text: Page text");
+    expect(request).toHaveBeenCalledWith("/contents", "POST", {
+      urls: ["https://example.com"],
+    });
+  });
+
+  it("passes configured contents options through to /contents", async () => {
+    const request = vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [
+        {
+          id: "result-1",
+          title: "Example",
+          url: "https://example.com",
+          summary: "A summary",
+        },
+      ],
+    });
+
+    const tool = exa.openai.getContents({
+      name: "read_pages",
+      description: "Read pages",
+      summary: true,
+      livecrawl: "preferred",
+    });
+    const output = await tool.run({
+      urls: ["https://example.com", "https://exa.ai"],
+    });
+
+    expect(output).toContain("Summary: A summary");
+    expect(request).toHaveBeenCalledWith("/contents", "POST", {
+      urls: ["https://example.com", "https://exa.ai"],
+      summary: true,
+      livecrawl: "preferred",
+    });
+    expect(JSON.parse(JSON.stringify(tool))).toEqual({
+      type: "function",
+      function: {
+        name: "read_pages",
+        description: "Read pages",
+        parameters: tool.jsonSchema,
+      },
+    });
+  });
+
+  it("reports empty and failed contents results to the model", async () => {
+    vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [],
+    });
+    const tool = exa.tools.getContents();
+    expect(await tool.run({ urls: ["https://example.com"] })).toBe(
+      "No contents found."
+    );
+    expect(await tool.run({ urls: "https://example.com" })).toMatch(/^Error:/);
+  });
+
+  it("serializes contents tools for every provider and handler", async () => {
+    vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [
+        {
+          id: "result-1",
+          title: "Example",
+          url: "https://example.com",
+          text: "Page text",
+        },
+      ],
+    });
+    const search = exa.openai.webSearch();
+    const contents = exa.openai.getContents();
+    const responsesTool = exa.openai.responses.getContents();
+    const anthropicTool = exa.anthropic.getContents();
+
+    expect(JSON.parse(JSON.stringify(responsesTool))).toEqual({
+      type: "function",
+      name: "get_contents",
+      description: responsesTool.description,
+      parameters: responsesTool.jsonSchema,
+      strict: false,
+    });
+    expect(JSON.parse(JSON.stringify(anthropicTool))).toEqual({
+      name: "get_contents",
+      description: anthropicTool.description,
+      input_schema: anthropicTool.jsonSchema,
+    });
+
+    const chatMessages = await exa.openai.handleToolCalls({
+      tool_calls: [
+        {
+          id: "call-1",
+          function: { name: search.name, arguments: '{"query":"q"}' },
+        },
+        {
+          id: "call-2",
+          function: {
+            name: contents.name,
+            arguments: '{"urls":["https://example.com"]}',
+          },
+        },
+      ],
+    });
+    expect(chatMessages).toHaveLength(2);
+    expect((chatMessages[1] as { content: string }).content).toContain(
+      "Text: Page text"
+    );
+
+    const responsesOutputs = await exa.openai.responses.handleToolCalls([
+      {
+        type: "function_call",
+        call_id: "call-3",
+        name: responsesTool.name,
+        arguments: '{"urls":["https://example.com"]}',
+      },
+    ]);
+    expect(responsesOutputs[0].output).toContain("Text: Page text");
+
+    const toolResults = await exa.anthropic.handleToolUse({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu-1",
+          name: anthropicTool.name,
+          input: { urls: ["https://example.com"] },
+        },
+      ],
+    });
+    expect(toolResults[0].content).toContain("Text: Page text");
+  });
 });

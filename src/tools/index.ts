@@ -1,8 +1,12 @@
 export {
+  DEFAULT_GET_CONTENTS_TOOL_DESCRIPTION,
   DEFAULT_WEB_SEARCH_TOOL_DESCRIPTION,
   ToolRegistry,
+  createGetContentsTool,
   createWebSearchTool,
   type ExaToolSpec,
+  type GetContentsTool,
+  type GetContentsToolConfig,
   type ToolDefinition,
   type ToolJsonSchema,
   type ToolNamespace,
