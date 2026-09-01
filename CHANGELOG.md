@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.20.0](https://github.com/exa-labs/exa-js/compare/v2.19.0...v2.20.0) (2026-09-01)
+
+
+### Features
+
+* add getContents tool helpers ([21db6d1](https://github.com/exa-labs/exa-js/commit/21db6d1062307a867f7215ef2c1969444e502b8d))
+* **helpers:** get_contents tool helper ([c5ceb0a](https://github.com/exa-labs/exa-js/commit/c5ceb0a4eb825cbba8b85775ef90a22b2a27664c))
+
 ## [2.19.0](https://github.com/exa-labs/exa-js/compare/v2.18.1...v2.19.0) (2026-08-27)
 
 
