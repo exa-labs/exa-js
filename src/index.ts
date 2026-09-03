@@ -2,6 +2,7 @@ import fetch, { Headers } from "cross-fetch";
 import { ZodSchema } from "zod";
 import packageJson from "../package.json";
 import { AgentClient, BetaClient } from "./agent/client";
+import { headersForBetas } from "./agent/betas";
 import { ExaError, HttpStatusCode } from "./errors";
 import { SearchMonitorsClient } from "./monitors/client";
 import { ResearchClient } from "./research/client";
@@ -23,6 +24,9 @@ const HeadersImpl =
   typeof global !== "undefined" && global.Headers ? global.Headers : Headers;
 
 const DEFAULT_MAX_CHARACTERS = 10_000;
+
+/** Exa-Beta token required for Dynamic Highlights (research preview). */
+export const DYNAMIC_HIGHLIGHTS_BETA = "dynamic-highlights-2026-08-28";
 
 // Longest snippet of a non-JSON response body to include in error messages.
 const NON_JSON_BODY_SNIPPET_LENGTH = 500;
@@ -242,6 +246,15 @@ type NonDeepSearchOptions = BaseRegularSearchOptions & {
 export type RegularSearchOptions = DeepSearchOptions | NonDeepSearchOptions;
 
 /**
+ * Options for opting into Exa-Beta features.
+ * @typedef {Object} BetaOptions
+ * @property {string[]} [betas] - Exa-Beta tokens to send with the request (e.g. `[DYNAMIC_HIGHLIGHTS_BETA]` for Dynamic Highlights).
+ */
+export type BetaOptions = {
+  betas?: string[];
+};
+
+/**
  * DEPRECATED: Used only by deprecated `findSimilar()` APIs. Use `search()` and `RegularSearchOptions` for new search flows. Will be removed in a future version.
  * @deprecated Use `search()` and `RegularSearchOptions` for new search flows. There is no direct replacement for URL-based similarity.
  *
@@ -309,13 +322,15 @@ export type TextContentsOptions = {
  * Deep search variants also support these options for returned highlights.
  * @typedef {Object} HighlightsContentsOptions
  * @property {string} [query] - The query string to use for highlights search.
- * @property {number} [maxCharacters] - The maximum number of characters to return for highlights.
+ * @property {number} [maxCharacters] - The maximum number of characters to return for highlights. Not compatible with `dynamic`.
+ * @property {boolean} [dynamic] - Enable Dynamic Highlights (research preview): allocates one shared context budget across all results instead of a per-document budget; the model sizes the output itself. Not compatible with `maxCharacters`. Beta: requires passing `betas: [DYNAMIC_HIGHLIGHTS_BETA]` to the request.
  * @property {number} [numSentences] - DEPRECATED: Use maxCharacters instead.
  * @property {number} [highlightsPerUrl] - DEPRECATED: Use maxCharacters instead.
  */
 export type HighlightsContentsOptions = {
   query?: string;
   maxCharacters?: number;
+  dynamic?: boolean;
   /**
    * DEPRECATED: Use `maxCharacters` instead. Will be removed in a future version.
    * @deprecated Use `maxCharacters` instead. This legacy sizing field will be removed in a future version.
@@ -836,6 +851,7 @@ export class Exa {
   ): Record<string, unknown> {
     const requestOptions = { ...(options ?? {}) } as Record<string, unknown>;
     delete requestOptions.stream;
+    delete requestOptions.betas;
 
     if (options === undefined || !("contents" in options)) {
       return {
@@ -1110,7 +1126,8 @@ export class Exa {
    */
   async search(
     query: string,
-    options: RegularSearchOptions & { contents: false | null | undefined }
+    options: RegularSearchOptions &
+      BetaOptions & { contents: false | null | undefined }
   ): Promise<SearchResponse<{}>>;
   /**
    * Performs a search with specific contents.
@@ -1121,7 +1138,7 @@ export class Exa {
    */
   async search<T extends ContentsOptions>(
     query: string,
-    options: RegularSearchOptions & { contents: T }
+    options: RegularSearchOptions & BetaOptions & { contents: T }
   ): Promise<SearchResponse<T>>;
   /**
    * Performs a search with an Exa prompt-engineered query.
@@ -1133,13 +1150,16 @@ export class Exa {
    */
   async search(
     query: string,
-    options:
+    options: (
       | Omit<DeepSearchOptions, "contents">
       | Omit<NonDeepSearchOptions, "contents">
+    ) &
+      BetaOptions
   ): Promise<SearchResponse<{ text: true }>>;
   async search<T extends ContentsOptions>(
     query: string,
-    options?: RegularSearchOptions & { contents?: T | false | null | undefined }
+    options?: RegularSearchOptions &
+      BetaOptions & { contents?: T | false | null | undefined }
   ): Promise<SearchResponse<T | { text: true } | {}>> {
     if (options?.stream) {
       throw new ExaError(
@@ -1151,11 +1171,11 @@ export class Exa {
       );
     }
 
-    return await this.request(
-      "/search",
-      "POST",
-      this.buildSearchRequestBody(query, options)
-    );
+    const body = this.buildSearchRequestBody(query, options);
+    const betaHeaders = headersForBetas(options?.betas);
+    return betaHeaders
+      ? await this.request("/search", "POST", body, undefined, betaHeaders)
+      : await this.request("/search", "POST", body);
   }
 
   /**
@@ -1342,7 +1362,7 @@ export class Exa {
    */
   async getContents<T extends ContentsOptions>(
     urls: string | string[] | SearchResult<T>[],
-    options?: T
+    options?: T & BetaOptions
   ): Promise<SearchResponse<T>> {
     if (!urls || (Array.isArray(urls) && urls.length === 0)) {
       throw new ExaError(
@@ -1361,12 +1381,17 @@ export class Exa {
       requestUrls = (urls as SearchResult<T>[]).map((result) => result.url);
     }
 
+    const { betas, ...contentsOptions } = options ?? {};
+
     const payload = {
       urls: requestUrls,
-      ...options,
+      ...contentsOptions,
     };
 
-    return await this.request("/contents", "POST", payload);
+    const betaHeaders = headersForBetas(betas);
+    return betaHeaders
+      ? await this.request("/contents", "POST", payload, undefined, betaHeaders)
+      : await this.request("/contents", "POST", payload);
   }
 
   /**
