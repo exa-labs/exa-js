@@ -9,7 +9,7 @@ import {
   ResearchCreateParamsTyped,
   ResearchTyped,
 } from "./index";
-import { ZodSchema } from "zod";
+import type { ZodSchema } from "zod";
 import { isZodSchema, zodToJsonSchema } from "../zod-utils";
 import { ResearchBaseClient } from "./base";
 
