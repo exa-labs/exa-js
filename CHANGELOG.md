@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.21.0](https://github.com/exa-labs/exa-js/compare/v2.20.0...v2.21.0) (2026-09-03)
+
+
+### Features
+
+* add Dynamic Highlights (research preview) via betas param ([#220](https://github.com/exa-labs/exa-js/issues/220)) ([f33c4ff](https://github.com/exa-labs/exa-js/commit/f33c4fffbcdded178b4d19b5ab259147d501b3b9))
+
 ## [2.20.0](https://github.com/exa-labs/exa-js/compare/v2.19.0...v2.20.0) (2026-09-01)
 
 
