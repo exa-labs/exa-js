@@ -99,6 +99,65 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it("should send snapshotAsOf top-level on /contents and surface snapshotAt", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://example.com",
+          id: "test-id",
+          text: "Sample text content",
+          snapshotAt: "2026-09-14T00:00:00.000Z",
+        },
+      ],
+      requestId: "req-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.getContents(["https://example.com"], {
+      snapshotAsOf: "2026-09-15T00:00:00Z",
+      text: true,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/contents", "POST", {
+      urls: ["https://example.com"],
+      snapshotAsOf: "2026-09-15T00:00:00Z",
+      text: true,
+    });
+    expect(result.results[0].snapshotAt).toBe("2026-09-14T00:00:00.000Z");
+  });
+
+  it("should nest snapshotAsOf under contents on /search", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Test Result",
+          url: "https://example.com",
+          id: "test-id",
+          snapshotAt: "2026-08-15T00:00:00.000Z",
+        },
+      ],
+      requestId: "req-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("latest AI developments", {
+      contents: { snapshotAsOf: "2026-08-16T00:00:00Z", highlights: true },
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "latest AI developments",
+      contents: { snapshotAsOf: "2026-08-16T00:00:00Z", highlights: true },
+    });
+    expect(result.results[0].snapshotAt).toBe("2026-08-15T00:00:00.000Z");
+  });
+
   it("should preserve deprecated searchAndContents context option for compatibility", async () => {
     const mockResponse = {
       results: [
