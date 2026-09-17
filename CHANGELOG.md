@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.22.0](https://github.com/exa-labs/exa-js/compare/v2.21.0...v2.22.0) (2026-09-17)
+
+
+### Features
+
+* add snapshotAsOf option ([f9125ba](https://github.com/exa-labs/exa-js/commit/f9125babdc2cd415c6b97259ffc3bd9ee0f8d1f4))
+* add snapshotAsOf option ([ca64418](https://github.com/exa-labs/exa-js/commit/ca64418e3cbe1bad7a931b6f7083ecdcce31c5ad))
+
 ## [2.21.0](https://github.com/exa-labs/exa-js/compare/v2.20.0...v2.21.0) (2026-09-03)
 
 
