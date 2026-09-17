@@ -77,6 +77,7 @@ function truncateResponseBody(text: string): string {
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
  * @property {ContextOptions | boolean} [context] - DEPRECATED: Use `text` or `highlights` instead. Will be removed in a future version.
  * @property {number} [maxAgeHours] - Maximum age of cached content in hours. If content is older, it will be fetched fresh. Special values: 0 = always fetch fresh content, -1 = never fetch fresh (use cached content only). Example: 168 = fetch fresh for pages older than 7 days.
+ * @property {string} [snapshotAsOf] - ISO 8601 datetime. Return the newest stored version at or before this instant instead of live content.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
  * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result.
  * @property {string | string[]} [subpageTarget] - Text used to match/rank subpages in the returned subpage list. You could use "about" to get *about* page for websites. Note that this is a fuzzy matcher.
@@ -94,6 +95,7 @@ export type ContentsOptions = {
   context?: ContextOptions | true;
   livecrawlTimeout?: number;
   maxAgeHours?: number;
+  snapshotAsOf?: string;
   filterEmptyResults?: boolean;
   subpages?: number;
   subpageTarget?: string | string[];
@@ -570,6 +572,7 @@ export type Entity = CompanyEntity | PersonEntity;
  * @property {string} id - The temporary ID for the document.
  * @property {string} [image] - A representative image for the content, if any.
  * @property {string} [favicon] - A favicon for the site, if any.
+ * @property {string} [snapshotAt] - Crawl instant of the stored version served for a snapshotAsOf request.
  * @property {Entity[]} [entities] - Structured entity data for company or person search results.
  */
 export type SearchResult<T extends ContentsOptions> = {
@@ -581,6 +584,7 @@ export type SearchResult<T extends ContentsOptions> = {
   id: string;
   image?: string;
   favicon?: string;
+  snapshotAt?: string;
   entities?: Entity[];
 } & ContentsResultComponent<T>;
 
@@ -790,6 +794,7 @@ export class Exa {
       livecrawl,
       livecrawlTimeout,
       maxAgeHours,
+      snapshotAsOf,
       // DEPRECATED FIELD: preserve legacy `context` only for backward compatibility.
       context,
       ...rest
@@ -834,6 +839,8 @@ export class Exa {
     if (livecrawlTimeout !== undefined)
       contentsOptions.livecrawlTimeout = livecrawlTimeout;
     if (maxAgeHours !== undefined) contentsOptions.maxAgeHours = maxAgeHours;
+    if (snapshotAsOf !== undefined)
+      contentsOptions.snapshotAsOf = snapshotAsOf;
     // DEPRECATED FIELD: pass through only so existing callers do not break.
     if (context !== undefined) contentsOptions.context = context;
 
