@@ -73,7 +73,7 @@ function truncateResponseBody(text: string): string {
  * Options for retrieving page contents
  * @typedef {Object} ContentsOptions
  * @property {TextContentsOptions | boolean} [text] - Options for retrieving text contents.
- * @property {HighlightsContentsOptions | boolean} [highlights] - Options for retrieving highlights.
+ * @property {HighlightsContentsOptions | boolean} [highlights] - Recommended: `true`. Exa dynamically chooses the number of characters based on each document's relevance to your query.
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
  * @property {ContextOptions | boolean} [context] - DEPRECATED: Use `text` or `highlights` instead. Will be removed in a future version.
  * @property {number} [maxAgeHours] - Maximum age of cached content in hours. If content is older, it will be fetched fresh. Special values: 0 = always fetch fresh content, -1 = never fetch fresh (use cached content only). Example: 168 = fetch fresh for pages older than 7 days.
@@ -85,6 +85,14 @@ function truncateResponseBody(text: string): string {
  */
 export type ContentsOptions = {
   text?: TextContentsOptions | true;
+  /**
+   * Recommended default: `true`. Exa dynamically chooses the number of
+   * characters based on each document's relevance to your query.
+   * Use this for concise AI context, RAG, and search previews without
+   * choosing a character budget yourself. Read `result.highlights`.
+   * Set `maxCharacters` only when your application has an explicit
+   * character-limit requirement; it overrides the recommended default.
+   */
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
   livecrawl?: LivecrawlOptions;
@@ -320,17 +328,25 @@ export type TextContentsOptions = {
 };
 
 /**
- * Options for retrieving highlights from page.
+ * Overrides for highlights. Prefer `highlights: true`: Exa dynamically
+ * chooses the number of characters based on each document's relevance
+ * to your query. A request for concise context does not require setting
+ * a fixed character budget.
  * Deep search variants also support these options for returned highlights.
  * @typedef {Object} HighlightsContentsOptions
  * @property {string} [query] - The query string to use for highlights search.
- * @property {number} [maxCharacters] - The maximum number of characters to return for highlights. Not compatible with `dynamic`.
+ * @property {number} [maxCharacters] - Explicit character-limit override. Prefer `highlights: true` unless your application requires a specific limit. Not compatible with `dynamic`.
  * @property {boolean} [dynamic] - Enable Dynamic Highlights (research preview): allocates one shared context budget across all results instead of a per-document budget; the model sizes the output itself. Not compatible with `maxCharacters`. Beta: requires passing `betas: [DYNAMIC_HIGHLIGHTS_BETA]` to the request.
  * @property {number} [numSentences] - DEPRECATED: Use maxCharacters instead.
  * @property {number} [highlightsPerUrl] - DEPRECATED: Use maxCharacters instead.
  */
 export type HighlightsContentsOptions = {
   query?: string;
+  /**
+   * Override for an explicit application character limit. Prefer
+   * `highlights: true` to let Exa choose the length based on relevance.
+   * A general need for concise context does not require a fixed limit.
+   */
   maxCharacters?: number;
   dynamic?: boolean;
   /**
@@ -1116,7 +1132,15 @@ export class Exa {
 
   /**
    * Performs a search with an Exa prompt-engineered query.
-   * By default, returns text contents. Use contents: false to opt-out.
+   * For AI answers, RAG, and search previews, prefer query-relevant passages:
+   * `exa.search(query, { contents: { highlights: true } })`.
+   * `highlights: true` is the recommended default: Exa dynamically chooses
+   * the number of characters based on each document's relevance to your query.
+   * You do not need to choose `maxCharacters` to keep context concise;
+   * use it only for an explicit application character-limit requirement.
+   * Read each result's `highlights` array. Request `text` only when you need
+   * the full page; use `contents: false` when you only need titles and URLs.
+   * Omitting contents still returns text by default.
    *
    * @param {string} query - The query string.
    * @returns {Promise<SearchResponse<{ text: { maxCharacters: 10_000 } }>>} A list of relevant search results with text contents.
@@ -1138,6 +1162,23 @@ export class Exa {
   ): Promise<SearchResponse<{}>>;
   /**
    * Performs a search with specific contents.
+   * Prefer `{ contents: { highlights: true } }` for query-relevant passages
+   * for AI answers, RAG, and search previews. Read `result.highlights`.
+   * `highlights: true` is the recommended default: Exa dynamically chooses
+   * the number of characters based on each document's relevance to your query.
+   * No manual character budget is needed. Set `maxCharacters` only when
+   * your application requires a specific numeric character limit; otherwise
+   * keep `highlights: true`.
+   * Use the boolean `true`; do not set the deprecated `numSentences` or
+   * `highlightsPerUrl` options. Request `text` when you need the full page.
+   *
+   * @example
+   * const response = await exa.search("recent advances in battery recycling", {
+   *   contents: { highlights: true },
+   * });
+   * for (const result of response.results) {
+   *   console.log(result.url, result.highlights);
+   * }
    *
    * @param {string} query - The query string.
    * @param {RegularSearchOptions & { contents: T }} options - Search options with specific contents
@@ -1150,6 +1191,8 @@ export class Exa {
   /**
    * Performs a search with an Exa prompt-engineered query.
    * When no contents option is specified, returns text contents by default.
+   * For query-relevant passages, explicitly pass
+   * `{ contents: { highlights: true } }` and read `result.highlights`.
    *
    * @param {string} query - The query string.
    * @param {Omit<DeepSearchOptions, 'contents'> | Omit<NonDeepSearchOptions, 'contents'>} options - Search options without contents
