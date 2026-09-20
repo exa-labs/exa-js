@@ -280,17 +280,15 @@ const changes = await exa.beta.agent.monitors.changes.list(monitor.id, {
   since: "2026-01-01T00:00:00Z",
 });
 
-// One-shot stateless snapshot of a past news window — no monitor created.
-const snapshot = await exa.beta.agent.monitors.snapshots.createAndWait({
+// One-shot backtest of a past news window — no monitor persists.
+const backtest = await exa.beta.agent.monitors.backtests.createAndWait({
   betas,
   entities: [{ name: "Acme Corp", domain: "acme.com" }],
-  fields: [
-    { name: "funding", description: "New funding rounds" }, // dynamic by default
-  ],
-  startDate: "2026-01-01",
-  endDate: "2026-01-08",
+  fields: [{ name: "funding", description: "New funding rounds" }],
+  startTime: "2026-01-01T00:00:00Z",
+  endTime: "2026-01-08T00:00:00Z",
 });
-console.log(snapshot.data);
+console.log(backtest.data);
 
 // Add entities, inspect refresh progress, clean up.
 await exa.beta.agent.monitors.entities.add(monitor.id, {

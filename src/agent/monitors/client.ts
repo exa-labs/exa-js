@@ -9,12 +9,12 @@ import {
   AgentMonitor,
   AgentMonitorChange,
   AgentMonitorEntityView,
-  AgentMonitorSnapshot,
-  AgentMonitorSnapshotWaitOptions,
+  AgentMonitorBacktest,
+  AgentMonitorBacktestWaitOptions,
   AgentMonitorsBetaOptions,
   CreateAgentMonitorOptions,
   CreateAgentMonitorParams,
-  CreateAgentMonitorSnapshotParams,
+  CreateAgentMonitorBacktestParams,
   DeletedAgentMonitor,
   ListAgentMonitorChangesParams,
   ListAgentMonitorChangesResponse,
@@ -24,23 +24,23 @@ import {
   ListAgentMonitorsResponse,
 } from "./types";
 
-const DEFAULT_SNAPSHOT_POLL_INTERVAL_MS = 2000;
-const DEFAULT_SNAPSHOT_POLL_TIMEOUT_MS = 60 * 60 * 1000;
+const DEFAULT_BACKTEST_POLL_INTERVAL_MS = 2000;
+const DEFAULT_BACKTEST_POLL_TIMEOUT_MS = 60 * 60 * 1000;
 
-type AgentMonitorTerminalSnapshot = AgentMonitorSnapshot & {
+type AgentMonitorTerminalBacktest = AgentMonitorBacktest & {
   status: "completed" | "failed";
 };
-type AgentMonitorCompletedSnapshot = AgentMonitorSnapshot & {
+type AgentMonitorCompletedBacktest = AgentMonitorBacktest & {
   status: "completed";
 };
 
-export class AgentMonitorSnapshotFailedError extends Error {
-  snapshot: AgentMonitorSnapshot & { status: "failed" };
+export class AgentMonitorBacktestFailedError extends Error {
+  backtest: AgentMonitorBacktest & { status: "failed" };
 
-  constructor(snapshot: AgentMonitorSnapshot & { status: "failed" }) {
-    super(snapshot.error ?? `Agent monitor snapshot ${snapshot.id} failed`);
-    this.name = "AgentMonitorSnapshotFailedError";
-    this.snapshot = snapshot;
+  constructor(backtest: AgentMonitorBacktest & { status: "failed" }) {
+    super(backtest.error ?? `Agent monitor backtest ${backtest.id} failed`);
+    this.name = "AgentMonitorBacktestFailedError";
+    this.backtest = backtest;
   }
 }
 
@@ -187,18 +187,18 @@ export class AgentMonitorChangesClient extends AgentMonitorsBaseClient {
   }
 }
 
-export class AgentMonitorSnapshotsClient extends AgentMonitorsBaseClient {
+export class AgentMonitorBacktestsClient extends AgentMonitorsBaseClient {
   /**
-   * Start an async, stateless snapshot of entities × fields over an explicit
-   * past news window — no monitor is created. Returns a `running` job; poll
-   * with `get` (or use `createAndWait`) for the result.
+   * Start an async backtest of entities × fields over an explicit past news
+   * window. Returns a `running` job; poll with `get` (or use `createAndWait`)
+   * for the result.
    */
   async create(
-    params: CreateAgentMonitorSnapshotParams & AgentMonitorsBetaOptions
-  ): Promise<AgentMonitorSnapshot> {
+    params: CreateAgentMonitorBacktestParams & AgentMonitorsBetaOptions
+  ): Promise<AgentMonitorBacktest> {
     const { betas, ...payload } = params;
-    return this.request<AgentMonitorSnapshot>(
-      "/snapshot",
+    return this.request<AgentMonitorBacktest>(
+      "/backtest",
       betas,
       "POST",
       payload
@@ -206,41 +206,41 @@ export class AgentMonitorSnapshotsClient extends AgentMonitorsBaseClient {
   }
 
   /**
-   * Poll a snapshot job for its status and, once completed, its result.
+   * Poll a backtest job for its status and, once completed, its result.
    * Jobs expire and read as 404 after `expiresAt`.
    */
   async get(
-    snapshotId: string,
+    backtestId: string,
     options: AgentMonitorsBetaOptions
-  ): Promise<AgentMonitorSnapshot> {
-    return this.request<AgentMonitorSnapshot>(
-      `/snapshot/${snapshotId}`,
+  ): Promise<AgentMonitorBacktest> {
+    return this.request<AgentMonitorBacktest>(
+      `/backtest/${backtestId}`,
       options.betas,
       "GET"
     );
   }
 
   /**
-   * Poll a snapshot job until it reaches a terminal status.
+   * Poll a backtest job until it reaches a terminal status.
    */
   async pollUntilFinished(
-    snapshotId: string,
-    options: AgentMonitorSnapshotWaitOptions & AgentMonitorsBetaOptions
-  ): Promise<AgentMonitorTerminalSnapshot> {
+    backtestId: string,
+    options: AgentMonitorBacktestWaitOptions & AgentMonitorsBetaOptions
+  ): Promise<AgentMonitorTerminalBacktest> {
     const pollInterval =
-      options.pollInterval ?? DEFAULT_SNAPSHOT_POLL_INTERVAL_MS;
-    const timeoutMs = options.timeoutMs ?? DEFAULT_SNAPSHOT_POLL_TIMEOUT_MS;
+      options.pollInterval ?? DEFAULT_BACKTEST_POLL_INTERVAL_MS;
+    const timeoutMs = options.timeoutMs ?? DEFAULT_BACKTEST_POLL_TIMEOUT_MS;
     const startTime = Date.now();
 
     while (true) {
-      const snapshot = await this.get(snapshotId, { betas: options.betas });
-      if (snapshot.status !== "running") {
-        return snapshot;
+      const backtest = await this.get(backtestId, { betas: options.betas });
+      if (backtest.status !== "running") {
+        return backtest;
       }
 
       if (Date.now() - startTime > timeoutMs) {
         throw new Error(
-          `Polling timeout: Agent monitor snapshot ${snapshotId} did not complete within ${timeoutMs}ms`
+          `Polling timeout: Agent monitor backtest ${backtestId} did not complete within ${timeoutMs}ms`
         );
       }
 
@@ -249,25 +249,25 @@ export class AgentMonitorSnapshotsClient extends AgentMonitorsBaseClient {
   }
 
   /**
-   * Start a snapshot and wait for its result. Throws
-   * AgentMonitorSnapshotFailedError if the snapshot fails.
+   * Start a backtest and wait for its result. Throws
+   * AgentMonitorBacktestFailedError if the backtest fails.
    */
   async createAndWait(
-    params: CreateAgentMonitorSnapshotParams & AgentMonitorsBetaOptions,
-    options?: AgentMonitorSnapshotWaitOptions
-  ): Promise<AgentMonitorCompletedSnapshot> {
-    const snapshot = await this.create(params);
-    const terminalSnapshot =
-      snapshot.status === "running"
-        ? await this.pollUntilFinished(snapshot.id, {
+    params: CreateAgentMonitorBacktestParams & AgentMonitorsBetaOptions,
+    options?: AgentMonitorBacktestWaitOptions
+  ): Promise<AgentMonitorCompletedBacktest> {
+    const backtest = await this.create(params);
+    const terminalBacktest =
+      backtest.status === "running"
+        ? await this.pollUntilFinished(backtest.id, {
             ...options,
             betas: params.betas,
           })
-        : snapshot;
-    if (terminalSnapshot.status === "failed") {
-      throw new AgentMonitorSnapshotFailedError(terminalSnapshot);
+        : backtest;
+    if (terminalBacktest.status === "failed") {
+      throw new AgentMonitorBacktestFailedError(terminalBacktest);
     }
-    return terminalSnapshot as AgentMonitorCompletedSnapshot;
+    return terminalBacktest as AgentMonitorCompletedBacktest;
   }
 }
 
@@ -283,15 +283,15 @@ export class AgentMonitorsClient extends AgentMonitorsBaseClient {
   changes: AgentMonitorChangesClient;
 
   /**
-   * Client for stateless snapshot jobs.
+   * Client for one-shot backtest jobs.
    */
-  snapshots: AgentMonitorSnapshotsClient;
+  backtests: AgentMonitorBacktestsClient;
 
   constructor(client: Exa) {
     super(client);
     this.entities = new AgentMonitorEntitiesClient(client);
     this.changes = new AgentMonitorChangesClient(client);
-    this.snapshots = new AgentMonitorSnapshotsClient(client);
+    this.backtests = new AgentMonitorBacktestsClient(client);
   }
 
   /**

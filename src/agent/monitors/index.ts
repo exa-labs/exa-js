@@ -1,8 +1,8 @@
 export {
   AgentMonitorChangesClient,
   AgentMonitorEntitiesClient,
-  AgentMonitorSnapshotFailedError,
-  AgentMonitorSnapshotsClient,
+  AgentMonitorBacktestFailedError,
+  AgentMonitorBacktestsClient,
   AgentMonitorsClient,
 } from "./client";
 export * from "./types";

@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Exa from "../../src";
 import { ExaError } from "../../src/errors";
-import { AgentMonitorSnapshotFailedError } from "../../src/agent/monitors/client";
+import { AgentMonitorBacktestFailedError } from "../../src/agent/monitors/client";
 import {
   AgentMonitor,
   AgentMonitorChange,
   AgentMonitorEntityView,
-  AgentMonitorSnapshot,
+  AgentMonitorBacktest,
   CreateAgentMonitorParams,
-  CreateAgentMonitorSnapshotParams,
+  CreateAgentMonitorBacktestParams,
   DeletedAgentMonitor,
   ListAgentMonitorChangesResponse,
   ListAgentMonitorEntitiesResponse,
@@ -81,17 +81,17 @@ describe("Agent Monitors API", () => {
     createdAt: "2026-01-08T00:00:01.000Z",
   });
 
-  const snapshotBase = {
-    id: "agentsnap_01hzx3snap1",
-    object: "agent_monitor.snapshot" as const,
+  const backtestBase = {
+    id: "agentbacktest_01hzx3backtest1",
+    object: "agent_monitor.backtest" as const,
     startTime: "2026-01-01T00:00:00.000Z",
     endTime: "2026-01-08T00:00:00.000Z",
     createdAt: "2026-01-09T00:00:00.000Z",
     expiresAt: "2026-01-10T00:00:00.000Z",
   };
 
-  const runningSnapshot: AgentMonitorSnapshot = {
-    ...snapshotBase,
+  const runningBacktest: AgentMonitorBacktest = {
+    ...backtestBase,
     status: "running",
   };
 
@@ -572,132 +572,138 @@ describe("Agent Monitors API", () => {
     });
   });
 
-  describe("Snapshot Operations", () => {
-    const snapshotParams: CreateAgentMonitorSnapshotParams = {
+  describe("Backtest Operations", () => {
+    const backtestParams: CreateAgentMonitorBacktestParams = {
       entities: [{ name: "Acme Corp", domain: "acme.com" }],
-      fields: [
-        { name: "funding", description: "New funding rounds", type: "dynamic" },
-      ],
-      startDate: "2026-01-01",
-      endDate: "2026-01-08",
-      endHour: 12,
+      fields: [{ name: "funding", description: "New funding rounds" }],
+      startTime: "2026-01-01T00:00:00Z",
+      endTime: "2026-01-08T00:00:00Z",
     };
 
-    it("should start a snapshot job", async () => {
-      const mockResponse = runningSnapshot;
+    it("should start a backtest job", async () => {
+      const mockResponse = runningBacktest;
 
-      const snapshotsClient = getProtectedClient(
-        exa.beta.agent.monitors.snapshots
+      const backtestsClient = getProtectedClient(
+        exa.beta.agent.monitors.backtests
       );
       const requestSpy = vi
-        .spyOn(snapshotsClient, "request")
+        .spyOn(backtestsClient, "request")
         .mockResolvedValueOnce(mockResponse);
 
-      const result = await exa.beta.agent.monitors.snapshots.create({
-        ...snapshotParams,
+      const result = await exa.beta.agent.monitors.backtests.create({
+        ...backtestParams,
         betas: BETAS,
       });
 
       expect(requestSpy).toHaveBeenCalledWith(
-        "/snapshot",
+        "/backtest",
         BETAS,
         "POST",
-        snapshotParams
+        backtestParams
       );
       expect(result.status).toBe("running");
     });
 
-    it("should poll a snapshot job by ID", async () => {
-      const mockResponse: AgentMonitorSnapshot = {
-        ...snapshotBase,
+    it("should poll a backtest job by ID", async () => {
+      const mockResponse: AgentMonitorBacktest = {
+        ...backtestBase,
         status: "completed",
         data: [
           {
             name: "Acme Corp",
-            fields: { funding: "Raised a $30M Series B" },
-            sourceUrls: ["https://news.example.com/acme-series-b"],
+            contents: {
+              funding: {
+                value: "Raised a $30M Series B",
+                citations: [{ url: "https://news.example.com/acme-series-b" }],
+              },
+            },
           },
         ],
         warnings: [],
       };
 
-      const snapshotsClient = getProtectedClient(
-        exa.beta.agent.monitors.snapshots
+      const backtestsClient = getProtectedClient(
+        exa.beta.agent.monitors.backtests
       );
       const requestSpy = vi
-        .spyOn(snapshotsClient, "request")
+        .spyOn(backtestsClient, "request")
         .mockResolvedValueOnce(mockResponse);
 
-      const result = await exa.beta.agent.monitors.snapshots.get(
-        "agentsnap_01hzx3snap1",
+      const result = await exa.beta.agent.monitors.backtests.get(
+        "agentbacktest_01hzx3backtest1",
         { betas: BETAS }
       );
 
       expect(requestSpy).toHaveBeenCalledWith(
-        "/snapshot/agentsnap_01hzx3snap1",
+        "/backtest/agentbacktest_01hzx3backtest1",
         BETAS,
         "GET"
       );
       expect(result.status).toBe("completed");
       if (result.status === "completed") {
-        expect(result.data[0].fields.funding).toBe("Raised a $30M Series B");
+        expect(result.data[0].contents.funding.value).toBe(
+          "Raised a $30M Series B"
+        );
+        expect(result.data[0].contents.funding.citations[0].url).toBe(
+          "https://news.example.com/acme-series-b"
+        );
       }
     });
 
-    it("should createAndWait until the snapshot completes", async () => {
-      const completed: AgentMonitorSnapshot = {
-        ...snapshotBase,
+    it("should createAndWait until the backtest completes", async () => {
+      const completed: AgentMonitorBacktest = {
+        ...backtestBase,
         status: "completed",
         data: [],
       };
 
-      const snapshotsClient = getProtectedClient(
-        exa.beta.agent.monitors.snapshots
+      const backtestsClient = getProtectedClient(
+        exa.beta.agent.monitors.backtests
       );
-      vi.spyOn(snapshotsClient, "request")
-        .mockResolvedValueOnce(runningSnapshot)
-        .mockResolvedValueOnce(runningSnapshot)
+      vi.spyOn(backtestsClient, "request")
+        .mockResolvedValueOnce(runningBacktest)
+        .mockResolvedValueOnce(runningBacktest)
         .mockResolvedValueOnce(completed);
 
-      const result = await exa.beta.agent.monitors.snapshots.createAndWait(
-        { ...snapshotParams, betas: BETAS },
+      const result = await exa.beta.agent.monitors.backtests.createAndWait(
+        { ...backtestParams, betas: BETAS },
         { pollInterval: 1 }
       );
 
       expect(result.status).toBe("completed");
     });
 
-    it("should throw AgentMonitorSnapshotFailedError when the snapshot fails", async () => {
-      const failed: AgentMonitorSnapshot = {
-        ...snapshotBase,
+    it("should throw AgentMonitorBacktestFailedError when the backtest fails", async () => {
+      const failed: AgentMonitorBacktest = {
+        ...backtestBase,
         status: "failed",
         error: "newsfeed unavailable",
       };
 
-      const snapshotsClient = getProtectedClient(
-        exa.beta.agent.monitors.snapshots
+      const backtestsClient = getProtectedClient(
+        exa.beta.agent.monitors.backtests
       );
-      vi.spyOn(snapshotsClient, "request")
-        .mockResolvedValueOnce(runningSnapshot)
+      vi.spyOn(backtestsClient, "request")
+        .mockResolvedValueOnce(runningBacktest)
         .mockResolvedValueOnce(failed);
 
       await expect(
-        exa.beta.agent.monitors.snapshots.createAndWait(
-          { ...snapshotParams, betas: BETAS },
+        exa.beta.agent.monitors.backtests.createAndWait(
+          { ...backtestParams, betas: BETAS },
           { pollInterval: 1 }
         )
-      ).rejects.toThrow(AgentMonitorSnapshotFailedError);
+      ).rejects.toThrow(AgentMonitorBacktestFailedError);
     });
 
-    it("should time out pollUntilFinished when the snapshot never finishes", async () => {
-      const snapshotsClient = getProtectedClient(
-        exa.beta.agent.monitors.snapshots
+    it("should time out pollUntilFinished when the backtest never finishes", async () => {
+      const backtestsClient = getProtectedClient(
+        exa.beta.agent.monitors.backtests
       );
-      vi.spyOn(snapshotsClient, "request").mockResolvedValue(runningSnapshot);
+      vi.spyOn(backtestsClient, "request").mockResolvedValue(runningBacktest);
 
       await expect(
-        exa.beta.agent.monitors.snapshots.pollUntilFinished(
-          "agentsnap_01hzx3snap1",
+        exa.beta.agent.monitors.backtests.pollUntilFinished(
+          "agentbacktest_01hzx3backtest1",
           {
             betas: BETAS,
             pollInterval: 1,
