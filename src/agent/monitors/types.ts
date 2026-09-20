@@ -252,65 +252,65 @@ export interface DeletedAgentMonitor {
   deleted: true;
 }
 
-// --- Snapshots ---
+// --- Backtests ---
 
 /**
- * Params for a one-shot, stateless snapshot of entities × fields over an
- * explicit past news window — no monitor is created. The window bounds
- * dynamic fields only; static fields return present values answered over the
- * live web, and the result carries a warning when static fields are included.
+ * Params for a one-shot backtest of entities × fields over an explicit past
+ * news window. The backtest runs one monitor refresh over the requested
+ * window, then tears down its temporary monitor.
  */
-export interface CreateAgentMonitorSnapshotParams {
+export interface CreateAgentMonitorBacktestParams {
   entities: CreateAgentMonitorEntityParams[];
   fields: CreateAgentMonitorFieldParams[];
-  /** Start of the news window to snapshot, `YYYY-MM-DD` (UTC). */
-  startDate: string;
-  /** Hour of startDate the window starts at, 0-23 UTC; omitted means midnight. */
-  startHour?: number;
-  /** End of the news window to snapshot, `YYYY-MM-DD` (UTC). */
-  endDate: string;
-  /** Hour of endDate the window ends at, 0-23 UTC; omitted means midnight. */
-  endHour?: number;
+  /** Start of the news window as an ISO-8601 UTC timestamp. */
+  startTime: string;
+  /** End of the news window as an ISO-8601 UTC timestamp. */
+  endTime: string;
 }
 
-/** One entity's snapshot result: populated field values plus the news sources read. */
-export interface AgentMonitorSnapshotEntity {
+/** One backtest cell: a value and its grounding citations. */
+export interface AgentMonitorBacktestContent {
+  value: unknown;
+  citations: AgentMonitorCitation[];
+}
+
+/** One entity's backtest result, with populated cells keyed by field name. */
+export interface AgentMonitorBacktestEntity {
   name: string;
-  /** Populated values by field name; fields with no update are absent. */
-  fields: Record<string, string>;
-  sourceUrls: string[];
+  /** Populated cells by field name; fields with no update are absent. */
+  contents: Record<string, AgentMonitorBacktestContent>;
 }
 
-/** The computed body of a finished snapshot, embedded in the job once it completes. */
-export interface AgentMonitorSnapshotResult {
-  data: AgentMonitorSnapshotEntity[];
+/** The computed body of a finished backtest, embedded in the job once it completes. */
+export interface AgentMonitorBacktestResult {
+  data: AgentMonitorBacktestEntity[];
   failedEntities?: Array<{ name: string; reason: string }>;
-  /** Caveats about how the snapshot was computed, e.g. static fields ignoring the window. */
+  /** Caveats about how the backtest was computed. */
   warnings?: string[];
 }
 
-export type AgentMonitorSnapshotStatus = "running" | "completed" | "failed";
+export type AgentMonitorBacktestStatus = "running" | "completed" | "failed";
 
 /**
- * A snapshot job: `create` returns it as `running`, and `get` polls it to
+ * A backtest job: `create` returns it as `running`, and `get` polls it to
  * `completed` (result fields present) or `failed`. Jobs expire and read as
  * 404 after `expiresAt`.
  */
-export type AgentMonitorSnapshot = {
+export type AgentMonitorBacktest = {
   id: string;
-  object: "agent_monitor.snapshot";
-  /** The snapshotted news window, echoed back as normalized ISO-8601 timestamps. */
+  object: "agent_monitor.backtest";
+  /** The backtested news window, echoed back as normalized ISO-8601 timestamps. */
   startTime: string;
   endTime: string;
   createdAt: string;
   expiresAt: string;
 } & (
   | { status: "running" }
-  | ({ status: "completed" } & AgentMonitorSnapshotResult)
+  | ({ status: "completed" } & AgentMonitorBacktestResult)
   | { status: "failed"; error: string }
 );
 
-export interface AgentMonitorSnapshotWaitOptions {
+export interface AgentMonitorBacktestWaitOptions {
   pollInterval?: number;
   timeoutMs?: number;
 }

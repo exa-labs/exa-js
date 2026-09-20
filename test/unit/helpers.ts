@@ -11,7 +11,7 @@ import {
 import {
   AgentMonitorChangesClient,
   AgentMonitorEntitiesClient,
-  AgentMonitorSnapshotsClient,
+  AgentMonitorBacktestsClient,
   AgentMonitorsClient,
 } from "../../src/agent/monitors/client";
 import { WebsetsBaseClient } from "../../src/websets/base";
@@ -57,7 +57,7 @@ export function getProtectedClient<
     | AgentMonitorsClient
     | AgentMonitorEntitiesClient
     | AgentMonitorChangesClient
-    | AgentMonitorSnapshotsClient,
+    | AgentMonitorBacktestsClient,
 >(client: T): WithProtectedAccess<T> {
   return client as WithProtectedAccess<T>;
 }
@@ -84,7 +84,7 @@ export function getProtectedClientInstance(
     | AgentMonitorsClient
     | AgentMonitorEntitiesClient
     | AgentMonitorChangesClient
-    | AgentMonitorSnapshotsClient
+    | AgentMonitorBacktestsClient
 ) {
   return client;
 }
