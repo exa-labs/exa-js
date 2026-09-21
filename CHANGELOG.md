@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.22.2](https://github.com/exa-labs/exa-js/compare/v2.22.1...v2.22.2) (2026-09-21)
+
+
+### Bug Fixes
+
+* **websets:** add missing enum values ([#229](https://github.com/exa-labs/exa-js/issues/229)) ([420531a](https://github.com/exa-labs/exa-js/commit/420531a273f78ad662399e417eb8deac3ca72308))
+
 ## [2.22.1](https://github.com/exa-labs/exa-js/compare/v2.22.0...v2.22.1) (2026-09-20)
 
 
