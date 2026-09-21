@@ -3591,6 +3591,7 @@ export enum CreateImportResponseStatus {
   processing = "processing",
   completed = "completed",
   failed = "failed",
+  canceled = "canceled",
 }
 export enum WebsetImportSource {
   import = "import",
@@ -3640,6 +3641,7 @@ export enum ImportStatus {
   processing = "processing",
   completed = "completed",
   failed = "failed",
+  canceled = "canceled",
 }
 export enum MonitorObject {
   monitor = "monitor",
@@ -3726,4 +3728,5 @@ export enum WebsetSearchBehavior {
 export enum WebsetSearchCanceledReason {
   webset_deleted = "webset_deleted",
   webset_canceled = "webset_canceled",
+  out_of_credits = "out_of_credits",
 }
