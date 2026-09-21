@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.22.1](https://github.com/exa-labs/exa-js/compare/v2.22.0...v2.22.1) (2026-09-20)
+
+
+### Bug Fixes
+
+* update agent monitors to backtest API ([#227](https://github.com/exa-labs/exa-js/issues/227)) ([b5ecf0a](https://github.com/exa-labs/exa-js/commit/b5ecf0a6d5225876458b833a9f168660d7b5576f))
+
 ## [2.22.0](https://github.com/exa-labs/exa-js/compare/v2.21.0...v2.22.0) (2026-09-17)
 
 
