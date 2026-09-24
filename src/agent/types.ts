@@ -30,6 +30,7 @@ export type AgentRunStatus =
 export type AgentStopReason =
   | "schema_satisfied"
   | "budget_reached"
+  | "time_limit_reached"
   | "stopped"
   | "error"
   | "cancelled";
@@ -43,16 +44,21 @@ export type AgentEffort =
   | "high"
   | "xhigh"
   | "auto"
+  | "ultra"
   | "max";
 
-/** Per-run spend ceiling for the metered `auto` and `max` efforts. */
+/** Per-run spend ceiling for the metered `auto` and `ultra` efforts. */
 export interface AgentBudget {
   /**
    * Maximum spend for the run in US dollars.
-   * Only accepted by the API for `auto` and `max`; the server validates the
+   * Only accepted by the API for `auto` and `ultra`; the server validates the
    * allowed range and applies defaults when omitted.
    */
   maxCostDollars?: number;
+  /**
+   * Soft wall-clock ceiling in seconds (300–10,800). Only accepted for `ultra`.
+   */
+  maxDurationSeconds?: number;
 }
 
 /**
