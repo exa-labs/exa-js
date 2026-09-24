@@ -158,6 +158,12 @@ export type BaseSearchOptions = {
  */
 type BaseRegularSearchOptions = BaseSearchOptions & {
   /**
+   * Goal for this search turn; say which documents should rank first, which should be excluded,
+   * and what specific facts or figures to pull from them.
+   * Use for multi-turn research to improve result quality and reduce token usage.
+   */
+  objective?: string;
+  /**
    * If true, the search results are moderated for safety.
    */
   moderation?: boolean;
