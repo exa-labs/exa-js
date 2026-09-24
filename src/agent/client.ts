@@ -533,7 +533,7 @@ export class AgentBetaRunsClient extends AgentRunsClient {
 
   /**
    * Stop a running Agent run, completing it early with the results
-   * gathered so far. Only supported for `max` effort runs.
+   * gathered so far. Only supported for `ultra` effort runs.
    */
   async stop(runId: string, options?: AgentBetaOptions): Promise<AgentRun> {
     return this.request<AgentRun>(
