@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.23.0](https://github.com/exa-labs/exa-js/compare/v2.22.2...v2.23.0) (2026-09-24)
+
+
+### Features
+
+* **agent:** add ultra effort, maxDurationSeconds, and stop ([052e8e3](https://github.com/exa-labs/exa-js/commit/052e8e325746a8c4da439de00a6f2edbf9dd8b3e))
+* **agent:** add ultra effort, maxDurationSeconds, and stop ([eee07eb](https://github.com/exa-labs/exa-js/commit/eee07eb4719b2ba7c633f8ca908a4192933df664))
+
 ## [2.22.2](https://github.com/exa-labs/exa-js/compare/v2.22.1...v2.22.2) (2026-09-21)
 
 
