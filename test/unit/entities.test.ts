@@ -115,6 +115,18 @@ describe("Entity Types", () => {
               },
             },
           ],
+          educationHistory: [
+            {
+              degree: "BS",
+              dates: {
+                from: "2014-09-01",
+                to: "2018-05-15",
+              },
+              institution: {
+                name: "Virginia Tech",
+              },
+            },
+          ],
         },
       };
 
@@ -123,6 +135,9 @@ describe("Entity Types", () => {
       expect(person.properties.workHistory).toHaveLength(2);
       expect(person.properties.workHistory?.[0].title).toBe("Software Engineer");
       expect(person.properties.workHistory?.[0].company?.name).toBe("Exa");
+      expect(person.properties.educationHistory).toHaveLength(1);
+      expect(person.properties.educationHistory?.[0].degree).toBe("BS");
+      expect(person.properties.educationHistory?.[0].institution?.name).toBe("Virginia Tech");
     });
 
     it("should allow empty work history", () => {
