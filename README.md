@@ -223,17 +223,14 @@ console.log(
 );
 ```
 
-For Agent Max, use the beta namespace and pass the beta token explicitly:
+For Agent Ultra, set `effort: "ultra"`:
 
 ```ts
-import { AGENT_MAX_EFFORT_BETA } from "exa-js";
-
-const maxRun = await exa.beta.agent.runs.create({
+const ultraRun = await exa.agent.runs.create({
   query:
     "Find all companies building browser automation tools in the United States.",
-  effort: "max",
+  effort: "ultra",
   budget: { maxCostDollars: 10 },
-  betas: [AGENT_MAX_EFFORT_BETA],
 });
 ```
 

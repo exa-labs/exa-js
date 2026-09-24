@@ -78,7 +78,7 @@ describe("Agent API", () => {
   it("exposes Agent runs under the primary namespace", () => {
     expect(exa.agent.runs).toBeDefined();
     expect((exa.agent as any).run).toBeUndefined();
-    expect((exa.agent.runs as any).stop).toBeUndefined();
+    expect(exa.agent.runs.stop).toBeDefined();
     expect(exa.beta.agent.runs.stop).toBeDefined();
   });
 
@@ -106,7 +106,6 @@ describe("Agent API", () => {
       exa.beta.agent.runs.get("agent_run_123", {
         betas: [AGENT_BETA_HEADER],
       });
-      // @ts-expect-error stop is only available through exa.beta.agent.
       exa.agent.runs.stop("agent_run_123");
       exa.beta.agent.runs.stop("agent_run_123");
       exa.agent.runs.createAndWait({
@@ -222,6 +221,25 @@ describe("Agent API", () => {
       undefined,
       { "Exa-Beta": AGENT_MAX_EFFORT_BETA }
     );
+  });
+
+  it("sends ultra effort and budget through the agent namespace", async () => {
+    const runClient = getProtectedClient(exa.agent.runs);
+    const requestSpy = vi
+      .spyOn(runClient, "request")
+      .mockResolvedValueOnce(createMockRun());
+
+    await exa.agent.runs.create({
+      query: "Find recent funding rounds.",
+      effort: "ultra",
+      budget: { maxCostDollars: 10, maxDurationSeconds: 1800 },
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("", "POST", {
+      query: "Find recent funding rounds.",
+      effort: "ultra",
+      budget: { maxCostDollars: 10, maxDurationSeconds: 1800 },
+    });
   });
 
   it("omits legacy beta headers when beta values are empty", async () => {
@@ -526,6 +544,17 @@ describe("Agent API", () => {
       "POST"
     );
     expect(requestSpy).toHaveBeenNthCalledWith(2, "/agent_run_123", "DELETE");
+  });
+
+  it("stops a run through the agent namespace without a beta header", async () => {
+    const runClient = getProtectedClient(exa.agent.runs);
+    const requestSpy = vi
+      .spyOn(runClient, "request")
+      .mockResolvedValueOnce({ ...createMockRun(), stopReason: "stopped" });
+
+    await exa.agent.runs.stop("agent_run_123");
+
+    expect(requestSpy).toHaveBeenCalledWith("/agent_run_123/stop", "POST");
   });
 
   it("gets, cancels, and deletes Agent runs with legacy beta headers from the beta namespace", async () => {
