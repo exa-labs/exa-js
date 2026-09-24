@@ -1,0 +1,15 @@
+title = "exa-js gitleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "exa-api-key-assignment"
+description = "Exa API keys must not be committed"
+regex = '''(?i)\b(?:EXA(?:SEARCH)?_API_KEY|api[_-]?key)\s*[:=]\s*["']?[A-Za-z0-9_\-]{20,}["']?'''
+keywords = [
+  "EXA_API_KEY",
+  "EXASEARCH_API_KEY",
+  "api_key",
+  "apikey",
+]
