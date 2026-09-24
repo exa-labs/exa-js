@@ -139,6 +139,34 @@ describe("Entity Types", () => {
 
       expect(person.properties.workHistory).toHaveLength(0);
     });
+
+    it("should type education history for person entities", () => {
+      const person: PersonEntity = {
+        id: "https://exa.ai/library/person/brad-vogel",
+        type: "person",
+        version: 1,
+        properties: {
+          name: "Brad Vogel",
+          location: "Washington, DC",
+          educationHistory: [
+            {
+              degree: "BS",
+              dates: {
+                from: "2003-01-01",
+                to: "2007-01-01",
+              },
+              institution: {
+                name: "Virginia Tech",
+              },
+            },
+          ],
+        },
+      };
+
+      expect(person.properties.educationHistory).toHaveLength(1);
+      expect(person.properties.educationHistory?.[0].degree).toBe("BS");
+      expect(person.properties.educationHistory?.[0].institution?.name).toBe("Virginia Tech");
+    });
   });
 
   describe("Entity Union Type", () => {
