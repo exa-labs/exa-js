@@ -299,6 +299,14 @@ export class AgentRunsClient extends AgentBaseClient {
   }
 
   /**
+   * Stop a running Agent run, completing it early with the results
+   * gathered so far. Only supported for `ultra` effort runs.
+   */
+  async stop(runId: string): Promise<AgentRun> {
+    return this.request<AgentRun>(`/${runId}/stop`, "POST");
+  }
+
+  /**
    * Delete a stored Agent run.
    */
   async delete(runId: string): Promise<DeletedAgentRun> {
@@ -525,7 +533,7 @@ export class AgentBetaRunsClient extends AgentRunsClient {
 
   /**
    * Stop a running Agent run, completing it early with the results
-   * gathered so far. Only supported for `max` effort runs.
+   * gathered so far. Only supported for `ultra` effort runs.
    */
   async stop(runId: string, options?: AgentBetaOptions): Promise<AgentRun> {
     return this.request<AgentRun>(
