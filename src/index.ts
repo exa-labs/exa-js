@@ -863,7 +863,8 @@ export class Exa {
     if (livecrawlTimeout !== undefined)
       contentsOptions.livecrawlTimeout = livecrawlTimeout;
     if (maxAgeHours !== undefined) contentsOptions.maxAgeHours = maxAgeHours;
-    if (snapshotAsOf !== undefined) contentsOptions.snapshotAsOf = snapshotAsOf;
+    if (snapshotAsOf !== undefined)
+      contentsOptions.snapshotAsOf = snapshotAsOf;
     // DEPRECATED FIELD: pass through only so existing callers do not break.
     if (context !== undefined) contentsOptions.context = context;
 
