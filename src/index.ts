@@ -650,10 +650,18 @@ export type SearchResponse<T extends ContentsOptions> = {
   searchTime?: number;
 };
 
+/** Error details for a failed content retrieval. */
+export type ContentStatusError = {
+  tag?: string;
+  httpStatusCode?: number | null;
+};
+
+/** Status information for a requested URL. */
 export type Status = {
   id: string;
   status: string;
-  source: string;
+  source?: string;
+  error?: ContentStatusError | null;
 };
 
 /**
@@ -855,8 +863,7 @@ export class Exa {
     if (livecrawlTimeout !== undefined)
       contentsOptions.livecrawlTimeout = livecrawlTimeout;
     if (maxAgeHours !== undefined) contentsOptions.maxAgeHours = maxAgeHours;
-    if (snapshotAsOf !== undefined)
-      contentsOptions.snapshotAsOf = snapshotAsOf;
+    if (snapshotAsOf !== undefined) contentsOptions.snapshotAsOf = snapshotAsOf;
     // DEPRECATED FIELD: pass through only so existing callers do not break.
     if (context !== undefined) contentsOptions.context = context;
 
