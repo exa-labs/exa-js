@@ -21,6 +21,7 @@
       "AnswerOptions",
       "AnswerResponse",
       "AnswerStreamChunk",
+      "ContentStatusError",
       "Status",
       "CostDollars"
     ],

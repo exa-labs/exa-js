@@ -650,10 +650,18 @@ export type SearchResponse<T extends ContentsOptions> = {
   searchTime?: number;
 };
 
+/** Error details for a failed content retrieval. */
+export type ContentStatusError = {
+  tag?: string;
+  httpStatusCode?: number | null;
+};
+
+/** Status information for a requested URL. */
 export type Status = {
   id: string;
   status: string;
-  source: string;
+  source?: string;
+  error?: ContentStatusError | null;
 };
 
 /**
