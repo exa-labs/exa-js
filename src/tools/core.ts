@@ -61,7 +61,7 @@ export type ToolNamespace = {
   getContents(config?: GetContentsToolConfig): GetContentsTool;
 };
 
-type SearchArgs = { query: string };
+type SearchArgs = { query: string; objective?: string };
 type GetContentsArgs = { urls: string[] };
 type FormattableResult = {
   title?: string | null;
@@ -88,6 +88,12 @@ export const DEFAULT_WEB_SEARCH_TOOL_DESCRIPTION =
 
 export const DEFAULT_GET_CONTENTS_TOOL_DESCRIPTION =
   "Read the full contents of web pages you already have URLs for, such as pages returned by a search or mentioned by the user.";
+
+/** Model-facing description of the `objective` search tool parameter. */
+export const SEARCH_OBJECTIVE_TOOL_DESCRIPTION =
+  "Goal for this search turn; say which documents should rank first, which should be excluded, and what specific facts or figures to pull from them.";
+
+const MAX_OBJECTIVE_LENGTH = 4096;
 
 function formatResults(
   response: SearchResponse<ContentsOptions>,
@@ -169,6 +175,28 @@ function createTool<TArgs, TResult>(
   return registerTool(registry, tool);
 }
 
+/**
+ * Optional when parsing, but listed in the JSON schema's `required` so models
+ * fill it in on every call. `zod-to-json-schema` decides `required` from
+ * `isOptional()`.
+ */
+class AdvertisedRequiredOptional<
+  T extends z.ZodTypeAny,
+> extends z.ZodOptional<T> {
+  isOptional(): boolean {
+    return false;
+  }
+}
+
+function advertisedRequired<T extends z.ZodTypeAny>(
+  inner: T
+): AdvertisedRequiredOptional<T> {
+  return new AdvertisedRequiredOptional({
+    innerType: inner,
+    typeName: z.ZodFirstPartyTypeKind.ZodOptional,
+  });
+}
+
 /** Create a `web_search` tool. Defaults to `type: "auto"` and highlights. */
 export function createWebSearchTool(
   exa: Exa,
@@ -186,6 +214,9 @@ export function createWebSearchTool(
       .describe(
         "Natural language search query. Should be a semantically rich description of the ideal page, not just keywords."
       ),
+    objective: advertisedRequired(
+      z.string().trim().min(1).max(MAX_OBJECTIVE_LENGTH)
+    ).describe(SEARCH_OBJECTIVE_TOOL_DESCRIPTION),
   });
   const jsonSchema = zodToJsonSchema(inputSchema) as ToolJsonSchema;
   delete jsonSchema.$schema;
@@ -200,12 +231,13 @@ export function createWebSearchTool(
       description,
       parameters: jsonSchema,
     },
-    execute: ({ query }) => {
+    execute: ({ query, objective }) => {
       const options = {
         type: "auto",
         numResults: 10,
         contents: { highlights: true },
         ...searchOptions,
+        ...(objective !== undefined && { objective }),
       } as RegularSearchOptions;
       return exa.search(query, options) as Promise<
         SearchResponse<ContentsOptions>

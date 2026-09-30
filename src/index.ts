@@ -158,6 +158,14 @@ export type BaseSearchOptions = {
  */
 type BaseRegularSearchOptions = BaseSearchOptions & {
   /**
+   * The broader goal this search serves: the task the caller is working on,
+   * beyond the query itself. When an agent picks the query as one step of a
+   * larger task, pass the goal of that step — which documents should rank
+   * first, which should be excluded, and what to pull from them. Up to 4096
+   * characters.
+   */
+  objective?: string;
+  /**
    * If true, the search results are moderated for safety.
    */
   moderation?: boolean;

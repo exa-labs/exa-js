@@ -1,6 +1,7 @@
 export {
   DEFAULT_GET_CONTENTS_TOOL_DESCRIPTION,
   DEFAULT_WEB_SEARCH_TOOL_DESCRIPTION,
+  SEARCH_OBJECTIVE_TOOL_DESCRIPTION,
   ToolRegistry,
   createGetContentsTool,
   createWebSearchTool,

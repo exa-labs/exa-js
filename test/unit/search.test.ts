@@ -902,6 +902,41 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it("should pass objective for search", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "Objective Search Result",
+          url: "https://example.com/objective",
+          id: "objective-id",
+          text: "Objective search result text",
+        },
+      ],
+      requestId: "req-objective-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.search("H100 cloud pricing", {
+      type: "auto",
+      objective: "Compare H100 cloud pricing across providers.",
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "H100 cloud pricing",
+      type: "auto",
+      objective: "Compare H100 cloud pricing across providers.",
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
   it("should reject search with stream and direct callers to streamSearch", async () => {
     await expect(
       exa.search("compare recent model launches", {

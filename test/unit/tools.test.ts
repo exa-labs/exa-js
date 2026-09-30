@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type OpenAI from "openai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Exa from "../../src";
+import Exa, { SEARCH_OBJECTIVE_TOOL_DESCRIPTION } from "../../src";
 
 describe("LLM tools", () => {
   let exa: Exa;
@@ -10,7 +10,7 @@ describe("LLM tools", () => {
     exa = new Exa("test-api-key", "https://api.exa.ai");
   });
 
-  it("creates a query-only neutral search tool with MCP defaults", async () => {
+  it("creates a neutral search tool with MCP defaults", async () => {
     const request = vi.spyOn(exa, "request").mockResolvedValue({
       requestId: "request-1",
       results: [
@@ -29,7 +29,7 @@ describe("LLM tools", () => {
     expect(tool.name).toBe("web_search");
     expect(tool.jsonSchema).toMatchObject({
       type: "object",
-      required: ["query"],
+      required: ["query", "objective"],
     });
     expect(tool.jsonSchema).not.toHaveProperty("$schema");
     expect(tool.definition).not.toHaveProperty("run");
@@ -82,6 +82,108 @@ describe("LLM tools", () => {
       name: anthropicTool.name,
       description: anthropicTool.description,
       input_schema: anthropicTool.jsonSchema,
+    });
+  });
+
+  it("advertises objective as required in every provider schema", () => {
+    // Must stay byte-identical to the Exa MCP server's `objective` description.
+    expect(SEARCH_OBJECTIVE_TOOL_DESCRIPTION).toBe(
+      "Goal for this search turn; say which documents should rank first, which should be excluded, and what specific facts or figures to pull from them."
+    );
+
+    const tool = exa.tools.webSearch();
+    expect(tool.jsonSchema.required).toEqual(["query", "objective"]);
+    expect(tool.jsonSchema.properties?.objective).toEqual({
+      type: "string",
+      minLength: 1,
+      maxLength: 4096,
+      description: SEARCH_OBJECTIVE_TOOL_DESCRIPTION,
+    });
+    expect(exa.openai.webSearch().function.parameters.required).toEqual([
+      "query",
+      "objective",
+    ]);
+    expect(exa.openai.responses.webSearch().parameters.required).toEqual([
+      "query",
+      "objective",
+    ]);
+    expect(exa.anthropic.webSearch().input_schema.required).toEqual([
+      "query",
+      "objective",
+    ]);
+  });
+
+  it("forwards the model's trimmed objective to /search", async () => {
+    const request = vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [],
+    });
+    const tool = exa.tools.webSearch();
+
+    await tool.run({
+      query: "H100 cloud pricing",
+      objective: "  Compare H100 cloud pricing across providers.  ",
+    });
+
+    expect(request).toHaveBeenCalledWith("/search", "POST", {
+      query: "H100 cloud pricing",
+      type: "auto",
+      numResults: 10,
+      contents: { highlights: true },
+      objective: "Compare H100 cloud pricing across providers.",
+    });
+  });
+
+  it("still runs tool calls that omit objective", async () => {
+    const request = vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [],
+    });
+    const tool = exa.tools.webSearch();
+
+    expect(await tool.run({ query: "H100 cloud pricing" })).toBe(
+      "No search results found."
+    );
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(request.mock.calls[0][2]).not.toHaveProperty("objective");
+  });
+
+  it("rejects empty, blank, oversized, and null objectives", async () => {
+    const request = vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [],
+    });
+    const tool = exa.tools.webSearch();
+
+    for (const objective of ["", "   ", "x".repeat(4097), null]) {
+      expect(await tool.run({ query: "q", objective })).toMatch(/^Error:/);
+    }
+    expect(request).not.toHaveBeenCalled();
+  });
+
+  it("prefers the model's objective over a configured one", async () => {
+    const request = vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [],
+    });
+    const tool = exa.tools.webSearch({ objective: "Configured goal." });
+
+    await tool.run({ query: "q", objective: "Model goal." });
+    expect(request).toHaveBeenLastCalledWith("/search", "POST", {
+      query: "q",
+      type: "auto",
+      numResults: 10,
+      contents: { highlights: true },
+      objective: "Model goal.",
+    });
+
+    await tool.run({ query: "q" });
+    expect(request).toHaveBeenLastCalledWith("/search", "POST", {
+      query: "q",
+      type: "auto",
+      numResults: 10,
+      contents: { highlights: true },
+      objective: "Configured goal.",
     });
   });
 
