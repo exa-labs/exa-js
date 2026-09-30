@@ -95,8 +95,6 @@ describe("LLM tools", () => {
     expect(tool.jsonSchema.required).toEqual(["query", "objective"]);
     expect(tool.jsonSchema.properties?.objective).toEqual({
       type: "string",
-      minLength: 1,
-      maxLength: 4096,
       description: SEARCH_OBJECTIVE_TOOL_DESCRIPTION,
     });
     expect(exa.openai.webSearch().function.parameters.required).toEqual([
@@ -111,6 +109,22 @@ describe("LLM tools", () => {
       "query",
       "objective",
     ]);
+  });
+
+  it("keeps the web_search schema valid for strict tool use", () => {
+    // Strict tool use needs every property required and rejects keywords such
+    // as `minLength`/`maxLength` on some providers.
+    const { jsonSchema } = exa.tools.webSearch();
+    expect(jsonSchema.additionalProperties).toBe(false);
+    expect(jsonSchema.required).toEqual(
+      Object.keys(jsonSchema.properties ?? {})
+    );
+    for (const property of Object.values(jsonSchema.properties ?? {})) {
+      expect(Object.keys(property as object).sort()).toEqual([
+        "description",
+        "type",
+      ]);
+    }
   });
 
   it("forwards the model's trimmed objective to /search", async () => {
@@ -155,10 +169,35 @@ describe("LLM tools", () => {
     });
     const tool = exa.tools.webSearch();
 
-    for (const objective of ["", "   ", "x".repeat(4097), null]) {
-      expect(await tool.run({ query: "q", objective })).toMatch(/^Error:/);
+    for (const [objective, message] of [
+      ["", "objective must not be empty"],
+      ["   ", "objective must not be empty"],
+      ["x".repeat(4097), "objective must be at most 4096 characters"],
+      [null, "Expected string, received null"],
+    ]) {
+      const output = await tool.run({ query: "q", objective });
+      expect(output).toMatch(/^Error:/);
+      expect(output).toContain(message);
     }
     expect(request).not.toHaveBeenCalled();
+  });
+
+  it("accepts an objective at the length limit", async () => {
+    const request = vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [],
+    });
+    const objective = "x".repeat(4096);
+
+    await exa.tools.webSearch().run({ query: "q", objective });
+
+    expect(request).toHaveBeenCalledWith("/search", "POST", {
+      query: "q",
+      type: "auto",
+      numResults: 10,
+      contents: { highlights: true },
+      objective,
+    });
   });
 
   it("prefers the model's objective over a configured one", async () => {

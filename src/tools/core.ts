@@ -214,8 +214,17 @@ export function createWebSearchTool(
       .describe(
         "Natural language search query. Should be a semantically rich description of the ideal page, not just keywords."
       ),
+    // Length limits are validated but not advertised: strict tool use on some
+    // providers rejects `minLength`/`maxLength` in the schema.
     objective: advertisedRequired(
-      z.string().trim().min(1).max(MAX_OBJECTIVE_LENGTH)
+      z
+        .string()
+        .trim()
+        .refine((value) => value.length > 0, "objective must not be empty")
+        .refine(
+          (value) => value.length <= MAX_OBJECTIVE_LENGTH,
+          `objective must be at most ${MAX_OBJECTIVE_LENGTH} characters`
+        )
     ).describe(SEARCH_OBJECTIVE_TOOL_DESCRIPTION),
   });
   const jsonSchema = zodToJsonSchema(inputSchema) as ToolJsonSchema;
