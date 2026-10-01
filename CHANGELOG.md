@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.25.0](https://github.com/exa-labs/exa-js/compare/v2.24.0...v2.25.0) (2026-10-01)
+
+
+### Features
+
+* add raw search body overrides ([494c035](https://github.com/exa-labs/exa-js/commit/494c0357479658e4bef06ebc4b7977944ff98837))
+* add raw search body overrides ([4430719](https://github.com/exa-labs/exa-js/commit/4430719181718117889247dc31bd5cd9e7ca459b))
+
 ## [2.24.0](https://github.com/exa-labs/exa-js/compare/v2.23.0...v2.24.0) (2026-09-30)
 
 
