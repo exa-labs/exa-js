@@ -112,26 +112,37 @@ export class ResearchClient extends ResearchBaseClient {
         }
 
         async function* streamEvents() {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
+          let doneReading = false;
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) {
+                doneReading = true;
+                break;
+              }
+              buffer += decoder.decode(value, { stream: true });
 
-            let parts = buffer.split("\n\n");
-            buffer = parts.pop() ?? "";
+              let parts = buffer.split("\n\n");
+              buffer = parts.pop() ?? "";
 
-            for (const part of parts) {
-              const processed = processPart(part);
+              for (const part of parts) {
+                const processed = processPart(part);
+                if (processed) {
+                  yield processed;
+                }
+              }
+            }
+            if (buffer.trim()) {
+              const processed = processPart(buffer.trim());
               if (processed) {
                 yield processed;
               }
             }
-          }
-          if (buffer.trim()) {
-            const processed = processPart(buffer.trim());
-            if (processed) {
-              yield processed;
+          } finally {
+            if (!doneReading) {
+              await reader.cancel();
             }
+            reader.releaseLock();
           }
         }
 
