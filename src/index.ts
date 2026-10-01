@@ -110,6 +110,11 @@ export type ContentsOptions = {
   extras?: ExtrasOptions;
 };
 
+export type RequestOptions = {
+  /** Per-call body overrides, except stream. */
+  body?: Record<string, unknown>;
+};
+
 /**
  * Options for performing a search query
  * @typedef {Object} SearchOptions
@@ -871,8 +876,7 @@ export class Exa {
     if (livecrawlTimeout !== undefined)
       contentsOptions.livecrawlTimeout = livecrawlTimeout;
     if (maxAgeHours !== undefined) contentsOptions.maxAgeHours = maxAgeHours;
-    if (snapshotAsOf !== undefined)
-      contentsOptions.snapshotAsOf = snapshotAsOf;
+    if (snapshotAsOf !== undefined) contentsOptions.snapshotAsOf = snapshotAsOf;
     // DEPRECATED FIELD: pass through only so existing callers do not break.
     if (context !== undefined) contentsOptions.context = context;
 
@@ -882,34 +886,34 @@ export class Exa {
     };
   }
 
+  private mergeSearchRequestBody(
+    body: Record<string, unknown>,
+    requestOptions?: RequestOptions
+  ): Record<string, unknown> {
+    const merged = { ...body, ...requestOptions?.body };
+    delete merged.stream;
+    return merged;
+  }
+
   private buildSearchRequestBody(
     query: string,
     options?: RegularSearchOptions & {
       contents?: ContentsOptions | false | null | undefined;
-    }
+    },
+    requestOptions?: RequestOptions
   ): Record<string, unknown> {
-    const requestOptions = { ...(options ?? {}) } as Record<string, unknown>;
-    delete requestOptions.stream;
-    delete requestOptions.betas;
-
+    const body = { ...(options ?? {}) } as Record<string, unknown>;
+    delete body.betas;
     if (options === undefined || !("contents" in options)) {
-      return {
-        query,
-        ...requestOptions,
-        contents: { text: { maxCharacters: DEFAULT_MAX_CHARACTERS } },
-      };
-    }
-
-    if (
+      body.contents = { text: { maxCharacters: DEFAULT_MAX_CHARACTERS } };
+    } else if (
       options.contents === false ||
       options.contents === null ||
       options.contents === undefined
     ) {
-      delete requestOptions.contents;
-      return { query, ...requestOptions };
+      delete body.contents;
     }
-
-    return { query, ...requestOptions };
+    return this.mergeSearchRequestBody({ query, ...body }, requestOptions);
   }
 
   /**
@@ -1159,22 +1163,27 @@ export class Exa {
    * Omitting contents still returns text by default.
    *
    * @param {string} query - The query string.
+   * @param {RequestOptions} [requestOptions] - Per-call body overrides.
    * @returns {Promise<SearchResponse<{ text: { maxCharacters: 10_000 } }>>} A list of relevant search results with text contents.
    */
   async search(
-    query: string
+    query: string,
+    options?: undefined,
+    requestOptions?: RequestOptions
   ): Promise<SearchResponse<{ text: { maxCharacters: 10_000 } }>>;
   /**
    * Performs a search without contents.
    *
    * @param {string} query - The query string.
    * @param {RegularSearchOptions & { contents: false }} options - Search options with contents explicitly disabled
+   * @param {RequestOptions} [requestOptions] - Per-call body overrides.
    * @returns {Promise<SearchResponse<{}>>} A list of relevant search results without contents.
    */
   async search(
     query: string,
     options: RegularSearchOptions &
-      BetaOptions & { contents: false | null | undefined }
+      BetaOptions & { contents: false | null | undefined },
+    requestOptions?: RequestOptions
   ): Promise<SearchResponse<{}>>;
   /**
    * Performs a search with specific contents.
@@ -1198,11 +1207,13 @@ export class Exa {
    *
    * @param {string} query - The query string.
    * @param {RegularSearchOptions & { contents: T }} options - Search options with specific contents
+   * @param {RequestOptions} [requestOptions] - Per-call body overrides.
    * @returns {Promise<SearchResponse<T>>} A list of relevant search results with requested contents.
    */
   async search<T extends ContentsOptions>(
     query: string,
-    options: RegularSearchOptions & BetaOptions & { contents: T }
+    options: RegularSearchOptions & BetaOptions & { contents: T },
+    requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>>;
   /**
    * Performs a search with an Exa prompt-engineered query.
@@ -1212,6 +1223,7 @@ export class Exa {
    *
    * @param {string} query - The query string.
    * @param {Omit<DeepSearchOptions, 'contents'> | Omit<NonDeepSearchOptions, 'contents'>} options - Search options without contents
+   * @param {RequestOptions} [requestOptions] - Per-call body overrides.
    * @returns {Promise<SearchResponse<{ text: true }>>} A list of relevant search results with text contents.
    */
   async search(
@@ -1220,12 +1232,14 @@ export class Exa {
       | Omit<DeepSearchOptions, "contents">
       | Omit<NonDeepSearchOptions, "contents">
     ) &
-      BetaOptions
+      BetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<SearchResponse<{ text: true }>>;
   async search<T extends ContentsOptions>(
     query: string,
     options?: RegularSearchOptions &
-      BetaOptions & { contents?: T | false | null | undefined }
+      BetaOptions & { contents?: T | false | null | undefined },
+    requestOptions?: RequestOptions
   ): Promise<SearchResponse<T | { text: true } | {}>> {
     if (options?.stream) {
       throw new ExaError(
@@ -1237,7 +1251,7 @@ export class Exa {
       );
     }
 
-    const body = this.buildSearchRequestBody(query, options);
+    const body = this.buildSearchRequestBody(query, options, requestOptions);
     const betaHeaders = headersForBetas(options?.betas);
     return betaHeaders
       ? await this.request("/search", "POST", body, undefined, betaHeaders)
@@ -1249,15 +1263,17 @@ export class Exa {
    *
    * Each iteration yields a chunk with partial text (`content`) or new citations.
    * Use this if you'd like to read synthesized search output incrementally.
+   * @param {RequestOptions} [requestOptions] - Per-call body overrides.
    */
   streamSearch(
     query: string,
     options?: RegularSearchOptions & {
       contents?: ContentsOptions | false | null | undefined;
-    }
+    },
+    requestOptions?: RequestOptions
   ): AsyncGenerator<SearchStreamChunk> {
     return this.streamChatCompletions("/search", {
-      ...this.buildSearchRequestBody(query, options),
+      ...this.buildSearchRequestBody(query, options, requestOptions),
       stream: true,
     });
   }
@@ -1275,11 +1291,13 @@ export class Exa {
    *
    * @param {string} query - The query string.
    * @param {RegularSearchOptions & T} [options] - Additional search + contents options
+   * @param {RequestOptions} [requestOptions] - Per-call body overrides.
    * @returns {Promise<SearchResponse<T>>} A list of relevant search results with requested contents.
    */
   async searchAndContents<T extends ContentsOptions>(
     query: string,
-    options?: RegularSearchOptions & T
+    options?: RegularSearchOptions & T,
+    requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>> {
     const { contentsOptions, restOptions } =
       options === undefined
@@ -1291,11 +1309,14 @@ export class Exa {
           }
         : this.extractContentsOptions(options);
 
-    return await this.request("/search", "POST", {
-      query,
-      contents: contentsOptions,
-      ...restOptions,
-    });
+    return await this.request(
+      "/search",
+      "POST",
+      this.mergeSearchRequestBody(
+        { query, contents: contentsOptions, ...restOptions },
+        requestOptions
+      )
+    );
   }
 
   /**

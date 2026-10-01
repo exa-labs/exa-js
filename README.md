@@ -93,6 +93,14 @@ Deep search variants that also support `additionalQueries`:
 - `deep`
 - `deep-reasoning`
 
+### Raw body fields
+
+Pass `requestOptions.body` as the third argument for per-call search body overrides.
+
+```typescript
+const result = await exa.search("AI research", undefined, { body: { futureField: true } });
+```
+
 ## Contents
 
 Get clean text, highlights, or summaries from any URL.
