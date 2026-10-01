@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.24.0](https://github.com/exa-labs/exa-js/compare/v2.23.0...v2.24.0) (2026-09-30)
+
+
+### Features
+
+* add search objective and ask the model for it in the web_search tool ([#237](https://github.com/exa-labs/exa-js/issues/237)) ([04809a4](https://github.com/exa-labs/exa-js/commit/04809a4317e181ed9b0f9e44c96eabc4f9fd0f6c))
+
+
+### Bug Fixes
+
+* add error field to contents Status type ([#235](https://github.com/exa-labs/exa-js/issues/235)) ([fc25d1f](https://github.com/exa-labs/exa-js/commit/fc25d1fb04c1393ff447243c36d7c0b1b1e69a1d))
+
 ## [2.23.0](https://github.com/exa-labs/exa-js/compare/v2.22.2...v2.23.0) (2026-09-24)
 
 
