@@ -730,6 +730,7 @@ describe("LLM tools", () => {
     expect(output).toContain("Text: Page text");
     expect(request).toHaveBeenCalledWith("/contents", "POST", {
       urls: ["https://example.com"],
+      highlights: true,
     });
   });
 

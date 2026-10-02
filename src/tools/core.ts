@@ -256,10 +256,19 @@ export function createWebSearchTool(
   }) as WebSearchTool;
 }
 
+function hasContentOption(options: ContentsOptions): boolean {
+  return (
+    options.text !== undefined ||
+    options.highlights !== undefined ||
+    options.summary !== undefined ||
+    options.extras !== undefined
+  );
+}
+
 /**
  * Create a `get_contents` tool that reads pages the model already has URLs for.
- * Inherits `exa.getContents` defaults, which return page text when no content
- * option is configured.
+ * Defaults to `highlights: true` when no content option (`text`, `highlights`,
+ * `summary`, `extras`) is configured.
  */
 export function createGetContentsTool(
   exa: Exa,
@@ -269,8 +278,11 @@ export function createGetContentsTool(
   const {
     name = "get_contents",
     description = DEFAULT_GET_CONTENTS_TOOL_DESCRIPTION,
-    ...contentsOptions
+    ...configuredOptions
   } = config;
+  const contentsOptions: ContentsOptions = hasContentOption(configuredOptions)
+    ? configuredOptions
+    : { ...configuredOptions, highlights: true };
   const inputSchema = z.object({
     urls: z
       .array(z.string())
