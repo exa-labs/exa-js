@@ -1193,8 +1193,10 @@ export class Exa {
    * const response = await exa.search("recent advances in battery recycling", {
    *   contents: { highlights: true },
    *   objective:
-   *     "Compare battery recycling methods for a technical report. Prioritize " +
-   *     "peer-reviewed studies, exclude marketing pages, and extract recovery rates and costs.",
+   *     "I'm preparing a technical report on battery recycling methods. " +
+   *     "For this search turn, gather evidence to compare their economics. " +
+   *     "Rank peer-reviewed studies first, exclude marketing pages, and pull " +
+   *     "material recovery rates and processing costs.",
    * });
    * for (const result of response.results) {
    *   console.log(result.url, result.highlights);
