@@ -1157,8 +1157,9 @@ export class Exa {
    * to your query. Set `maxCharacters` only for an explicit application limit.
    *
    * Supply `objective` to improve search quality and token efficiency.
-   * Describe the goal for this search turn: which documents should rank first,
-   * which should be excluded, and what specific facts or figures to pull from them.
+   * Describe the larger task you're working on and the goal for this search turn.
+   * Say which documents should rank first, which should be excluded, and what
+   * specific facts or figures to pull from them.
    *
    * Request `text` when you need the full page; use `contents: false` for
    * titles and URLs only. Omitting contents still returns text by default.
