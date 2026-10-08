@@ -4,7 +4,7 @@
 
 The official JavaScript SDK for [Exa](https://exa.ai), the web search API built for AI.
 
-[Documentation](https://docs.exa.ai) &nbsp;|&nbsp; [Dashboard](https://dashboard.exa.ai)
+[Documentation](https://exa.ai/docs) &nbsp;|&nbsp; [Dashboard](https://dashboard.exa.ai)
 
 ## Install
 
@@ -106,7 +106,7 @@ const result = await exa.search("AI research", undefined, { body: { futureField:
 Get clean text, highlights, or summaries from any URL.
 
 ```ts
-const { results } = await exa.getContents(["https://docs.exa.ai"], {
+const { results } = await exa.getContents(["https://exa.ai/docs"], {
   text: true,
   highlights: true,
   summary: true,
@@ -316,8 +316,8 @@ import type { SearchResponse, RegularSearchOptions } from "exa-js";
 
 ## Links
 
-- [Documentation](https://docs.exa.ai)
-- [API Reference](https://docs.exa.ai/reference)
+- [Documentation](https://exa.ai/docs)
+- [API Reference](https://exa.ai/docs/reference/search)
 - [Examples](./examples)
 
 ## Contributing

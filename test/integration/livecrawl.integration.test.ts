@@ -1,24 +1,62 @@
-import { describe, it, expect } from "vitest";
-import Exa from "../../src";
+import { randomUUID } from "node:crypto";
+import { it, expect } from "vitest";
+import { createClient, integrationDescribe } from "./environment";
 
-const apiKey = process.env.EXA_API_KEY;
+const FIXTURE_URL = "https://example.com";
 
-const integrationDescribe = apiKey ? describe : describe.skip;
+/**
+ * `livecrawl: "always"` may answer from a crawl made moments earlier for the
+ * same URL, so the crawl test asks for a URL no earlier run has fetched.
+ */
+function uncrawledUrl(): string {
+  return `${FIXTURE_URL}/?exa-sdk-livecrawl=${randomUUID()}`;
+}
 
-integrationDescribe("Integration: getContents livecrawl", () => {
-  it("should retrieve statuses when livecrawl is set to 'always'", async () => {
-    const exa = new Exa(apiKey as string);
-
-    const url = "https://example.com";
+integrationDescribe("Integration: livecrawl", () => {
+  it("reports a crawled page when livecrawl is 'always'", async () => {
+    const exa = createClient();
+    const url = uncrawledUrl();
 
     const response = await exa.getContents(url, {
       text: true,
       livecrawl: "always",
     });
 
-    // Basic assertions – we mainly want to ensure status information is returned.
-    // The livecrawl provider may report an error status for the fixture URL,
-    // so this test should not depend on extracted contents being returned.
-    expect(response.statuses?.length).toBeGreaterThan(0);
+    expect(response.statuses).toEqual([
+      { id: url, status: "success", source: "crawled" },
+    ]);
   }, 30_000); // Allow up to 30s since livecrawling can be slow
+
+  it("reports a cached page when livecrawl is 'never'", async () => {
+    const exa = createClient();
+
+    const response = await exa.getContents(FIXTURE_URL, {
+      text: true,
+      livecrawl: "never",
+    });
+
+    expect(response.statuses).toHaveLength(1);
+    expect(response.statuses![0]).toMatchObject({
+      status: "success",
+      source: "cached",
+    });
+    expect(response.results).toHaveLength(1);
+  }, 30_000);
+
+  it("forwards the legacy top-level livecrawl option, which the API refuses with maxAgeHours", async () => {
+    const exa = createClient();
+
+    await expect(
+      exa.searchAndContents("example domain", {
+        numResults: 1,
+        livecrawl: "always",
+        maxAgeHours: 1,
+      })
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      message: expect.stringContaining(
+        "Cannot set both 'livecrawl' and 'maxAgeHours'"
+      ),
+    });
+  }, 30_000);
 });

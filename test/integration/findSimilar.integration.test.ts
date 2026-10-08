@@ -1,9 +1,7 @@
-import { describe, it, expect, type TestContext } from "vitest";
-import Exa from "../../src";
+import { it, expect, type TestContext } from "vitest";
+import { createClient, integrationDescribe } from "./environment";
 
-const apiKey = process.env.EXA_API_KEY;
-const integrationDescribe = apiKey ? describe : describe.skip;
-const exa = new Exa(apiKey ?? "test-key");
+const exa = createClient();
 
 function firstResultOrSkip<T>(results: T[], ctx: TestContext): T {
   if (results.length === 0) {
