@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
-import Exa from "../../src";
+import { it, expect } from "vitest";
+import { createClient, integrationDescribe } from "./environment";
 
-const exa = new Exa(process.env.EXA_API_KEY);
+const exa = createClient();
 
-describe("Search Contents Options", () => {
+integrationDescribe("Search Contents Options", () => {
   const testQuery = "invasive ant species California";
 
   it("Defaults to providing text contents with 10,000 max characters", async () => {
@@ -112,7 +112,7 @@ describe("Search Contents Options", () => {
   });
 });
 
-describe("Company Category Search", () => {
+integrationDescribe("Company Category Search", () => {
   it("should return entities for company category search", async () => {
     const response = await exa.search("Exa AI search company", {
       category: "company",
@@ -142,5 +142,32 @@ describe("Company Category Search", () => {
     if (entity.type === "company") {
       expect(entity.properties).toHaveProperty("name");
     }
+  }, 15000);
+});
+
+integrationDescribe("People Category Search", () => {
+  it("should return work history date ranges for people category search", async () => {
+    const response = await exa.search("software engineer at Exa AI", {
+      category: "people",
+      numResults: 5,
+      contents: false,
+    });
+
+    const people = response.results
+      .flatMap((r) => r.entities ?? [])
+      .filter((entity) => entity.type === "person");
+    expect(people.length).toBeGreaterThan(0);
+
+    const dates = people.flatMap((person) =>
+      person.type === "person"
+        ? (person.properties.workHistory ?? []).flatMap((entry) =>
+            entry.dates ? [entry.dates] : []
+          )
+        : []
+    );
+    expect(dates.length).toBeGreaterThan(0);
+    // A current role has no end date, so only some ranges carry `to`.
+    expect(dates.every((range) => typeof range.from === "string")).toBe(true);
+    expect(dates.some((range) => typeof range.to === "string")).toBe(true);
   }, 15000);
 });
