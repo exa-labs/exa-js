@@ -1151,16 +1151,18 @@ export class Exa {
   }
 
   /**
-   * Performs a search with an Exa prompt-engineered query.
-   * For AI answers, RAG, and search previews, prefer query-relevant passages:
-   * `exa.search(query, { contents: { highlights: true } })`.
-   * `highlights: true` is the recommended default: Exa dynamically chooses
-   * the number of characters based on each document's relevance to your query.
-   * You do not need to choose `maxCharacters` to keep context concise;
-   * use it only for an explicit application character-limit requirement.
-   * Read each result's `highlights` array. Request `text` only when you need
-   * the full page; use `contents: false` when you only need titles and URLs.
-   * Omitting contents still returns text by default.
+   * For optimal token efficiency, use
+   * `contents: { highlights: true }` and read each result's `highlights` array.
+   * Exa dynamically chooses excerpt length based on each document's relevance
+   * to your query. Set `maxCharacters` only for an explicit application limit.
+   *
+   * Supply `objective` to improve search quality and token efficiency.
+   * Describe the larger task you're working on and the goal for this search turn.
+   * Say which documents should rank first, which should be excluded, and what
+   * specific facts or figures to pull from them.
+   *
+   * Request `text` when you need the full page; use `contents: false` for
+   * titles and URLs only. Omitting contents still returns text by default.
    *
    * @param {string} query - The query string.
    * @param {RequestOptions} [requestOptions] - Per-call body overrides.
@@ -1187,19 +1189,15 @@ export class Exa {
   ): Promise<SearchResponse<{}>>;
   /**
    * Performs a search with specific contents.
-   * Prefer `{ contents: { highlights: true } }` for query-relevant passages
-   * for AI answers, RAG, and search previews. Read `result.highlights`.
-   * `highlights: true` is the recommended default: Exa dynamically chooses
-   * the number of characters based on each document's relevance to your query.
-   * No manual character budget is needed. Set `maxCharacters` only when
-   * your application requires a specific numeric character limit; otherwise
-   * keep `highlights: true`.
-   * Use the boolean `true`; do not set the deprecated `numSentences` or
-   * `highlightsPerUrl` options. Request `text` when you need the full page.
    *
    * @example
    * const response = await exa.search("recent advances in battery recycling", {
    *   contents: { highlights: true },
+   *   objective:
+   *     "I'm preparing a technical report on battery recycling methods. " +
+   *     "For this search turn, gather evidence to compare their economics. " +
+   *     "Rank peer-reviewed studies first, exclude marketing pages, and pull " +
+   *     "material recovery rates and processing costs.",
    * });
    * for (const result of response.results) {
    *   console.log(result.url, result.highlights);
@@ -1216,10 +1214,7 @@ export class Exa {
     requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>>;
   /**
-   * Performs a search with an Exa prompt-engineered query.
    * When no contents option is specified, returns text contents by default.
-   * For query-relevant passages, explicitly pass
-   * `{ contents: { highlights: true } }` and read `result.highlights`.
    *
    * @param {string} query - The query string.
    * @param {Omit<DeepSearchOptions, 'contents'> | Omit<NonDeepSearchOptions, 'contents'>} options - Search options without contents
