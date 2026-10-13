@@ -622,6 +622,77 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it("should handle userLocation parameter with coordinates", async () => {
+    const mockResponse = {
+      results: [
+        {
+          title: "US Result",
+          url: "https://example.com",
+          id: "us-id",
+          text: "US local news content",
+        },
+      ],
+      requestId: "req-us-coords-123",
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const userLocation = {
+      country: "US",
+      latitude: 37.7749,
+      longitude: -122.4194,
+    };
+    const result = await exa.search("local news", {
+      userLocation,
+      numResults: 5,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "local news",
+      userLocation,
+      numResults: 5,
+      contents: {
+        text: {
+          maxCharacters: 10000,
+        },
+      },
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
+  it("should handle userLocation parameter with coordinates for answer", async () => {
+    const mockResponse = {
+      answer: "Some answer",
+      citations: [],
+    };
+
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce(mockResponse);
+
+    const userLocation = {
+      country: "US",
+      latitude: 37.7749,
+      longitude: -122.4194,
+    };
+    const result = await exa.answer("What is the weather today?", {
+      userLocation,
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/answer", "POST", {
+      query: "What is the weather today?",
+      stream: false,
+      text: false,
+      model: "exa",
+      systemPrompt: undefined,
+      outputSchema: undefined,
+      userLocation,
+    });
+    expect(result).toEqual(mockResponse);
+  });
+
   it("should allow opting out of contents with contents: false", async () => {
     const mockResponse = {
       results: [

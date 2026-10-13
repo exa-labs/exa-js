@@ -105,3 +105,65 @@ export class ExaError extends Error {
     }
   }
 }
+
+/**
+ * Thrown when a request is cancelled through the caller's `AbortSignal`.
+ *
+ * `name` stays `"AbortError"`, the name `fetch` itself rejects with, so
+ * `error.name === "AbortError"` checks keep working on every runtime. A
+ * cancellation is the caller's own action rather than an API failure, so this
+ * is not an `ExaError` and carries no status code.
+ */
+export class ExaAbortError extends Error {
+  /**
+   * The error `fetch` rejected with, or the signal's abort reason
+   */
+  cause?: unknown;
+
+  /**
+   * Create a new ExaAbortError
+   * @param cause The underlying fetch rejection or abort reason
+   */
+  constructor(cause?: unknown) {
+    super("Request was aborted.");
+    this.name = "AbortError";
+    this.cause = cause;
+  }
+}
+
+/**
+ * Thrown when a request exceeds its `timeout`.
+ *
+ * `name` stays `"TimeoutError"`, the name `AbortSignal.timeout()` rejects
+ * with, so `error.name === "TimeoutError"` checks keep working on every
+ * runtime. `statusCode` is 408, like the SDK's polling timeouts.
+ */
+export class ExaTimeoutError extends ExaError {
+  /**
+   * The timeout that elapsed, in milliseconds
+   */
+  timeout: number;
+
+  /**
+   * The error `fetch` rejected with
+   */
+  cause?: unknown;
+
+  /**
+   * Create a new ExaTimeoutError
+   * @param timeout The timeout that elapsed, in milliseconds
+   * @param path Path of the request that timed out
+   * @param cause The underlying fetch rejection
+   */
+  constructor(timeout: number, path?: string, cause?: unknown) {
+    super(
+      `Request timed out after ${timeout}ms.`,
+      HttpStatusCode.RequestTimeout,
+      undefined,
+      path
+    );
+    this.name = "TimeoutError";
+    this.timeout = timeout;
+    this.cause = cause;
+  }
+}

@@ -2,6 +2,7 @@
  * Base client for Search Monitors API
  */
 import { Exa } from "../index";
+import { RequestScopedClient } from "../request-options";
 import { ListSearchMonitorsParams, ListSearchMonitorRunsParams } from "./types";
 
 type QueryParams = Record<
@@ -9,10 +10,11 @@ type QueryParams = Record<
   string | number | boolean | string[] | undefined
 >;
 
-export class SearchMonitorsBaseClient {
+export class SearchMonitorsBaseClient extends RequestScopedClient {
   protected client: Exa;
 
   constructor(client: Exa) {
+    super();
     this.client = client;
   }
 
@@ -22,12 +24,17 @@ export class SearchMonitorsBaseClient {
     data?: Record<string, any>,
     params?: QueryParams
   ): Promise<T> {
-    return this.client.request<T>(
-      `/monitors${endpoint}`,
-      method,
-      data,
-      params
-    );
+    if (this.requestOptions) {
+      return this.client.request<T>(
+        `/monitors${endpoint}`,
+        method,
+        data,
+        params,
+        undefined,
+        this.requestOptions
+      );
+    }
+    return this.client.request<T>(`/monitors${endpoint}`, method, data, params);
   }
 
   protected buildPaginationParams(

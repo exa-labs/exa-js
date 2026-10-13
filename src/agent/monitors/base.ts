@@ -4,6 +4,7 @@
 
 import { ExaError, HttpStatusCode } from "../../errors";
 import { Exa } from "../../index";
+import { RequestScopedClient } from "../../request-options";
 import { headersForBetas } from "../betas";
 import {
   AGENT_MONITORS_BETA_HEADER,
@@ -19,10 +20,11 @@ type QueryParams = Record<
 
 type RequestBody = Record<string, any>;
 
-export class AgentMonitorsBaseClient {
+export class AgentMonitorsBaseClient extends RequestScopedClient {
   protected client: Exa;
 
   constructor(client: Exa) {
+    super();
     this.client = client;
   }
 
@@ -41,15 +43,26 @@ export class AgentMonitorsBaseClient {
       );
     }
 
+    const requestHeaders = {
+      ...headersForBetas(betas),
+      ...headers,
+    };
+    if (this.requestOptions) {
+      return this.client.request<T>(
+        `/agent/monitors${endpoint}`,
+        method,
+        data,
+        params,
+        requestHeaders,
+        this.requestOptions
+      );
+    }
     return this.client.request<T>(
       `/agent/monitors${endpoint}`,
       method,
       data,
       params,
-      {
-        ...headersForBetas(betas),
-        ...headers,
-      }
+      requestHeaders
     );
   }
 

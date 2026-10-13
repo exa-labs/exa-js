@@ -15,6 +15,7 @@ import {
   TriggerSearchMonitorResponse,
   UpdateSearchMonitorParams,
 } from "./types";
+import { type RequestOptions } from "../request-options";
 
 /**
  * Client for managing Search Monitor Runs
@@ -24,14 +25,17 @@ export class SearchMonitorRunsClient extends SearchMonitorsBaseClient {
    * List all runs for a Search Monitor
    * @param monitorId The ID of the Search Monitor
    * @param options Pagination options
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The list of Search Monitor runs
    */
   async list(
     monitorId: string,
-    options?: ListSearchMonitorRunsParams
+    options?: ListSearchMonitorRunsParams,
+    requestOptions?: RequestOptions
   ): Promise<ListSearchMonitorRunsResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const params = this.buildPaginationParams(options);
-    return this.request<ListSearchMonitorRunsResponse>(
+    return scoped.request<ListSearchMonitorRunsResponse>(
       `/${monitorId}/runs`,
       "GET",
       undefined,
@@ -43,10 +47,16 @@ export class SearchMonitorRunsClient extends SearchMonitorsBaseClient {
    * Get a specific Search Monitor run
    * @param monitorId The ID of the Search Monitor
    * @param runId The ID of the run
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The Search Monitor run
    */
-  async get(monitorId: string, runId: string): Promise<SearchMonitorRun> {
-    return this.request<SearchMonitorRun>(
+  async get(
+    monitorId: string,
+    runId: string,
+    requestOptions?: RequestOptions
+  ): Promise<SearchMonitorRun> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<SearchMonitorRun>(
       `/${monitorId}/runs/${runId}`,
       "GET"
     );
@@ -56,18 +66,21 @@ export class SearchMonitorRunsClient extends SearchMonitorsBaseClient {
    * Iterate through all runs for a Search Monitor, handling pagination automatically
    * @param monitorId The ID of the Search Monitor
    * @param options Pagination options
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns Async generator of Search Monitor runs
    */
   async *listAll(
     monitorId: string,
-    options?: ListSearchMonitorRunsParams
+    options?: ListSearchMonitorRunsParams,
+    requestOptions?: RequestOptions
   ): AsyncGenerator<SearchMonitorRun> {
+    let scoped = this.withRequestOptions(requestOptions);
     let cursor: string | undefined = undefined;
     const pageOptions = options ? { ...options } : {};
 
     while (true) {
       pageOptions.cursor = cursor;
-      const response = await this.list(monitorId, pageOptions);
+      const response = await scoped.list(monitorId, pageOptions);
 
       for (const run of response.data) {
         yield run;
@@ -78,6 +91,7 @@ export class SearchMonitorRunsClient extends SearchMonitorsBaseClient {
       }
 
       cursor = response.nextCursor;
+      scoped = scoped.forNextPage();
     }
   }
 
@@ -85,14 +99,17 @@ export class SearchMonitorRunsClient extends SearchMonitorsBaseClient {
    * Collect all runs for a Search Monitor into an array
    * @param monitorId The ID of the Search Monitor
    * @param options Pagination options
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns Promise resolving to an array of all Search Monitor runs
    */
   async getAll(
     monitorId: string,
-    options?: ListSearchMonitorRunsParams
+    options?: ListSearchMonitorRunsParams,
+    requestOptions?: RequestOptions
   ): Promise<SearchMonitorRun[]> {
+    const scoped = this.withRequestOptions(requestOptions);
     const runs: SearchMonitorRun[] = [];
-    for await (const run of this.listAll(monitorId, options)) {
+    for await (const run of scoped.listAll(monitorId, options)) {
       runs.push(run);
     }
     return runs;
@@ -116,33 +133,44 @@ export class SearchMonitorsClient extends SearchMonitorsBaseClient {
   /**
    * Create a Search Monitor
    * @param params The monitor creation parameters
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The created Search Monitor with webhookSecret
    */
   async create(
-    params: CreateSearchMonitorParams
+    params: CreateSearchMonitorParams,
+    requestOptions?: RequestOptions
   ): Promise<CreateSearchMonitorResponse> {
-    return this.request<CreateSearchMonitorResponse>("", "POST", params);
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<CreateSearchMonitorResponse>("", "POST", params);
   }
 
   /**
    * Get a Search Monitor by ID
    * @param id The ID of the Search Monitor
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The Search Monitor
    */
-  async get(id: string): Promise<SearchMonitor> {
-    return this.request<SearchMonitor>(`/${id}`, "GET");
+  async get(
+    id: string,
+    requestOptions?: RequestOptions
+  ): Promise<SearchMonitor> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<SearchMonitor>(`/${id}`, "GET");
   }
 
   /**
    * List Search Monitors
    * @param options Pagination and filtering options
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The list of Search Monitors
    */
   async list(
-    options?: ListSearchMonitorsParams
+    options?: ListSearchMonitorsParams,
+    requestOptions?: RequestOptions
   ): Promise<ListSearchMonitorsResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const params = this.buildPaginationParams(options);
-    return this.request<ListSearchMonitorsResponse>(
+    return scoped.request<ListSearchMonitorsResponse>(
       "",
       "GET",
       undefined,
@@ -154,31 +182,44 @@ export class SearchMonitorsClient extends SearchMonitorsBaseClient {
    * Update a Search Monitor
    * @param id The ID of the Search Monitor
    * @param params The update parameters
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The updated Search Monitor
    */
   async update(
     id: string,
-    params: UpdateSearchMonitorParams
+    params: UpdateSearchMonitorParams,
+    requestOptions?: RequestOptions
   ): Promise<SearchMonitor> {
-    return this.request<SearchMonitor>(`/${id}`, "PATCH", params);
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<SearchMonitor>(`/${id}`, "PATCH", params);
   }
 
   /**
    * Delete a Search Monitor
    * @param id The ID of the Search Monitor
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The deleted Search Monitor
    */
-  async delete(id: string): Promise<SearchMonitor> {
-    return this.request<SearchMonitor>(`/${id}`, "DELETE");
+  async delete(
+    id: string,
+    requestOptions?: RequestOptions
+  ): Promise<SearchMonitor> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<SearchMonitor>(`/${id}`, "DELETE");
   }
 
   /**
    * Trigger a Search Monitor run immediately
    * @param id The ID of the Search Monitor
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns Whether the monitor was triggered
    */
-  async trigger(id: string): Promise<TriggerSearchMonitorResponse> {
-    return this.request<TriggerSearchMonitorResponse>(
+  async trigger(
+    id: string,
+    requestOptions?: RequestOptions
+  ): Promise<TriggerSearchMonitorResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<TriggerSearchMonitorResponse>(
       `/${id}/trigger`,
       "POST"
     );
@@ -187,17 +228,20 @@ export class SearchMonitorsClient extends SearchMonitorsBaseClient {
   /**
    * Iterate through all Search Monitors, handling pagination automatically
    * @param options Pagination and filtering options
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns Async generator of Search Monitors
    */
   async *listAll(
-    options?: ListSearchMonitorsParams
+    options?: ListSearchMonitorsParams,
+    requestOptions?: RequestOptions
   ): AsyncGenerator<SearchMonitor> {
+    let scoped = this.withRequestOptions(requestOptions);
     let cursor: string | undefined = undefined;
     const pageOptions = options ? { ...options } : {};
 
     while (true) {
       pageOptions.cursor = cursor;
-      const response = await this.list(pageOptions);
+      const response = await scoped.list(pageOptions);
 
       for (const monitor of response.data) {
         yield monitor;
@@ -208,17 +252,23 @@ export class SearchMonitorsClient extends SearchMonitorsBaseClient {
       }
 
       cursor = response.nextCursor;
+      scoped = scoped.forNextPage();
     }
   }
 
   /**
    * Collect all Search Monitors into an array
    * @param options Pagination and filtering options
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns Promise resolving to an array of all Search Monitors
    */
-  async getAll(options?: ListSearchMonitorsParams): Promise<SearchMonitor[]> {
+  async getAll(
+    options?: ListSearchMonitorsParams,
+    requestOptions?: RequestOptions
+  ): Promise<SearchMonitor[]> {
+    const scoped = this.withRequestOptions(requestOptions);
     const monitors: SearchMonitor[] = [];
-    for await (const monitor of this.listAll(options)) {
+    for await (const monitor of scoped.listAll(options)) {
       monitors.push(monitor);
     }
     return monitors;

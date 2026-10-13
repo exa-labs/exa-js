@@ -5,9 +5,27 @@ import { AgentClient, BetaClient } from "./agent/client";
 import { headersForBetas } from "./agent/betas";
 import { ExaError, HttpStatusCode } from "./errors";
 import { SearchMonitorsClient } from "./monitors/client";
+import {
+  isStreamRequestOptions,
+  mergeRequestBody,
+  mergeRequestHeaders,
+  mergeRequestOptions,
+  mergeRequestQuery,
+  omitRequestOptions,
+  pickRequestOptions,
+  resolveRequestSignal,
+  setClientDefaults,
+  streamRequestOptions,
+  validateTimeout,
+  withClientDefaults,
+  withDisposeOnBodySettled,
+  type RequestOptions,
+  type TransportRequestOptions,
+} from "./request-options";
 import { ResearchClient } from "./research/client";
 import { WebsetsClient } from "./websets/client";
 import { isZodSchema, zodToJsonSchema } from "./zod-utils";
+
 import { AnthropicTools } from "./tools/anthropic";
 import { OpenAITools } from "./tools/openai";
 import {
@@ -110,9 +128,42 @@ export type ContentsOptions = {
   extras?: ExtrasOptions;
 };
 
-export type RequestOptions = {
-  /** Per-call body overrides, except stream. */
-  body?: Record<string, unknown>;
+export type { RequestOptions, TransportRequestOptions };
+
+/**
+ * Two-letter ISO country code of the user (e.g. US), or an object with `country` and/or `latitude` + `longitude` in decimal degrees.
+ */
+export type UserLocation =
+  | string
+  | { country: string }
+  | { country?: string; latitude: number; longitude: number };
+
+/**
+ * Options that attribute a request to one end user of your application.
+ * @typedef {Object} UserIdentifierOptions
+ * @property {string} [userIdentifier] - An opaque identifier you generate for the end user the request is made on behalf of, such as a UUID or a hash. 1 to 64 characters: letters, digits, `_` and `-`.
+ */
+export type UserIdentifierOptions = {
+  /**
+   * An opaque identifier you generate for the end user this request is made
+   * on behalf of, such as a UUID or a hash. Never send personal information
+   * such as an email address, name or phone number. 1 to 64 characters:
+   * letters, digits, `_` and `-`. Exa records it so usage can be attributed
+   * to one end user; it does not change results.
+   */
+  userIdentifier?: string;
+};
+
+/**
+ * Client-wide settings, given as the third argument of the `Exa` constructor.
+ */
+export type ExaClientOptions = {
+  /**
+   * Default timeout in milliseconds for every request this client makes. A
+   * per-call `timeout` overrides it. Unset by default, in which case the SDK
+   * imposes no timeout of its own.
+   */
+  timeout?: number;
 };
 
 /**
@@ -130,10 +181,12 @@ export type RequestOptions = {
  * @property {string[]} [includeText] - List of strings that must be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  * @property {string[]} [excludeText] - List of strings that must not be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  * @property {string[]} [flags] - Experimental flags
- * @property {string} [userLocation] - The two-letter ISO country code of the user, e.g. US.
+ * @property {UserLocation} [userLocation] - Two-letter ISO country code of the user (e.g. US), or an object with `country` and/or `latitude` + `longitude` in decimal degrees.
  * @property {boolean} [stream] - Whether to stream back OpenAI-style chat completion chunks. Use `streamSearch()` instead of `search({ stream: true })`.
+ * @property {AbortSignal} [signal] - AbortSignal to cancel the underlying HTTP request.
+ * @property {number} [timeout] - Request timeout in milliseconds.
  */
-export type BaseSearchOptions = {
+export type BaseSearchOptions = TransportRequestOptions & {
   contents?: ContentsOptions;
   numResults?: number;
   includeDomains?: string[];
@@ -154,7 +207,7 @@ export type BaseSearchOptions = {
   includeText?: string[];
   excludeText?: string[];
   flags?: string[];
-  userLocation?: string;
+  userLocation?: UserLocation;
   stream?: boolean;
 };
 
@@ -170,6 +223,14 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
    * characters.
    */
   objective?: string;
+  /**
+   * An opaque identifier you generate for the end user this request is made
+   * on behalf of, such as a UUID or a hash. Never send personal information
+   * such as an email address, name or phone number. 1 to 64 characters:
+   * letters, digits, `_` and `-`. Exa records it so usage can be attributed
+   * to one end user; it does not change results.
+   */
+  userIdentifier?: string;
   /**
    * If true, the search results are moderated for safety.
    */
@@ -685,14 +746,17 @@ export type Status = {
  * @property {"exa"} [model] - The model to use for generating the answer. Default "exa".
  * @property {string} [systemPrompt] - A system prompt to guide the LLM's behavior when generating the answer.
  * @property {Object} [outputSchema] - A JSON Schema specification for the structure you expect the output to take
+ * @property {string} [userIdentifier] - An opaque identifier you generate for the end user the request is made on behalf of. See {@link UserIdentifierOptions}.
+ * @property {AbortSignal} [signal] - AbortSignal to cancel the underlying HTTP request.
+ * @property {number} [timeout] - Request timeout in milliseconds.
  */
-export type AnswerOptions = {
+export type AnswerOptions = UserIdentifierOptions & TransportRequestOptions & {
   stream?: boolean;
   text?: boolean;
   model?: "exa";
   systemPrompt?: string;
   outputSchema?: Record<string, unknown>;
-  userLocation?: string;
+  userLocation?: UserLocation;
 };
 
 /**
@@ -775,6 +839,7 @@ export type SummaryContentsOptionsTyped<T> = Omit<
 export class Exa {
   private baseURL: string;
   private headers: Headers;
+  /** Client-wide transport defaults; a per-call option overrides each field. */
 
   /**
    * Websets API client
@@ -886,24 +951,16 @@ export class Exa {
     };
   }
 
-  private mergeSearchRequestBody(
-    body: Record<string, unknown>,
-    requestOptions?: RequestOptions
-  ): Record<string, unknown> {
-    const merged = { ...body, ...requestOptions?.body };
-    delete merged.stream;
-    return merged;
-  }
-
   private buildSearchRequestBody(
     query: string,
     options?: RegularSearchOptions & {
       contents?: ContentsOptions | false | null | undefined;
-    },
-    requestOptions?: RequestOptions
+    }
   ): Record<string, unknown> {
-    const body = { ...(options ?? {}) } as Record<string, unknown>;
+    const body = { ...omitRequestOptions(options) } as Record<string, unknown>;
     delete body.betas;
+    // The method called decides whether the response streams.
+    delete body.stream;
     if (options === undefined || !("contents" in options)) {
       body.contents = { text: { maxCharacters: DEFAULT_MAX_CHARACTERS } };
     } else if (
@@ -913,16 +970,28 @@ export class Exa {
     ) {
       delete body.contents;
     }
-    return this.mergeSearchRequestBody({ query, ...body }, requestOptions);
+    return { query, ...body };
   }
 
   /**
    * Constructs the Exa API client.
    * @param {string} apiKey - The API key for authentication.
    * @param {string} [baseURL] - The base URL of the Exa API.
+   * @param {ExaClientOptions} [options] - Client-wide settings (`timeout`).
+   * @throws {RangeError} When `options.timeout` is not an integer from 1 to 2147483647.
    */
-  constructor(apiKey?: string, baseURL: string = "https://api.exa.ai") {
+  constructor(
+    apiKey?: string,
+    baseURL: string = "https://api.exa.ai",
+    options?: ExaClientOptions
+  ) {
     this.baseURL = baseURL;
+    setClientDefaults(
+      this,
+      options?.timeout === undefined
+        ? undefined
+        : { timeout: validateTimeout(options.timeout) }
+    );
     if (!apiKey) {
       apiKey = process.env.EXA_API_KEY;
       if (!apiKey) {
@@ -964,16 +1033,24 @@ export class Exa {
    * @param {string} method - The HTTP method to use.
    * @param {any} [body] - The request body for POST requests.
    * @param {Record<string, any>} [params] - The query parameters.
+   * @param {Record<string, string>} [headers] - Additional request headers.
+   * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<any>} The response from the API.
    * @throws {ExaError} When any API request fails with structured error information
+   * @throws {ExaTimeoutError} When the request exceeds its `timeout`
+   * @throws {ExaAbortError} When the caller's `signal` aborts the request
    */
   async request<T = unknown>(
     endpoint: string,
     method: string,
     body?: any,
     params?: Record<string, any>,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
+    requestOptions?: RequestOptions
   ): Promise<T> {
+    body = mergeRequestBody(method, body, requestOptions?.body);
+    params = mergeRequestQuery(params, requestOptions?.query);
+
     // Build URL with query parameters if provided
     let url = this.baseURL + endpoint;
     if (params && Object.keys(params).length > 0) {
@@ -1003,104 +1080,130 @@ export class Exa {
     if (headers) {
       combinedHeaders = { ...combinedHeaders, ...headers };
     }
+    combinedHeaders = mergeRequestHeaders(
+      combinedHeaders,
+      requestOptions?.headers
+    );
 
-    const response = await fetchImpl(url, {
-      method,
-      headers: combinedHeaders,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    const { signal, dispose, toRequestError } = resolveRequestSignal(
+      withClientDefaults(this, requestOptions)
+    );
+    try {
+      const response = await fetchImpl(url, {
+        method,
+        headers: combinedHeaders,
+        body: body ? JSON.stringify(body) : undefined,
+        signal,
+      });
 
-    if (!response.ok) {
-      const { json, text } = await readResponseBody(response);
+      if (!response.ok) {
+        const { json, text } = await readResponseBody(response);
 
-      // Gateways/proxies can return non-JSON (e.g. HTML) error pages. Surface
-      // the real status and a snippet of the body rather than throwing an
-      // opaque JSON parse error that hides the underlying failure.
-      if (!json || typeof json !== "object") {
-        const snippet = truncateResponseBody(text);
-        const message = snippet
-          ? `Request failed with status ${response.status}. Response body was not valid JSON: ${snippet}`
-          : `Request failed with status ${response.status}.`;
+        // Gateways/proxies can return non-JSON (e.g. HTML) error pages. Surface
+        // the real status and a snippet of the body rather than throwing an
+        // opaque JSON parse error that hides the underlying failure.
+        if (!json || typeof json !== "object") {
+          const snippet = truncateResponseBody(text);
+          const message = snippet
+            ? `Request failed with status ${response.status}. Response body was not valid JSON: ${snippet}`
+            : `Request failed with status ${response.status}.`;
+          throw new ExaError(
+            message,
+            response.status,
+            new Date().toISOString(),
+            endpoint
+          );
+        }
+
+        const errorData = json;
+        if (!errorData.statusCode) {
+          errorData.statusCode = response.status;
+        }
+        if (!errorData.timestamp) {
+          errorData.timestamp = new Date().toISOString();
+        }
+        if (!errorData.path) {
+          errorData.path = endpoint;
+        }
+
+        // Structured envelope (`error` is an object): message and metadata live
+        // inside it — e.g. { error: { type, code, message, detail }, requestId }.
+        const envelope =
+          typeof errorData.error === "object" && errorData.error !== null
+            ? (errorData.error as {
+                type?: string;
+                code?: string;
+                message?: string;
+                detail?: unknown;
+                requestId?: string;
+              })
+            : undefined;
+        let message: string;
+        if (envelope) {
+          message = envelope.message || errorData.message || "Unknown error";
+        } else {
+          message = errorData.error || "Unknown error";
+          if (errorData.message) {
+            message += (message.length > 0 ? ". " : "") + errorData.message;
+          }
+        }
         throw new ExaError(
           message,
+          response.status,
+          errorData.timestamp,
+          errorData.path,
+          envelope
+            ? {
+                type: envelope.type,
+                code: envelope.code,
+                detail: envelope.detail,
+                requestId: errorData.requestId ?? envelope.requestId,
+              }
+            : errorData.requestId
+              ? { requestId: errorData.requestId }
+              : undefined
+        );
+      }
+
+      // If the server responded with an SSE stream, parse it and return the final payload.
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.includes("text/event-stream")) {
+        return (await this.parseSSEStream<T>(response)) as T;
+      }
+
+      const { json, text } = await readResponseBody(response);
+
+      // A successful status with a non-JSON body usually means a proxy returned
+      // an error/redirect page; surface it instead of an opaque parse error.
+      if (json === undefined && text) {
+        throw new ExaError(
+          `Expected a JSON response but received a non-JSON body (status ${response.status}): ${truncateResponseBody(text)}`,
           response.status,
           new Date().toISOString(),
           endpoint
         );
       }
 
-      const errorData = json;
-      if (!errorData.statusCode) {
-        errorData.statusCode = response.status;
-      }
-      if (!errorData.timestamp) {
-        errorData.timestamp = new Date().toISOString();
-      }
-      if (!errorData.path) {
-        errorData.path = endpoint;
-      }
-
-      // Structured envelope (`error` is an object): message and metadata live
-      // inside it — e.g. { error: { type, code, message, detail }, requestId }.
-      const envelope =
-        typeof errorData.error === "object" && errorData.error !== null
-          ? (errorData.error as {
-              type?: string;
-              code?: string;
-              message?: string;
-              detail?: unknown;
-              requestId?: string;
-            })
-          : undefined;
-      let message: string;
-      if (envelope) {
-        message = envelope.message || errorData.message || "Unknown error";
-      } else {
-        message = errorData.error || "Unknown error";
-        if (errorData.message) {
-          message += (message.length > 0 ? ". " : "") + errorData.message;
-        }
-      }
-      throw new ExaError(
-        message,
-        response.status,
-        errorData.timestamp,
-        errorData.path,
-        envelope
-          ? {
-              type: envelope.type,
-              code: envelope.code,
-              detail: envelope.detail,
-              requestId: errorData.requestId ?? envelope.requestId,
-            }
-          : errorData.requestId
-            ? { requestId: errorData.requestId }
-            : undefined
-      );
+      return json as T;
+    } catch (error) {
+      throw toRequestError(error, endpoint);
+    } finally {
+      dispose();
     }
-
-    // If the server responded with an SSE stream, parse it and return the final payload.
-    const contentType = response.headers.get("content-type") || "";
-    if (contentType.includes("text/event-stream")) {
-      return (await this.parseSSEStream<T>(response)) as T;
-    }
-
-    const { json, text } = await readResponseBody(response);
-
-    // A successful status with a non-JSON body usually means a proxy returned
-    // an error/redirect page; surface it instead of an opaque parse error.
-    if (json === undefined && text) {
-      throw new ExaError(
-        `Expected a JSON response but received a non-JSON body (status ${response.status}): ${truncateResponseBody(text)}`,
-        response.status,
-        new Date().toISOString(),
-        endpoint
-      );
-    }
-
-    return json as T;
   }
 
+  /**
+   * Makes a request to the Exa API and returns the raw `Response`.
+   *
+   * `timeout` keeps running until the response body is consumed or cancelled,
+   * and a body read it or the `signal` interrupts rejects with the platform's
+   * own error. The SDK's streaming methods instead stop the timeout once the
+   * response headers arrive. `body`, `headers` and `query` in
+   * `requestOptions` are added to the request as they are in `request`.
+   *
+   * @throws {ExaTimeoutError} When no response arrives within `timeout`
+   * @throws {ExaAbortError} When the caller's `signal` aborts before a response arrives
+   */
   async rawRequest(
     endpoint: string,
     method: string = "POST",
@@ -1109,8 +1212,14 @@ export class Exa {
       string,
       string | number | boolean | string[] | undefined
     >,
-    headers?: Record<string, string>
+    headers?: Record<string, string>,
+    requestOptions?: RequestOptions
   ): Promise<Response> {
+    body = mergeRequestBody(method, body, requestOptions?.body) as
+      | Record<string, unknown>
+      | undefined;
+    queryParams = mergeRequestQuery(queryParams, requestOptions?.query);
+
     let url = this.baseURL + endpoint;
 
     if (queryParams) {
@@ -1140,32 +1249,99 @@ export class Exa {
     if (headers) {
       combinedHeaders = { ...combinedHeaders, ...headers };
     }
+    combinedHeaders = mergeRequestHeaders(
+      combinedHeaders,
+      requestOptions?.headers
+    );
 
-    const response = await fetchImpl(url, {
-      method,
-      headers: combinedHeaders,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    const { signal, dispose, needsDispose, stopTimeout, toRequestError } =
+      resolveRequestSignal(withClientDefaults(this, requestOptions));
+    try {
+      const response = await fetchImpl(url, {
+        method,
+        headers: combinedHeaders,
+        body: body ? JSON.stringify(body) : undefined,
+        signal,
+      });
+      if (isStreamRequestOptions(requestOptions)) {
+        const mapError = (error: unknown) => toRequestError(error, endpoint);
+        if (!response.ok) {
+          // An error response is read whole, not streamed: the timeout stays.
+          return withDisposeOnBodySettled(response, dispose, mapError);
+        }
+        // The stream has started: only the caller's signal may end it now.
+        stopTimeout();
+        if (!requestOptions?.signal) {
+          dispose();
+          return response;
+        }
+        return withDisposeOnBodySettled(response, dispose, mapError);
+      }
+      if (!needsDispose) {
+        return response;
+      }
+      // Hold signal listeners and the timeout until the body is consumed/cancelled.
+      return withDisposeOnBodySettled(response, dispose);
+    } catch (error) {
+      dispose();
+      throw toRequestError(error, endpoint);
+    }
+  }
 
-    return response;
+  private requestWithOptions<T>(
+    endpoint: string,
+    method: string,
+    body?: any,
+    requestOptions?: RequestOptions
+  ): Promise<T> {
+    const transport = mergeRequestOptions(requestOptions);
+    if (transport) {
+      return this.request(
+        endpoint,
+        method,
+        body,
+        undefined,
+        undefined,
+        transport
+      );
+    }
+    return this.request(endpoint, method, body);
+  }
+
+  private streamRequestWithOptions(
+    endpoint: string,
+    method: string,
+    body?: Record<string, unknown>,
+    requestOptions?: RequestOptions
+  ): Promise<Response> {
+    const transport = streamRequestOptions(this, requestOptions);
+    if (transport) {
+      return this.rawRequest(
+        endpoint,
+        method,
+        body,
+        undefined,
+        undefined,
+        transport
+      );
+    }
+    return this.rawRequest(endpoint, method, body);
   }
 
   /**
-   * For optimal token efficiency, use
-   * `contents: { highlights: true }` and read each result's `highlights` array.
-   * Exa dynamically chooses excerpt length based on each document's relevance
-   * to your query. Set `maxCharacters` only for an explicit application limit.
-   *
-   * Supply `objective` to improve search quality and token efficiency.
-   * Describe the larger task you're working on and the goal for this search turn.
-   * Say which documents should rank first, which should be excluded, and what
-   * specific facts or figures to pull from them.
-   *
-   * Request `text` when you need the full page; use `contents: false` for
-   * titles and URLs only. Omitting contents still returns text by default.
+   * Performs a search with an Exa prompt-engineered query.
+   * For AI answers, RAG, and search previews, prefer query-relevant passages:
+   * `exa.search(query, { contents: { highlights: true } })`.
+   * `highlights: true` is the recommended default: Exa dynamically chooses
+   * the number of characters based on each document's relevance to your query.
+   * You do not need to choose `maxCharacters` to keep context concise;
+   * use it only for an explicit application character-limit requirement.
+   * Read each result's `highlights` array. Request `text` only when you need
+   * the full page; use `contents: false` when you only need titles and URLs.
+   * Omitting contents still returns text by default.
    *
    * @param {string} query - The query string.
-   * @param {RequestOptions} [requestOptions] - Per-call body overrides.
+   * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<SearchResponse<{ text: { maxCharacters: 10_000 } }>>} A list of relevant search results with text contents.
    */
   async search(
@@ -1178,7 +1354,7 @@ export class Exa {
    *
    * @param {string} query - The query string.
    * @param {RegularSearchOptions & { contents: false }} options - Search options with contents explicitly disabled
-   * @param {RequestOptions} [requestOptions] - Per-call body overrides.
+   * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<SearchResponse<{}>>} A list of relevant search results without contents.
    */
   async search(
@@ -1189,15 +1365,19 @@ export class Exa {
   ): Promise<SearchResponse<{}>>;
   /**
    * Performs a search with specific contents.
+   * Prefer `{ contents: { highlights: true } }` for query-relevant passages
+   * for AI answers, RAG, and search previews. Read `result.highlights`.
+   * `highlights: true` is the recommended default: Exa dynamically chooses
+   * the number of characters based on each document's relevance to your query.
+   * No manual character budget is needed. Set `maxCharacters` only when
+   * your application requires a specific numeric character limit; otherwise
+   * keep `highlights: true`.
+   * Use the boolean `true`; do not set the deprecated `numSentences` or
+   * `highlightsPerUrl` options. Request `text` when you need the full page.
    *
    * @example
    * const response = await exa.search("recent advances in battery recycling", {
    *   contents: { highlights: true },
-   *   objective:
-   *     "I'm preparing a technical report on battery recycling methods. " +
-   *     "For this search turn, gather evidence to compare their economics. " +
-   *     "Rank peer-reviewed studies first, exclude marketing pages, and pull " +
-   *     "material recovery rates and processing costs.",
    * });
    * for (const result of response.results) {
    *   console.log(result.url, result.highlights);
@@ -1205,7 +1385,7 @@ export class Exa {
    *
    * @param {string} query - The query string.
    * @param {RegularSearchOptions & { contents: T }} options - Search options with specific contents
-   * @param {RequestOptions} [requestOptions] - Per-call body overrides.
+   * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<SearchResponse<T>>} A list of relevant search results with requested contents.
    */
   async search<T extends ContentsOptions>(
@@ -1214,11 +1394,14 @@ export class Exa {
     requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>>;
   /**
+   * Performs a search with an Exa prompt-engineered query.
    * When no contents option is specified, returns text contents by default.
+   * For query-relevant passages, explicitly pass
+   * `{ contents: { highlights: true } }` and read `result.highlights`.
    *
    * @param {string} query - The query string.
    * @param {Omit<DeepSearchOptions, 'contents'> | Omit<NonDeepSearchOptions, 'contents'>} options - Search options without contents
-   * @param {RequestOptions} [requestOptions] - Per-call body overrides.
+   * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<SearchResponse<{ text: true }>>} A list of relevant search results with text contents.
    */
   async search(
@@ -1246,8 +1429,22 @@ export class Exa {
       );
     }
 
-    const body = this.buildSearchRequestBody(query, options, requestOptions);
+    const body = this.buildSearchRequestBody(query, options);
     const betaHeaders = headersForBetas(options?.betas);
+    const transport = mergeRequestOptions(
+      pickRequestOptions(options),
+      requestOptions
+    );
+    if (transport) {
+      return await this.request(
+        "/search",
+        "POST",
+        body,
+        undefined,
+        betaHeaders,
+        transport
+      );
+    }
     return betaHeaders
       ? await this.request("/search", "POST", body, undefined, betaHeaders)
       : await this.request("/search", "POST", body);
@@ -1258,7 +1455,7 @@ export class Exa {
    *
    * Each iteration yields a chunk with partial text (`content`) or new citations.
    * Use this if you'd like to read synthesized search output incrementally.
-   * @param {RequestOptions} [requestOptions] - Per-call body overrides.
+   * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    */
   streamSearch(
     query: string,
@@ -1267,10 +1464,11 @@ export class Exa {
     },
     requestOptions?: RequestOptions
   ): AsyncGenerator<SearchStreamChunk> {
-    return this.streamChatCompletions("/search", {
-      ...this.buildSearchRequestBody(query, options, requestOptions),
-      stream: true,
-    });
+    return this.streamChatCompletions(
+      "/search",
+      { ...this.buildSearchRequestBody(query, options), stream: true },
+      mergeRequestOptions(pickRequestOptions(options), requestOptions)
+    );
   }
 
   /**
@@ -1286,7 +1484,7 @@ export class Exa {
    *
    * @param {string} query - The query string.
    * @param {RegularSearchOptions & T} [options] - Additional search + contents options
-   * @param {RequestOptions} [requestOptions] - Per-call body overrides.
+   * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<SearchResponse<T>>} A list of relevant search results with requested contents.
    */
   async searchAndContents<T extends ContentsOptions>(
@@ -1304,13 +1502,18 @@ export class Exa {
           }
         : this.extractContentsOptions(options);
 
-    return await this.request(
+    const body: Record<string, unknown> = {
+      query,
+      contents: contentsOptions,
+      ...omitRequestOptions(restOptions),
+    };
+    // The method called decides whether the response streams.
+    delete body.stream;
+    return await this.requestWithOptions(
       "/search",
       "POST",
-      this.mergeSearchRequestBody(
-        { query, contents: contentsOptions, ...restOptions },
-        requestOptions
-      )
+      body,
+      mergeRequestOptions(pickRequestOptions(options), requestOptions)
     );
   }
 
@@ -1322,10 +1525,13 @@ export class Exa {
    * By default, returns text contents. Use contents: false to opt-out.
    *
    * @param {string} url - The URL for which to find similar links.
+   * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<SearchResponse<{ text: { maxCharacters: 10_000 } }>>} A list of similar search results with text contents.
    */
   async findSimilar(
-    url: string
+    url: string,
+    options?: undefined,
+    requestOptions?: RequestOptions
   ): Promise<SearchResponse<{ text: { maxCharacters: 10_000 } }>>;
   /**
    * DEPRECATED: Use `search()` for new discovery flows. There is no direct replacement for URL-based similarity.
@@ -1335,11 +1541,13 @@ export class Exa {
    *
    * @param {string} url - The URL for which to find similar links.
    * @param {FindSimilarOptions & { contents: false }} options - Options with contents explicitly disabled
+   * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<SearchResponse<{}>>} A list of similar search results without contents.
    */
   async findSimilar(
     url: string,
-    options: FindSimilarOptions & { contents: false | null | undefined }
+    options: FindSimilarOptions & { contents: false | null | undefined },
+    requestOptions?: RequestOptions
   ): Promise<SearchResponse<{}>>;
   /**
    * DEPRECATED: Use `search()` with `contents` for new discovery flows. There is no direct replacement for URL-based similarity.
@@ -1349,11 +1557,13 @@ export class Exa {
    *
    * @param {string} url - The URL for which to find similar links.
    * @param {FindSimilarOptions & { contents: T }} options - Options with specific contents
+   * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<SearchResponse<T>>} A list of similar search results with requested contents.
    */
   async findSimilar<T extends ContentsOptions>(
     url: string,
-    options: FindSimilarOptions & { contents: T }
+    options: FindSimilarOptions & { contents: T },
+    requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>>;
   /**
    * DEPRECATED: Use `search()` for new discovery flows. There is no direct replacement for URL-based similarity.
@@ -1364,24 +1574,38 @@ export class Exa {
    *
    * @param {string} url - The URL for which to find similar links.
    * @param {Omit<FindSimilarOptions, 'contents'>} options - Options without contents
+   * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<SearchResponse<{ text: true }>>} A list of similar search results with text contents.
    */
   async findSimilar(
     url: string,
-    options: Omit<FindSimilarOptions, "contents">
+    options: Omit<FindSimilarOptions, "contents">,
+    requestOptions?: RequestOptions
   ): Promise<SearchResponse<{ text: true }>>;
   async findSimilar<T extends ContentsOptions>(
     url: string,
-    options?: FindSimilarOptions & { contents?: T | false | null | undefined }
+    options?: FindSimilarOptions & { contents?: T | false | null | undefined },
+    requestOptions?: RequestOptions
   ): Promise<SearchResponse<T | { text: { maxCharacters: 10_000 } } | {}>> {
+    const transport = mergeRequestOptions(
+      pickRequestOptions(options),
+      requestOptions
+    );
+    const bodyOptions = omitRequestOptions(options);
+
     // DEPRECATED METHOD: preserve legacy URL-similarity endpoint for compatibility.
     if (options === undefined || !("contents" in options)) {
       // No options or no contents property → default to text contents
-      return await this.request("/findSimilar", "POST", {
-        url,
-        ...options,
-        contents: { text: { maxCharacters: DEFAULT_MAX_CHARACTERS } },
-      });
+      return await this.requestWithOptions(
+        "/findSimilar",
+        "POST",
+        {
+          url,
+          ...bodyOptions,
+          contents: { text: { maxCharacters: DEFAULT_MAX_CHARACTERS } },
+        },
+        transport
+      );
     }
 
     // If contents is false, null, or undefined, don't send it to the API
@@ -1390,15 +1614,25 @@ export class Exa {
       options.contents === null ||
       options.contents === undefined
     ) {
-      const { contents, ...restOptions } = options;
-      return await this.request("/findSimilar", "POST", {
-        url,
-        ...restOptions,
-      });
+      const { contents: _contents, ...restOptions } = bodyOptions ?? {};
+      return await this.requestWithOptions(
+        "/findSimilar",
+        "POST",
+        {
+          url,
+          ...restOptions,
+        },
+        transport
+      );
     }
 
     // Contents property exists with value - pass it through
-    return await this.request("/findSimilar", "POST", { url, ...options });
+    return await this.requestWithOptions(
+      "/findSimilar",
+      "POST",
+      { url, ...bodyOptions },
+      transport
+    );
   }
 
   /**
@@ -1417,7 +1651,8 @@ export class Exa {
    */
   async findSimilarAndContents<T extends ContentsOptions>(
     url: string,
-    options?: FindSimilarOptions & T
+    options?: FindSimilarOptions & T,
+    requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>> {
     const { contentsOptions, restOptions } =
       options === undefined
@@ -1429,22 +1664,25 @@ export class Exa {
           }
         : this.extractContentsOptions(options);
 
-    return await this.request("/findSimilar", "POST", {
-      url,
-      contents: contentsOptions,
-      ...restOptions,
-    });
+    return await this.requestWithOptions(
+      "/findSimilar",
+      "POST",
+      { url, contents: contentsOptions, ...omitRequestOptions(restOptions) },
+      mergeRequestOptions(pickRequestOptions(options), requestOptions)
+    );
   }
 
   /**
    * Retrieves contents of documents based on URLs.
    * @param {string | string[] | SearchResult[]} urls - A URL or array of URLs, or an array of SearchResult objects.
-   * @param {ContentsOptions} [options] - Additional options for retrieving document contents.
+   * @param {ContentsOptions & BetaOptions & UserIdentifierOptions & TransportRequestOptions} [options] - Additional options for retrieving document contents.
+   * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<SearchResponse<T>>} A list of document contents for the requested URLs.
    */
   async getContents<T extends ContentsOptions>(
     urls: string | string[] | SearchResult<T>[],
-    options?: T & BetaOptions
+    options?: T & BetaOptions & UserIdentifierOptions & TransportRequestOptions,
+    requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>> {
     if (!urls || (Array.isArray(urls) && urls.length === 0)) {
       throw new ExaError(
@@ -1467,10 +1705,24 @@ export class Exa {
 
     const payload = {
       urls: requestUrls,
-      ...contentsOptions,
+      ...omitRequestOptions(contentsOptions),
     };
 
     const betaHeaders = headersForBetas(betas);
+    const transport = mergeRequestOptions(
+      pickRequestOptions(options),
+      requestOptions
+    );
+    if (transport) {
+      return await this.request(
+        "/contents",
+        "POST",
+        payload,
+        undefined,
+        betaHeaders,
+        transport
+      );
+    }
     return betaHeaders
       ? await this.request("/contents", "POST", payload, undefined, betaHeaders)
       : await this.request("/contents", "POST", payload);
@@ -1481,13 +1733,15 @@ export class Exa {
    */
   async answer<T>(
     query: string,
-    options: AnswerOptionsTyped<ZodSchema<T>>
+    options: AnswerOptionsTyped<ZodSchema<T>>,
+    requestOptions?: RequestOptions
   ): Promise<AnswerResponseTyped<T>>;
 
   /**
    * Generate an answer to a query.
    * @param {string} query - The question or query to answer.
    * @param {AnswerOptions} [options] - Additional options for answer generation.
+   * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<AnswerResponse>} The generated answer and source references.
    *
    * Example with systemPrompt:
@@ -1506,11 +1760,16 @@ export class Exa {
    * }
    * ```
    */
-  async answer(query: string, options?: AnswerOptions): Promise<AnswerResponse>;
+  async answer(
+    query: string,
+    options?: AnswerOptions,
+    requestOptions?: RequestOptions
+  ): Promise<AnswerResponse>;
 
   async answer<T>(
     query: string,
-    options?: AnswerOptions | AnswerOptionsTyped<ZodSchema<T>>
+    options?: AnswerOptions | AnswerOptionsTyped<ZodSchema<T>>,
+    requestOptions?: RequestOptions
   ): Promise<AnswerResponse | AnswerResponseTyped<T>> {
     if (options?.stream) {
       throw new ExaError(
@@ -1538,9 +1797,15 @@ export class Exa {
       systemPrompt: options?.systemPrompt,
       outputSchema,
       userLocation: options?.userLocation,
+      userIdentifier: options?.userIdentifier,
     };
 
-    return await this.request("/answer", "POST", requestBody);
+    return await this.requestWithOptions(
+      "/answer",
+      "POST",
+      requestBody,
+      mergeRequestOptions(pickRequestOptions(options), requestOptions)
+    );
   }
 
   /**
@@ -1554,8 +1819,9 @@ export class Exa {
       model?: "exa" | "exa-pro";
       systemPrompt?: string;
       outputSchema: ZodSchema<T>;
-      userLocation?: string;
-    }
+      userLocation?: UserLocation;
+    } & UserIdentifierOptions & TransportRequestOptions,
+    requestOptions?: RequestOptions
   ): AsyncGenerator<AnswerStreamChunk>;
 
   /**
@@ -1584,8 +1850,9 @@ export class Exa {
       model?: "exa" | "exa-pro";
       systemPrompt?: string;
       outputSchema?: Record<string, unknown>;
-      userLocation?: string;
-    }
+      userLocation?: UserLocation;
+    } & UserIdentifierOptions & TransportRequestOptions,
+    requestOptions?: RequestOptions
   ): AsyncGenerator<AnswerStreamChunk>;
 
   async *streamAnswer<T>(
@@ -1595,8 +1862,9 @@ export class Exa {
       model?: "exa" | "exa-pro";
       systemPrompt?: string;
       outputSchema?: Record<string, unknown> | ZodSchema<T>;
-      userLocation?: string;
-    }
+      userLocation?: UserLocation;
+    } & UserIdentifierOptions & TransportRequestOptions,
+    requestOptions?: RequestOptions
   ): AsyncGenerator<AnswerStreamChunk> {
     // Convert Zod schema to JSON schema if needed
     let outputSchema = options?.outputSchema;
@@ -1613,16 +1881,27 @@ export class Exa {
       systemPrompt: options?.systemPrompt,
       outputSchema,
       userLocation: options?.userLocation,
+      userIdentifier: options?.userIdentifier,
     };
 
-    yield* this.streamChatCompletions("/answer", body);
+    yield* this.streamChatCompletions(
+      "/answer",
+      body,
+      mergeRequestOptions(pickRequestOptions(options), requestOptions)
+    );
   }
 
   private async *streamChatCompletions(
     endpoint: string,
-    body: Record<string, unknown>
+    body: Record<string, unknown>,
+    requestOptions?: RequestOptions
   ): AsyncGenerator<AnswerStreamChunk> {
-    const response = await this.rawRequest(endpoint, "POST", body);
+    const response = await this.streamRequestWithOptions(
+      endpoint,
+      "POST",
+      body,
+      requestOptions
+    );
 
     if (!response.ok) {
       const message = await response.text();
@@ -1685,7 +1964,13 @@ export class Exa {
         }
       }
     } finally {
-      reader.releaseLock();
+      // Cancel so rawRequest can release signal listeners and timers even if
+      // the consumer stops early (break / throw out of the generator).
+      try {
+        await reader.cancel();
+      } catch {
+        // ignore
+      }
     }
   }
 
@@ -1736,74 +2021,52 @@ export class Exa {
 
     const decoder = new TextDecoder();
     let buffer = "";
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-    return new Promise<T>(async (resolve, reject) => {
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
 
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.replace(/^data:\s*/, "").trim();
+          if (!jsonStr || jsonStr === "[DONE]") continue;
 
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue;
+          let chunk: any;
+          try {
+            chunk = JSON.parse(jsonStr);
+          } catch {
+            continue;
+          }
 
-            const jsonStr = line.replace(/^data:\s*/, "").trim();
-            if (!jsonStr || jsonStr === "[DONE]") {
-              continue;
-            }
-
-            let chunk: any;
-            try {
-              chunk = JSON.parse(jsonStr);
-            } catch {
-              continue; // Ignore malformed JSON lines
-            }
-
-            switch (chunk.tag) {
-              case "complete":
-                reader.releaseLock();
-                resolve(chunk.data as T);
-                return;
-              case "error": {
-                const message = chunk.error?.message || "Unknown error";
-                reader.releaseLock();
-                reject(
-                  new ExaError(
-                    message,
-                    HttpStatusCode.InternalServerError,
-                    new Date().toISOString()
-                  )
-                );
-                return;
-              }
-              // 'progress' and any other tags are ignored for the blocking variant
-              default:
-                break;
-            }
+          if (chunk.tag === "complete") return chunk.data as T;
+          if (chunk.tag === "error") {
+            throw new ExaError(
+              chunk.error?.message || "Unknown error",
+              HttpStatusCode.InternalServerError,
+              new Date().toISOString()
+            );
           }
         }
-
-        // If we exit the loop without receiving a completion event
-        reject(
-          new ExaError(
-            "Stream ended without a completion event.",
-            HttpStatusCode.InternalServerError,
-            new Date().toISOString()
-          )
-        );
-      } catch (err) {
-        reject(err as Error);
-      } finally {
-        try {
-          reader.releaseLock();
-        } catch {
-          /* ignore */
-        }
       }
-    });
+
+      throw new ExaError(
+        "Stream ended without a completion event.",
+        HttpStatusCode.InternalServerError,
+        new Date().toISOString()
+      );
+    } finally {
+      // The server may keep the SSE connection open after a terminal event.
+      try {
+        await reader.cancel();
+      } catch {
+        // Preserve the completion payload or original read error.
+      }
+      reader.releaseLock();
+    }
   }
 }
 

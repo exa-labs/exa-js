@@ -95,7 +95,7 @@ Deep search variants that also support `additionalQueries`:
 
 ### Raw body fields
 
-Pass `requestOptions.body` as the third argument for per-call search body overrides.
+Pass `requestOptions.body` as the third argument for per-call search body overrides. Every other method takes it too; see [Request options](#request-options).
 
 ```typescript
 const result = await exa.search("AI research", undefined, { body: { futureField: true } });
@@ -304,6 +304,98 @@ const current = await exa.beta.agent.monitors.get(monitor.id, { betas });
 console.log(current.status, current.refresh, current.usage);
 await exa.beta.agent.monitors.delete(monitor.id, { betas });
 ```
+
+## Request options
+
+Every API method takes a request options object as its last argument. It comes after a method's existing arguments, so pass `undefined` for any you skip.
+
+| Option              | Effect                                                      |
+| ------------------- | ----------------------------------------------------------- |
+| `body`              | Extra fields merged over the JSON request body              |
+| `headers`           | Extra request headers                                       |
+| `query`             | Extra query parameters                                      |
+| `signal`, `timeout` | See [Cancellation and timeouts](#cancellation-and-timeouts) |
+
+```ts
+// Send a field the SDK does not type yet.
+await exa.getContents(
+  "https://example.com",
+  { text: true },
+  { body: { futureField: true } }
+);
+
+await exa.websets.list(
+  { limit: 10 },
+  {
+    query: { futureParam: "value" },
+    headers: { "X-Request-Source": "nightly" },
+  }
+);
+```
+
+`body`, `headers` and `query` add to the request the method builds. On a name the method also sets, your value wins.
+
+- `body` is sent with `POST`, `PUT` and `PATCH` requests. Other requests ignore it; use `query` there.
+- A header the SDK sets, such as `User-Agent`, is replaced whatever its case. A header set to `null` is removed.
+- The method you call decides whether the response streams. `stream` is never taken from `body` or `query`, and a streaming method keeps its `Accept: text/event-stream`: call the streaming method instead.
+- Helpers that make several requests (`listAll`, `getAll`, `pollUntilFinished`, `createAndWait`, `waitUntilIdle`) apply the options to each one, so `createAndWait` sends `body` with the create request and not with its polls. A `cursor` in `query` picks the first page of `listAll` and `getAll`; the helper advances from there.
+- A CSV import's upload goes to a presigned URL and receives none of the three.
+- The LLM tool helpers (`exa.tools`, `exa.openai`, `exa.anthropic`) take no request options argument. A `webSearch` tool passes the `signal` and `timeout` in its config to every search it runs; a `getContents` tool takes neither, and neither tool takes `body`, `headers` or `query`. `run`, `execute` and `handleToolCalls` / `handleToolUse` take no per-call options.
+
+The deprecated `exa.beta.agent.runs` `get`, `cancel`, `stop`, and `delete` take request options in their options object, next to `betas`.
+
+## Cancellation and timeouts
+
+The request options take `signal` to cancel the request and `timeout` in milliseconds. They are never sent in the request body.
+
+```ts
+const controller = new AbortController();
+const pending = exa.search("latest AI developments", undefined, {
+  signal: controller.signal,
+});
+controller.abort();
+await pending; // rejects with ExaAbortError
+
+await exa.getContents(
+  "https://example.com",
+  { text: true },
+  { timeout: 10_000 }
+);
+await exa.websets.get("ws_123", undefined, { timeout: 10_000 });
+await exa.agent.runs.get("run_123", { timeout: 10_000 });
+```
+
+Search, contents, and answer also accept `signal` and `timeout` inside their options object; the trailing argument wins when both set the same field.
+
+Set a default timeout for every request on the client; a per-call `timeout` overrides it. Without one, the SDK applies no timeout of its own.
+
+```ts
+const exa = new Exa(process.env.EXA_API_KEY, undefined, { timeout: 30_000 });
+```
+
+`timeout` is a positive integer up to 2,147,483,647 ms and applies to each HTTP request:
+
+- A regular call must finish, response body included, within the timeout.
+- A streaming call (`streamSearch`, `streamAnswer`, `stream: true`) must start within the timeout. Once the stream is flowing the timeout no longer applies; use `signal` to stop it.
+- Helpers that make several requests (`listAll`, `getAll`, `pollUntilFinished`, `createAndWait`, `waitUntilIdle`) apply it to each one. Aborting the signal also ends the wait between polls.
+
+Both failures have their own error class: `ExaTimeoutError` (`name` `"TimeoutError"`) when `timeout` expires, and `ExaAbortError` (`name` `"AbortError"`) when your `signal` aborts, whatever its reason, `AbortSignal.timeout()` included.
+
+```ts
+import { ExaAbortError, ExaTimeoutError } from "exa-js";
+
+try {
+  await exa.search("latest AI developments", undefined, { timeout: 5_000 });
+} catch (error) {
+  if (error instanceof ExaTimeoutError) {
+    // An ExaError with statusCode 408; error.timeout is the limit in ms.
+  } else if (error instanceof ExaAbortError) {
+    // The caller's signal aborted; error.cause is the underlying reason.
+  }
+}
+```
+
+`request` / `rawRequest` take the same options as their sixth argument. With `rawRequest`, the timeout keeps running until the response body is consumed or cancelled, so do one or the other when finished. Keeping only a body reader or a cloned response does not end cancellation or timeout coverage, and an interrupted body read rejects with the platform's own error. Request timers and signal listeners are released when the body settles.
 
 ## TypeScript
 

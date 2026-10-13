@@ -103,6 +103,11 @@ const isBoolean: Parser<boolean> = (value, path) => {
   return value;
 };
 
+const isNumber: Parser<number> = (value, path) => {
+  if (typeof value !== "number") throw fail(path, "number", value);
+  return value;
+};
+
 const isObject: Parser<Record<string, unknown>> = (value, path) => {
   if (!isRecord(value)) throw fail(path, "object", value);
   return value;
@@ -304,6 +309,17 @@ const CONTENTS_FIELDS = {
 const CONTENTS_OPTIONS = object(CONTENTS_FIELDS);
 type ContentsOptions = Parsed<typeof CONTENTS_OPTIONS>;
 
+const USER_LOCATION = anyOf(
+  isString,
+  anyOf(
+    object({ country: isString, latitude: isNumber, longitude: isNumber }, [
+      "latitude",
+      "longitude",
+    ]),
+    object({ country: isString }, ["country"])
+  )
+);
+
 const FILTER_FIELDS = {
   numResults: integer(1, 100),
   includeDomains: stringList,
@@ -316,7 +332,7 @@ const FILTER_FIELDS = {
   endPublishedDate: isString,
   category: CATEGORY,
   flags: stringList,
-  userLocation: isString,
+  userLocation: USER_LOCATION,
   contents: CONTENTS_OPTIONS,
 };
 

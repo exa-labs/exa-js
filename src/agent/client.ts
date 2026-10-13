@@ -23,6 +23,7 @@ import {
   ListAgentRunsParams,
   ListAgentRunsResponse,
 } from "./types";
+import { sleep, type RequestOptions } from "../request-options";
 
 type WithBetaOptions<T> = T & AgentBetaOptions;
 type AgentTerminalStatus = "completed" | "failed" | "cancelled";
@@ -185,10 +186,12 @@ export class AgentRunEventsClient extends AgentBaseClient {
    */
   async list(
     runId: string,
-    options?: ListAgentRunEventsParams
+    options?: ListAgentRunEventsParams,
+    requestOptions?: RequestOptions
   ): Promise<ListAgentRunEventsResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const params = this.buildPaginationParams(options);
-    return this.request<ListAgentRunEventsResponse>(
+    return scoped.request<ListAgentRunEventsResponse>(
       `/${runId}/events`,
       "GET",
       undefined,
@@ -212,19 +215,26 @@ export class AgentRunsClient extends AgentBaseClient {
    * Create an Agent run.
    */
   async create<T>(
-    params: AgentCreateOptions<T> & { stream: true }
+    params: AgentCreateOptions<T> & { stream: true },
+    requestOptions?: RequestOptions
   ): Promise<AsyncGenerator<AgentEvent>>;
   async create<T>(
-    params: AgentCreateOptions<T> & { stream?: false }
+    params: AgentCreateOptions<T> & { stream?: false },
+    requestOptions?: RequestOptions
   ): Promise<AgentRunTyped<T>>;
-  async create(params: CreateAgentRunParams): Promise<AgentRun>;
+  async create(
+    params: CreateAgentRunParams,
+    requestOptions?: RequestOptions
+  ): Promise<AgentRun>;
   async create<T>(
-    params: AgentCreateOptions<T>
+    params: AgentCreateOptions<T>,
+    requestOptions?: RequestOptions
   ): Promise<AgentRun | AgentRunTyped<T> | AsyncGenerator<AgentEvent>> {
+    const scoped = this.withRequestOptions(requestOptions);
     const { stream, payload } = buildAgentRunPayload(params);
 
     if (stream) {
-      const response = await this.rawRequest("", "POST", payload, undefined, {
+      const response = await scoped.rawRequest("", "POST", payload, undefined, {
         Accept: "text/event-stream",
       });
       if (!response.ok) {
@@ -239,34 +249,43 @@ export class AgentRunsClient extends AgentBaseClient {
       return streamAgentEvents(response);
     }
 
-    return this.request<AgentRunTyped<T>>("", "POST", payload);
+    return scoped.request<AgentRunTyped<T>>("", "POST", payload);
   }
 
   /**
    * Get an Agent run by ID.
    */
-  async get(runId: string): Promise<AgentRun> {
-    return this.request<AgentRun>(`/${runId}`, "GET");
+  async get(runId: string, requestOptions?: RequestOptions): Promise<AgentRun> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<AgentRun>(`/${runId}`, "GET");
   }
 
   /**
    * List Agent runs.
    */
-  async list(options?: ListAgentRunsParams): Promise<ListAgentRunsResponse> {
+  async list(
+    options?: ListAgentRunsParams,
+    requestOptions?: RequestOptions
+  ): Promise<ListAgentRunsResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const params = this.buildPaginationParams(options);
-    return this.request<ListAgentRunsResponse>("", "GET", undefined, params);
+    return scoped.request<ListAgentRunsResponse>("", "GET", undefined, params);
   }
 
   /**
    * Iterate through all Agent runs, handling pagination automatically.
    */
-  async *listAll(options?: ListAgentRunsParams): AsyncGenerator<AgentRun> {
+  async *listAll(
+    options?: ListAgentRunsParams,
+    requestOptions?: RequestOptions
+  ): AsyncGenerator<AgentRun> {
+    let scoped = this.withRequestOptions(requestOptions);
     let cursor: string | undefined = undefined;
     const pageOptions = options ? { ...options } : {};
 
     while (true) {
       pageOptions.cursor = cursor;
-      const response = await this.list(pageOptions);
+      const response = await scoped.list(pageOptions);
 
       for (const run of response.data) {
         yield run;
@@ -277,15 +296,20 @@ export class AgentRunsClient extends AgentBaseClient {
       }
 
       cursor = response.nextCursor;
+      scoped = scoped.forNextPage();
     }
   }
 
   /**
    * Collect all Agent runs into an array.
    */
-  async getAll(options?: ListAgentRunsParams): Promise<AgentRun[]> {
+  async getAll(
+    options?: ListAgentRunsParams,
+    requestOptions?: RequestOptions
+  ): Promise<AgentRun[]> {
+    const scoped = this.withRequestOptions(requestOptions);
     const runs: AgentRun[] = [];
-    for await (const run of this.listAll(options)) {
+    for await (const run of scoped.listAll(options)) {
       runs.push(run);
     }
     return runs;
@@ -294,23 +318,35 @@ export class AgentRunsClient extends AgentBaseClient {
   /**
    * Cancel a queued or running Agent run.
    */
-  async cancel(runId: string): Promise<AgentRun> {
-    return this.request<AgentRun>(`/${runId}/cancel`, "POST");
+  async cancel(
+    runId: string,
+    requestOptions?: RequestOptions
+  ): Promise<AgentRun> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<AgentRun>(`/${runId}/cancel`, "POST");
   }
 
   /**
    * Stop a running Agent run, completing it early with the results
    * gathered so far. Only supported for `ultra` effort runs.
    */
-  async stop(runId: string): Promise<AgentRun> {
-    return this.request<AgentRun>(`/${runId}/stop`, "POST");
+  async stop(
+    runId: string,
+    requestOptions?: RequestOptions
+  ): Promise<AgentRun> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<AgentRun>(`/${runId}/stop`, "POST");
   }
 
   /**
    * Delete a stored Agent run.
    */
-  async delete(runId: string): Promise<DeletedAgentRun> {
-    return this.request<DeletedAgentRun>(`/${runId}`, "DELETE");
+  async delete(
+    runId: string,
+    requestOptions?: RequestOptions
+  ): Promise<DeletedAgentRun> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<DeletedAgentRun>(`/${runId}`, "DELETE");
   }
 
   /**
@@ -318,15 +354,17 @@ export class AgentRunsClient extends AgentBaseClient {
    */
   async pollUntilFinished(
     runId: string,
-    options?: AgentWaitOptions
+    options?: AgentWaitOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentTerminalRun> {
+    const scoped = this.withRequestOptions(requestOptions);
     const pollInterval =
       options?.pollInterval ?? DEFAULT_AGENT_POLL_INTERVAL_MS;
     const timeoutMs = options?.timeoutMs ?? DEFAULT_AGENT_POLL_TIMEOUT_MS;
     const startTime = Date.now();
 
     while (true) {
-      const run = await this.get(runId);
+      const run = await scoped.get(runId);
       if (isTerminalAgentRunStatus(run.status)) {
         return run as AgentTerminalRun;
       }
@@ -337,7 +375,7 @@ export class AgentRunsClient extends AgentBaseClient {
         );
       }
 
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      await sleep(pollInterval, scoped.requestOptions?.signal);
     }
   }
 
@@ -346,23 +384,27 @@ export class AgentRunsClient extends AgentBaseClient {
    */
   async createAndWait<T>(
     params: Omit<AgentCreateOptions<T>, "stream">,
-    options?: AgentWaitOptions
+    options?: AgentWaitOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentCompletedRunTyped<T>>;
   async createAndWait(
     params: CreateAgentRunParams,
-    options?: AgentWaitOptions
+    options?: AgentWaitOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentCompletedRun>;
   async createAndWait<T>(
     params: Omit<AgentCreateOptions<T>, "stream">,
-    options?: AgentWaitOptions
+    options?: AgentWaitOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentCompletedRunTyped<T>> {
+    const scoped = this.withRequestOptions(requestOptions);
     const { stream: _stream, ...createParams } =
       params as AgentCreateOptions<T>;
-    const run = (await this.create(
+    const run = (await scoped.create(
       createParams as AgentCreateOptions<T> & { stream?: false }
     )) as AgentRunTyped<T>;
     const runId = (run as AgentRun).id;
-    const terminalRun = (await this.pollUntilFinished(
+    const terminalRun = (await scoped.pollUntilFinished(
       runId,
       createAndWaitPollOptions(options)
     )) as AgentTerminalRunTyped<T>;
@@ -395,11 +437,13 @@ export class AgentBetaRunEventsClient extends AgentRunEventsClient {
    */
   async list(
     runId: string,
-    options?: WithBetaOptions<ListAgentRunEventsParams>
+    options?: WithBetaOptions<ListAgentRunEventsParams>,
+    requestOptions?: RequestOptions
   ): Promise<ListAgentRunEventsResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const { betas, ...pagination } = options ?? {};
     const params = this.buildPaginationParams(pagination);
-    return this.request<ListAgentRunEventsResponse>(
+    return scoped.request<ListAgentRunEventsResponse>(
       `/${runId}/events`,
       "GET",
       undefined,
@@ -421,17 +465,22 @@ export class AgentBetaRunsClient extends AgentRunsClient {
   }
 
   async create<T>(
-    params: WithBetaOptions<AgentCreateOptions<T>> & { stream: true }
+    params: WithBetaOptions<AgentCreateOptions<T>> & { stream: true },
+    requestOptions?: RequestOptions
   ): Promise<AsyncGenerator<AgentEvent>>;
   async create<T>(
-    params: WithBetaOptions<AgentCreateOptions<T>> & { stream?: false }
+    params: WithBetaOptions<AgentCreateOptions<T>> & { stream?: false },
+    requestOptions?: RequestOptions
   ): Promise<AgentRunTyped<T>>;
   async create(
-    params: CreateAgentRunParams & AgentBetaOptions
+    params: CreateAgentRunParams & AgentBetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentRun>;
   async create<T>(
-    params: WithBetaOptions<AgentCreateOptions<T>>
+    params: WithBetaOptions<AgentCreateOptions<T>>,
+    requestOptions?: RequestOptions
   ): Promise<AgentRun | AgentRunTyped<T> | AsyncGenerator<AgentEvent>> {
+    const scoped = this.withRequestOptions(requestOptions);
     const { betas, ...createParams } = params;
     const { stream, payload } = buildAgentRunPayload(
       createParams as AgentCreateOptions<T>
@@ -439,7 +488,7 @@ export class AgentBetaRunsClient extends AgentRunsClient {
     const headers = headersForBetas(betas);
 
     if (stream) {
-      const response = await this.rawRequest("", "POST", payload, undefined, {
+      const response = await scoped.rawRequest("", "POST", payload, undefined, {
         ...headers,
         Accept: "text/event-stream",
       });
@@ -455,7 +504,7 @@ export class AgentBetaRunsClient extends AgentRunsClient {
       return streamAgentEvents(response);
     }
 
-    return this.request<AgentRunTyped<T>>(
+    return scoped.request<AgentRunTyped<T>>(
       "",
       "POST",
       payload,
@@ -464,8 +513,12 @@ export class AgentBetaRunsClient extends AgentRunsClient {
     );
   }
 
-  async get(runId: string, options?: AgentBetaOptions): Promise<AgentRun> {
-    return this.request<AgentRun>(
+  async get(
+    runId: string,
+    options?: AgentBetaOptions & RequestOptions
+  ): Promise<AgentRun> {
+    const scoped = this.withRequestOptions(options);
+    return scoped.request<AgentRun>(
       `/${runId}`,
       "GET",
       undefined,
@@ -475,11 +528,13 @@ export class AgentBetaRunsClient extends AgentRunsClient {
   }
 
   async list(
-    options?: WithBetaOptions<ListAgentRunsParams>
+    options?: WithBetaOptions<ListAgentRunsParams>,
+    requestOptions?: RequestOptions
   ): Promise<ListAgentRunsResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const { betas, ...pagination } = options ?? {};
     const params = this.buildPaginationParams(pagination);
-    return this.request<ListAgentRunsResponse>(
+    return scoped.request<ListAgentRunsResponse>(
       "",
       "GET",
       undefined,
@@ -489,15 +544,17 @@ export class AgentBetaRunsClient extends AgentRunsClient {
   }
 
   async *listAll(
-    options?: WithBetaOptions<ListAgentRunsParams>
+    options?: WithBetaOptions<ListAgentRunsParams>,
+    requestOptions?: RequestOptions
   ): AsyncGenerator<AgentRun> {
+    let scoped = this.withRequestOptions(requestOptions);
     let cursor: string | undefined = undefined;
     const { betas, ...pagination } = options ?? {};
     const pageOptions: ListAgentRunsParams = { ...pagination };
 
     while (true) {
       pageOptions.cursor = cursor;
-      const response = await this.list({ ...pageOptions, betas });
+      const response = await scoped.list({ ...pageOptions, betas });
 
       for (const run of response.data) {
         yield run;
@@ -508,21 +565,28 @@ export class AgentBetaRunsClient extends AgentRunsClient {
       }
 
       cursor = response.nextCursor;
+      scoped = scoped.forNextPage();
     }
   }
 
   async getAll(
-    options?: WithBetaOptions<ListAgentRunsParams>
+    options?: WithBetaOptions<ListAgentRunsParams>,
+    requestOptions?: RequestOptions
   ): Promise<AgentRun[]> {
+    const scoped = this.withRequestOptions(requestOptions);
     const runs: AgentRun[] = [];
-    for await (const run of this.listAll(options)) {
+    for await (const run of scoped.listAll(options)) {
       runs.push(run);
     }
     return runs;
   }
 
-  async cancel(runId: string, options?: AgentBetaOptions): Promise<AgentRun> {
-    return this.request<AgentRun>(
+  async cancel(
+    runId: string,
+    options?: AgentBetaOptions & RequestOptions
+  ): Promise<AgentRun> {
+    const scoped = this.withRequestOptions(options);
+    return scoped.request<AgentRun>(
       `/${runId}/cancel`,
       "POST",
       undefined,
@@ -535,8 +599,12 @@ export class AgentBetaRunsClient extends AgentRunsClient {
    * Stop a running Agent run, completing it early with the results
    * gathered so far. Only supported for `ultra` effort runs.
    */
-  async stop(runId: string, options?: AgentBetaOptions): Promise<AgentRun> {
-    return this.request<AgentRun>(
+  async stop(
+    runId: string,
+    options?: AgentBetaOptions & RequestOptions
+  ): Promise<AgentRun> {
+    const scoped = this.withRequestOptions(options);
+    return scoped.request<AgentRun>(
       `/${runId}/stop`,
       "POST",
       undefined,
@@ -547,9 +615,10 @@ export class AgentBetaRunsClient extends AgentRunsClient {
 
   async delete(
     runId: string,
-    options?: AgentBetaOptions
+    options?: AgentBetaOptions & RequestOptions
   ): Promise<DeletedAgentRun> {
-    return this.request<DeletedAgentRun>(
+    const scoped = this.withRequestOptions(options);
+    return scoped.request<DeletedAgentRun>(
       `/${runId}`,
       "DELETE",
       undefined,
@@ -560,8 +629,10 @@ export class AgentBetaRunsClient extends AgentRunsClient {
 
   async pollUntilFinished(
     runId: string,
-    options?: WithBetaOptions<AgentWaitOptions>
+    options?: WithBetaOptions<AgentWaitOptions>,
+    requestOptions?: RequestOptions
   ): Promise<AgentTerminalRun> {
+    const scoped = this.withRequestOptions(requestOptions);
     const pollInterval =
       options?.pollInterval ?? DEFAULT_AGENT_POLL_INTERVAL_MS;
     const timeoutMs = options?.timeoutMs ?? DEFAULT_AGENT_POLL_TIMEOUT_MS;
@@ -569,7 +640,7 @@ export class AgentBetaRunsClient extends AgentRunsClient {
     const headers = headersForBetas(options?.betas);
 
     while (true) {
-      const run = await this.request<AgentRun>(
+      const run = await scoped.request<AgentRun>(
         `/${runId}`,
         "GET",
         undefined,
@@ -586,33 +657,37 @@ export class AgentBetaRunsClient extends AgentRunsClient {
         );
       }
 
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      await sleep(pollInterval, scoped.requestOptions?.signal);
     }
   }
 
   async createAndWait<T>(
     params: WithBetaOptions<Omit<AgentCreateOptions<T>, "stream">>,
-    options?: AgentWaitOptions
+    options?: AgentWaitOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentCompletedRunTyped<T>>;
   async createAndWait(
     params: CreateAgentRunParams & AgentBetaOptions,
-    options?: AgentWaitOptions
+    options?: AgentWaitOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentCompletedRun>;
   async createAndWait<T>(
     params: WithBetaOptions<Omit<AgentCreateOptions<T>, "stream">>,
-    options?: AgentWaitOptions
+    options?: AgentWaitOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentCompletedRunTyped<T>> {
+    const scoped = this.withRequestOptions(requestOptions);
     const {
       betas,
       stream: _stream,
       ...createParams
     } = params as WithBetaOptions<AgentCreateOptions<T>>;
-    const run = (await this.create({
+    const run = (await scoped.create({
       ...createParams,
       betas,
     })) as AgentRunTyped<T>;
     const runId = (run as AgentRun).id;
-    const terminalRun = (await this.pollUntilFinished(runId, {
+    const terminalRun = (await scoped.pollUntilFinished(runId, {
       ...createAndWaitPollOptions(options),
       betas,
     })) as AgentTerminalRunTyped<T>;

@@ -201,6 +201,16 @@ export interface CreateAgentRunParams {
   metadata?: Record<string, unknown>;
   /** Exa Connect data providers to enable for the run. Each entry enables all of that provider's tools. */
   dataSources?: AgentDataSource[];
+  /**
+   * An opaque identifier you generate for the end user this run is made on
+   * behalf of, such as a UUID or a hash. Never send personal information such
+   * as an email address, name or phone number. 1 to 64 characters: letters,
+   * digits, `_` and `-`. Exa records it with the run and its searches so
+   * usage can be attributed to one end user; it does not change results. A
+   * follow-up run (`previousRunId`) that omits it keeps the identifier of the
+   * run it continues.
+   */
+  userIdentifier?: string;
 }
 
 export type CreateAgentRunParamsTyped<T> = Omit<

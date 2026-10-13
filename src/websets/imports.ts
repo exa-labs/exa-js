@@ -1,7 +1,7 @@
 /**
  * Client for managing Imports
  */
-import { ExaError, HttpStatusCode } from "../errors";
+import { ExaAbortError, ExaError, HttpStatusCode } from "../errors";
 import { PaginationParams, WebsetsBaseClient } from "./base";
 import {
   CreateImportParameters,
@@ -12,6 +12,12 @@ import {
   ListImportsResponse,
   UpdateImport,
 } from "./openapi";
+import {
+  resolveRequestSignal,
+  sleep,
+  withClientDefaults,
+  type RequestOptions,
+} from "../request-options";
 
 /**
  * Options for waiting until import completion
@@ -65,27 +71,36 @@ export class ImportsClient extends WebsetsBaseClient {
   /**
    * Create a new Import (basic version - returns upload URL)
    * @param params The import creation parameters
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The created Import response with upload URL
    */
-  async create(params: CreateImportParameters): Promise<CreateImportResponse>;
+  async create(
+    params: CreateImportParameters,
+    csv?: undefined,
+    requestOptions?: RequestOptions
+  ): Promise<CreateImportResponse>;
 
   /**
    * Create a new Import with CSV data (handles upload)
    * @param params The import creation parameters (without size/count - calculated automatically)
    * @param csv CSV data as string or Buffer
+   * @param requestOptions Per-call request options. `signal` and `timeout` also apply to the upload; `body`, `headers` and `query` apply to the create request only
    * @returns The Import after upload (not waited for completion)
    */
   async create(
     params: CreateImportWithCsvParameters,
-    csv: CsvDataInput
+    csv: CsvDataInput,
+    requestOptions?: RequestOptions
   ): Promise<Import>;
 
   async create(
     params: CreateImportParameters | CreateImportWithCsvParameters,
-    csv?: CsvDataInput
+    csv?: CsvDataInput,
+    requestOptions?: RequestOptions
   ): Promise<CreateImportResponse | Import> {
+    const scoped = this.withRequestOptions(requestOptions);
     if (csv === undefined) {
-      return this.request<CreateImportResponse>(
+      return scoped.request<CreateImportResponse>(
         "/v0/imports",
         "POST",
         params as CreateImportParameters
@@ -135,16 +150,22 @@ export class ImportsClient extends WebsetsBaseClient {
       csv: (params as CreateImportWithCsvParameters).csv,
     };
 
-    const importResponse = await this.request<CreateImportResponse>(
+    const importResponse = await scoped.request<CreateImportResponse>(
       "/v0/imports",
       "POST",
       createParams
     );
 
+    // The upload goes to a presigned URL rather than through the client, so
+    // it resolves the same transport options itself.
+    const upload = resolveRequestSignal(
+      withClientDefaults(this.client, scoped.requestOptions)
+    );
     try {
       const uploadResponse = await fetch(importResponse.uploadUrl, {
         method: "PUT",
         body: csvBuffer as BodyInit,
+        signal: upload.signal,
       });
 
       if (!uploadResponse.ok) {
@@ -155,13 +176,19 @@ export class ImportsClient extends WebsetsBaseClient {
         );
       }
     } catch (error) {
-      if (error instanceof ExaError) {
-        throw error;
+      const requestError = upload.toRequestError(error);
+      if (
+        requestError instanceof ExaError ||
+        requestError instanceof ExaAbortError
+      ) {
+        throw requestError;
       }
       throw new ExaError(
         `Failed to upload CSV data: ${(error as Error).message}`,
         HttpStatusCode.BadRequest
       );
+    } finally {
+      upload.dispose();
     }
 
     return importResponse;
@@ -170,20 +197,27 @@ export class ImportsClient extends WebsetsBaseClient {
   /**
    * Get an Import by ID
    * @param id The ID of the Import
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The Import
    */
-  async get(id: string): Promise<Import> {
-    return this.request<Import>(`/v0/imports/${id}`, "GET");
+  async get(id: string, requestOptions?: RequestOptions): Promise<Import> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<Import>(`/v0/imports/${id}`, "GET");
   }
 
   /**
    * List all Imports
    * @param options Pagination options
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The list of Imports
    */
-  async list(options?: PaginationParams): Promise<ListImportsResponse> {
+  async list(
+    options?: PaginationParams,
+    requestOptions?: RequestOptions
+  ): Promise<ListImportsResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const params = this.buildPaginationParams(options);
-    return this.request<ListImportsResponse>(
+    return scoped.request<ListImportsResponse>(
       "/v0/imports",
       "GET",
       undefined,
@@ -195,32 +229,43 @@ export class ImportsClient extends WebsetsBaseClient {
    * Update an Import
    * @param id The ID of the Import
    * @param params The import update parameters
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The updated Import
    */
-  async update(id: string, params: UpdateImport): Promise<Import> {
-    return this.request<Import>(`/v0/imports/${id}`, "PATCH", params);
+  async update(
+    id: string,
+    params: UpdateImport,
+    requestOptions?: RequestOptions
+  ): Promise<Import> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<Import>(`/v0/imports/${id}`, "PATCH", params);
   }
 
   /**
    * Delete an Import
    * @param id The ID of the Import
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The deleted Import
    */
-  async delete(id: string): Promise<Import> {
-    return this.request<Import>(`/v0/imports/${id}`, "DELETE");
+  async delete(id: string, requestOptions?: RequestOptions): Promise<Import> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<Import>(`/v0/imports/${id}`, "DELETE");
   }
 
   /**
    * Wait until an Import is completed or failed
    * @param id The ID of the Import
    * @param options Configuration options for timeout and polling
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The Import once it reaches a final state (completed or failed)
    * @throws Error if the Import does not complete within the timeout or fails
    */
   async waitUntilCompleted(
     id: string,
-    options?: WaitUntilCompletedOptions
+    options?: WaitUntilCompletedOptions,
+    requestOptions?: RequestOptions
   ): Promise<Import> {
+    const scoped = this.withRequestOptions(requestOptions);
     const timeout = options?.timeout ?? 30 * 60 * 1000;
     const pollInterval = options?.pollInterval ?? 2_000;
     const onPoll = options?.onPoll;
@@ -228,7 +273,7 @@ export class ImportsClient extends WebsetsBaseClient {
     const startTime = Date.now();
 
     while (true) {
-      const importItem = await this.get(id);
+      const importItem = await scoped.get(id);
 
       if (onPoll) {
         onPoll(importItem.status);
@@ -252,22 +297,27 @@ export class ImportsClient extends WebsetsBaseClient {
         );
       }
 
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      await sleep(pollInterval, scoped.requestOptions?.signal);
     }
   }
 
   /**
    * Iterate through all Imports, handling pagination automatically
    * @param options Pagination options
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns Async generator of Imports
    */
-  async *listAll(options?: PaginationParams): AsyncGenerator<Import> {
+  async *listAll(
+    options?: PaginationParams,
+    requestOptions?: RequestOptions
+  ): AsyncGenerator<Import> {
+    let scoped = this.withRequestOptions(requestOptions);
     let cursor: string | undefined = undefined;
     const pageOptions = options ? { ...options } : {};
 
     while (true) {
       pageOptions.cursor = cursor;
-      const response = await this.list(pageOptions);
+      const response = await scoped.list(pageOptions);
 
       for (const importItem of response.data) {
         yield importItem;
@@ -278,17 +328,23 @@ export class ImportsClient extends WebsetsBaseClient {
       }
 
       cursor = response.nextCursor;
+      scoped = scoped.forNextPage();
     }
   }
 
   /**
    * Collect all Imports into an array
    * @param options Pagination options
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns Promise resolving to an array of all Imports
    */
-  async getAll(options?: PaginationParams): Promise<Import[]> {
+  async getAll(
+    options?: PaginationParams,
+    requestOptions?: RequestOptions
+  ): Promise<Import[]> {
+    const scoped = this.withRequestOptions(requestOptions);
     const imports: Import[] = [];
-    for await (const importItem of this.listAll(options)) {
+    for await (const importItem of scoped.listAll(options)) {
       imports.push(importItem);
     }
     return imports;
