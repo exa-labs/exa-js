@@ -3,6 +3,7 @@
  */
 
 import { Exa } from "../index";
+import { RequestScopedClient, streamRequestOptions } from "../request-options";
 import { ListAgentRunEventsParams, ListAgentRunsParams } from "./types";
 
 type QueryParams = Record<
@@ -12,10 +13,11 @@ type QueryParams = Record<
 
 type RequestBody = Record<string, unknown>;
 
-export class AgentBaseClient {
+export class AgentBaseClient extends RequestScopedClient {
   protected client: Exa;
 
   constructor(client: Exa) {
+    super();
     this.client = client;
   }
 
@@ -26,6 +28,16 @@ export class AgentBaseClient {
     params?: QueryParams,
     headers?: Record<string, string>
   ): Promise<T> {
+    if (this.requestOptions) {
+      return this.client.request<T>(
+        `/agent/runs${endpoint}`,
+        method,
+        data,
+        params,
+        headers,
+        this.requestOptions
+      );
+    }
     return this.client.request<T>(
       `/agent/runs${endpoint}`,
       method,
@@ -35,6 +47,10 @@ export class AgentBaseClient {
     );
   }
 
+  /**
+   * Opens a streamed response. `timeout` covers the wait for the stream to
+   * start; the caller's `signal` can cancel it at any point.
+   */
   protected async rawRequest(
     endpoint: string,
     method: string = "POST",
@@ -42,6 +58,17 @@ export class AgentBaseClient {
     params?: QueryParams,
     headers?: Record<string, string>
   ): Promise<Response> {
+    const transport = streamRequestOptions(this.client, this.requestOptions);
+    if (transport) {
+      return this.client.rawRequest(
+        `/agent/runs${endpoint}`,
+        method,
+        data,
+        params,
+        headers,
+        transport
+      );
+    }
     return this.client.rawRequest(
       `/agent/runs${endpoint}`,
       method,

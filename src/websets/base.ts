@@ -2,6 +2,7 @@
  * Base client for Websets API
  */
 import { Exa } from "../index";
+import { RequestScopedClient } from "../request-options";
 
 /**
  * Type for API query parameters
@@ -36,7 +37,7 @@ export interface PaginationParams {
 /**
  * Base client class for all Websets-related API clients
  */
-export class WebsetsBaseClient {
+export class WebsetsBaseClient extends RequestScopedClient {
   protected client: Exa;
 
   /**
@@ -44,6 +45,7 @@ export class WebsetsBaseClient {
    * @param client The Exa client instance
    */
   constructor(client: Exa) {
+    super();
     this.client = client;
   }
 
@@ -63,6 +65,16 @@ export class WebsetsBaseClient {
     params?: QueryParams,
     headers?: Record<string, string>
   ): Promise<T> {
+    if (this.requestOptions) {
+      return this.client.request<T>(
+        `/websets${endpoint}`,
+        method,
+        data,
+        params,
+        headers,
+        this.requestOptions
+      );
+    }
     return this.client.request<T>(
       `/websets${endpoint}`,
       method,

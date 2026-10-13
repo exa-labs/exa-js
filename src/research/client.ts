@@ -1,4 +1,5 @@
 import { Exa } from "../index";
+import { ExaAbortError } from "../errors";
 import {
   ListResearchRequest,
   ListResearchResponse,
@@ -12,6 +13,7 @@ import {
 import { ZodSchema } from "zod";
 import { isZodSchema, zodToJsonSchema } from "../zod-utils";
 import { ResearchBaseClient } from "./base";
+import { sleep, type RequestOptions } from "../request-options";
 
 export class ResearchClient extends ResearchBaseClient {
   constructor(client: Exa) {
@@ -19,20 +21,28 @@ export class ResearchClient extends ResearchBaseClient {
   }
 
   async create<T>(
-    params: ResearchCreateParamsTyped<ZodSchema<T>>
+    params: ResearchCreateParamsTyped<ZodSchema<T>>,
+    requestOptions?: RequestOptions
   ): Promise<ResearchCreateResponse>;
 
-  async create(params: {
-    instructions: string;
-    model?: ResearchCreateRequest["model"];
-    outputSchema?: Record<string, unknown>;
-  }): Promise<ResearchCreateResponse>;
+  async create(
+    params: {
+      instructions: string;
+      model?: ResearchCreateRequest["model"];
+      outputSchema?: Record<string, unknown>;
+    },
+    requestOptions?: RequestOptions
+  ): Promise<ResearchCreateResponse>;
 
-  async create<T>(params: {
-    instructions: string;
-    model?: ResearchCreateRequest["model"];
-    outputSchema?: Record<string, unknown> | ZodSchema<T>;
-  }): Promise<ResearchCreateResponse> {
+  async create<T>(
+    params: {
+      instructions: string;
+      model?: ResearchCreateRequest["model"];
+      outputSchema?: Record<string, unknown> | ZodSchema<T>;
+    },
+    requestOptions?: RequestOptions
+  ): Promise<ResearchCreateResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const { instructions, model, outputSchema } = params;
 
     let schema = outputSchema;
@@ -49,25 +59,33 @@ export class ResearchClient extends ResearchBaseClient {
       payload.outputSchema = schema as Record<string, unknown>;
     }
 
-    return this.request<ResearchCreateResponse>("", "POST", payload);
+    return scoped.request<ResearchCreateResponse>("", "POST", payload);
   }
 
-  get(researchId: string): Promise<Research>;
   get(
     researchId: string,
-    options: { stream?: false; events?: boolean }
+    options?: undefined,
+    requestOptions?: RequestOptions
+  ): Promise<Research>;
+  get(
+    researchId: string,
+    options: { stream?: false; events?: boolean },
+    requestOptions?: RequestOptions
   ): Promise<Research>;
   get<T>(
     researchId: string,
-    options: { stream?: false; events?: boolean; outputSchema: ZodSchema<T> }
+    options: { stream?: false; events?: boolean; outputSchema: ZodSchema<T> },
+    requestOptions?: RequestOptions
   ): Promise<ResearchTyped<T>>;
   get(
     researchId: string,
-    options: { stream: true; events?: boolean }
+    options: { stream: true; events?: boolean },
+    requestOptions?: RequestOptions
   ): Promise<AsyncGenerator<ResearchStreamEvent, any, any>>;
   get<T>(
     researchId: string,
-    options: { stream: true; events?: boolean; outputSchema?: ZodSchema<T> }
+    options: { stream: true; events?: boolean; outputSchema?: ZodSchema<T> },
+    requestOptions?: RequestOptions
   ): Promise<AsyncGenerator<ResearchStreamEvent, any, any>>;
   get<T = unknown>(
     researchId: string,
@@ -75,17 +93,19 @@ export class ResearchClient extends ResearchBaseClient {
       stream?: boolean;
       events?: boolean;
       outputSchema?: ZodSchema<T>;
-    }
+    },
+    requestOptions?: RequestOptions
   ):
     | Promise<Research | ResearchTyped<T>>
     | Promise<AsyncGenerator<ResearchStreamEvent>> {
+    const scoped = this.withRequestOptions(requestOptions);
     if (options?.stream) {
       const promise = async () => {
         const params: Record<string, string> = { stream: "true" };
         if (options.events !== undefined) {
           params.events = options.events.toString();
         }
-        const resp = await this.rawRequest(
+        const resp = await scoped.rawRequest(
           `/${researchId}`,
           "GET",
           undefined,
@@ -112,25 +132,35 @@ export class ResearchClient extends ResearchBaseClient {
         }
 
         async function* streamEvents() {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buffer += decoder.decode(value, { stream: true });
 
-            let parts = buffer.split("\n\n");
-            buffer = parts.pop() ?? "";
+              let parts = buffer.split("\n\n");
+              buffer = parts.pop() ?? "";
 
-            for (const part of parts) {
-              const processed = processPart(part);
+              for (const part of parts) {
+                const processed = processPart(part);
+                if (processed) {
+                  yield processed;
+                }
+              }
+            }
+            if (buffer.trim()) {
+              const processed = processPart(buffer.trim());
               if (processed) {
                 yield processed;
               }
             }
-          }
-          if (buffer.trim()) {
-            const processed = processPart(buffer.trim());
-            if (processed) {
-              yield processed;
+          } finally {
+            // Cancel so the request's signal listeners are released even if
+            // the consumer stops early.
+            try {
+              await reader.cancel();
+            } catch {
+              // ignore
             }
           }
         }
@@ -145,7 +175,7 @@ export class ResearchClient extends ResearchBaseClient {
       if (options?.events !== undefined) {
         params.events = options.events.toString();
       }
-      return this.request<Research>(
+      return scoped.request<Research>(
         `/${researchId}`,
         "GET",
         undefined,
@@ -154,9 +184,13 @@ export class ResearchClient extends ResearchBaseClient {
     }
   }
 
-  async list(options?: ListResearchRequest): Promise<ListResearchResponse> {
+  async list(
+    options?: ListResearchRequest,
+    requestOptions?: RequestOptions
+  ): Promise<ListResearchResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const params = this.buildPaginationParams(options);
-    return this.request<ListResearchResponse>("", "GET", undefined, params);
+    return scoped.request<ListResearchResponse>("", "GET", undefined, params);
   }
 
   async pollUntilFinished(
@@ -165,7 +199,8 @@ export class ResearchClient extends ResearchBaseClient {
       pollInterval?: number;
       timeoutMs?: number;
       events?: boolean;
-    }
+    },
+    requestOptions?: RequestOptions
   ): Promise<Research & { status: "completed" | "failed" | "canceled" }>;
   async pollUntilFinished<T>(
     researchId: string,
@@ -174,7 +209,8 @@ export class ResearchClient extends ResearchBaseClient {
       timeoutMs?: number;
       events?: boolean;
       outputSchema: ZodSchema<T>;
-    }
+    },
+    requestOptions?: RequestOptions
   ): Promise<
     ResearchTyped<T> & { status: "completed" | "failed" | "canceled" }
   >;
@@ -185,8 +221,10 @@ export class ResearchClient extends ResearchBaseClient {
       timeoutMs?: number;
       events?: boolean;
       outputSchema?: ZodSchema<T>;
-    }
+    },
+    requestOptions?: RequestOptions
   ): Promise<any> {
+    const scoped = this.withRequestOptions(requestOptions);
     const pollInterval = options?.pollInterval ?? 1000;
     const timeoutMs = options?.timeoutMs ?? 10 * 60 * 1000;
     const maxConsecutiveFailures = 5;
@@ -195,7 +233,7 @@ export class ResearchClient extends ResearchBaseClient {
 
     while (true) {
       try {
-        const research = await this.get(researchId, {
+        const research = await scoped.get(researchId, {
           events: options?.events,
         });
         consecutiveFailures = 0;
@@ -208,6 +246,10 @@ export class ResearchClient extends ResearchBaseClient {
           return research;
         }
       } catch (err) {
+        // A cancelled poll is the caller's decision, not a failed attempt.
+        if (err instanceof ExaAbortError) {
+          throw err;
+        }
         consecutiveFailures += 1;
         if (consecutiveFailures >= maxConsecutiveFailures) {
           throw new Error(
@@ -222,7 +264,7 @@ export class ResearchClient extends ResearchBaseClient {
         );
       }
 
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      await sleep(pollInterval, scoped.requestOptions?.signal);
     }
   }
 }

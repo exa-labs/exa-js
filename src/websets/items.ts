@@ -3,6 +3,7 @@
  */
 import { PaginationParams, WebsetsBaseClient } from "./base";
 import { ListWebsetItemResponse, WebsetItem } from "./openapi";
+import { type RequestOptions } from "../request-options";
 
 /**
  * Options for listing webset items
@@ -22,17 +23,20 @@ export class WebsetItemsClient extends WebsetsBaseClient {
    * List all Items for a Webset
    * @param websetId The ID of the Webset
    * @param params - Optional pagination and filtering parameters
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns A promise that resolves with the list of Items
    */
   list(
     websetId: string,
-    params?: ListWebsetItemsOptions
+    params?: ListWebsetItemsOptions,
+    requestOptions?: RequestOptions
   ): Promise<ListWebsetItemResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const queryParams = {
       ...this.buildPaginationParams(params),
       sourceId: params?.sourceId,
     };
-    return this.request<ListWebsetItemResponse>(
+    return scoped.request<ListWebsetItemResponse>(
       `/v0/websets/${websetId}/items`,
       "GET",
       undefined,
@@ -44,18 +48,21 @@ export class WebsetItemsClient extends WebsetsBaseClient {
    * Iterate through all Items in a Webset, handling pagination automatically
    * @param websetId The ID of the Webset
    * @param options Pagination options
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns Async generator of Webset Items
    */
   async *listAll(
     websetId: string,
-    options?: ListWebsetItemsOptions
+    options?: ListWebsetItemsOptions,
+    requestOptions?: RequestOptions
   ): AsyncGenerator<WebsetItem> {
+    let scoped = this.withRequestOptions(requestOptions);
     let cursor: string | undefined = undefined;
     const pageOptions = options ? { ...options } : {};
 
     while (true) {
       pageOptions.cursor = cursor;
-      const response = await this.list(websetId, pageOptions);
+      const response = await scoped.list(websetId, pageOptions);
 
       for (const item of response.data) {
         yield item;
@@ -66,6 +73,7 @@ export class WebsetItemsClient extends WebsetsBaseClient {
       }
 
       cursor = response.nextCursor;
+      scoped = scoped.forNextPage();
     }
   }
 
@@ -73,14 +81,17 @@ export class WebsetItemsClient extends WebsetsBaseClient {
    * Collect all items from a Webset into an array
    * @param websetId The ID of the Webset
    * @param options Pagination options
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns Promise resolving to an array of all Webset Items
    */
   async getAll(
     websetId: string,
-    options?: ListWebsetItemsOptions
+    options?: ListWebsetItemsOptions,
+    requestOptions?: RequestOptions
   ): Promise<WebsetItem[]> {
+    const scoped = this.withRequestOptions(requestOptions);
     const items: WebsetItem[] = [];
-    for await (const item of this.listAll(websetId, options)) {
+    for await (const item of scoped.listAll(websetId, options)) {
       items.push(item);
     }
     return items;
@@ -90,10 +101,16 @@ export class WebsetItemsClient extends WebsetsBaseClient {
    * Get an Item by ID
    * @param websetId The ID of the Webset
    * @param id The ID of the Item
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The Webset Item
    */
-  async get(websetId: string, id: string): Promise<WebsetItem> {
-    return this.request<WebsetItem>(
+  async get(
+    websetId: string,
+    id: string,
+    requestOptions?: RequestOptions
+  ): Promise<WebsetItem> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<WebsetItem>(
       `/v0/websets/${websetId}/items/${id}`,
       "GET"
     );
@@ -103,10 +120,16 @@ export class WebsetItemsClient extends WebsetsBaseClient {
    * Delete an Item
    * @param websetId The ID of the Webset
    * @param id The ID of the Item
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The deleted Webset Item
    */
-  async delete(websetId: string, id: string): Promise<WebsetItem> {
-    return this.request<WebsetItem>(
+  async delete(
+    websetId: string,
+    id: string,
+    requestOptions?: RequestOptions
+  ): Promise<WebsetItem> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<WebsetItem>(
       `/v0/websets/${websetId}/items/${id}`,
       "DELETE"
     );

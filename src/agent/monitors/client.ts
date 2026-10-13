@@ -23,6 +23,7 @@ import {
   ListAgentMonitorsParams,
   ListAgentMonitorsResponse,
 } from "./types";
+import { sleep, type RequestOptions } from "../../request-options";
 
 const DEFAULT_BACKTEST_POLL_INTERVAL_MS = 2000;
 const DEFAULT_BACKTEST_POLL_TIMEOUT_MS = 60 * 60 * 1000;
@@ -52,10 +53,12 @@ export class AgentMonitorEntitiesClient extends AgentMonitorsBaseClient {
    */
   async add(
     monitorId: string,
-    params: AddAgentMonitorEntitiesParams & AgentMonitorsBetaOptions
+    params: AddAgentMonitorEntitiesParams & AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentMonitor> {
+    const scoped = this.withRequestOptions(requestOptions);
     const { betas, ...payload } = params;
-    return this.request<AgentMonitor>(
+    return scoped.request<AgentMonitor>(
       `/${monitorId}/entities`,
       betas,
       "POST",
@@ -69,11 +72,13 @@ export class AgentMonitorEntitiesClient extends AgentMonitorsBaseClient {
    */
   async list(
     monitorId: string,
-    options: ListAgentMonitorEntitiesParams & AgentMonitorsBetaOptions
+    options: ListAgentMonitorEntitiesParams & AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<ListAgentMonitorEntitiesResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const { betas, ...pagination } = options;
     const params = this.buildPaginationParams(pagination);
-    return this.request<ListAgentMonitorEntitiesResponse>(
+    return scoped.request<ListAgentMonitorEntitiesResponse>(
       `/${monitorId}/entities`,
       betas,
       "GET",
@@ -88,15 +93,17 @@ export class AgentMonitorEntitiesClient extends AgentMonitorsBaseClient {
    */
   async *listAll(
     monitorId: string,
-    options: ListAgentMonitorEntitiesParams & AgentMonitorsBetaOptions
+    options: ListAgentMonitorEntitiesParams & AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): AsyncGenerator<AgentMonitorEntityView> {
+    let scoped = this.withRequestOptions(requestOptions);
     let cursor: string | undefined = options.cursor;
     const { betas, ...pagination } = options;
     const pageOptions: ListAgentMonitorEntitiesParams = { ...pagination };
 
     while (true) {
       pageOptions.cursor = cursor;
-      const response = await this.list(monitorId, { ...pageOptions, betas });
+      const response = await scoped.list(monitorId, { ...pageOptions, betas });
 
       for (const entityView of response.data) {
         yield entityView;
@@ -107,6 +114,7 @@ export class AgentMonitorEntitiesClient extends AgentMonitorsBaseClient {
       }
 
       cursor = response.nextCursor;
+      scoped = scoped.forNextPage();
     }
   }
 
@@ -115,10 +123,12 @@ export class AgentMonitorEntitiesClient extends AgentMonitorsBaseClient {
    */
   async getAll(
     monitorId: string,
-    options: ListAgentMonitorEntitiesParams & AgentMonitorsBetaOptions
+    options: ListAgentMonitorEntitiesParams & AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentMonitorEntityView[]> {
+    const scoped = this.withRequestOptions(requestOptions);
     const entities: AgentMonitorEntityView[] = [];
-    for await (const entityView of this.listAll(monitorId, options)) {
+    for await (const entityView of scoped.listAll(monitorId, options)) {
       entities.push(entityView);
     }
     return entities;
@@ -131,11 +141,13 @@ export class AgentMonitorChangesClient extends AgentMonitorsBaseClient {
    */
   async list(
     monitorId: string,
-    options: ListAgentMonitorChangesParams & AgentMonitorsBetaOptions
+    options: ListAgentMonitorChangesParams & AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<ListAgentMonitorChangesResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const { betas, ...pagination } = options;
     const params = this.buildPaginationParams(pagination);
-    return this.request<ListAgentMonitorChangesResponse>(
+    return scoped.request<ListAgentMonitorChangesResponse>(
       `/${monitorId}/changes`,
       betas,
       "GET",
@@ -150,15 +162,17 @@ export class AgentMonitorChangesClient extends AgentMonitorsBaseClient {
    */
   async *listAll(
     monitorId: string,
-    options: ListAgentMonitorChangesParams & AgentMonitorsBetaOptions
+    options: ListAgentMonitorChangesParams & AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): AsyncGenerator<AgentMonitorChange> {
+    let scoped = this.withRequestOptions(requestOptions);
     let cursor: string | undefined = options.cursor;
     const { betas, ...pagination } = options;
     const pageOptions: ListAgentMonitorChangesParams = { ...pagination };
 
     while (true) {
       pageOptions.cursor = cursor;
-      const response = await this.list(monitorId, { ...pageOptions, betas });
+      const response = await scoped.list(monitorId, { ...pageOptions, betas });
 
       for (const change of response.data) {
         yield change;
@@ -169,6 +183,7 @@ export class AgentMonitorChangesClient extends AgentMonitorsBaseClient {
       }
 
       cursor = response.nextCursor;
+      scoped = scoped.forNextPage();
     }
   }
 
@@ -177,10 +192,12 @@ export class AgentMonitorChangesClient extends AgentMonitorsBaseClient {
    */
   async getAll(
     monitorId: string,
-    options: ListAgentMonitorChangesParams & AgentMonitorsBetaOptions
+    options: ListAgentMonitorChangesParams & AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentMonitorChange[]> {
+    const scoped = this.withRequestOptions(requestOptions);
     const changes: AgentMonitorChange[] = [];
-    for await (const change of this.listAll(monitorId, options)) {
+    for await (const change of scoped.listAll(monitorId, options)) {
       changes.push(change);
     }
     return changes;
@@ -194,10 +211,12 @@ export class AgentMonitorBacktestsClient extends AgentMonitorsBaseClient {
    * for the result.
    */
   async create(
-    params: CreateAgentMonitorBacktestParams & AgentMonitorsBetaOptions
+    params: CreateAgentMonitorBacktestParams & AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentMonitorBacktest> {
+    const scoped = this.withRequestOptions(requestOptions);
     const { betas, ...payload } = params;
-    return this.request<AgentMonitorBacktest>(
+    return scoped.request<AgentMonitorBacktest>(
       "/backtest",
       betas,
       "POST",
@@ -211,9 +230,11 @@ export class AgentMonitorBacktestsClient extends AgentMonitorsBaseClient {
    */
   async get(
     backtestId: string,
-    options: AgentMonitorsBetaOptions
+    options: AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentMonitorBacktest> {
-    return this.request<AgentMonitorBacktest>(
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<AgentMonitorBacktest>(
       `/backtest/${backtestId}`,
       options.betas,
       "GET"
@@ -225,15 +246,17 @@ export class AgentMonitorBacktestsClient extends AgentMonitorsBaseClient {
    */
   async pollUntilFinished(
     backtestId: string,
-    options: AgentMonitorBacktestWaitOptions & AgentMonitorsBetaOptions
+    options: AgentMonitorBacktestWaitOptions & AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentMonitorTerminalBacktest> {
+    const scoped = this.withRequestOptions(requestOptions);
     const pollInterval =
       options.pollInterval ?? DEFAULT_BACKTEST_POLL_INTERVAL_MS;
     const timeoutMs = options.timeoutMs ?? DEFAULT_BACKTEST_POLL_TIMEOUT_MS;
     const startTime = Date.now();
 
     while (true) {
-      const backtest = await this.get(backtestId, { betas: options.betas });
+      const backtest = await scoped.get(backtestId, { betas: options.betas });
       if (backtest.status !== "running") {
         return backtest;
       }
@@ -244,7 +267,7 @@ export class AgentMonitorBacktestsClient extends AgentMonitorsBaseClient {
         );
       }
 
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      await sleep(pollInterval, scoped.requestOptions?.signal);
     }
   }
 
@@ -254,12 +277,14 @@ export class AgentMonitorBacktestsClient extends AgentMonitorsBaseClient {
    */
   async createAndWait(
     params: CreateAgentMonitorBacktestParams & AgentMonitorsBetaOptions,
-    options?: AgentMonitorBacktestWaitOptions
+    options?: AgentMonitorBacktestWaitOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentMonitorCompletedBacktest> {
-    const backtest = await this.create(params);
+    const scoped = this.withRequestOptions(requestOptions);
+    const backtest = await scoped.create(params);
     const terminalBacktest =
       backtest.status === "running"
-        ? await this.pollUntilFinished(backtest.id, {
+        ? await scoped.pollUntilFinished(backtest.id, {
             ...options,
             betas: params.betas,
           })
@@ -301,13 +326,15 @@ export class AgentMonitorsClient extends AgentMonitorsBaseClient {
    */
   async create(
     params: CreateAgentMonitorParams & AgentMonitorsBetaOptions,
-    options?: CreateAgentMonitorOptions
+    options?: CreateAgentMonitorOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentMonitor> {
+    const scoped = this.withRequestOptions(requestOptions);
     const { betas, ...payload } = params;
     const headers = options?.idempotencyKey
       ? { "Idempotency-Key": options.idempotencyKey }
       : undefined;
-    return this.request<AgentMonitor>(
+    return scoped.request<AgentMonitor>(
       "",
       betas,
       "POST",
@@ -322,20 +349,24 @@ export class AgentMonitorsClient extends AgentMonitorsBaseClient {
    */
   async get(
     monitorId: string,
-    options: AgentMonitorsBetaOptions
+    options: AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentMonitor> {
-    return this.request<AgentMonitor>(`/${monitorId}`, options.betas, "GET");
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<AgentMonitor>(`/${monitorId}`, options.betas, "GET");
   }
 
   /**
    * List the team's Agent Monitors.
    */
   async list(
-    options: ListAgentMonitorsParams & AgentMonitorsBetaOptions
+    options: ListAgentMonitorsParams & AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<ListAgentMonitorsResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const { betas, ...pagination } = options;
     const params = this.buildPaginationParams(pagination);
-    return this.request<ListAgentMonitorsResponse>(
+    return scoped.request<ListAgentMonitorsResponse>(
       "",
       betas,
       "GET",
@@ -348,15 +379,17 @@ export class AgentMonitorsClient extends AgentMonitorsBaseClient {
    * Iterate through all Agent Monitors, handling pagination automatically.
    */
   async *listAll(
-    options: ListAgentMonitorsParams & AgentMonitorsBetaOptions
+    options: ListAgentMonitorsParams & AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): AsyncGenerator<AgentMonitor> {
+    let scoped = this.withRequestOptions(requestOptions);
     let cursor: string | undefined = options.cursor;
     const { betas, ...pagination } = options;
     const pageOptions: ListAgentMonitorsParams = { ...pagination };
 
     while (true) {
       pageOptions.cursor = cursor;
-      const response = await this.list({ ...pageOptions, betas });
+      const response = await scoped.list({ ...pageOptions, betas });
 
       for (const monitor of response.data) {
         yield monitor;
@@ -367,6 +400,7 @@ export class AgentMonitorsClient extends AgentMonitorsBaseClient {
       }
 
       cursor = response.nextCursor;
+      scoped = scoped.forNextPage();
     }
   }
 
@@ -374,10 +408,12 @@ export class AgentMonitorsClient extends AgentMonitorsBaseClient {
    * Collect all Agent Monitors into an array.
    */
   async getAll(
-    options: ListAgentMonitorsParams & AgentMonitorsBetaOptions
+    options: ListAgentMonitorsParams & AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<AgentMonitor[]> {
+    const scoped = this.withRequestOptions(requestOptions);
     const monitors: AgentMonitor[] = [];
-    for await (const monitor of this.listAll(options)) {
+    for await (const monitor of scoped.listAll(options)) {
       monitors.push(monitor);
     }
     return monitors;
@@ -388,9 +424,11 @@ export class AgentMonitorsClient extends AgentMonitorsBaseClient {
    */
   async delete(
     monitorId: string,
-    options: AgentMonitorsBetaOptions
+    options: AgentMonitorsBetaOptions,
+    requestOptions?: RequestOptions
   ): Promise<DeletedAgentMonitor> {
-    return this.request<DeletedAgentMonitor>(
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<DeletedAgentMonitor>(
       `/${monitorId}`,
       options.betas,
       "DELETE"

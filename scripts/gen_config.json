@@ -52,6 +52,7 @@
       {"name": "moderation", "type": "boolean", "description": "If true, the search results are moderated for safety."},
       {"name": "useAutoprompt", "type": "boolean", "description": "If true, uses autoprompt to enhance the query."},
       {"name": "userLocation", "type": "string", "description": "The two-letter ISO country code of the user, e.g. US."},
+      {"name": "userIdentifier", "type": "string", "description": "An opaque identifier you generate for the end user the request is made on behalf of, such as a UUID or a hash. Must not be personal information such as an email address, name or phone number. 1 to 64 characters: letters, digits, `_` and `-`. Recorded for usage attribution; does not change results."},
       {"name": "additionalQueries", "type": "string[]", "description": "Alternative query formulations for deep search. Max 5 queries. Only for type: \"deep\"."}
     ],
     "ContentsOptions": [
@@ -94,7 +95,8 @@
       {"name": "stream", "type": "boolean", "description": "Whether to stream the response. Default false."},
       {"name": "systemPrompt", "type": "string", "description": "A system prompt to guide the LLM's behavior when generating the answer."},
       {"name": "outputSchema", "type": "Record<string, unknown>", "description": "A JSON Schema specification for the structure you expect the output to take."},
-      {"name": "userLocation", "type": "string", "description": "The two-letter ISO country code of the user, e.g. US."}
+      {"name": "userLocation", "type": "string", "description": "The two-letter ISO country code of the user, e.g. US."},
+      {"name": "userIdentifier", "type": "string", "description": "An opaque identifier you generate for the end user the request is made on behalf of, such as a UUID or a hash. Must not be personal information such as an email address, name or phone number. 1 to 64 characters: letters, digits, `_` and `-`. Recorded for usage attribution; does not change results."}
     ],
     "AnswerResponse": [
       {"name": "answer", "type": "string | Record<string, unknown>", "description": "The generated answer text (or object matching outputSchema if provided)."},

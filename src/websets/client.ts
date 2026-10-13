@@ -20,6 +20,7 @@ import {
 } from "./openapi";
 import { WebsetSearchesClient } from "./searches";
 import { WebsetWebhooksClient } from "./webhooks";
+import { sleep, type RequestOptions } from "../request-options";
 
 /**
  * Options for listing Websets (API only supports pagination)
@@ -83,13 +84,16 @@ export class WebsetsClient extends WebsetsBaseClient {
   /**
    * Create a new Webset
    * @param params The Webset creation parameters
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The created Webset
    */
   async create(
     params: CreateWebsetParameters,
-    options?: { headers?: WebsetHeadersLike }
+    options?: { headers?: WebsetHeadersLike },
+    requestOptions?: RequestOptions
   ): Promise<Webset> {
-    return this.request<Webset>(
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<Webset>(
       "/v0/websets",
       "POST",
       params,
@@ -102,18 +106,21 @@ export class WebsetsClient extends WebsetsBaseClient {
    * Preview a webset
    * @param params The preview parameters
    * @param options Optional parameters. Search = true allows you to retrieve a preview set of items that could be returned by the webset.
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The preview response showing how the query will be decomposed
    */
   async preview(
     params: PreviewWebsetParameters,
-    options?: { search?: boolean }
+    options?: { search?: boolean },
+    requestOptions?: RequestOptions
   ): Promise<PreviewWebsetResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const queryParams: { search?: boolean } = {};
     if (options?.search !== undefined) {
       queryParams.search = options.search;
     }
 
-    return this.request<PreviewWebsetResponse>(
+    return scoped.request<PreviewWebsetResponse>(
       "/v0/websets/preview",
       "POST",
       params,
@@ -125,15 +132,21 @@ export class WebsetsClient extends WebsetsBaseClient {
    * Get a Webset by ID
    * @param id The ID of the Webset
    * @param expand Optional array of relations to expand
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The Webset
    */
-  async get(id: string, expand?: Array<"items">): Promise<GetWebsetResponse> {
+  async get(
+    id: string,
+    expand?: Array<"items">,
+    requestOptions?: RequestOptions
+  ): Promise<GetWebsetResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const params: { expand?: Array<"items"> } = {};
     if (expand) {
       params.expand = expand;
     }
 
-    return this.request<GetWebsetResponse>(
+    return scoped.request<GetWebsetResponse>(
       `/v0/websets/${id}`,
       "GET",
       undefined,
@@ -144,11 +157,16 @@ export class WebsetsClient extends WebsetsBaseClient {
   /**
    * List all Websets
    * @param options Pagination options (filtering by status is not supported by API)
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The list of Websets
    */
-  async list(options?: ListWebsetsOptions): Promise<ListWebsetsResponse> {
+  async list(
+    options?: ListWebsetsOptions,
+    requestOptions?: RequestOptions
+  ): Promise<ListWebsetsResponse> {
+    const scoped = this.withRequestOptions(requestOptions);
     const params = this.buildPaginationParams(options);
-    return this.request<ListWebsetsResponse>(
+    return scoped.request<ListWebsetsResponse>(
       "/v0/websets",
       "GET",
       undefined,
@@ -159,15 +177,20 @@ export class WebsetsClient extends WebsetsBaseClient {
   /**
    * Iterate through all Websets, handling pagination automatically
    * @param options Pagination options
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns Async generator of Websets
    */
-  async *listAll(options?: ListWebsetsOptions): AsyncGenerator<Webset> {
+  async *listAll(
+    options?: ListWebsetsOptions,
+    requestOptions?: RequestOptions
+  ): AsyncGenerator<Webset> {
+    let scoped = this.withRequestOptions(requestOptions);
     let cursor: string | undefined = undefined;
     const pageOptions = options ? { ...options } : {};
 
     while (true) {
       pageOptions.cursor = cursor;
-      const response = await this.list(pageOptions);
+      const response = await scoped.list(pageOptions);
 
       for (const webset of response.data) {
         yield webset;
@@ -178,17 +201,23 @@ export class WebsetsClient extends WebsetsBaseClient {
       }
 
       cursor = response.nextCursor;
+      scoped = scoped.forNextPage();
     }
   }
 
   /**
    * Collect all Websets into an array
    * @param options Pagination options
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns Promise resolving to an array of all Websets
    */
-  async getAll(options?: ListWebsetsOptions): Promise<Webset[]> {
+  async getAll(
+    options?: ListWebsetsOptions,
+    requestOptions?: RequestOptions
+  ): Promise<Webset[]> {
+    const scoped = this.withRequestOptions(requestOptions);
     const websets: Webset[] = [];
-    for await (const webset of this.listAll(options)) {
+    for await (const webset of scoped.listAll(options)) {
       websets.push(webset);
     }
     return websets;
@@ -198,34 +227,45 @@ export class WebsetsClient extends WebsetsBaseClient {
    * Update a Webset
    * @param id The ID of the Webset
    * @param params The Webset update parameters
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The updated Webset
    */
-  async update(id: string, params: UpdateWebsetRequest): Promise<Webset> {
-    return this.request<Webset>(`/v0/websets/${id}`, "POST", params);
+  async update(
+    id: string,
+    params: UpdateWebsetRequest,
+    requestOptions?: RequestOptions
+  ): Promise<Webset> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<Webset>(`/v0/websets/${id}`, "POST", params);
   }
 
   /**
    * Delete a Webset
    * @param id The ID of the Webset
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The deleted Webset
    */
-  async delete(id: string): Promise<Webset> {
-    return this.request<Webset>(`/v0/websets/${id}`, "DELETE");
+  async delete(id: string, requestOptions?: RequestOptions): Promise<Webset> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<Webset>(`/v0/websets/${id}`, "DELETE");
   }
 
   /**
    * Cancel a running Webset
    * @param id The ID or external ID of the Webset
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The canceled Webset (as returned by the API)
    */
-  async cancel(id: string): Promise<Webset> {
-    return this.request<Webset>(`/v0/websets/${id}/cancel`, "POST");
+  async cancel(id: string, requestOptions?: RequestOptions): Promise<Webset> {
+    const scoped = this.withRequestOptions(requestOptions);
+    return scoped.request<Webset>(`/v0/websets/${id}/cancel`, "POST");
   }
 
   /**
    * Wait until a Webset is idle
    * @param id The ID of the Webset
    * @param options Configuration options for timeout and polling
+   * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
    * @returns The Webset once it becomes idle
    * @throws Error if the Webset does not become idle within the timeout
    */
@@ -237,8 +277,10 @@ export class WebsetsClient extends WebsetsBaseClient {
           pollInterval?: number;
           onPoll?: (status: WebsetStatus) => void;
         }
-      | number // Legacy: timeout only
+      | number, // Legacy: timeout only
+    requestOptions?: RequestOptions
   ): Promise<Webset> {
+    const scoped = this.withRequestOptions(requestOptions);
     let timeout: number | undefined;
     let pollInterval = 1000;
     let onPoll: ((status: WebsetStatus) => void) | undefined;
@@ -255,7 +297,7 @@ export class WebsetsClient extends WebsetsBaseClient {
     const startTime = Date.now();
 
     while (true) {
-      const webset = await this.get(id);
+      const webset = await scoped.get(id);
 
       if (onPoll) {
         onPoll(webset.status);
@@ -272,7 +314,7 @@ export class WebsetsClient extends WebsetsBaseClient {
         );
       }
 
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      await sleep(pollInterval, scoped.requestOptions?.signal);
     }
   }
 }
