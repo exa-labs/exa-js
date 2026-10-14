@@ -1,5 +1,24 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import Exa, { type SearchStreamChunk } from "../../src";
+import { beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
+import Exa, {
+  type SearchNotice,
+  type SearchResponse,
+  type SearchStreamChunk,
+} from "../../src";
+
+const searchNotices: SearchNotice[] = [
+  {
+    code: "RESTRICTIONS_RELAXED",
+    path: "/query",
+    message: "The query's site restriction matched nothing and was removed.",
+    details: { relaxed: [{ kind: "site", operator: "site:example.com" }] },
+  },
+  {
+    code: "FUTURE_NOTICE",
+    path: "/query",
+    message: "Additional context for these results.",
+    details: { context: { sources: ["web"], available: true }, score: 0.5 },
+  },
+];
 
 function createSseResponse(lines: string[]): Response {
   const encoder = new TextEncoder();
@@ -64,6 +83,25 @@ describe("Search API", () => {
       },
     });
     expect(result).toEqual(mockResponse);
+    expect(result).not.toHaveProperty("notices");
+  });
+
+  it("preserves typed notices, unknown codes, and open details on search responses", async () => {
+    expectTypeOf<SearchResponse<{}>["notices"]>().toEqualTypeOf<
+      SearchNotice[] | undefined
+    >();
+    expectTypeOf<SearchStreamChunk["notices"]>().toEqualTypeOf<
+      SearchNotice[] | undefined
+    >();
+    vi.spyOn(exa, "request").mockResolvedValueOnce({
+      requestId: "req-notices",
+      results: [],
+      notices: searchNotices,
+    });
+
+    const response = await exa.search("climate tech news");
+
+    expect(response.notices).toEqual(searchNotices);
   });
 
   it("should preserve deprecated searchAndContents text option for compatibility", async () => {
@@ -1069,6 +1107,52 @@ describe("Search API", () => {
       },
     ]);
   });
+
+  it.each(["\n", ""])(
+    "preserves notices-only results events with trailing newline %j",
+    async (ending) => {
+      vi.spyOn(exa, "rawRequest").mockResolvedValueOnce(
+        new Response(
+          'data: {"choices":[{"delta":{"content":"Hello"}}]}\n' +
+            `data: ${JSON.stringify({
+              type: "results",
+              results: [],
+              notices: searchNotices,
+            })}${ending}`,
+          { headers: { "content-type": "text/event-stream" } }
+        )
+      );
+
+      const chunks: SearchStreamChunk[] = [];
+      for await (const chunk of exa.streamSearch("climate tech news")) {
+        chunks.push(chunk);
+      }
+
+      expect(chunks).toEqual([
+        { content: "Hello", citations: undefined },
+        { content: undefined, citations: undefined, notices: searchNotices },
+      ]);
+    }
+  );
+
+  it.each([undefined, []])(
+    "does not yield a results event without notices (%j)",
+    async (notices) => {
+      vi.spyOn(exa, "rawRequest").mockResolvedValueOnce(
+        createSseResponse([
+          'data: {"choices":[{"delta":{"content":"Hello"}}]}',
+          `data: ${JSON.stringify({ type: "results", results: [], notices })}`,
+        ])
+      );
+
+      const chunks: SearchStreamChunk[] = [];
+      for await (const chunk of exa.streamSearch("climate tech news")) {
+        chunks.push(chunk);
+      }
+
+      expect(chunks).toEqual([{ content: "Hello", citations: undefined }]);
+    }
+  );
 
   it("should pass additionalQueries for deep-reasoning search type", async () => {
     const mockResponse = {

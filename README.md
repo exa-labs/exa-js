@@ -101,6 +101,19 @@ Pass `requestOptions.body` as the third argument for per-call search body overri
 const result = await exa.search("AI research", undefined, { body: { futureField: true } });
 ```
 
+### Notices
+
+Search responses can carry `notices` about how the results were produced. Pass their `message` to your model with the results. Each notice has an open-set `code`, a JSON Pointer `path`, and optional `details` with no fixed schema. The field is absent when there are no notices.
+
+```ts
+const response = await exa.search("climate tech news");
+for (const notice of response.notices ?? []) {
+  console.log(`Notice: ${notice.message}`);
+}
+```
+
+`streamSearch` yields notices on a chunk's `notices`, after the streamed text. The `webSearch` tool helpers include notice messages in their model-facing output automatically.
+
 ## Contents
 
 Get clean text, highlights, or summaries from any URL.

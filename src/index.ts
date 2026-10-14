@@ -696,6 +696,18 @@ export type DeepSearchOutput = {
   grounding: DeepSearchOutputGrounding[];
 };
 
+/** A note about how search results were produced. Pass it to your model with the results. */
+export type SearchNotice = {
+  /** Open-set code, such as `RESTRICTIONS_RELAXED`. Handle unknown codes by their message. */
+  code: string;
+  /** JSON Pointer to the request field, such as `/query`. */
+  path: string;
+  /** A complete explanation written for a model. */
+  message: string;
+  /** Optional extra context. Keys have no fixed schema. */
+  details?: Record<string, unknown>;
+};
+
 /**
  * Represents a search response object.
  * @typedef {Object} SearchResponse
@@ -707,6 +719,7 @@ export type DeepSearchOutput = {
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
  * @property {string} [resolvedSearchType] - The resolved search type ('neural' or 'keyword') when using 'auto' search.
  * @property {number} [searchTime] - Time taken for the search in milliseconds.
+ * @property {SearchNotice[]} [notices] - Notes about how search results were produced. Pass them to your model with the results.
  */
 export type SearchResponse<T extends ContentsOptions> = {
   results: SearchResult<T>[];
@@ -722,6 +735,8 @@ export type SearchResponse<T extends ContentsOptions> = {
   costDollars?: CostDollars;
   resolvedSearchType?: string;
   searchTime?: number;
+  /** Notes about how search results were produced. Absent when there are none. */
+  notices?: SearchNotice[];
 };
 
 /** Error details for a failed content retrieval. */
@@ -792,7 +807,11 @@ export type AnswerStreamChunk = {
   }>;
 };
 
-export type SearchStreamChunk = AnswerStreamChunk;
+/** A search stream chunk containing text, citations, or retrieval notices. */
+export type SearchStreamChunk = AnswerStreamChunk & {
+  /** Notices arrive on the `results` event, after the streamed text. */
+  notices?: SearchNotice[];
+};
 
 /**
  * Represents a streaming answer response chunk from the /answer endpoint.
@@ -1453,7 +1472,8 @@ export class Exa {
   /**
    * Stream a search response as an async generator of OpenAI-style chat completion chunks.
    *
-   * Each iteration yields a chunk with partial text (`content`) or new citations.
+   * Each iteration yields a chunk with partial text (`content`), new citations,
+   * or `notices` about how the results were produced.
    * Use this if you'd like to read synthesized search output incrementally.
    * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    */
@@ -1895,7 +1915,7 @@ export class Exa {
     endpoint: string,
     body: Record<string, unknown>,
     requestOptions?: RequestOptions
-  ): AsyncGenerator<AnswerStreamChunk> {
+  ): AsyncGenerator<SearchStreamChunk> {
     const response = await this.streamRequestWithOptions(
       endpoint,
       "POST",
@@ -1945,7 +1965,7 @@ export class Exa {
           }
 
           const chunk = this.processChunk(chunkData);
-          if (chunk.content || chunk.citations) {
+          if (chunk.content || chunk.citations || chunk.notices) {
             yield chunk;
           }
         }
@@ -1957,7 +1977,7 @@ export class Exa {
           try {
             const chunkData = JSON.parse(leftover);
             const chunk = this.processChunk(chunkData);
-            if (chunk.content || chunk.citations) {
+            if (chunk.content || chunk.citations || chunk.notices) {
               yield chunk;
             }
           } catch (e) {}
@@ -1974,7 +1994,8 @@ export class Exa {
     }
   }
 
-  private processChunk(chunkData: any): AnswerStreamChunk {
+  /** Preserve search notices even when the event has no text or citations. */
+  private processChunk(chunkData: any): SearchStreamChunk {
     let content: string | undefined;
     let citations:
       | Array<{
@@ -2004,6 +2025,10 @@ export class Exa {
         author: c.author,
         text: c.text,
       }));
+    }
+
+    if (Array.isArray(chunkData.notices) && chunkData.notices.length > 0) {
+      return { content, citations, notices: chunkData.notices };
     }
 
     return { content, citations };
