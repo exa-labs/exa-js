@@ -121,10 +121,15 @@ function formatResults(
   return formatted || emptyMessage;
 }
 
+/** Include retrieval notices in the search output sent to a model. */
 function formatSearchResponse(
   response: SearchResponse<ContentsOptions>
 ): string {
-  return formatResults(response, "No search results found.");
+  const results = formatResults(response, "No search results found.");
+  const notices = response.notices
+    ?.map((notice) => `Notice: ${notice.message}`)
+    .join("\n");
+  return notices ? `${notices}\n\n${results}` : results;
 }
 
 function formatContentsResponse(

@@ -47,6 +47,43 @@ describe("LLM tools", () => {
     });
   });
 
+  it("forwards every notice message with the results in all search tool helpers", async () => {
+    vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [
+        { id: "result-1", title: "Example", url: "https://example.com" },
+      ],
+      notices: [
+        {
+          code: "RESTRICTIONS_RELAXED",
+          path: "/query",
+          message:
+            "The query's site restriction matched nothing and was removed.",
+        },
+        {
+          code: "FUTURE_NOTICE",
+          path: "/query",
+          message: "Additional context for these results.",
+          details: { future: true },
+        },
+      ],
+    });
+
+    for (const tool of [
+      exa.tools.webSearch(),
+      exa.openai.webSearch(),
+      exa.openai.responses.webSearch(),
+      exa.anthropic.webSearch(),
+    ]) {
+      const output = await tool.run({ query: "climate tech news" });
+      expect(output).toBe(
+        "Notice: The query's site restriction matched nothing and was removed.\n" +
+          "Notice: Additional context for these results.\n\n" +
+          "Title: Example\nURL: https://example.com\nPublished: N/A\nAuthor: N/A"
+      );
+    }
+  });
+
   it("serializes each provider tool to its exact wire descriptor", () => {
     const openaiTool = exa.openai.webSearch();
     const responsesTool = exa.openai.responses.webSearch();
