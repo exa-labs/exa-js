@@ -48,8 +48,14 @@ describe("Search Monitors API", () => {
       content: "Summary of results",
       grounding: [
         {
-          url: "https://techcrunch.com/article",
-          title: "AI Startup Article",
+          field: "content",
+          citations: [
+            {
+              url: "https://techcrunch.com/article",
+              title: "AI Startup Article",
+            },
+          ],
+          confidence: "high",
         },
       ],
     },

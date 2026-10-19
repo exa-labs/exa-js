@@ -39,6 +39,14 @@ async function runAnswerExample() {
       userLocation: "FR",
     });
     console.log("Answer result:", JSON.stringify(answerFromLocation, null, 2));
+
+    // Coordinates are used only for queries that name no place but depend on
+    // where the user is. They do not set a country, so send `country` with
+    // them to localize results.
+    const answerNearby = await exa.answer("Coffee shops open now", {
+      userLocation: { country: "US", latitude: 37.7749, longitude: -122.4194 },
+    });
+    console.log("Answer result:", JSON.stringify(answerNearby, null, 2));
   } catch (error) {
     console.error("Error in answer example:", error);
   }

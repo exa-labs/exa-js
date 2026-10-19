@@ -4,6 +4,13 @@ import type {
   RegularSearchOptions,
   SearchResponse,
 } from "../index";
+
+// Search responses can carry `notices`: notes about how the results were
+// produced, written for a model. The search tool's text leads with one
+// `Note: <message>` line per notice, then a blank line, then the results: the
+// format agent evals measured. A response without notices formats exactly as
+// before. `warnings` describe the request, not the results, so the tool leaves
+// them out of its text.
 import type { Exa } from "../index";
 import { zodToJsonSchema } from "../zod-utils";
 
@@ -121,10 +128,21 @@ function formatResults(
   return formatted || emptyMessage;
 }
 
+/** One `Note: <message>` line per notice on a search response. */
+function formatSearchNotices(
+  response: SearchResponse<ContentsOptions>
+): string[] {
+  return (response.notices ?? [])
+    .filter((notice) => typeof notice?.message === "string")
+    .map((notice) => `Note: ${notice.message}`);
+}
+
 function formatSearchResponse(
   response: SearchResponse<ContentsOptions>
 ): string {
-  return formatResults(response, "No search results found.");
+  const text = formatResults(response, "No search results found.");
+  const notes = formatSearchNotices(response);
+  return notes.length === 0 ? text : `${notes.join("\n")}\n\n${text}`;
 }
 
 function formatContentsResponse(

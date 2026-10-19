@@ -141,6 +141,76 @@ describe("Entity Types", () => {
     });
   });
 
+  describe("PersonEntity education and research", () => {
+    it("should type every person property the API returns", () => {
+      const person: PersonEntity = {
+        id: "https://exa.ai/library/person/ada-lovelace",
+        type: "person",
+        version: 1,
+        properties: {
+          name: "Ada Lovelace",
+          firstName: "Ada",
+          lastName: "Lovelace",
+          location: "London, UK",
+          workHistory: [],
+          educationHistory: [
+            {
+              degree: "Mathematics",
+              dates: { from: "1832-01-01", to: "1835-01-01" },
+              institution: {
+                id: "https://exa.ai/library/organization/university-of-london",
+                name: "University of London",
+              },
+            },
+          ],
+          research: {
+            worksCount: 3,
+            citationCount: 120,
+            hIndex: 2,
+            firstPublicationYear: 1843,
+            latestPublicationYear: 1843,
+            areas: ["Mathematics", "Computing"],
+            notableWorks: [
+              {
+                title: "Notes on the Analytical Engine",
+                year: 1843,
+                venue: "Scientific Memoirs",
+                citationCount: 100,
+                doi: null,
+                id: null,
+                type: "article",
+              },
+            ],
+          },
+        },
+      };
+
+      expect(person.properties.firstName).toBe("Ada");
+      expect(person.properties.educationHistory?.[0].institution?.name).toBe(
+        "University of London"
+      );
+      expect(person.properties.research?.notableWorks?.[0].year).toBe(1843);
+    });
+
+    it("should allow null education fields and research", () => {
+      const person: PersonEntity = {
+        id: "https://exa.ai/library/person/jane-doe",
+        type: "person",
+        version: 1,
+        properties: {
+          name: "Jane Doe",
+          firstName: null,
+          lastName: null,
+          educationHistory: [{ degree: null, dates: null, institution: null }],
+          research: null,
+        },
+      };
+
+      expect(person.properties.educationHistory?.[0].institution).toBeNull();
+      expect(person.properties.research).toBeNull();
+    });
+  });
+
   describe("Entity Union Type", () => {
     it("should discriminate between company and person entities", () => {
       const entities: Entity[] = [

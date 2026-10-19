@@ -22,27 +22,31 @@ import { ExaAbortError, ExaError, ExaTimeoutError } from "./errors";
 /**
  * Transport-level options for a single request.
  *
- * These are never serialized into JSON request bodies; they only control the
+ * These are never serialized into JSON request bodies. They only control the
  * underlying `fetch` call (cancellation and timeouts).
  */
 export type TransportRequestOptions = {
   /**
    * AbortSignal used to cancel the in-flight HTTP request, for stale UI
    * requests or navigation changes. Aborting it rejects the call with
-   * `ExaAbortError` whatever the reason, `AbortSignal.timeout()` included;
-   * use `timeout` to get `ExaTimeoutError`.
+   * `ExaAbortError` whatever the reason, `AbortSignal.timeout()` included.
+   * Use `timeout` to get `ExaTimeoutError`.
    */
-  signal?: AbortSignal;
+  signal?: AbortSignal | undefined;
 
   /**
    * Request timeout in milliseconds. When it expires, the call rejects with
-   * `ExaTimeoutError`. A streaming method applies it to the wait for a
-   * successful response to start, never to a stream that is flowing.
+   * `ExaTimeoutError`. It is a deadline for the whole response, body
+   * included, counted from when the request is sent. A streaming method
+   * applies it to the wait for a successful response to start, never to a
+   * stream that is flowing. An error response is read whole within it.
+   * Left unset (`undefined`, or `null` from JavaScript), the client's default
+   * timeout applies.
    *
    * If both `timeout` and `signal` are provided, the request aborts when either
    * fires first.
    */
-  timeout?: number;
+  timeout?: number | undefined;
 };
 
 /** Query parameter values the SDK can serialize into a URL. */
@@ -56,29 +60,31 @@ export type QueryParams = Record<
  *
  * `signal` and `timeout` control the `fetch` call. `body`, `headers` and
  * `query` add to the request the method builds, for fields the SDK does not
- * type yet; on a name the method also sets, the value given here wins.
+ * type yet. On a name the method also sets, the value given here wins.
  */
 export type RequestOptions = TransportRequestOptions & {
   /**
-   * Extra fields merged over the JSON request body, except `stream`: the
-   * method called decides whether the response streams. Sent with `POST`,
-   * `PUT` and `PATCH` requests; other requests take `query` instead.
+   * Extra fields merged over the JSON request body, except `stream`, because
+   * the method called decides whether the response streams. Sent with `POST`,
+   * `PUT` and `PATCH` requests. Other requests take `query` instead.
    */
-  body?: Record<string, unknown>;
+  body?: Record<string, unknown> | undefined;
 
   /**
-   * Extra headers. A header the SDK also sets is replaced, whatever its case;
-   * `null` removes it and `undefined` leaves it as it is. The
-   * `Accept: text/event-stream` of a streaming method stays.
+   * Extra headers. A header the SDK also sets is replaced, whatever its case.
+   * `null` removes it and `undefined` leaves it as it is. The Agent run
+   * streams send `Accept: text/event-stream` and keep it, ignoring an extra
+   * `Accept`. Every other method, the other streaming methods included, sends
+   * an extra `Accept` as given.
    */
-  headers?: Record<string, string | null | undefined>;
+  headers?: Record<string, string | null | undefined> | undefined;
 
   /**
    * Extra query parameters merged over the request's query string, except
-   * `stream`; a parameter set to `undefined` is skipped. A `cursor` given to
+   * `stream`. A parameter set to `undefined` is skipped. A `cursor` given to
    * a helper that pages through a listing selects its first page only.
    */
-  query?: QueryParams;
+  query?: QueryParams | undefined;
 };
 
 /**
@@ -178,7 +184,9 @@ export function pickRequestOptions(
  * wins: `signal` and `timeout` field by field, `body`, `headers` and `query`
  * entry by entry. A field a later source leaves undefined falls through to an
  * earlier one, so a trailing `requestOptions` argument overrides the same
- * field in a method's options bag, which overrides the client default.
+ * field in a method's options bag, which overrides the client default. A
+ * `timeout` of `null` counts as unset too, so it never switches off the
+ * client default.
  * Returns undefined when no source sets anything.
  */
 export function mergeRequestOptions(
@@ -189,7 +197,7 @@ export function mergeRequestOptions(
     if (source?.signal !== undefined) {
       merged.signal = source.signal;
     }
-    if (source?.timeout !== undefined) {
+    if (source?.timeout != null) {
       merged.timeout = source.timeout;
     }
     if (source?.body !== undefined) {

@@ -1,5 +1,5 @@
 import { Exa } from "../index";
-import { ExaAbortError } from "../errors";
+import { exaErrorFromResponse } from "../error-response";
 import {
   ListResearchRequest,
   ListResearchResponse,
@@ -12,9 +12,16 @@ import {
 } from "./index";
 import { ZodSchema } from "zod";
 import { isZodSchema, zodToJsonSchema } from "../zod-utils";
-import { ResearchBaseClient } from "./base";
-import { sleep, type RequestOptions } from "../request-options";
+import { ResearchBaseClient, researchRetiredError } from "./base";
+import { type RequestOptions } from "../request-options";
 
+/**
+ * Client for the Research API, which has been retired.
+ *
+ * Every method rejects with an `ExaError` (`statusCode` 410) without sending a
+ * request. Use the Agent API (`exa.agent.runs.create`) for asynchronous,
+ * multi-step research.
+ */
 export class ResearchClient extends ResearchBaseClient {
   constructor(client: Exa) {
     super(client);
@@ -111,6 +118,9 @@ export class ResearchClient extends ResearchBaseClient {
           undefined,
           params
         );
+        if (!resp.ok) {
+          throw await exaErrorFromResponse(resp, `/research/v1/${researchId}`);
+        }
         if (!resp.body) {
           throw new Error("No response body for SSE stream");
         }
@@ -215,56 +225,15 @@ export class ResearchClient extends ResearchBaseClient {
     ResearchTyped<T> & { status: "completed" | "failed" | "canceled" }
   >;
   async pollUntilFinished<T = unknown>(
-    researchId: string,
-    options?: {
+    _researchId: string,
+    _options?: {
       pollInterval?: number;
       timeoutMs?: number;
       events?: boolean;
       outputSchema?: ZodSchema<T>;
     },
-    requestOptions?: RequestOptions
+    _requestOptions?: RequestOptions
   ): Promise<any> {
-    const scoped = this.withRequestOptions(requestOptions);
-    const pollInterval = options?.pollInterval ?? 1000;
-    const timeoutMs = options?.timeoutMs ?? 10 * 60 * 1000;
-    const maxConsecutiveFailures = 5;
-    const startTime = Date.now();
-    let consecutiveFailures = 0;
-
-    while (true) {
-      try {
-        const research = await scoped.get(researchId, {
-          events: options?.events,
-        });
-        consecutiveFailures = 0;
-
-        if (
-          research.status === "completed" ||
-          research.status === "failed" ||
-          research.status === "canceled"
-        ) {
-          return research;
-        }
-      } catch (err) {
-        // A cancelled poll is the caller's decision, not a failed attempt.
-        if (err instanceof ExaAbortError) {
-          throw err;
-        }
-        consecutiveFailures += 1;
-        if (consecutiveFailures >= maxConsecutiveFailures) {
-          throw new Error(
-            `Polling failed ${maxConsecutiveFailures} times in a row for research ${researchId}: ${err}`
-          );
-        }
-      }
-
-      if (Date.now() - startTime > timeoutMs) {
-        throw new Error(
-          `Polling timeout: Research ${researchId} did not complete within ${timeoutMs}ms`
-        );
-      }
-
-      await sleep(pollInterval, scoped.requestOptions?.signal);
-    }
+    throw researchRetiredError();
   }
 }

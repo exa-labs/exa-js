@@ -108,11 +108,7 @@ export class ExaError extends Error {
 
 /**
  * Thrown when a request is cancelled through the caller's `AbortSignal`.
- *
- * `name` stays `"AbortError"`, the name `fetch` itself rejects with, so
- * `error.name === "AbortError"` checks keep working on every runtime. A
- * cancellation is the caller's own action rather than an API failure, so this
- * is not an `ExaError` and carries no status code.
+ * `name` is `"AbortError"`. Not an `ExaError`, so it has no `statusCode`.
  */
 export class ExaAbortError extends Error {
   /**
@@ -132,11 +128,8 @@ export class ExaAbortError extends Error {
 }
 
 /**
- * Thrown when a request exceeds its `timeout`.
- *
- * `name` stays `"TimeoutError"`, the name `AbortSignal.timeout()` rejects
- * with, so `error.name === "TimeoutError"` checks keep working on every
- * runtime. `statusCode` is 408, like the SDK's polling timeouts.
+ * Thrown when a request exceeds its `timeout`. `name` is `"TimeoutError"`
+ * and `statusCode` is 408.
  */
 export class ExaTimeoutError extends ExaError {
   /**

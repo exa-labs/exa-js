@@ -107,7 +107,7 @@ export class WebsetsClient extends WebsetsBaseClient {
    * @param params The preview parameters
    * @param options Optional parameters. Search = true allows you to retrieve a preview set of items that could be returned by the webset.
    * @param requestOptions Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`)
-   * @returns The preview response showing how the query will be decomposed
+   * @returns How the query will be interpreted.
    */
   async preview(
     params: PreviewWebsetParameters,

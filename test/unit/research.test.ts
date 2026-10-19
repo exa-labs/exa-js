@@ -1,153 +1,53 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Exa from "../../src";
+import { ExaError } from "../../src/errors";
+import { RESEARCH_RETIRED_MESSAGE } from "../../src/research/base";
 
 /**
- * Test suite for the /research/v1 endpoint.
- *
- * These tests only ensure that the Exa client constructs the correct
- * internal request payload. They do **not** make any real HTTP calls.
+ * The Research API has been retired: every method rejects at once, without
+ * sending a request.
  */
-
 describe("Research API", () => {
   let exa: Exa;
 
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
     exa = new Exa("test-api-key", "https://api.exa.ai");
   });
 
-  it("should submit a research request with a minimal schema", async () => {
-    const instructions = "General research";
-    const model = "exa-research";
+  it("names the replacement in its message", () => {
+    expect(RESEARCH_RETIRED_MESSAGE).toContain("retired");
+    expect(RESEARCH_RETIRED_MESSAGE).toContain("exa.agent.runs.create");
+  });
 
-    const schema = { type: "object" };
+  it.each([
+    ["create", (exa: Exa) => exa.research.create({ instructions: "test" })],
+    ["get", (exa: Exa) => exa.research.get("research_1")],
+    [
+      "get with stream",
+      (exa: Exa) => exa.research.get("research_1", { stream: true }),
+    ],
+    ["list", (exa: Exa) => exa.research.list()],
+    [
+      "pollUntilFinished",
+      (exa: Exa) =>
+        exa.research.pollUntilFinished("research_1", { pollInterval: 60_000 }),
+    ],
+  ])("%s rejects without sending a request", async (_name, call) => {
+    const request = vi.spyOn(exa, "request");
+    const rawRequest = vi.spyOn(exa, "rawRequest");
 
-    const mockResponse = {
-      researchId: "research_123",
-      status: "running",
-      instructions,
-      model,
-      createdAt: Date.now(),
-    };
+    const error = await call(exa).then(
+      () => undefined,
+      (rejection: unknown) => rejection
+    );
 
-    const requestSpy = vi
-      .spyOn(exa, "request")
-      .mockResolvedValueOnce(mockResponse);
-
-    const result = await exa.research.create({
-      instructions,
-      model,
-      outputSchema: schema,
+    expect(error).toBeInstanceOf(ExaError);
+    expect(error).toMatchObject({
+      message: RESEARCH_RETIRED_MESSAGE,
+      statusCode: 410,
     });
-
-    expect(requestSpy).toHaveBeenCalledWith(
-      "/research/v1",
-      "POST",
-      {
-        instructions,
-        model,
-        outputSchema: schema,
-      },
-      undefined
-    );
-    expect(result).toEqual(mockResponse);
-  });
-
-  it("should submit a research request with an explicit output schema", async () => {
-    const instructions = "Explain photosynthesis in simple terms.";
-
-    const schema = {
-      type: "object",
-      required: ["answer"],
-      properties: {
-        answer: { type: "string" },
-      },
-    };
-
-    const mockResponse = {
-      researchId: "research_456",
-      status: "completed",
-      instructions,
-      model: "exa-research-fast",
-      createdAt: Date.now(),
-      output: {
-        content: "Photosynthesis is ...",
-        parsed: { answer: "Photosynthesis is ..." },
-      },
-      costDollars: {
-        numPages: 5,
-        numSearches: 2,
-        reasoningTokens: 1000,
-        total: 0.05,
-      },
-      events: [],
-    };
-
-    const requestSpy = vi
-      .spyOn(exa, "request")
-      .mockResolvedValueOnce(mockResponse);
-
-    const result = await exa.research.create({
-      instructions,
-      outputSchema: schema,
-    });
-
-    expect(requestSpy).toHaveBeenCalledWith(
-      "/research/v1",
-      "POST",
-      {
-        instructions,
-        model: "exa-research-fast",
-        outputSchema: schema,
-      },
-      undefined
-    );
-    expect(result).toEqual(mockResponse);
-  });
-
-  it("should list research requests without options", async () => {
-    const mockResponse = {
-      data: [],
-      hasMore: false,
-      nextCursor: null,
-    };
-
-    const requestSpy = vi
-      .spyOn(exa, "request")
-      .mockResolvedValueOnce(mockResponse);
-
-    const result = await exa.research.list();
-
-    expect(requestSpy).toHaveBeenCalledWith(
-      "/research/v1",
-      "GET",
-      undefined,
-      {}
-    );
-    expect(result).toEqual(mockResponse);
-  });
-
-  it("should list research requests with pagination options", async () => {
-    const pagination = { cursor: "abc123", limit: 25 } as const;
-
-    const mockResponse = {
-      data: [],
-      hasMore: true,
-      nextCursor: "def456",
-    };
-
-    const requestSpy = vi
-      .spyOn(exa, "request")
-      .mockResolvedValueOnce(mockResponse);
-
-    const result = await exa.research.list(pagination);
-
-    expect(requestSpy).toHaveBeenCalledWith(
-      "/research/v1",
-      "GET",
-      undefined,
-      pagination
-    );
-    expect(result).toEqual(mockResponse);
+    expect(request).not.toHaveBeenCalled();
+    expect(rawRequest).not.toHaveBeenCalled();
   });
 });

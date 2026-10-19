@@ -5,8 +5,7 @@
 import { ZodSchema } from "zod";
 
 /**
- * @deprecated Agent API beta header is no longer required for `exa.agent`.
- * Retained for legacy `exa.beta.agent` compatibility.
+ * @deprecated `exa.agent` does not need a beta header.
  */
 export const AGENT_BETA_HEADER = "agent-2026-05-07";
 
@@ -14,8 +13,8 @@ export const AGENT_MAX_EFFORT_BETA = "agent-max-effort-2026-07-27";
 
 export interface AgentBetaOptions {
   /**
-   * @deprecated Agent API beta header is no longer required for `exa.agent`.
-   * Values supplied to `exa.beta.agent` are sent as the `Exa-Beta` header.
+   * @deprecated `exa.agent` does not need a beta header. Values supplied to
+   * `exa.beta.agent` are sent as the `Exa-Beta` header.
    */
   betas?: string[];
 }
@@ -50,9 +49,8 @@ export type AgentEffort =
 /** Per-run spend ceiling for the metered `auto` and `ultra` efforts. */
 export interface AgentBudget {
   /**
-   * Maximum spend for the run in US dollars.
-   * Only accepted by the API for `auto` and `ultra`; the server validates the
-   * allowed range and applies defaults when omitted.
+   * Maximum spend for the run in US dollars, from 1 to 100. Only for `auto`
+   * and `ultra` effort. Defaults to 5 for `auto` and 20 for `ultra`.
    */
   maxCostDollars?: number;
   /**
@@ -62,9 +60,8 @@ export interface AgentBudget {
 }
 
 /**
- * Identifier of an Exa Connect data provider, e.g. `"fiber_ai"`,
- * `"financial_datasets"`, `"similarweb"`, `"baselayer"`, `"affiliate"`,
- * `"particle_news"`, or `"jinko"`.
+ * Identifier of an Exa Connect data provider. See the Exa Connect docs for the
+ * full list.
  */
 export type AgentDataSourceProvider = string;
 
@@ -202,13 +199,13 @@ export interface CreateAgentRunParams {
   /** Exa Connect data providers to enable for the run. Each entry enables all of that provider's tools. */
   dataSources?: AgentDataSource[];
   /**
-   * An opaque identifier you generate for the end user this run is made on
-   * behalf of, such as a UUID or a hash. Never send personal information such
-   * as an email address, name or phone number. 1 to 64 characters: letters,
-   * digits, `_` and `-`. Exa records it with the run and its searches so
-   * usage can be attributed to one end user; it does not change results. A
-   * follow-up run (`previousRunId`) that omits it keeps the identifier of the
-   * run it continues.
+   * An opaque ID you assign to the end user this run is made for, such as a
+   * UUID, used to attribute usage to that end user. Must not contain personal
+   * information such as an email address, phone number, username or name.
+   * Hash such values before sending them. 1 to 64 characters: letters, digits,
+   * `_` and `-`. Retained even when your team has Zero Data Retention
+   * enabled. Does not affect results. A follow-up run (`previousRunId`) that
+   * omits it inherits the identifier of the run it continues.
    */
   userIdentifier?: string;
 }

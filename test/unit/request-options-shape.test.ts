@@ -320,6 +320,27 @@ describe("client-level default timeout", () => {
         () => new Exa("test-key", "http://127.0.0.1:1", { timeout: invalid })
       ).toThrow(RangeError);
     }
+    expect(
+      () =>
+        new Exa("test-key", "http://127.0.0.1:1", {
+          timeout: null as unknown as number,
+        })
+    ).toThrow(RangeError);
+  });
+
+  it("still applies when a call sets its timeout to null", async () => {
+    const exa = await start(stalled(), { timeout: 30 });
+    const noTimeout = { timeout: null as unknown as number };
+    await expect(
+      exa.search("slow", undefined, noTimeout)
+    ).rejects.toMatchObject({ name: "TimeoutError", timeout: 30 });
+    await expect(exa.search("slow", noTimeout)).rejects.toMatchObject({
+      name: "TimeoutError",
+      timeout: 30,
+    });
+    await expect(
+      exa.websets.get("ws_1", undefined, noTimeout)
+    ).rejects.toMatchObject({ name: "TimeoutError", timeout: 30 });
   });
 });
 
@@ -411,7 +432,7 @@ describe("streams and timeouts", () => {
     await closed.promise;
   });
 
-  it("does not cut Agent and Research event streams either", async () => {
+  it("does not cut Agent event streams either", async () => {
     const event = (name: string) =>
       `event: ${name}\ndata: ${JSON.stringify({ name })}\n\n`;
     const exa = await start(
@@ -426,16 +447,6 @@ describe("streams and timeouts", () => {
       agentEvents.push(agentEvent.event);
     }
     expect(agentEvents).toEqual(["first", "second"]);
-
-    const researchEvents: unknown[] = [];
-    for await (const researchEvent of await exa.research.get(
-      "research_1",
-      { stream: true },
-      { timeout: TIMEOUT_MS }
-    )) {
-      researchEvents.push(researchEvent);
-    }
-    expect(researchEvents).toEqual([{ name: "first" }, { name: "second" }]);
   });
 
   it("keeps rawRequest's timeout running through the body", async () => {
@@ -508,12 +519,6 @@ describe("trailing requestOptions on the API sub-clients", () => {
       "websets.webhooks.listAttempts",
       (exa, o) => exa.websets.webhooks.listAttempts("wh_1", undefined, o),
     ],
-    [
-      "research.create",
-      (exa, o) => exa.research.create({ instructions: "test" }, o),
-    ],
-    ["research.get", (exa, o) => exa.research.get("r_1", undefined, o)],
-    ["research.list", (exa, o) => exa.research.list(undefined, o)],
     ["monitors.create", (exa, o) => exa.monitors.create({} as never, o)],
     ["monitors.get", (exa, o) => exa.monitors.get("mon_1", o)],
     [
@@ -588,7 +593,6 @@ describe("trailing requestOptions on the API sub-clients", () => {
     const exa = new Exa("test-key", "http://127.0.0.1:1");
     const request = vi.spyOn(exa, "request").mockResolvedValue({});
     await exa.agent.runs.get("run_1");
-    await exa.research.list();
     expect(request).toHaveBeenNthCalledWith(
       1,
       "/agent/runs/run_1",
@@ -596,13 +600,6 @@ describe("trailing requestOptions on the API sub-clients", () => {
       undefined,
       undefined,
       undefined
-    );
-    expect(request).toHaveBeenNthCalledWith(
-      2,
-      "/research/v1",
-      "GET",
-      undefined,
-      {}
     );
   });
 
@@ -625,18 +622,30 @@ describe("trailing requestOptions on the API sub-clients", () => {
     expect(Date.now() - started).toBeLessThan(5_000);
   });
 
-  it("surfaces a cancelled research poll as an abort, not as repeated failures", async () => {
-    const exa = await start(stalled());
-    const controller = new AbortController();
-    const poll = exa.research.pollUntilFinished(
-      "r_1",
-      { pollInterval: 1 },
-      { signal: controller.signal }
-    );
-    await wait(20);
-    controller.abort();
-    await expect(poll).rejects.toBeInstanceOf(ExaAbortError);
-  });
+  it.each([
+    [
+      "agent.runs.pollUntilFinished",
+      (exa: Exa, o: TransportRequestOptions) =>
+        exa.agent.runs.pollUntilFinished("run_1", { pollInterval: 1 }, o),
+    ],
+    [
+      "websets.waitUntilIdle",
+      (exa: Exa, o: TransportRequestOptions) =>
+        exa.websets.waitUntilIdle("ws_1", { pollInterval: 1 }, o),
+    ],
+  ])(
+    "%s rejects with ExaTimeoutError when a poll exceeds its request timeout",
+    async (_name, poll) => {
+      let polls = 0;
+      const exa = await start(stalled(() => (polls += 1)));
+      const error = await poll(exa, { timeout: 30 }).catch(
+        (caught: unknown) => caught
+      );
+      expect(error).toBeInstanceOf(ExaTimeoutError);
+      expect(error).toMatchObject({ statusCode: 408, timeout: 30 });
+      expect(polls).toBe(1);
+    }
+  );
 
   it("cancels a CSV import's upload through the signal", async () => {
     const arrived = deferred();

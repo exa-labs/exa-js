@@ -246,7 +246,7 @@ const ultraRun = await exa.agent.runs.create({
 
 Agent Monitors use the beta namespace and require the `AGENT_MONITORS_BETA_HEADER` beta identifier (`agent-monitors-2026-08-04`).
 
-An Agent Monitor keeps a table of entities × fields fresh on a cadence: static fields are answered once per entity over the live web, dynamic fields are tracked from news on every refresh.
+An Agent Monitor keeps a table of entities × fields fresh on a cadence.
 
 ```ts
 import { AGENT_MONITORS_BETA_HEADER } from "exa-js";
@@ -264,8 +264,8 @@ const monitor = await exa.beta.agent.monitors.create(
       { name: "Globex", domain: "globex.com" },
     ],
     fields: [
-      { name: "funding", description: "New funding rounds" }, // dynamic by default
-      { name: "ceo", description: "The company's current CEO", mode: "static" },
+      { name: "funding", description: "New funding rounds" },
+      { name: "ceo", description: "The company's current CEO" },
     ],
   },
   { idempotencyKey: "my-monitor-1" } // safe retries: same key returns the same monitor
@@ -396,6 +396,30 @@ try {
 ```
 
 `request` / `rawRequest` take the same options as their sixth argument. With `rawRequest`, the timeout keeps running until the response body is consumed or cancelled, so do one or the other when finished. Keeping only a body reader or a cloned response does not end cancellation or timeout coverage, and an interrupted body read rejects with the platform's own error. Request timers and signal listeners are released when the body settles.
+
+## Warnings
+
+The API can return `warnings` about a request, such as a field it ignores. At the time of writing, search responses carry them, including `streamSearch`. A warning never changes the status code or the results. It is for whoever maintains the code that builds the request. Fix the request, and don't pass the warning to a model. The response keeps them in `warnings`.
+
+By default the client prints each one with `console.warn`, once per process for each endpoint, code and path:
+
+```text
+[exa] POST /search IGNORED_FIELD at /startCrawlDate: startCrawlDate is no longer supported and is ignored. Remove it from the request.
+```
+
+The client's `warnings` option changes that. `"silent"` prints nothing. A function receives every warning, with the request it is about, instead of printing:
+
+```ts
+const quiet = new Exa(process.env.EXA_API_KEY, undefined, { warnings: "silent" });
+
+const routed = new Exa(process.env.EXA_API_KEY, undefined, {
+  warnings: (warning, { endpoint, method, requestId }) => {
+    logger.warn({ ...warning, endpoint, method, requestId }, "Exa API warning");
+  },
+});
+```
+
+The handler's types are `ApiWarning` (`code`, `path` and `message`) and `ApiWarningContext`. Options the API ignores are marked `@deprecated` in the types, so editors flag them before the request is sent. At the time of writing, `useAutoprompt` is one of them.
 
 ## TypeScript
 

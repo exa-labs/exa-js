@@ -127,6 +127,24 @@ const isHttpUrl: Parser<string> = (value, path) => {
   return text;
 };
 
+/** A number within the inclusive bounds. */
+function numberBetween(minimum: number, maximum: number): Parser<number> {
+  return (value, path) => {
+    const number = isNumber(value, path);
+    if (number < minimum) {
+      throw invalidBody(
+        `Too small: expected number to be >=${minimum} at "${path}"`
+      );
+    }
+    if (number > maximum) {
+      throw invalidBody(
+        `Too big: expected number to be <=${maximum} at "${path}"`
+      );
+    }
+    return number;
+  };
+}
+
 /** An integer within the inclusive bounds. */
 function integer(minimum?: number, maximum?: number): Parser<number> {
   return (value, path) => {
@@ -312,10 +330,14 @@ type ContentsOptions = Parsed<typeof CONTENTS_OPTIONS>;
 const USER_LOCATION = anyOf(
   isString,
   anyOf(
-    object({ country: isString, latitude: isNumber, longitude: isNumber }, [
-      "latitude",
-      "longitude",
-    ]),
+    object(
+      {
+        country: isString,
+        latitude: numberBetween(-90, 90),
+        longitude: numberBetween(-180, 180),
+      },
+      ["latitude", "longitude"]
+    ),
     object({ country: isString }, ["country"])
   )
 );

@@ -1,4 +1,5 @@
 import { it, expect } from "vitest";
+import type { UserLocation } from "../../src";
 import { createClient, integrationDescribe } from "./environment";
 
 const exa = createClient();
@@ -169,5 +170,37 @@ integrationDescribe("People Category Search", () => {
     // A current role has no end date, so only some ranges carry `to`.
     expect(dates.every((range) => typeof range.from === "string")).toBe(true);
     expect(dates.some((range) => typeof range.to === "string")).toBe(true);
+  }, 15000);
+});
+
+integrationDescribe("Search userLocation", () => {
+  const coordinates = { latitude: 37.7749, longitude: -122.4194 };
+
+  it.each<[string, UserLocation]>([
+    ["a country code", "US"],
+    ["a country object", { country: "US" }],
+    ["coordinates", coordinates],
+    ["coordinates with a country", { country: "US", ...coordinates }],
+  ])(
+    "accepts userLocation as %s",
+    async (_form, userLocation) => {
+      const response = await exa.search("weather today", {
+        userLocation,
+        numResults: 2,
+        contents: false,
+      });
+      expect(response.results).not.toHaveLength(0);
+    },
+    15000
+  );
+
+  it("is refused a latitude out of range", async () => {
+    await expect(
+      exa.search("weather today", {
+        userLocation: { latitude: 91, longitude: coordinates.longitude },
+        numResults: 2,
+        contents: false,
+      })
+    ).rejects.toMatchObject({ statusCode: 400 });
   }, 15000);
 });
