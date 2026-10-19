@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.26.0](https://github.com/exa-labs/exa-js/compare/v2.25.0...v2.26.0) (2026-10-19)
+
+
+### Features
+
+* add per-request timeouts and abort support ([2b317c2](https://github.com/exa-labs/exa-js/commit/2b317c2947ae9eeae016fb68c6d17c52ee1f8c8e))
+* add search warnings and client warnings reporting, the lite and pass-through search types, user location coordinates, and search notices in tools ([c2bfb88](https://github.com/exa-labs/exa-js/commit/c2bfb88afc0a6aa7536995fbd06c93d8bafae898))
+* add userIdentifier to search, contents, answer and agent runs ([2b317c2](https://github.com/exa-labs/exa-js/commit/2b317c2947ae9eeae016fb68c6d17c52ee1f8c8e))
+* retire the Research API ([c2bfb88](https://github.com/exa-labs/exa-js/commit/c2bfb88afc0a6aa7536995fbd06c93d8bafae898))
+* take request options (signal, timeout, body, headers, query) as a trailing argument on every method ([2b317c2](https://github.com/exa-labs/exa-js/commit/2b317c2947ae9eeae016fb68c6d17c52ee1f8c8e))
+
+
+### Bug Fixes
+
+* keep an extra cursor from pinning listings to one page ([2b317c2](https://github.com/exa-labs/exa-js/commit/2b317c2947ae9eeae016fb68c6d17c52ee1f8c8e))
+
 ## [2.25.0](https://github.com/exa-labs/exa-js/compare/v2.24.0...v2.25.0) (2026-10-01)
 
 
