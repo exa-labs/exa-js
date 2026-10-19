@@ -30,7 +30,11 @@ integrationDescribe("Deprecated findSimilar contents compatibility", () => {
       numResults: 2,
     });
 
-    const sampleResult = firstResultOrSkip(response.results, ctx);
+    // The result type has no content fields; the response must not either.
+    const sampleResult: Record<string, unknown> = firstResultOrSkip(
+      response.results,
+      ctx
+    );
     expect(sampleResult.text).toBeUndefined();
     expect(sampleResult.summary).toBeUndefined();
   });
@@ -70,7 +74,8 @@ integrationDescribe("Deprecated findSimilar contents compatibility", () => {
     const sampleResult = firstResultOrSkip(response.results, ctx);
     expect(sampleResult.summary).toBeDefined();
     expect(sampleResult.summary.length).toBeGreaterThan(10);
-    expect(sampleResult.text).toBeUndefined();
+    // `text` was not requested, so the result type has no such field.
+    expect((sampleResult as Record<string, unknown>).text).toBeUndefined();
   }, 15000);
 
   it("preserves deprecated text and summary contents when both are requested", async (ctx) => {

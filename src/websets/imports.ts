@@ -60,9 +60,10 @@ export interface CreateImportWithCsvParameters {
 }
 
 /**
- * CSV data input - can be raw data or buffer
+ * CSV data to import, as text or as UTF-8 bytes in a `Uint8Array`, such as a
+ * Node.js `Buffer`.
  */
-export type CsvDataInput = string | Buffer;
+export type CsvDataInput = string | Uint8Array;
 
 /**
  * Client for managing Imports
@@ -83,9 +84,11 @@ export class ImportsClient extends WebsetsBaseClient {
   /**
    * Create a new Import with CSV data (handles upload)
    * @param params The import creation parameters (without size/count - calculated automatically)
-   * @param csv CSV data as string or Buffer
-   * @param requestOptions Per-call request options. `signal` and `timeout` also apply to the upload; `body`, `headers` and `query` apply to the create request only
-   * @returns The Import after upload (not waited for completion)
+   * @param csv CSV data as a string, or as UTF-8 bytes in a Uint8Array such as a Buffer
+   * @param requestOptions Per-call request options. `signal` and `timeout` also apply to the upload. `body`, `headers` and `query` apply to the create request only
+   * @returns The create response, once the CSV is uploaded. The import is not
+   *   fetched again, so its status is the one it was created with. Call `get`
+   *   or `waitUntilCompleted` for its current state.
    */
   async create(
     params: CreateImportWithCsvParameters,
@@ -107,22 +110,27 @@ export class ImportsClient extends WebsetsBaseClient {
       );
     }
 
-    let csvBuffer: Buffer;
+    // The bytes to upload and their text, with the web encoding APIs rather
+    // than Node's Buffer, so a CSV upload also works where Buffer is absent.
+    // A Buffer is a Uint8Array and is uploaded as is.
+    let csvBytes: Uint8Array;
+    let csvText: string;
     if (typeof csv === "string") {
-      csvBuffer = Buffer.from(csv, "utf8");
-    } else if (Buffer.isBuffer(csv)) {
-      csvBuffer = csv;
+      csvBytes = new TextEncoder().encode(csv);
+      csvText = csv;
+    } else if (csv instanceof Uint8Array) {
+      csvBytes = csv;
+      csvText = new TextDecoder().decode(csv);
     } else {
       throw new ExaError(
-        "Invalid CSV data input. Must be string or Buffer",
+        "Invalid CSV data input. Must be a string or a Uint8Array such as a Buffer",
         HttpStatusCode.BadRequest
       );
     }
 
-    const sizeInBytes = csvBuffer.length;
+    const sizeInBytes = csvBytes.byteLength;
     const sizeInMB = Math.max(1, Math.ceil(sizeInBytes / (1024 * 1024)));
 
-    const csvText = csvBuffer.toString("utf8");
     const lines = csvText.split("\n").filter((line) => line.trim().length > 0);
     const recordCount = Math.max(0, lines.length - 1); // Subtract 1 for header
 
@@ -164,7 +172,7 @@ export class ImportsClient extends WebsetsBaseClient {
     try {
       const uploadResponse = await fetch(importResponse.uploadUrl, {
         method: "PUT",
-        body: csvBuffer as BodyInit,
+        body: csvBytes as BodyInit,
         signal: upload.signal,
       });
 

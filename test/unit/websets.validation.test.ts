@@ -62,6 +62,7 @@ describe("Websets Client Method Validation", () => {
     websetsWithAccess.request = vi.fn().mockResolvedValue({
       id: "test-id",
       object: "webset",
+      dashboardUrl: "https://websets.exa.ai/test-id",
       status: WebsetStatus.idle,
       externalId: null,
       searches: [],
@@ -122,11 +123,11 @@ describe("Websets Client Method Validation", () => {
     const mockWebsetResponse: GetWebsetResponse = {
       id: "test-id",
       object: "webset",
+      dashboardUrl: "https://websets.exa.ai/test-id",
       status: WebsetStatus.idle,
       externalId: null,
       imports: [],
       monitors: [],
-      streams: [],
       title: "",
       searches: [],
       enrichments: [],

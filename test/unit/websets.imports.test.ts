@@ -1,5 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import Exa from "../../src";
+import { Buffer } from "node:buffer";
+import { createServer, type Server } from "node:http";
+import type { AddressInfo } from "node:net";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import Exa, { ExaError } from "../../src";
 import {
   CompanyEntity,
   CreateImportParameters,
@@ -328,5 +331,112 @@ describe("Websets Imports API", () => {
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(result).toEqual(completedImport);
     });
+  });
+});
+
+describe("Websets Imports CSV upload", () => {
+  let server: Server;
+  /** The bodies of the uploads the server received. */
+  let uploads: Buffer[];
+  let exa: Exa;
+  let createParams: unknown[];
+
+  beforeEach(async () => {
+    vi.restoreAllMocks();
+    uploads = [];
+    createParams = [];
+    server = createServer((req, res) => {
+      const chunks: Buffer[] = [];
+      req.on("data", (chunk: Buffer) => chunks.push(chunk));
+      req.on("end", () => {
+        uploads.push(Buffer.concat(chunks));
+        res.writeHead(200);
+        res.end();
+      });
+    });
+    await new Promise<void>((resolve) =>
+      server.listen(0, "127.0.0.1", resolve)
+    );
+    const { port } = server.address() as AddressInfo;
+    exa = new Exa("test-api-key", "https://api.exa.ai");
+    vi.spyOn(exa.websets.imports as any, "request").mockImplementation(
+      async (...args: unknown[]) => {
+        createParams.push(args[2]);
+        return {
+          id: "import_123456",
+          uploadUrl: `http://127.0.0.1:${port}/upload`,
+        };
+      }
+    );
+  });
+
+  afterEach(async () => {
+    vi.restoreAllMocks();
+    server.closeAllConnections();
+    await new Promise<void>((resolve, reject) =>
+      server.close((err) => (err ? reject(err) : resolve()))
+    );
+  });
+
+  const params = { title: "Companies", entity: { type: "company" as const } };
+  const csv = "name,url\nAcme,https://acme.example\n";
+
+  it.each([
+    ["a string", csv],
+    ["a Buffer", Buffer.from(csv, "utf8")],
+    ["a Uint8Array", new TextEncoder().encode(csv)],
+    [
+      "a Uint8Array view into a larger buffer",
+      new Uint8Array(
+        new TextEncoder().encode(`xx${csv}yy`).buffer,
+        2,
+        csv.length
+      ),
+    ],
+  ])("uploads the CSV given as %s byte for byte", async (_name, data) => {
+    await exa.websets.imports.create(params, data);
+
+    expect(uploads).toHaveLength(1);
+    expect(uploads[0].toString("utf8")).toBe(csv);
+    expect(createParams[0]).toMatchObject({
+      title: "Companies",
+      format: "csv",
+      size: csv.length,
+      count: 1,
+    });
+  });
+
+  it.each([
+    ["a string", csv],
+    ["a Uint8Array", new TextEncoder().encode(csv)],
+  ])(
+    "uploads the CSV given as %s where there is no Buffer global",
+    async (_name, data) => {
+      // Node's own fetch needs Buffer, so the upload goes to a stub here, as
+      // it would to a browser's fetch.
+      const bodies: unknown[] = [];
+      vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => {
+        bodies.push(init.body);
+        return { ok: true, status: 200 } as Response;
+      });
+      vi.stubGlobal("Buffer", undefined);
+      try {
+        await exa.websets.imports.create(params, data);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+
+      expect(bodies).toHaveLength(1);
+      expect(bodies[0]).toBeInstanceOf(Uint8Array);
+      expect(new TextDecoder().decode(bodies[0] as Uint8Array)).toBe(csv);
+      expect(createParams[0]).toMatchObject({ size: csv.length, count: 1 });
+    }
+  );
+
+  it("rejects CSV data that is neither a string nor bytes", async () => {
+    await expect(
+      exa.websets.imports.create(params, 42 as unknown as string)
+    ).rejects.toBeInstanceOf(ExaError);
+    expect(uploads).toHaveLength(0);
   });
 });

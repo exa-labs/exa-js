@@ -207,8 +207,8 @@ export class AgentMonitorChangesClient extends AgentMonitorsBaseClient {
 export class AgentMonitorBacktestsClient extends AgentMonitorsBaseClient {
   /**
    * Start an async backtest of entities × fields over an explicit past news
-   * window. Returns a `running` job; poll with `get` (or use `createAndWait`)
-   * for the result.
+   * window. Returns a `running` job. Poll it with `get`, or use
+   * `createAndWait`, for the result.
    */
   async create(
     params: CreateAgentMonitorBacktestParams & AgentMonitorsBetaOptions,

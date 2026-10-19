@@ -37,6 +37,7 @@ describe("Websets API", () => {
     const mockResponse: Webset = {
       id: "ws_123456",
       object: "webset",
+      dashboardUrl: "https://websets.exa.ai/ws_123456",
       status: WebsetStatus.running,
       searches: [],
       enrichments: [],
@@ -46,7 +47,6 @@ describe("Websets API", () => {
       externalId: null,
       metadata: {},
       imports: [],
-      streams: [],
       title: "Test Webset",
     };
 
@@ -106,6 +106,7 @@ describe("Websets API", () => {
           ],
         },
       ],
+      items: [],
     };
 
     const websetsClient = getProtectedClient(exa.websets);
@@ -116,6 +117,7 @@ describe("Websets API", () => {
     const previewParams = {
       search: {
         query: "AI companies founded after 2020",
+        count: 10,
         entity: { type: "company" as const },
       },
     };
@@ -147,6 +149,7 @@ describe("Websets API", () => {
         ],
       },
       enrichments: [],
+      items: [],
     };
 
     const websetsClient = getProtectedClient(exa.websets);
@@ -157,6 +160,7 @@ describe("Websets API", () => {
     const previewParams = {
       search: {
         query: "AI companies",
+        count: 10,
       },
     };
     const result = await exa.websets.preview(previewParams, { search: true });
@@ -179,6 +183,7 @@ describe("Websets API", () => {
         criteria: [],
       },
       enrichments: [],
+      items: [],
     };
 
     const websetsClient = getProtectedClient(exa.websets);
@@ -189,6 +194,7 @@ describe("Websets API", () => {
     const previewParams = {
       search: {
         query: "AI companies",
+        count: 10,
       },
     };
     const result = await exa.websets.preview(previewParams, { search: false });
@@ -206,6 +212,7 @@ describe("Websets API", () => {
     const mockResponse: Webset = {
       id: "ws_789012",
       object: "webset",
+      dashboardUrl: "https://websets.exa.ai/ws_789012",
       status: WebsetStatus.running,
       searches: [],
       enrichments: [],
@@ -215,7 +222,6 @@ describe("Websets API", () => {
       externalId: null,
       metadata: {},
       imports: [],
-      streams: [],
       title: "Scoped Webset",
     };
 
@@ -253,6 +259,7 @@ describe("Websets API", () => {
     const mockResponse: Webset = {
       id: "ws_123456",
       object: "webset",
+      dashboardUrl: "https://websets.exa.ai/ws_123456",
       status: WebsetStatus.idle,
       searches: [],
       enrichments: [],
@@ -262,7 +269,6 @@ describe("Websets API", () => {
       externalId: null,
       metadata: {},
       imports: [],
-      streams: [],
       title: "Test Webset",
     };
 
@@ -286,12 +292,12 @@ describe("Websets API", () => {
     const mockWebsetData: Webset = {
       id: "ws_123456",
       object: "webset",
+      dashboardUrl: "https://websets.exa.ai/ws_123456",
       status: WebsetStatus.idle,
       searches: [],
       enrichments: [],
       monitors: [],
       imports: [],
-      streams: [],
       title: "Test Webset",
       createdAt: "2023-01-01T00:00:00Z",
       updatedAt: "2023-01-01T00:00:00Z",
@@ -325,12 +331,12 @@ describe("Websets API", () => {
     const mockResponse: Webset = {
       id: "ws_123456",
       object: "webset",
+      dashboardUrl: "https://websets.exa.ai/ws_123456",
       status: WebsetStatus.idle,
       searches: [],
       enrichments: [],
       monitors: [],
       imports: [],
-      streams: [],
       title: "Test Webset",
       metadata: { updated: "true" },
       createdAt: "2023-01-01T00:00:00Z",
@@ -358,12 +364,12 @@ describe("Websets API", () => {
     const mockResponse: Webset = {
       id: "ws_123456",
       object: "webset",
+      dashboardUrl: "https://websets.exa.ai/ws_123456",
       status: WebsetStatus.idle,
       searches: [],
       enrichments: [],
       monitors: [],
       imports: [],
-      streams: [],
       title: "Test Webset",
       createdAt: "2023-01-01T00:00:00Z",
       updatedAt: "2023-01-01T00:00:00Z",
@@ -555,6 +561,7 @@ describe("Websets API", () => {
     const mockRunningResponse: Webset = {
       id: "ws_123456",
       object: "webset",
+      dashboardUrl: "https://websets.exa.ai/ws_123456",
       status: WebsetStatus.running,
       searches: [],
       enrichments: [],
@@ -564,18 +571,17 @@ describe("Websets API", () => {
       externalId: null,
       metadata: {},
       imports: [],
-      streams: [],
       title: null,
     };
     const mockIdleResponse: Webset = {
       id: "ws_123456",
       object: "webset",
+      dashboardUrl: "https://websets.exa.ai/ws_123456",
       status: WebsetStatus.idle,
       searches: [],
       enrichments: [],
       monitors: [],
       imports: [],
-      streams: [],
       title: "Test Webset",
       createdAt: "2023-01-01T00:00:00Z",
       updatedAt: "2023-01-01T00:00:00Z",
@@ -625,12 +631,12 @@ describe("Websets API", () => {
       data: {
         id: "ws_123456",
         object: "webset",
+        dashboardUrl: "https://websets.exa.ai/ws_123456",
         status: WebsetStatus.idle,
         searches: [],
         enrichments: [],
         monitors: [],
         imports: [],
-        streams: [],
         title: "Test Webset",
         createdAt: "2023-01-01T00:00:00Z",
         updatedAt: "2023-01-01T00:00:00Z",
@@ -673,12 +679,12 @@ describe("Websets API", () => {
       data: {
         id: "ws_123456",
         object: "webset",
+        dashboardUrl: "https://websets.exa.ai/ws_123456",
         status: WebsetStatus.idle,
         searches: [],
         enrichments: [],
         monitors: [],
         imports: [],
-        streams: [],
         title: "Test Webset",
         createdAt: "2023-01-01T00:00:00Z",
         updatedAt: "2023-01-01T00:00:00Z",

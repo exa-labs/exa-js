@@ -4,7 +4,7 @@
 
 import { ZodSchema } from "zod";
 import { Exa } from "../index";
-import { ExaError } from "../errors";
+import { exaErrorFromResponse } from "../error-response";
 import { isZodSchema, zodToJsonSchema } from "../zod-utils";
 import { AgentBaseClient } from "./base";
 import { headersForBetas } from "./betas";
@@ -238,13 +238,7 @@ export class AgentRunsClient extends AgentBaseClient {
         Accept: "text/event-stream",
       });
       if (!response.ok) {
-        const message = await response.text();
-        throw new ExaError(
-          message || `Request failed with status code ${response.status}`,
-          response.status,
-          new Date().toISOString(),
-          "/agent/runs"
-        );
+        throw await exaErrorFromResponse(response, "/agent/runs");
       }
       return streamAgentEvents(response);
     }
@@ -493,13 +487,7 @@ export class AgentBetaRunsClient extends AgentRunsClient {
         Accept: "text/event-stream",
       });
       if (!response.ok) {
-        const message = await response.text();
-        throw new ExaError(
-          message || `Request failed with status code ${response.status}`,
-          response.status,
-          new Date().toISOString(),
-          "/agent/runs"
-        );
+        throw await exaErrorFromResponse(response, "/agent/runs");
       }
       return streamAgentEvents(response);
     }
@@ -719,10 +707,7 @@ export class AgentBetaClient extends AgentClient {
 }
 
 export class BetaClient {
-  /**
-   * Beta Agent namespace. Stable Agent runs remain available here for
-   * backwards compatibility; beta-only Agent products live here exclusively.
-   */
+  /** Beta Agent APIs. For Agent runs, use `exa.agent.runs`. */
   agent: AgentBetaClient;
 
   constructor(clientOrAgent: Exa | AgentClient) {

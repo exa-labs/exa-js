@@ -1,9 +1,8 @@
 /**
  * Types for the Exa Agent Monitors API (`/agent/monitors`).
  *
- * An Agent Monitor keeps a table of entities × fields fresh: static fields
- * are answered once per entity over the live web, dynamic fields are tracked
- * from news on every refresh, on the monitor's cadence.
+ * An Agent Monitor keeps a table of entities × fields fresh on the monitor's
+ * cadence.
  */
 
 /** Beta identifier required for the Agent Monitors API. */
@@ -31,17 +30,13 @@ export type AgentMonitorFieldValueType =
   | "email"
   | "phone";
 
-/**
- * A field the monitor keeps fresh for every entity. Fields are dynamic
- * (tracked from news on every refresh) unless declared `mode: "static"`
- * (answered once over the live web).
- */
+/** A field the monitor keeps fresh for every entity. */
 export interface AgentMonitorField {
   id: string;
   name: string;
   description: string;
-  /** @deprecated The static/dynamic knob is becoming internal-only. */
-  mode: AgentMonitorFieldMode;
+  /** @deprecated Not returned by the API. */
+  mode?: AgentMonitorFieldMode;
   /** The type of the field's cell values. */
   type: AgentMonitorFieldValueType;
 }
@@ -121,9 +116,9 @@ export interface AgentMonitorEntityView {
 }
 
 /**
- * Entity/field references on a change item. `id` is the canonical, stable
- * join key; the name attributes are denormalized for display, resolved as of
- * read time, and absent when the entity/field no longer exists.
+ * Entity and field references on a change item. Join on `id`. The other
+ * attributes show current values for display and are absent once the entity
+ * or field is removed.
  */
 export interface AgentMonitorChangeEntity {
   id: string;
@@ -150,28 +145,26 @@ export interface AgentMonitorChange {
 
 // --- Request params ---
 
-/** An entity to track. `domain` anchors entity resolution and must be unique per monitor. */
+/** An entity to track. Each name and domain pair must be unique. */
 export interface CreateAgentMonitorEntityParams {
   name: string;
-  /** Resolution anchor: entities resolve by first-party or domain-verified evidence. */
+  /** The entity's website domain, used to identify the entity. */
   domain: string;
   /** Extra disambiguation context for entity resolution of ambiguous names. */
   description?: string;
 }
 
-/** A field to keep fresh. Dynamic (the default) unless declared `mode: "static"`. */
+/** A field to keep fresh. */
 export interface CreateAgentMonitorFieldParams {
   name: string;
   description: string;
   /**
-   * The type of the field's cell values; defaults to `"string"`. Cell values
-   * are normalized to the declared type best-effort on write, never rejected
-   * — but declaring an unsupported type (e.g. `"object"`) is a 400.
-   * `"static"`/`"dynamic"` are accepted as deprecated aliases of `mode`;
-   * declaring both spellings is a 400.
+   * The type of the field's values. Defaults to `"string"`. Values are
+   * converted to this type where possible. An unsupported type fails the
+   * request, including the deprecated values `"static"` and `"dynamic"`.
    */
   type?: AgentMonitorFieldValueType | AgentMonitorFieldMode;
-  /** @deprecated The static/dynamic knob is becoming internal-only. */
+  /** @deprecated Omit this field. The API rejects requests that set it. */
   mode?: AgentMonitorFieldMode;
 }
 
@@ -232,7 +225,10 @@ export interface ListAgentMonitorEntitiesResponse {
   data: AgentMonitorEntityView[];
   hasMore: boolean;
   nextCursor: string | null;
-  /** Store head change token — "am I caught up?" display only, NOT the cursor. */
+  /**
+   * Latest change version of the monitor, for showing whether a reader is up
+   * to date. Not a cursor. Page with `nextCursor`.
+   */
   version: number;
 }
 
@@ -242,7 +238,10 @@ export interface ListAgentMonitorChangesResponse {
   hasMore: boolean;
   /** Opaque; resume the feed from the last served change. Null when data is empty. */
   nextCursor: string | null;
-  /** Store head change token — "am I caught up?" display only, NOT the cursor. */
+  /**
+   * Latest change version of the monitor, for showing whether a reader is up
+   * to date. Not a cursor. Page with `nextCursor`.
+   */
   version: number;
 }
 
@@ -255,9 +254,9 @@ export interface DeletedAgentMonitor {
 // --- Backtests ---
 
 /**
- * Params for a one-shot backtest of entities × fields over an explicit past
- * news window. The backtest runs one monitor refresh over the requested
- * window, then tears down its temporary monitor.
+ * Params for a backtest that fills fields for entities over a past window.
+ * Fields answered from news use only news published between `startTime` and
+ * `endTime`. Other fields return present values. No monitor is created.
  */
 export interface CreateAgentMonitorBacktestParams {
   entities: CreateAgentMonitorEntityParams[];
@@ -268,7 +267,7 @@ export interface CreateAgentMonitorBacktestParams {
   endTime: string;
 }
 
-/** One backtest cell: a value and its grounding citations. */
+/** One backtest cell, with a value and its grounding citations. */
 export interface AgentMonitorBacktestContent {
   value: unknown;
   citations: AgentMonitorCitation[];
@@ -277,7 +276,7 @@ export interface AgentMonitorBacktestContent {
 /** One entity's backtest result, with populated cells keyed by field name. */
 export interface AgentMonitorBacktestEntity {
   name: string;
-  /** Populated cells by field name; fields with no update are absent. */
+  /** Populated cells by field name. Fields with no update are absent. */
   contents: Record<string, AgentMonitorBacktestContent>;
 }
 
@@ -292,7 +291,7 @@ export interface AgentMonitorBacktestResult {
 export type AgentMonitorBacktestStatus = "running" | "completed" | "failed";
 
 /**
- * A backtest job: `create` returns it as `running`, and `get` polls it to
+ * A backtest job. `create` returns it as `running`, and `get` polls it to
  * `completed` (result fields present) or `failed`. Jobs expire and read as
  * 404 after `expiresAt`.
  */

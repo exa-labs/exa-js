@@ -162,18 +162,17 @@ describe("extra body", () => {
 
     await exa.websets.create({} as never, undefined, extra);
     await exa.websets.searches.create("ws_1", {} as never, undefined, extra);
-    await exa.research.create({ instructions: "test" }, extra);
     await exa.monitors.create({} as never, extra);
     await exa.agent.runs.create({ query: "test" }, extra);
     await exa.websets.cancel("ws_1", extra);
 
-    expect(requests).toHaveLength(6);
+    expect(requests).toHaveLength(5);
     for (const request of requests) {
       expect(request.method).toBe("POST");
       expect(request.json()).toMatchObject({ futureField: "new" });
     }
-    expect(requests[2].json()).toMatchObject({ instructions: "test" });
-    expect(requests[5].json()).toEqual({ futureField: "new" });
+    expect(requests[3].json()).toMatchObject({ query: "test" });
+    expect(requests[4].json()).toEqual({ futureField: "new" });
   });
 
   it("is not sent with GET or DELETE requests", async () => {
@@ -379,50 +378,6 @@ describe("extra query parameters", () => {
 });
 
 describe("streaming stays the called method's decision", () => {
-  const research = {
-    researchId: "r1",
-    createdAt: 1,
-    model: "exa-research",
-    instructions: "test",
-    status: "completed",
-  };
-  const replyByStreamParam: Responder = (request, response) => {
-    if (request.query.get("stream") === "true") {
-      response.writeHead(200, { "content-type": "text/event-stream" });
-      response.end('event: research-definition\ndata: {"researchId":"r1"}\n\n');
-    } else {
-      replyJson(research)(request, response);
-    }
-  };
-
-  it("never takes stream from the extra query", async () => {
-    const { exa, requests } = await start(replyByStreamParam);
-
-    const result = await exa.research.get("r1", undefined, {
-      query: { stream: "true", debug: "1" },
-    });
-    expect(result).toMatchObject({ researchId: "r1", status: "completed" });
-
-    const events = [];
-    for await (const event of await exa.research.get(
-      "r1",
-      { stream: true },
-      { query: { stream: "false", debug: "1" } }
-    )) {
-      events.push(event);
-    }
-    expect(events).toHaveLength(1);
-
-    expect(requests.map((request) => request.query.get("stream"))).toEqual([
-      "false",
-      "true",
-    ]);
-    expect(requests.map((request) => request.query.get("debug"))).toEqual([
-      "1",
-      "1",
-    ]);
-  });
-
   it("keeps the Accept header of a streaming method", async () => {
     const { exa, requests } = await start((request, response) => {
       if (String(request.headers.accept).includes("text/event-stream")) {

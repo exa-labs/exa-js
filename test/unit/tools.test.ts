@@ -47,6 +47,80 @@ describe("LLM tools", () => {
     });
   });
 
+  const RELAXED_NOTICE =
+    "No results matched the site restriction site:example.com in the query; these results come from a search with that restriction removed.";
+  const NOTICE_RESULTS = [
+    {
+      id: "result-1",
+      title: "Example",
+      url: "https://example.com",
+      highlights: ["A useful highlight."],
+    },
+  ];
+
+  it("leads the search output with one Note line per notice", async () => {
+    const request = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce({ requestId: "request-1", results: NOTICE_RESULTS });
+    const tool = exa.tools.webSearch();
+    const plain = await tool.run({ query: "site:example.com news" });
+
+    request.mockResolvedValueOnce({
+      requestId: "request-2",
+      results: NOTICE_RESULTS,
+      notices: [
+        {
+          code: "RESTRICTIONS_RELAXED",
+          path: "/query",
+          message: RELAXED_NOTICE,
+          details: {
+            relaxed: [{ kind: "site", operator: "site:example.com" }],
+          },
+        },
+        { code: "A_FUTURE_CODE", path: "/query", message: "A second notice." },
+      ],
+    });
+    const withNotices = await tool.run({ query: "site:example.com news" });
+
+    expect(plain).not.toContain("Note:");
+    expect(withNotices).toBe(
+      `Note: ${RELAXED_NOTICE}\nNote: A second notice.\n\n${plain}`
+    );
+  });
+
+  it("shows notices when the search returns no results", async () => {
+    vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: [],
+      notices: [
+        { code: "RESTRICTIONS_RELAXED", path: "/query", message: RELAXED_NOTICE },
+      ],
+    });
+
+    expect(await exa.tools.webSearch().run({ query: "news" })).toBe(
+      `Note: ${RELAXED_NOTICE}\n\nNo search results found.`
+    );
+  });
+
+  it("keeps search warnings out of the output", async () => {
+    vi.spyOn(exa, "request").mockResolvedValue({
+      requestId: "request-1",
+      results: NOTICE_RESULTS,
+      warnings: [
+        {
+          code: "IGNORED_FIELD",
+          path: "/useAutoprompt",
+          message: "useAutoprompt is ignored. Remove it from the request.",
+        },
+      ],
+    });
+
+    const output = await exa.openai.webSearch().run({ query: "news" });
+
+    expect(output).not.toContain("useAutoprompt");
+    expect(output).not.toContain("Note:");
+  });
+
   it("serializes each provider tool to its exact wire descriptor", () => {
     const openaiTool = exa.openai.webSearch();
     const responsesTool = exa.openai.responses.webSearch();

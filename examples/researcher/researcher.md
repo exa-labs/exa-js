@@ -127,7 +127,7 @@ console.log(await getLLMResponse({
 
 Those are some good ideas!
 
-Now we have to handle the neural Exa search. This is tougher: you can read all about crafting good Exa searches [here](https://docs.exa.ai/reference/prompting-guide). But this is actually a really good thing: making the perfect Exa search is hard because Exa is so powerful! Exa allows us to express so much more nuance in our searches and gives us unparalleled ability to steer our search queries towards our real objective.
+Now we have to handle the neural Exa search. This is tougher: you can read all about crafting good Exa searches [here](https://exa.ai/docs/search/best-practices). But this is actually a really good thing: making the perfect Exa search is hard because Exa is so powerful! Exa allows us to express so much more nuance in our searches and gives us unparalleled ability to steer our search queries towards our real objective.
 
 We need to our app to understand our goal, what Exa is, and how to use it to achieve the goal. So let's just tell the LLM everything it needs to know.
 

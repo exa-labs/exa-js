@@ -3,6 +3,11 @@ import { ZodSchema } from "zod";
 import packageJson from "../package.json";
 import { AgentClient, BetaClient } from "./agent/client";
 import { headersForBetas } from "./agent/betas";
+import {
+  exaErrorFromResponse,
+  readResponseBody,
+  truncateResponseBody,
+} from "./error-response";
 import { ExaError, HttpStatusCode } from "./errors";
 import { SearchMonitorsClient } from "./monitors/client";
 import {
@@ -46,59 +51,18 @@ const DEFAULT_MAX_CHARACTERS = 10_000;
 /** Exa-Beta token required for Dynamic Highlights (research preview). */
 export const DYNAMIC_HIGHLIGHTS_BETA = "dynamic-highlights-2026-08-28";
 
-// Longest snippet of a non-JSON response body to include in error messages.
-const NON_JSON_BODY_SNIPPET_LENGTH = 500;
-
-/**
- * Reads a fetch Response body once and attempts to parse it as JSON.
- *
- * API gateways and proxies (Cloudflare, load balancers, nginx) sometimes
- * return HTML or plain-text error pages even when the SDK expects JSON.
- * Calling `response.json()` on those bodies throws an opaque
- * `SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON`
- * that hides the real HTTP status. Reading the body as text first lets the
- * caller surface the actual status and a snippet of the response instead.
- *
- * @returns The parsed JSON value (or `undefined` when the body is empty or not
- *   valid JSON) alongside the raw response text.
- */
-async function readResponseBody(
-  response: Response
-): Promise<{ json: any; text: string }> {
-  const text = await response.text();
-  if (!text) {
-    return { json: undefined, text };
-  }
-  try {
-    return { json: JSON.parse(text), text };
-  } catch {
-    return { json: undefined, text };
-  }
-}
-
-/**
- * Collapses whitespace and truncates a non-JSON response body so it stays
- * readable when embedded in an error message.
- */
-function truncateResponseBody(text: string): string {
-  const collapsed = text.replace(/\s+/g, " ").trim();
-  return collapsed.length > NON_JSON_BODY_SNIPPET_LENGTH
-    ? `${collapsed.slice(0, NON_JSON_BODY_SNIPPET_LENGTH)}…`
-    : collapsed;
-}
-
 /**
  * Options for retrieving page contents
  * @typedef {Object} ContentsOptions
  * @property {TextContentsOptions | boolean} [text] - Options for retrieving text contents.
  * @property {HighlightsContentsOptions | boolean} [highlights] - Recommended: `true`. Exa dynamically chooses the number of characters based on each document's relevance to your query.
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
- * @property {ContextOptions | boolean} [context] - DEPRECATED: Use `text` or `highlights` instead. Will be removed in a future version.
+ * @property {ContextOptions | boolean} [context] - Deprecated. Use `text` or `highlights`.
  * @property {number} [maxAgeHours] - Maximum age of cached content in hours. If content is older, it will be fetched fresh. Special values: 0 = always fetch fresh content, -1 = never fetch fresh (use cached content only). Example: 168 = fetch fresh for pages older than 7 days.
  * @property {string} [snapshotAsOf] - ISO 8601 datetime. Return the newest stored version at or before this instant instead of live content.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
- * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result.
- * @property {string | string[]} [subpageTarget] - Text used to match/rank subpages in the returned subpage list. You could use "about" to get *about* page for websites. Note that this is a fuzzy matcher.
+ * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result. Deprecated on `search()`; use `getContents()` to crawl subpages.
+ * @property {string | string[]} [subpageTarget] - Text used to match/rank subpages in the returned subpage list. You could use "about" to get *about* page for websites. Note that this is a fuzzy matcher. Deprecated on `search()`; use `getContents()` to crawl subpages.
  * @property {ExtrasOptions} [extras] - Miscelleneous data derived from results
  */
 export type ContentsOptions = {
@@ -115,8 +79,7 @@ export type ContentsOptions = {
   summary?: SummaryContentsOptions | true;
   livecrawl?: LivecrawlOptions;
   /**
-   * DEPRECATED: Use `text` or `highlights` instead. Will be removed in a future version.
-   * @deprecated Use `text` or `highlights` instead. This legacy `context` field will be removed in a future version.
+   * @deprecated Use `text` or `highlights` instead.
    */
   context?: ContextOptions | true;
   livecrawlTimeout?: number;
@@ -128,31 +91,94 @@ export type ContentsOptions = {
   extras?: ExtrasOptions;
 };
 
+/**
+ * Contents options for search requests: `ContentsOptions`, with subpage
+ * crawling deprecated. To crawl subpages, pass the result URLs to
+ * `getContents()` with `subpages`.
+ */
+type SearchContentsOptions = Omit<
+  ContentsOptions,
+  "subpages" | "subpageTarget"
+> & {
+  /**
+   * DEPRECATED: Subpage crawling on search is deprecated. Use `getContents()` with `subpages` instead.
+   * @deprecated Use `getContents()` with `subpages` instead.
+   */
+  subpages?: number;
+  /**
+   * DEPRECATED: Subpage crawling on search is deprecated. Use `getContents()` with `subpageTarget` instead.
+   * @deprecated Use `getContents()` with `subpageTarget` instead.
+   */
+  subpageTarget?: string | string[];
+};
+
 export type { RequestOptions, TransportRequestOptions };
 
 /**
- * Two-letter ISO country code of the user (e.g. US), or an object with `country` and/or `latitude` + `longitude` in decimal degrees.
+ * The end user's location, as a two-letter ISO 3166-1 country code (e.g.
+ * `"US"`) or an object with `country`, a `latitude` and `longitude` pair, or
+ * both. `latitude` (-90 to 90) and `longitude` (-180 to 180) are in decimal
+ * degrees.
+ *
+ * The country localizes results. Coordinates are used only for queries that
+ * name no place but depend on where the user is, such as "coffee near me".
+ * They do not set a country, so send `country` with them to localize results.
+ * Send only the precision your use case needs.
  */
 export type UserLocation =
   | string
-  | { country: string }
+  | { country: string; latitude?: never; longitude?: never }
   | { country?: string; latitude: number; longitude: number };
 
 /**
  * Options that attribute a request to one end user of your application.
  * @typedef {Object} UserIdentifierOptions
- * @property {string} [userIdentifier] - An opaque identifier you generate for the end user the request is made on behalf of, such as a UUID or a hash. 1 to 64 characters: letters, digits, `_` and `-`.
+ * @property {string} [userIdentifier] - An opaque ID you assign to the end user the request is made for. See {@link UserIdentifierOptions}.
  */
 export type UserIdentifierOptions = {
   /**
-   * An opaque identifier you generate for the end user this request is made
-   * on behalf of, such as a UUID or a hash. Never send personal information
-   * such as an email address, name or phone number. 1 to 64 characters:
-   * letters, digits, `_` and `-`. Exa records it so usage can be attributed
-   * to one end user; it does not change results.
+   * An opaque ID you assign to the end user this request is made for, such
+   * as a UUID, used to attribute usage to that end user. Must not contain
+   * personal information such as an email address, phone number, username or
+   * name. Hash such values before sending them. 1 to 64 characters: letters,
+   * digits, `_` and `-`. Retained even when your team has Zero Data
+   * Retention enabled. Does not affect results.
    */
   userIdentifier?: string;
 };
+
+/**
+ * The request a warning is about, passed to a `warnings` handler with each
+ * warning.
+ */
+export type ApiWarningContext = {
+  /** API path the request was sent to, such as `/search`. */
+  endpoint: string;
+  /** HTTP method of the request, in upper case, such as `POST`. */
+  method: string;
+  /** The request's id, when the response carried one. */
+  requestId?: string;
+};
+
+/**
+ * What an `Exa` client does with the warnings the API returns about a request,
+ * such as a field it ignores.
+ * - `"log"` (default): print each warning with `console.warn`, once per process
+ *   for each endpoint, code and path, as
+ *   `[exa] POST /search IGNORED_FIELD at /startCrawlDate: ...`.
+ * - `"silent"`: print nothing.
+ * - A function: called with every warning of every response, and the request
+ *   it is about, instead of printing. For example, to route warnings to your
+ *   own logger.
+ *
+ * The client reports the warnings of every endpoint that returns them. Today
+ * that is `/search`, including `streamSearch`. A response keeps its own
+ * `warnings` in every mode.
+ */
+export type WarningsOption =
+  | "log"
+  | "silent"
+  | ((warning: ApiWarning, context: ApiWarningContext) => void);
 
 /**
  * Client-wide settings, given as the third argument of the `Exa` constructor.
@@ -163,8 +189,89 @@ export type ExaClientOptions = {
    * per-call `timeout` overrides it. Unset by default, in which case the SDK
    * imposes no timeout of its own.
    */
-  timeout?: number;
+  timeout?: number | undefined;
+  /**
+   * What the client does with the warnings the API returns about a request.
+   * Defaults to `"log"`: each warning is printed once per process for each
+   * endpoint, code and path. See {@link WarningsOption}.
+   */
+  warnings?: WarningsOption | undefined;
 };
+
+/** Receives each warning with the request it is about. */
+type WarningHandler = (warning: ApiWarning, context: ApiWarningContext) => void;
+
+/** `METHOD endpoint code path` of each warning the `"log"` mode printed in this process. */
+const loggedWarnings = new Set<string>();
+
+/** Prints a warning with `console.warn`, once per process for each endpoint, code and path. */
+function logWarningOnce(warning: ApiWarning, context: ApiWarningContext): void {
+  const request = `${context.method} ${context.endpoint}`;
+  const key = `${request} ${warning.code} ${warning.path}`;
+  if (loggedWarnings.has(key)) {
+    return;
+  }
+  loggedWarnings.add(key);
+  console.warn(
+    `[exa] ${request} ${warning.code} at ${warning.path}: ${warning.message}`
+  );
+}
+
+/**
+ * The handler a client gives each warning for its `warnings` option, or
+ * undefined for `"silent"`.
+ * @throws {TypeError} When the option is not `"log"`, `"silent"` or a function.
+ */
+function warningHandlerFor(
+  option: WarningsOption | undefined
+): WarningHandler | undefined {
+  if (option === undefined || option === "log") {
+    return logWarningOnce;
+  }
+  if (option === "silent") {
+    return undefined;
+  }
+  if (typeof option === "function") {
+    return option;
+  }
+  throw new TypeError(
+    `options.warnings must be "log", "silent" or a function, got ${JSON.stringify(option)}`
+  );
+}
+
+/**
+ * Endpoints whose responses carry a top-level `warnings` array of
+ * {@link ApiWarning}s. The client reads `warnings` from these alone, because
+ * other endpoints use the name for other shapes: agent monitor refresh events
+ * carry `warnings` as strings.
+ */
+const BODY_WARNING_ENDPOINTS: ReadonlySet<string> = new Set(["/search"]);
+
+/** Whether a value has the string `code`, `path` and `message` of an {@link ApiWarning}. */
+function isApiWarning(value: unknown): value is ApiWarning {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const { code, path, message } = value as Record<string, unknown>;
+  return (
+    typeof code === "string" &&
+    typeof path === "string" &&
+    typeof message === "string"
+  );
+}
+
+/** The well-formed warnings in a response body or stream payload from `endpoint`. */
+function bodyWarnings(endpoint: string, body: unknown): ApiWarning[] {
+  if (
+    !BODY_WARNING_ENDPOINTS.has(endpoint) ||
+    typeof body !== "object" ||
+    body === null
+  ) {
+    return [];
+  }
+  const { warnings } = body as { warnings?: unknown };
+  return Array.isArray(warnings) ? warnings.filter(isApiWarning) : [];
+}
 
 /**
  * Options for performing a search query
@@ -181,13 +288,13 @@ export type ExaClientOptions = {
  * @property {string[]} [includeText] - List of strings that must be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  * @property {string[]} [excludeText] - List of strings that must not be present in webpage text of results. Currently only supports 1 string of up to 5 words.
  * @property {string[]} [flags] - Experimental flags
- * @property {UserLocation} [userLocation] - Two-letter ISO country code of the user (e.g. US), or an object with `country` and/or `latitude` + `longitude` in decimal degrees.
+ * @property {UserLocation} [userLocation] - The end user's location, as a two-letter ISO 3166-1 country code or an object. See {@link UserLocation}.
  * @property {boolean} [stream] - Whether to stream back OpenAI-style chat completion chunks. Use `streamSearch()` instead of `search({ stream: true })`.
  * @property {AbortSignal} [signal] - AbortSignal to cancel the underlying HTTP request.
  * @property {number} [timeout] - Request timeout in milliseconds.
  */
 export type BaseSearchOptions = TransportRequestOptions & {
-  contents?: ContentsOptions;
+  contents?: SearchContentsOptions;
   numResults?: number;
   includeDomains?: string[];
   excludeDomains?: string[];
@@ -224,17 +331,22 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
    */
   objective?: string;
   /**
-   * An opaque identifier you generate for the end user this request is made
-   * on behalf of, such as a UUID or a hash. Never send personal information
-   * such as an email address, name or phone number. 1 to 64 characters:
-   * letters, digits, `_` and `-`. Exa records it so usage can be attributed
-   * to one end user; it does not change results.
+   * An opaque ID you assign to the end user this request is made for, such
+   * as a UUID, used to attribute usage to that end user. Must not contain
+   * personal information such as an email address, phone number, username or
+   * name. Hash such values before sending them. 1 to 64 characters: letters,
+   * digits, `_` and `-`. Retained even when your team has Zero Data
+   * Retention enabled. Does not affect results.
    */
   userIdentifier?: string;
   /**
    * If true, the search results are moderated for safety.
    */
   moderation?: boolean;
+  /**
+   * @deprecated No longer supported and ignored by the API. Remove it from
+   * the request.
+   */
   useAutoprompt?: boolean;
   /**
    * Additional instructions that guide both the search process and the final returned synthesis.
@@ -251,6 +363,12 @@ type BaseRegularSearchOptions = BaseSearchOptions & {
   outputSchema?: DeepOutputSchema;
 };
 
+/**
+ * Deep search types. We recommend `"deep"`. `"deep-reasoning"` is a legacy
+ * search type that is still accepted. Instead of `"deep-reasoning"`, use
+ * `"deep"`, or Exa Agent for long-running research, list building and
+ * multi-hop enrichment. Start an Exa Agent run with `exa.agent.runs.create`.
+ */
 export type DeepSearchType = "deep-lite" | "deep" | "deep-reasoning";
 
 /**
@@ -291,10 +409,9 @@ export type DeepOutputSchema = DeepTextOutputSchema | DeepObjectOutputSchema;
 /**
  * Contents options for deep search.
  */
-type DeepContentsOptions = Omit<ContentsOptions, "context"> & {
+type DeepContentsOptions = Omit<SearchContentsOptions, "context"> & {
   /**
-   * DEPRECATED: Use `text` or `highlights` instead. Will be removed in a future version.
-   * @deprecated Use `text` or `highlights` instead. This legacy `context` field will be removed in a future version.
+   * @deprecated Use `text` or `highlights` instead.
    */
   context?: ContextOptions | true;
 };
@@ -303,6 +420,12 @@ type DeepContentsOptions = Omit<ContentsOptions, "context"> & {
  * Search options for deep search types, which additionally support additional queries.
  */
 type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
+  /**
+   * The deep search type. We recommend `"deep"`. `"deep-reasoning"` is a
+   * legacy search type that is still accepted. Instead of `"deep-reasoning"`,
+   * use `"deep"`, or Exa Agent for long-running research, list building and
+   * multi-hop enrichment. Start an Exa Agent run with `exa.agent.runs.create`.
+   */
   type: DeepSearchType;
   /**
    * Alternative query formulations for deep search variants to skip automatic LLM-based query expansion.
@@ -317,10 +440,34 @@ type DeepSearchOptions = Omit<BaseRegularSearchOptions, "contents"> & {
 };
 
 /**
- * Search options for non-deep search types (keyword, neural, auto, hybrid, fast, instant)
+ * Non-deep search types.
+ */
+type NonDeepSearchType =
+  | "keyword"
+  | "neural"
+  | "auto"
+  | "hybrid"
+  | "fast"
+  | "instant"
+  | "lite";
+
+/**
+ * Search options for non-deep search types (keyword, neural, auto, hybrid,
+ * fast, instant, lite) and for any other search type string.
  */
 type NonDeepSearchOptions = BaseRegularSearchOptions & {
-  type?: "keyword" | "neural" | "auto" | "hybrid" | "fast" | "instant";
+  /**
+   * The search type. We recommend `"lite"`, `"auto"` (the default) and, for
+   * deep search, `"deep"`. `"lite"` (beta) is a low-cost search that supports
+   * a reduced set of parameters.
+   *
+   * `"fast"` and `"instant"` are legacy search types. They are still accepted;
+   * for new code, use `"lite"` instead of `"instant"`, and `"lite"` instead of
+   * `"fast"`, or `"auto"` when the request needs parameters `"lite"` rejects.
+   *
+   * Any other string is passed through to the API as given.
+   */
+  type?: NonDeepSearchType | (string & {});
 };
 
 /**
@@ -328,6 +475,20 @@ type NonDeepSearchOptions = BaseRegularSearchOptions & {
  * Uses a discriminated union to ensure additionalQueries is only allowed when type is a deep search variant.
  */
 export type RegularSearchOptions = DeepSearchOptions | NonDeepSearchOptions;
+
+/**
+ * Search options accepted by `streamSearch`: every search type except `lite`, which does not support streaming.
+ *
+ * `Type` is inferred from the `type` a caller passes, which lets any search
+ * type string through except `"lite"`.
+ */
+type StreamSearchOptions<Type extends string = never> =
+  | DeepSearchOptions
+  | (Omit<NonDeepSearchOptions, "type"> & {
+      type?:
+        | Exclude<NonDeepSearchType, "lite">
+        | (Type extends "lite" ? never : Type);
+    });
 
 /**
  * Options for opting into Exa-Beta features.
@@ -339,10 +500,8 @@ export type BetaOptions = {
 };
 
 /**
- * DEPRECATED: Used only by deprecated `findSimilar()` APIs. Use `search()` and `RegularSearchOptions` for new search flows. Will be removed in a future version.
- * @deprecated Use `search()` and `RegularSearchOptions` for new search flows. There is no direct replacement for URL-based similarity.
- *
- * Options for finding similar links.
+ * Options for `findSimilar()`.
+ * @deprecated Use `search()` instead. There is no direct replacement for URL-based similarity.
  * @typedef {Object} FindSimilarOptions
  * @property {boolean} [excludeSourceDomain] - If true, excludes links from the base domain of the input.
  */
@@ -424,13 +583,11 @@ export type HighlightsContentsOptions = {
   maxCharacters?: number;
   dynamic?: boolean;
   /**
-   * DEPRECATED: Use `maxCharacters` instead. Will be removed in a future version.
-   * @deprecated Use `maxCharacters` instead. This legacy sizing field will be removed in a future version.
+   * @deprecated Use `maxCharacters` instead.
    */
   numSentences?: number;
   /**
-   * DEPRECATED: Use `maxCharacters` instead. Will be removed in a future version.
-   * @deprecated Use `maxCharacters` instead. This legacy sizing field will be removed in a future version.
+   * @deprecated Use `maxCharacters` instead.
    */
   highlightsPerUrl?: number;
 };
@@ -446,14 +603,12 @@ export type SummaryContentsOptions = {
 };
 
 /**
- * DEPRECATED: Use `Record<string, unknown>` instead. Will be removed in a future version.
  * @deprecated Use `Record<string, unknown>` instead.
  */
 export type JSONSchema = Record<string, unknown>;
 
 /**
- * DEPRECATED: Use `text` or `highlights` instead. Will be removed in a future version.
- * @deprecated Use `text` or `highlights` instead. The `context` option will be removed in a future version.
+ * @deprecated Use `text` or `highlights` instead.
  *
  * Options for retrieving the context from a list of search results. The context is a string
  * representation of all the search results.
@@ -625,11 +780,50 @@ export type EntityPersonPropertiesWorkHistoryEntry = {
   company?: EntityPersonPropertiesCompanyRef | null;
 };
 
+/** Reference to an institution in education history. */
+export type EntityPersonPropertiesInstitutionRef = {
+  id?: string | null;
+  name?: string | null;
+};
+
+/** A single education history entry for a person. */
+export type EntityPersonPropertiesEducationHistoryEntry = {
+  degree?: string | null;
+  dates?: EntityDateRange | null;
+  institution?: EntityPersonPropertiesInstitutionRef | null;
+};
+
+/** A notable publication by a person. */
+export type EntityPersonPropertiesNotableWork = {
+  title?: string | null;
+  year?: number | null;
+  venue?: string | null;
+  citationCount?: number | null;
+  doi?: string | null;
+  id?: string | null;
+  type?: string | null;
+};
+
+/** Research information for a person. */
+export type EntityPersonPropertiesResearch = {
+  worksCount?: number | null;
+  citationCount?: number | null;
+  hIndex?: number | null;
+  firstPublicationYear?: number | null;
+  latestPublicationYear?: number | null;
+  areas?: string[];
+  notableWorks?: EntityPersonPropertiesNotableWork[];
+};
+
 /** Structured properties for a person entity. */
 export type EntityPersonProperties = {
   name?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
   location?: string | null;
   workHistory?: EntityPersonPropertiesWorkHistoryEntry[];
+  educationHistory?: EntityPersonPropertiesEducationHistoryEntry[];
+  research?: EntityPersonPropertiesResearch | null;
 };
 
 /** Structured entity data for a company. */
@@ -697,22 +891,72 @@ export type DeepSearchOutput = {
 };
 
 /**
+ * Known `ApiWarning` codes. The set is open, so handle codes you do not know.
+ * - `IGNORED_FIELD`: the field at `path` is accepted and has no effect on the request.
+ */
+export type ApiWarningCode = "IGNORED_FIELD" | (string & {});
+
+/**
+ * A warning the API returns about a request, such as a field it ignores. A
+ * warning never changes the status code or the result. It is for whoever owns
+ * the code that builds the request: fix the request, and do not pass the
+ * warning to a model.
+ */
+export type ApiWarning = {
+  /** Machine-readable code in UPPER_SNAKE case, such as `IGNORED_FIELD`. */
+  code: ApiWarningCode;
+  /** JSON Pointer to the request field the warning is about, such as `/startCrawlDate`. */
+  path: string;
+  /** What to change in the request, in plain words. */
+  message: string;
+};
+
+/** Known `SearchWarning` codes: the {@link ApiWarningCode}s. */
+export type SearchWarningCode = ApiWarningCode;
+
+/** A warning about a search request: an {@link ApiWarning}. */
+export type SearchWarning = ApiWarning;
+
+/**
+ * Known `SearchNotice` codes. The set is open, so handle codes you do not know.
+ * - `RESTRICTIONS_RELAXED`: no results matched a restriction in the query, such as `site:` or an exact phrase, so the results come from a search with it removed.
+ */
+export type SearchNoticeCode = "RESTRICTIONS_RELAXED" | (string & {});
+
+/**
+ * A note about how the results of a search were produced, such as a query
+ * restriction relaxed to return results. A notice is written to be shown to a
+ * model. Pass its `message` to the model that reads the results.
+ */
+export type SearchNotice = {
+  /** Machine-readable code in UPPER_SNAKE case, such as `RESTRICTIONS_RELAXED`. */
+  code: SearchNoticeCode;
+  /** JSON Pointer to the request field the notice is about, such as `/query`. */
+  path: string;
+  /** Complete on its own and written to be shown to a model. */
+  message: string;
+  /** Optional extra context. No schema is promised for its keys, and it never carries information that `message` lacks. */
+  details?: Record<string, unknown>;
+};
+
+/**
  * Represents a search response object.
  * @typedef {Object} SearchResponse
  * @property {Result[]} results - The list of search results.
- * @property {string} [context] - DEPRECATED: Use `text` or `highlights` on individual results instead. Will be removed in a future version.
+ * @property {string} [context] - Deprecated. Use `text` or `highlights` on individual results.
  * @property {DeepSearchOutput} [output] - Search synthesized output object returned when `outputSchema` is provided.
  * @property {string} [autoDate] - The autoprompt date, if applicable.
  * @property {string} requestId - The request ID for the search.
  * @property {CostDollars} [costDollars] - The cost breakdown for this request.
  * @property {string} [resolvedSearchType] - The resolved search type ('neural' or 'keyword') when using 'auto' search.
  * @property {number} [searchTime] - Time taken for the search in milliseconds.
+ * @property {SearchWarning[]} [warnings] - Notes about the search request, such as a field the API ignores. Absent when there are none.
+ * @property {SearchNotice[]} [notices] - Notes about how the results were produced, written to be shown to a model. Absent when there are none.
  */
 export type SearchResponse<T extends ContentsOptions> = {
   results: SearchResult<T>[];
   /**
-   * DEPRECATED: Use `text` or `highlights` on individual results instead. Will be removed in a future version.
-   * @deprecated Use `text` or `highlights` on individual results instead. This legacy `context` field will be removed in a future version.
+   * @deprecated Use `text` or `highlights` on individual results instead.
    */
   context?: string;
   output?: DeepSearchOutput;
@@ -722,6 +966,17 @@ export type SearchResponse<T extends ContentsOptions> = {
   costDollars?: CostDollars;
   resolvedSearchType?: string;
   searchTime?: number;
+  /**
+   * Notes about the search request, such as a field the API ignores. Returned
+   * by `search` only, and absent when there are none.
+   */
+  warnings?: SearchWarning[];
+  /**
+   * Notes about how the results were produced, such as a query restriction
+   * relaxed to return results. Written to be shown to a model. Returned by
+   * `search` only, and absent when there are none.
+   */
+  notices?: SearchNotice[];
 };
 
 /** Error details for a failed content retrieval. */
@@ -746,7 +1001,8 @@ export type Status = {
  * @property {"exa"} [model] - The model to use for generating the answer. Default "exa".
  * @property {string} [systemPrompt] - A system prompt to guide the LLM's behavior when generating the answer.
  * @property {Object} [outputSchema] - A JSON Schema specification for the structure you expect the output to take
- * @property {string} [userIdentifier] - An opaque identifier you generate for the end user the request is made on behalf of. See {@link UserIdentifierOptions}.
+ * @property {UserLocation} [userLocation] - The end user's location, as a two-letter ISO 3166-1 country code or an object. See {@link UserLocation}.
+ * @property {string} [userIdentifier] - An opaque ID you assign to the end user the request is made for. See {@link UserIdentifierOptions}.
  * @property {AbortSignal} [signal] - AbortSignal to cancel the underlying HTTP request.
  * @property {number} [timeout] - Request timeout in milliseconds.
  */
@@ -792,7 +1048,18 @@ export type AnswerStreamChunk = {
   }>;
 };
 
-export type SearchStreamChunk = AnswerStreamChunk;
+/**
+ * One chunk of a `streamSearch` response, with partial text (`content`), new
+ * citations, or the request's `warnings`.
+ */
+export type SearchStreamChunk = AnswerStreamChunk & {
+  /**
+   * Notes about the search request, such as a field the API ignores. When the
+   * API returns any, they arrive on one chunk of their own, after the streamed
+   * text.
+   */
+  warnings?: SearchWarning[];
+};
 
 /**
  * Represents a streaming answer response chunk from the /answer endpoint.
@@ -832,6 +1099,22 @@ export type SummaryContentsOptionsTyped<T> = Omit<
 > & {
   schema: T;
 };
+
+/**
+ * Returns contents options with a Zod `summary.schema` converted to JSON Schema,
+ * the form the API accepts. Any other value is returned unchanged.
+ */
+function withJsonSummarySchema<T>(contents: T): T {
+  if (typeof contents !== "object" || contents === null) return contents;
+  const summary: unknown = (contents as { summary?: unknown }).summary;
+  if (typeof summary !== "object" || summary === null) return contents;
+  const schema: unknown = (summary as { schema?: unknown }).schema;
+  if (!isZodSchema(schema)) return contents;
+  return {
+    ...contents,
+    summary: { ...summary, schema: zodToJsonSchema(schema) },
+  };
+}
 
 /**
  * The Exa class encapsulates the API's endpoints.
@@ -876,6 +1159,42 @@ export class Exa {
   anthropic: AnthropicTools;
 
   private readonly toolRegistry = new ToolRegistry();
+  /** Receives each warning the API returns; undefined when `warnings` is `"silent"`. */
+  private readonly warningHandler: WarningHandler | undefined;
+
+  /**
+   * Hands each warning in a response body or stream payload to the `warnings`
+   * option's handler. `request` calls it for every JSON response and
+   * `streamChatCompletions` for every stream payload, so every endpoint
+   * reports through here.
+   */
+  private reportWarnings(
+    endpoint: string,
+    method: string,
+    body: unknown,
+    requestIdHeader: string | null
+  ): void {
+    if (!this.warningHandler) {
+      return;
+    }
+    const warnings = bodyWarnings(endpoint, body);
+    if (warnings.length === 0) {
+      return;
+    }
+    const bodyRequestId = (body as { requestId?: unknown }).requestId;
+    const requestId =
+      typeof bodyRequestId === "string"
+        ? bodyRequestId
+        : (requestIdHeader ?? undefined);
+    const context: ApiWarningContext = {
+      endpoint,
+      method: method.toUpperCase(),
+      ...(requestId !== undefined && { requestId }),
+    };
+    for (const warning of warnings) {
+      this.warningHandler(warning, context);
+    }
+  }
 
   /**
    * Helper method to separate out the contents-specific options from the rest.
@@ -897,6 +1216,7 @@ export class Exa {
       livecrawlTimeout,
       maxAgeHours,
       snapshotAsOf,
+      filterEmptyResults,
       // DEPRECATED FIELD: preserve legacy `context` only for backward compatibility.
       context,
       ...rest
@@ -916,23 +1236,7 @@ export class Exa {
 
     if (text !== undefined) contentsOptions.text = text;
     if (highlights !== undefined) contentsOptions.highlights = highlights;
-    if (summary !== undefined) {
-      // Handle zod schema conversion for summary
-      if (
-        typeof summary === "object" &&
-        summary !== null &&
-        "schema" in summary &&
-        summary.schema &&
-        isZodSchema(summary.schema)
-      ) {
-        contentsOptions.summary = {
-          ...summary,
-          schema: zodToJsonSchema(summary.schema),
-        };
-      } else {
-        contentsOptions.summary = summary;
-      }
-    }
+    if (summary !== undefined) contentsOptions.summary = summary;
     if (subpages !== undefined) contentsOptions.subpages = subpages;
     if (subpageTarget !== undefined)
       contentsOptions.subpageTarget = subpageTarget;
@@ -942,11 +1246,13 @@ export class Exa {
       contentsOptions.livecrawlTimeout = livecrawlTimeout;
     if (maxAgeHours !== undefined) contentsOptions.maxAgeHours = maxAgeHours;
     if (snapshotAsOf !== undefined) contentsOptions.snapshotAsOf = snapshotAsOf;
+    if (filterEmptyResults !== undefined)
+      contentsOptions.filterEmptyResults = filterEmptyResults;
     // DEPRECATED FIELD: pass through only so existing callers do not break.
     if (context !== undefined) contentsOptions.context = context;
 
     return {
-      contentsOptions,
+      contentsOptions: withJsonSummarySchema(contentsOptions),
       restOptions: rest as Omit<T, keyof ContentsOptions>,
     };
   }
@@ -969,6 +1275,8 @@ export class Exa {
       options.contents === undefined
     ) {
       delete body.contents;
+    } else {
+      body.contents = withJsonSummarySchema(options.contents);
     }
     return { query, ...body };
   }
@@ -977,8 +1285,9 @@ export class Exa {
    * Constructs the Exa API client.
    * @param {string} apiKey - The API key for authentication.
    * @param {string} [baseURL] - The base URL of the Exa API.
-   * @param {ExaClientOptions} [options] - Client-wide settings (`timeout`).
+   * @param {ExaClientOptions} [options] - Client-wide settings (`timeout`, `warnings`).
    * @throws {RangeError} When `options.timeout` is not an integer from 1 to 2147483647.
+   * @throws {TypeError} When `options.warnings` is not `"log"`, `"silent"` or a function.
    */
   constructor(
     apiKey?: string,
@@ -986,6 +1295,7 @@ export class Exa {
     options?: ExaClientOptions
   ) {
     this.baseURL = baseURL;
+    this.warningHandler = warningHandlerFor(options?.warnings);
     setClientDefaults(
       this,
       options?.timeout === undefined
@@ -1097,72 +1407,7 @@ export class Exa {
       });
 
       if (!response.ok) {
-        const { json, text } = await readResponseBody(response);
-
-        // Gateways/proxies can return non-JSON (e.g. HTML) error pages. Surface
-        // the real status and a snippet of the body rather than throwing an
-        // opaque JSON parse error that hides the underlying failure.
-        if (!json || typeof json !== "object") {
-          const snippet = truncateResponseBody(text);
-          const message = snippet
-            ? `Request failed with status ${response.status}. Response body was not valid JSON: ${snippet}`
-            : `Request failed with status ${response.status}.`;
-          throw new ExaError(
-            message,
-            response.status,
-            new Date().toISOString(),
-            endpoint
-          );
-        }
-
-        const errorData = json;
-        if (!errorData.statusCode) {
-          errorData.statusCode = response.status;
-        }
-        if (!errorData.timestamp) {
-          errorData.timestamp = new Date().toISOString();
-        }
-        if (!errorData.path) {
-          errorData.path = endpoint;
-        }
-
-        // Structured envelope (`error` is an object): message and metadata live
-        // inside it — e.g. { error: { type, code, message, detail }, requestId }.
-        const envelope =
-          typeof errorData.error === "object" && errorData.error !== null
-            ? (errorData.error as {
-                type?: string;
-                code?: string;
-                message?: string;
-                detail?: unknown;
-                requestId?: string;
-              })
-            : undefined;
-        let message: string;
-        if (envelope) {
-          message = envelope.message || errorData.message || "Unknown error";
-        } else {
-          message = errorData.error || "Unknown error";
-          if (errorData.message) {
-            message += (message.length > 0 ? ". " : "") + errorData.message;
-          }
-        }
-        throw new ExaError(
-          message,
-          response.status,
-          errorData.timestamp,
-          errorData.path,
-          envelope
-            ? {
-                type: envelope.type,
-                code: envelope.code,
-                detail: envelope.detail,
-                requestId: errorData.requestId ?? envelope.requestId,
-              }
-            : errorData.requestId
-              ? { requestId: errorData.requestId }
-              : undefined
-        );
+        throw await exaErrorFromResponse(response, endpoint);
       }
 
       // If the server responded with an SSE stream, parse it and return the final payload.
@@ -1184,6 +1429,12 @@ export class Exa {
         );
       }
 
+      this.reportWarnings(
+        endpoint,
+        method,
+        json,
+        response.headers.get("x-request-id")
+      );
       return json as T;
     } catch (error) {
       throw toRequestError(error, endpoint);
@@ -1329,16 +1580,18 @@ export class Exa {
   }
 
   /**
-   * Performs a search with an Exa prompt-engineered query.
-   * For AI answers, RAG, and search previews, prefer query-relevant passages:
-   * `exa.search(query, { contents: { highlights: true } })`.
-   * `highlights: true` is the recommended default: Exa dynamically chooses
-   * the number of characters based on each document's relevance to your query.
-   * You do not need to choose `maxCharacters` to keep context concise;
-   * use it only for an explicit application character-limit requirement.
-   * Read each result's `highlights` array. Request `text` only when you need
-   * the full page; use `contents: false` when you only need titles and URLs.
-   * Omitting contents still returns text by default.
+   * For optimal token efficiency, use
+   * `contents: { highlights: true }` and read each result's `highlights` array.
+   * Exa dynamically chooses excerpt length based on each document's relevance
+   * to your query. Set `maxCharacters` only for an explicit application limit.
+   *
+   * Supply `objective` to improve search quality and token efficiency.
+   * Describe the larger task you're working on and the goal for this search turn.
+   * Say which documents should rank first, which should be excluded, and what
+   * specific facts or figures to pull from them.
+   *
+   * Request `text` when you need the full page; use `contents: false` for
+   * titles and URLs only. Omitting contents still returns text by default.
    *
    * @param {string} query - The query string.
    * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
@@ -1365,19 +1618,15 @@ export class Exa {
   ): Promise<SearchResponse<{}>>;
   /**
    * Performs a search with specific contents.
-   * Prefer `{ contents: { highlights: true } }` for query-relevant passages
-   * for AI answers, RAG, and search previews. Read `result.highlights`.
-   * `highlights: true` is the recommended default: Exa dynamically chooses
-   * the number of characters based on each document's relevance to your query.
-   * No manual character budget is needed. Set `maxCharacters` only when
-   * your application requires a specific numeric character limit; otherwise
-   * keep `highlights: true`.
-   * Use the boolean `true`; do not set the deprecated `numSentences` or
-   * `highlightsPerUrl` options. Request `text` when you need the full page.
    *
    * @example
    * const response = await exa.search("recent advances in battery recycling", {
    *   contents: { highlights: true },
+   *   objective:
+   *     "I'm preparing a technical report on battery recycling methods. " +
+   *     "For this search turn, gather evidence to compare their economics. " +
+   *     "Rank peer-reviewed studies first, exclude marketing pages, and pull " +
+   *     "material recovery rates and processing costs.",
    * });
    * for (const result of response.results) {
    *   console.log(result.url, result.highlights);
@@ -1394,10 +1643,7 @@ export class Exa {
     requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>>;
   /**
-   * Performs a search with an Exa prompt-engineered query.
    * When no contents option is specified, returns text contents by default.
-   * For query-relevant passages, explicitly pass
-   * `{ contents: { highlights: true } }` and read `result.highlights`.
    *
    * @param {string} query - The query string.
    * @param {Omit<DeepSearchOptions, 'contents'> | Omit<NonDeepSearchOptions, 'contents'>} options - Search options without contents
@@ -1454,12 +1700,15 @@ export class Exa {
    * Stream a search response as an async generator of OpenAI-style chat completion chunks.
    *
    * Each iteration yields a chunk with partial text (`content`) or new citations.
+   * When the API returns `warnings` about the request, one chunk after the text
+   * carries them.
    * Use this if you'd like to read synthesized search output incrementally.
+   * The `lite` search type does not support streaming.
    * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    */
-  streamSearch(
+  streamSearch<Type extends string = never>(
     query: string,
-    options?: RegularSearchOptions & {
+    options?: StreamSearchOptions<Type> & {
       contents?: ContentsOptions | false | null | undefined;
     },
     requestOptions?: RequestOptions
@@ -1472,8 +1721,8 @@ export class Exa {
   }
 
   /**
-   * DEPRECATED: Use `search()` instead. This legacy wrapper will be removed in a future version.
-   * @deprecated Use `search()` instead. The search method now returns text contents by default.
+   * @deprecated Use `search()`, which returns text contents by default. Pass
+   * content options inside `contents`.
    *
    * Migration examples:
    * - `searchAndContents(query)` → `search(query)`
@@ -1518,8 +1767,7 @@ export class Exa {
   }
 
   /**
-   * DEPRECATED: Use `search()` for new discovery flows. There is no direct replacement for URL-based similarity.
-   * @deprecated Use `search()` for new discovery flows. This legacy URL-similarity method will be removed in a future version.
+   * @deprecated Use `search()` instead. There is no direct replacement for URL-based similarity.
    *
    * Finds similar links to the provided URL.
    * By default, returns text contents. Use contents: false to opt-out.
@@ -1534,8 +1782,7 @@ export class Exa {
     requestOptions?: RequestOptions
   ): Promise<SearchResponse<{ text: { maxCharacters: 10_000 } }>>;
   /**
-   * DEPRECATED: Use `search()` for new discovery flows. There is no direct replacement for URL-based similarity.
-   * @deprecated Use `search()` for new discovery flows. This legacy URL-similarity method will be removed in a future version.
+   * @deprecated Use `search()` instead. There is no direct replacement for URL-based similarity.
    *
    * Finds similar links to the provided URL without contents.
    *
@@ -1550,8 +1797,7 @@ export class Exa {
     requestOptions?: RequestOptions
   ): Promise<SearchResponse<{}>>;
   /**
-   * DEPRECATED: Use `search()` with `contents` for new discovery flows. There is no direct replacement for URL-based similarity.
-   * @deprecated Use `search()` with `contents` for new discovery flows. This legacy URL-similarity method will be removed in a future version.
+   * @deprecated Use `search()` instead. There is no direct replacement for URL-based similarity.
    *
    * Finds similar links to the provided URL with specific contents.
    *
@@ -1566,8 +1812,7 @@ export class Exa {
     requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>>;
   /**
-   * DEPRECATED: Use `search()` for new discovery flows. There is no direct replacement for URL-based similarity.
-   * @deprecated Use `search()` for new discovery flows. This legacy URL-similarity method will be removed in a future version.
+   * @deprecated Use `search()` instead. There is no direct replacement for URL-based similarity.
    *
    * Finds similar links to the provided URL.
    * When no contents option is specified, returns text contents by default.
@@ -1630,14 +1875,17 @@ export class Exa {
     return await this.requestWithOptions(
       "/findSimilar",
       "POST",
-      { url, ...bodyOptions },
+      {
+        url,
+        ...bodyOptions,
+        contents: withJsonSummarySchema(options.contents),
+      },
       transport
     );
   }
 
   /**
-   * DEPRECATED: Use `search()` for new discovery flows instead. This legacy wrapper will be removed in a future version.
-   * @deprecated Use `search()` for new discovery flows instead. There is no direct replacement for URL-based similarity.
+   * @deprecated Use `search()` instead. There is no direct replacement for URL-based similarity.
    *
    * Migration examples:
    * - `findSimilarAndContents(url)` → `search(query)`
@@ -1705,7 +1953,7 @@ export class Exa {
 
     const payload = {
       urls: requestUrls,
-      ...omitRequestOptions(contentsOptions),
+      ...withJsonSummarySchema(omitRequestOptions(contentsOptions)),
     };
 
     const betaHeaders = headersForBetas(betas);
@@ -1895,7 +2143,7 @@ export class Exa {
     endpoint: string,
     body: Record<string, unknown>,
     requestOptions?: RequestOptions
-  ): AsyncGenerator<AnswerStreamChunk> {
+  ): AsyncGenerator<SearchStreamChunk> {
     const response = await this.streamRequestWithOptions(
       endpoint,
       "POST",
@@ -1904,9 +2152,9 @@ export class Exa {
     );
 
     if (!response.ok) {
-      const message = await response.text();
-      throw new ExaError(message, response.status, new Date().toISOString());
+      throw await exaErrorFromResponse(response, endpoint);
     }
+    const requestIdHeader = response.headers.get("x-request-id");
 
     const reader = response.body?.getReader();
     if (!reader) {
@@ -1945,7 +2193,8 @@ export class Exa {
           }
 
           const chunk = this.processChunk(chunkData);
-          if (chunk.content || chunk.citations) {
+          this.reportWarnings(endpoint, "POST", chunkData, requestIdHeader);
+          if (chunk.content || chunk.citations || chunk.warnings) {
             yield chunk;
           }
         }
@@ -1957,7 +2206,8 @@ export class Exa {
           try {
             const chunkData = JSON.parse(leftover);
             const chunk = this.processChunk(chunkData);
-            if (chunk.content || chunk.citations) {
+            this.reportWarnings(endpoint, "POST", chunkData, requestIdHeader);
+            if (chunk.content || chunk.citations || chunk.warnings) {
               yield chunk;
             }
           } catch (e) {}
@@ -1974,7 +2224,12 @@ export class Exa {
     }
   }
 
-  private processChunk(chunkData: any): AnswerStreamChunk {
+  /**
+   * Parses one stream payload into a chunk. `warnings` is set only when the
+   * payload carries a non-empty `warnings` array, which `/search` sends on its
+   * `results` event.
+   */
+  private processChunk(chunkData: any): SearchStreamChunk {
     let content: string | undefined;
     let citations:
       | Array<{
@@ -2004,6 +2259,11 @@ export class Exa {
         author: c.author,
         text: c.text,
       }));
+    }
+
+    if (Array.isArray(chunkData.warnings) && chunkData.warnings.length > 0) {
+      const warnings: SearchWarning[] = chunkData.warnings;
+      return { content, citations, warnings };
     }
 
     return { content, citations };

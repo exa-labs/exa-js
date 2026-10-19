@@ -1,6 +1,20 @@
+import { ExaError } from "../errors";
 import { Exa } from "../index";
-import { RequestScopedClient, streamRequestOptions } from "../request-options";
+import { RequestScopedClient } from "../request-options";
 import { ListResearchRequest } from "./index";
+
+/** The message every Research API method rejects with. */
+export const RESEARCH_RETIRED_MESSAGE =
+  "The Exa Research API has been retired and no longer accepts requests. " +
+  "Use the Agent API (exa.agent.runs.create) for asynchronous, multi-step research.";
+
+/**
+ * The error every Research API method rejects with, before sending a request.
+ * Its `statusCode` is 410, the status the API answers Research paths with.
+ */
+export function researchRetiredError(): ExaError {
+  return new ExaError(RESEARCH_RETIRED_MESSAGE, 410);
+}
 
 type QueryParams = Record<
   string,
@@ -19,57 +33,24 @@ export class ResearchBaseClient extends RequestScopedClient {
     this.client = client;
   }
 
+  /** Rejects with `researchRetiredError()`: the Research API has been retired. */
   protected async request<T = unknown>(
-    endpoint: string,
-    method: string = "POST",
-    data?: RequestBody,
-    params?: QueryParams
+    _endpoint: string,
+    _method: string = "POST",
+    _data?: RequestBody,
+    _params?: QueryParams
   ): Promise<T> {
-    if (this.requestOptions) {
-      return this.client.request<T>(
-        `/research/v1${endpoint}`,
-        method,
-        data,
-        params,
-        undefined,
-        this.requestOptions
-      );
-    }
-    return this.client.request<T>(
-      `/research/v1${endpoint}`,
-      method,
-      data,
-      params
-    );
+    throw researchRetiredError();
   }
 
-  /**
-   * Opens a streamed response. `timeout` covers the wait for the stream to
-   * start; the caller's `signal` can cancel it at any point.
-   */
+  /** Rejects with `researchRetiredError()`: the Research API has been retired. */
   protected async rawRequest(
-    endpoint: string,
-    method: string = "POST",
-    data?: RequestBody,
-    params?: QueryParams
+    _endpoint: string,
+    _method: string = "POST",
+    _data?: RequestBody,
+    _params?: QueryParams
   ): Promise<Response> {
-    const transport = streamRequestOptions(this.client, this.requestOptions);
-    if (transport) {
-      return this.client.rawRequest(
-        `/research/v1${endpoint}`,
-        method,
-        data,
-        params,
-        undefined,
-        transport
-      );
-    }
-    return this.client.rawRequest(
-      `/research/v1${endpoint}`,
-      method,
-      data,
-      params
-    );
+    throw researchRetiredError();
   }
 
   protected buildPaginationParams(

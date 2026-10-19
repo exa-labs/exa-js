@@ -517,6 +517,48 @@ describe("Search API", () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it("should send searchAndContents filterEmptyResults inside contents", async () => {
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce({ results: [], requestId: "req-filter" });
+
+    // DEPRECATED METHOD: compatibility coverage for legacy top-level contents options.
+    await exa.searchAndContents("latest AI developments", {
+      text: true,
+      filterEmptyResults: false,
+      numResults: 3,
+    });
+
+    const body = requestSpy.mock.calls[0][2];
+    expect(body).toEqual({
+      query: "latest AI developments",
+      contents: { text: true, filterEmptyResults: false },
+      numResults: 3,
+    });
+    expect(body).not.toHaveProperty("filterEmptyResults");
+  });
+
+  it("should send findSimilarAndContents filterEmptyResults inside contents", async () => {
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce({ results: [], requestId: "req-filter" });
+
+    // DEPRECATED METHOD: compatibility coverage for legacy top-level contents options.
+    await exa.findSimilarAndContents("https://example.com", {
+      text: true,
+      filterEmptyResults: false,
+      numResults: 3,
+    });
+
+    const body = requestSpy.mock.calls[0][2];
+    expect(body).toEqual({
+      url: "https://example.com",
+      contents: { text: true, filterEmptyResults: false },
+      numResults: 3,
+    });
+    expect(body).not.toHaveProperty("filterEmptyResults");
+  });
+
   it("should handle fast search type with default text contents", async () => {
     const mockResponse = {
       results: [
@@ -585,6 +627,60 @@ describe("Search API", () => {
       },
     });
     expect(result).toEqual(mockResponse);
+  });
+
+  it("should send only the lite type and default text contents for a plain lite search", async () => {
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce({ results: [], requestId: "req-lite-123" });
+
+    await exa.search("lite query", { type: "lite" });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "lite query",
+      type: "lite",
+      contents: { text: { maxCharacters: 10000 } },
+    });
+  });
+
+  it("should forward supported lite parameters as given without adding defaults", async () => {
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce({ results: [], requestId: "req-lite-456" });
+
+    await exa.search("lite query", {
+      type: "lite",
+      numResults: 3,
+      category: "news",
+      includeDomains: ["example.com"],
+      startPublishedDate: "2026-01-01T00:00:00.000Z",
+      contents: { highlights: true },
+    });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "lite query",
+      type: "lite",
+      numResults: 3,
+      category: "news",
+      includeDomains: ["example.com"],
+      startPublishedDate: "2026-01-01T00:00:00.000Z",
+      contents: { highlights: true },
+    });
+  });
+
+  it("should send only the lite type and default text contents from searchAndContents", async () => {
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce({ results: [], requestId: "req-lite-789" });
+
+    // DEPRECATED METHOD: compatibility coverage for the legacy top-level contents options shape.
+    await exa.searchAndContents("lite query", { type: "lite" });
+
+    expect(requestSpy).toHaveBeenCalledWith("/search", "POST", {
+      query: "lite query",
+      contents: { text: true },
+      type: "lite",
+    });
   });
 
   it("should handle userLocation parameter with default text contents", async () => {
@@ -1068,6 +1164,11 @@ describe("Search API", () => {
         ],
       },
     ]);
+  });
+
+  it("should not accept the lite search type in streamSearch", () => {
+    // @ts-expect-error lite does not support streaming
+    exa.streamSearch("lite query", { type: "lite" });
   });
 
   it("should pass additionalQueries for deep-reasoning search type", async () => {
