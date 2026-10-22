@@ -5,8 +5,8 @@ import { AgentClient, BetaClient } from "./agent/client";
 import { headersForBetas } from "./agent/betas";
 import {
   exaErrorFromResponse,
-  readResponseBody,
-  truncateResponseBody,
+  isJsonContentType,
+  readJsonBody,
 } from "./error-response";
 import { ExaError, HttpStatusCode } from "./errors";
 import { SearchMonitorsClient } from "./monitors/client";
@@ -1061,6 +1061,30 @@ export type SearchStreamChunk = AnswerStreamChunk & {
   warnings?: SearchWarning[];
 };
 
+/** One entry of a stream chunk's `citations`. */
+type StreamCitation = NonNullable<AnswerStreamChunk["citations"]>[number];
+
+/**
+ * The `results` of a search response as stream citations, with the fields a
+ * citation has. Returns undefined when there are no results.
+ */
+function citationsFromResults(results: unknown): StreamCitation[] | undefined {
+  if (!Array.isArray(results)) {
+    return undefined;
+  }
+  const citations = results
+    .filter((result) => typeof result === "object" && result !== null)
+    .map((result) => ({
+      id: result.id,
+      url: result.url,
+      title: result.title ?? undefined,
+      publishedDate: result.publishedDate ?? undefined,
+      author: result.author ?? undefined,
+      text: result.text ?? undefined,
+    }));
+  return citations.length > 0 ? citations : undefined;
+}
+
 /**
  * Represents a streaming answer response chunk from the /answer endpoint.
  * @typedef {Object} AnswerStreamResponse
@@ -1416,18 +1440,7 @@ export class Exa {
         return (await this.parseSSEStream<T>(response)) as T;
       }
 
-      const { json, text } = await readResponseBody(response);
-
-      // A successful status with a non-JSON body usually means a proxy returned
-      // an error/redirect page; surface it instead of an opaque parse error.
-      if (json === undefined && text) {
-        throw new ExaError(
-          `Expected a JSON response but received a non-JSON body (status ${response.status}): ${truncateResponseBody(text)}`,
-          response.status,
-          new Date().toISOString(),
-          endpoint
-        );
-      }
+      const json = await readJsonBody(response, endpoint);
 
       this.reportWarnings(
         endpoint,
@@ -1704,6 +1717,10 @@ export class Exa {
    * carries them.
    * Use this if you'd like to read synthesized search output incrementally.
    * The `lite` search type does not support streaming.
+   *
+   * A search without `outputSchema` has no text to stream. Its stream yields
+   * one chunk with the results as `citations`, then the warnings chunk when
+   * the API returns warnings. Call `search()` for every field of the results.
    * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    */
   streamSearch<Type extends string = never>(
@@ -2156,6 +2173,15 @@ export class Exa {
     }
     const requestIdHeader = response.headers.get("x-request-id");
 
+    // A response with nothing to stream arrives whole, as JSON. A search
+    // without `outputSchema` answers this way.
+    if (isJsonContentType(response.headers.get("content-type"))) {
+      const payload = await readJsonBody(response, endpoint);
+      this.reportWarnings(endpoint, "POST", payload, requestIdHeader);
+      yield* this.jsonResponseChunks(payload);
+      return;
+    }
+
     const reader = response.body?.getReader();
     if (!reader) {
       throw new ExaError(
@@ -2221,6 +2247,28 @@ export class Exa {
       } catch {
         // ignore
       }
+    }
+  }
+
+  /**
+   * The chunks for a response the API sent whole as JSON instead of streaming
+   * it. The first carries its `results` as `citations`. The second is the
+   * chunk `processChunk` makes of the whole payload, which carries its
+   * `warnings`. A chunk with nothing in it is left out, as in a stream.
+   */
+  private *jsonResponseChunks(payload: unknown): Generator<SearchStreamChunk> {
+    if (typeof payload !== "object" || payload === null) {
+      return;
+    }
+    const citations = citationsFromResults(
+      (payload as { results?: unknown }).results
+    );
+    if (citations) {
+      yield { citations };
+    }
+    const chunk = this.processChunk(payload);
+    if (chunk.content || chunk.citations || chunk.warnings) {
+      yield chunk;
     }
   }
 

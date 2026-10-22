@@ -67,6 +67,7 @@ console.log(resultWithOutput.output?.content);
 ```ts
 for await (const chunk of exa.streamSearch("Who leads OpenAI's safety team?", {
   type: "auto",
+  outputSchema: { type: "text" },
 })) {
   if (chunk.content) {
     process.stdout.write(chunk.content);
@@ -81,6 +82,7 @@ Search `outputSchema` modes:
 
 `systemPrompt` and `outputSchema` are supported on every search type.
 Search streaming is available via `streamSearch(...)`, which yields OpenAI-style chat completion chunks.
+A search without `outputSchema` has no text to stream. Its stream yields one chunk with the results as `citations`.
 
 For `type: "object"`, search currently enforces:
 

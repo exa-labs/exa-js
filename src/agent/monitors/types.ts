@@ -13,10 +13,16 @@ export interface AgentMonitorsBetaOptions {
   betas: string[];
 }
 
-export type AgentMonitorStatus =
+export type KnownAgentMonitorStatus =
   | "creating"
   | "pending_first_refresh"
   | "active";
+
+/**
+ * Agent Monitor status. A value not in `KnownAgentMonitorStatus` is kept as a
+ * string.
+ */
+export type AgentMonitorStatus = KnownAgentMonitorStatus | (string & {});
 
 export type AgentMonitorFieldMode = "static" | "dynamic";
 
@@ -37,8 +43,8 @@ export interface AgentMonitorField {
   description: string;
   /** @deprecated Not returned by the API. */
   mode?: AgentMonitorFieldMode;
-  /** The type of the field's cell values. */
-  type: AgentMonitorFieldValueType;
+  /** The type of the field's cell values. A value not listed is kept as a string. */
+  type: AgentMonitorFieldValueType | (string & {});
 }
 
 /** An entity tracked by the monitor. */
@@ -134,7 +140,8 @@ export interface AgentMonitorChangeField {
 
 /** One content change from the monitor's change feed. */
 export interface AgentMonitorChange {
-  type: "content.upserted";
+  /** Kind of change. A value not listed is kept as a string. */
+  type: "content.upserted" | (string & {});
   entity: AgentMonitorChangeEntity;
   field: AgentMonitorChangeField;
   content: AgentMonitorContent;
@@ -162,8 +169,10 @@ export interface CreateAgentMonitorFieldParams {
    * The type of the field's values. Defaults to `"string"`. Values are
    * converted to this type where possible. An unsupported type fails the
    * request, including the deprecated values `"static"` and `"dynamic"`.
+   * Accepts any type a monitor's field returns, so `monitor.fields` can be
+   * passed back.
    */
-  type?: AgentMonitorFieldValueType | AgentMonitorFieldMode;
+  type?: AgentMonitorField["type"] | AgentMonitorFieldMode;
   /** @deprecated Omit this field. The API rejects requests that set it. */
   mode?: AgentMonitorFieldMode;
 }

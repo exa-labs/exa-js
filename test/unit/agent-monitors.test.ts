@@ -8,6 +8,7 @@ import {
   AgentMonitorEntityView,
   AgentMonitorBacktest,
   CreateAgentMonitorParams,
+  CreateAgentMonitorFieldParams,
   CreateAgentMonitorBacktestParams,
   DeletedAgentMonitor,
   ListAgentMonitorChangesResponse,
@@ -15,6 +16,31 @@ import {
   ListAgentMonitorsResponse,
 } from "../../src/agent/monitors/types";
 import { getProtectedClient } from "./helpers";
+import type { AgentConfidence } from "../../src/agent/types";
+
+describe("Agent Monitor response values the SDK does not list", () => {
+  it("types them as strings", () => {
+    const status: AgentMonitor["status"] = "paused";
+    const changeType: AgentMonitorChange["type"] = "content.corrected";
+    const confidence: AgentConfidence = "very_high";
+    expect([status, changeType, confidence]).toEqual([
+      "paused",
+      "content.corrected",
+      "very_high",
+    ]);
+  });
+
+  it("lets a monitor's fields be passed back as create params", () => {
+    const fieldsOf = (monitor: AgentMonitor): CreateAgentMonitorFieldParams[] =>
+      monitor.fields;
+    const fields = fieldsOf({
+      fields: [
+        { id: "f_1", name: "price", description: "Price", type: "currency" },
+      ],
+    } as AgentMonitor);
+    expect(fields[0].type).toBe("currency");
+  });
+});
 
 describe("Agent Monitors API", () => {
   let exa: Exa;
