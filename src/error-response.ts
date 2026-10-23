@@ -39,6 +39,41 @@ export async function readResponseBody(
 }
 
 /**
+ * Reads a successful response's JSON body.
+ *
+ * @param response - A 2xx response. Its body is consumed.
+ * @param path - The API path the request went to, e.g. `/search`.
+ * @returns The parsed body, or `undefined` when the body is empty.
+ * @throws {ExaError} When the body is not JSON. A proxy can answer with a 2xx
+ *   error or redirect page, and the error carries the status and a snippet of
+ *   it instead of an opaque parse error.
+ */
+export async function readJsonBody(
+  response: Response,
+  path: string
+): Promise<unknown> {
+  const { json, text } = await readResponseBody(response);
+  if (json === undefined && text) {
+    throw new ExaError(
+      `Expected a JSON response but received a non-JSON body (status ${response.status}): ${truncateResponseBody(text)}`,
+      response.status,
+      new Date().toISOString(),
+      path
+    );
+  }
+  return json;
+}
+
+/**
+ * Whether a `content-type` header names JSON, which is `application/json` or
+ * a `+json` media type, with any parameters.
+ */
+export function isJsonContentType(contentType: string | null): boolean {
+  const mediaType = (contentType ?? "").split(";")[0].trim().toLowerCase();
+  return mediaType === "application/json" || mediaType.endsWith("+json");
+}
+
+/**
  * Collapses whitespace and truncates a non-JSON response body so it stays
  * readable when embedded in an error message.
  */
