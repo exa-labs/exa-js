@@ -193,28 +193,6 @@ function createTool<TArgs, TResult>(
   return registerTool(registry, tool);
 }
 
-/**
- * Optional when parsing, but listed in the JSON schema's `required` so models
- * fill it in on every call. `zod-to-json-schema` decides `required` from
- * `isOptional()`.
- */
-class AdvertisedRequiredOptional<
-  T extends z.ZodTypeAny,
-> extends z.ZodOptional<T> {
-  isOptional(): boolean {
-    return false;
-  }
-}
-
-function advertisedRequired<T extends z.ZodTypeAny>(
-  inner: T
-): AdvertisedRequiredOptional<T> {
-  return new AdvertisedRequiredOptional({
-    innerType: inner,
-    typeName: z.ZodFirstPartyTypeKind.ZodOptional,
-  });
-}
-
 /** Create a `web_search` tool. Defaults to `type: "auto"` and highlights. */
 export function createWebSearchTool(
   exa: Exa,
@@ -234,19 +212,22 @@ export function createWebSearchTool(
       ),
     // Length limits are validated but not advertised: strict tool use on some
     // providers rejects `minLength`/`maxLength` in the schema.
-    objective: advertisedRequired(
-      z
-        .string()
-        .trim()
-        .refine((value) => value.length > 0, "objective must not be empty")
-        .refine(
-          (value) => value.length <= MAX_OBJECTIVE_LENGTH,
-          `objective must be at most ${MAX_OBJECTIVE_LENGTH} characters`
-        )
-    ).describe(SEARCH_OBJECTIVE_TOOL_DESCRIPTION),
+    objective: z
+      .string()
+      .trim()
+      .refine((value) => value.length > 0, "objective must not be empty")
+      .refine(
+        (value) => value.length <= MAX_OBJECTIVE_LENGTH,
+        `objective must be at most ${MAX_OBJECTIVE_LENGTH} characters`
+      )
+      .optional()
+      .describe(SEARCH_OBJECTIVE_TOOL_DESCRIPTION),
   });
   const jsonSchema = zodToJsonSchema(inputSchema) as ToolJsonSchema;
   delete jsonSchema.$schema;
+  // Optional at runtime for existing callers, but advertised as required so
+  // models fill it in on every call.
+  jsonSchema.required = ["query", "objective"];
 
   return createTool(registry, {
     name,
