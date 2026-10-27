@@ -51,6 +51,12 @@ jobs:
         env:
           EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
 
+      # Every resolution mode (node10, node16 from CJS and from ESM, bundler)
+      # must see types that match the file it loads at runtime.
+      - name: Check package types
+        if: runner.os == 'Linux'
+        run: pnpm build && pnpm dlx @arethetypeswrong/cli@0.18.5 --pack .
+
   examples:
     needs: test
     if: needs.test.result == 'success'
