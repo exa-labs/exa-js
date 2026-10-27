@@ -247,7 +247,7 @@ describe("LLM tools", () => {
       ["", "objective must not be empty"],
       ["   ", "objective must not be empty"],
       ["x".repeat(4097), "objective must be at most 4096 characters"],
-      [null, "Expected string, received null"],
+      [null, "Invalid input: expected string, received null"],
     ]) {
       const output = await tool.run({ query: "q", objective });
       expect(output).toMatch(/^Error:/);

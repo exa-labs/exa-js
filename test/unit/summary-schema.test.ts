@@ -35,6 +35,130 @@ describe("Zod summary schemas", () => {
     });
   });
 
+  it("sends date summary fields as date-time strings", async () => {
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValue(emptyResponse);
+
+    await exa.getContents("https://example.com", {
+      summary: { schema: z.object({ publishedAt: z.date() }) },
+    });
+
+    expect(requestSpy.mock.calls[0][2]).toMatchObject({
+      summary: {
+        schema: {
+          properties: { publishedAt: { type: "string", format: "date-time" } },
+        },
+      },
+    });
+  });
+
+  it("sends set and map summary fields as constrained arrays", async () => {
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValue(emptyResponse);
+
+    await exa.getContents("https://example.com", {
+      summary: {
+        schema: z.object({
+          tags: z.set(z.string()).min(1).max(2),
+          pair: z.set(z.string()).size(2),
+          scores: z.map(z.string(), z.number()),
+        }),
+      },
+    });
+
+    expect(requestSpy.mock.calls[0][2]).toMatchObject({
+      summary: {
+        schema: {
+          properties: {
+            tags: {
+              type: "array",
+              uniqueItems: true,
+              items: { type: "string" },
+              minItems: 1,
+              maxItems: 2,
+            },
+            pair: {
+              type: "array",
+              uniqueItems: true,
+              items: { type: "string" },
+              minItems: 2,
+              maxItems: 2,
+            },
+            scores: {
+              type: "array",
+              maxItems: 125,
+              items: {
+                type: "array",
+                items: [{ type: "string" }, { type: "number" }],
+                minItems: 2,
+                maxItems: 2,
+              },
+            },
+          },
+        },
+      },
+    });
+  });
+
+  it("retains pipeline constraints and input schemas for transforms and defaults", async () => {
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValue(emptyResponse);
+
+    await exa.getContents("https://example.com", {
+      summary: {
+        schema: z.object({
+          title: z.string().pipe(z.string().min(3)),
+          length: z.string().transform((value) => value.length),
+          label: z.string().default("untitled"),
+        }),
+      },
+    });
+
+    expect(requestSpy.mock.calls[0][2]).toMatchObject({
+      summary: {
+        schema: {
+          properties: {
+            title: {
+              allOf: [{ type: "string" }, { type: "string", minLength: 3 }],
+            },
+            length: { type: "string" },
+            label: { type: "string", default: "untitled" },
+          },
+          required: ["title", "length"],
+        },
+      },
+    });
+  });
+
+  it.each([
+    ["strip", z.object({ title: z.string() }).strip(), false],
+    ["strict", z.object({ title: z.string() }).strict(), false],
+    ["passthrough", z.object({ title: z.string() }).passthrough(), true],
+    [
+      "catchall",
+      z.object({ title: z.string() }).catchall(z.number()),
+      { type: "number" },
+    ],
+  ])(
+    "preserves additional properties for %s summary objects",
+    async (_, schema, additionalProperties) => {
+      const requestSpy = vi
+        .spyOn(exa, "request")
+        .mockResolvedValue(emptyResponse);
+
+      await exa.getContents("https://example.com", {
+        summary: { schema },
+      });
+
+      expect(requestSpy.mock.calls[0][2]).toMatchObject({
+        summary: { schema: { additionalProperties } },
+      });
+    }
+  );
+
   it("search() sends contents.summary.schema as JSON Schema", async () => {
     const requestSpy = vi
       .spyOn(exa, "request")
