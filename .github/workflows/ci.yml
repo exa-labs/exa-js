@@ -56,9 +56,3 @@ jobs:
       - name: Check package types
         if: runner.os == 'Linux'
         run: pnpm build && pnpm dlx @arethetypeswrong/cli@0.18.5 --pack .
-
-  examples:
-    needs: test
-    if: needs.test.result == 'success'
-    uses: ./.github/workflows/run-examples.yml
-    secrets: inherit

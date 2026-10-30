@@ -434,7 +434,6 @@ import type { SearchResponse, RegularSearchOptions } from "exa-js";
 
 - [Documentation](https://exa.ai/docs)
 - [API Reference](https://exa.ai/docs/reference/search)
-- [Examples](./examples)
 
 ## Contributing
 

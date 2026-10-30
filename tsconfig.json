@@ -13,11 +13,5 @@
     "outDir": "dist",
     "resolveJsonModule": true,
     "types": ["vitest/globals"]
-  },
-  "exclude": [
-    "examples/next",
-    "examples/vite",
-    "examples/node",
-    "examples/zod_summary_example.ts"
-  ]
+  }
 }

@@ -1,9 +1,0 @@
-{
-  "dependencies": {
-    "exa-js": "file:../..",
-    "openai": "^4.20.1"
-  },
-  "overrides": {
-    "form-data": ">=4.0.4"
-  }
-}

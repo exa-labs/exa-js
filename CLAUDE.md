@@ -6,7 +6,7 @@
 - Test All: `npm run test`
 - Test Unit / Integration: `npm run test:unit` / `npm run test:integration`
 - Test Single: `npx vitest run test/path/to/test.ts`
-- Typecheck: `npm run typecheck` (examples: `npm run typecheck:examples`)
+- Typecheck: `npm run typecheck`
 - Format: `npm run format`
 - Generate Docs: `npm run generate-docs`
 
