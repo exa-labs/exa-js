@@ -6,30 +6,62 @@ import type { ContentsOptions } from "../index";
 
 // --- Enums / Literal types ---
 
-export type SearchMonitorStatus = "active" | "paused" | "disabled";
+export type KnownSearchMonitorStatus = "active" | "paused" | "disabled";
 
-export type SearchMonitorRunStatus =
+/**
+ * Search Monitor status. A value not in `KnownSearchMonitorStatus` is kept as
+ * a string.
+ */
+export type SearchMonitorStatus = KnownSearchMonitorStatus | (string & {});
+
+export type KnownSearchMonitorRunStatus =
   | "pending"
   | "running"
   | "completed"
   | "failed"
   | "cancelled";
 
-export type SearchMonitorRunFailReason =
+/**
+ * Search Monitor run status. A value not in `KnownSearchMonitorRunStatus` is
+ * kept as a string.
+ */
+export type SearchMonitorRunStatus =
+  | KnownSearchMonitorRunStatus
+  | (string & {});
+
+export type KnownSearchMonitorRunFailReason =
   | "api_key_invalid"
   | "insufficient_credits"
   | "invalid_params"
   | "rate_limited"
+  | "source_not_available"
+  | "forbidden"
   | "search_unavailable"
   | "search_failed"
   | "internal_error";
 
-export type SearchMonitorWebhookEvent =
+/**
+ * Why a monitor run failed. A value not in `KnownSearchMonitorRunFailReason`
+ * is kept as a string.
+ */
+export type SearchMonitorRunFailReason =
+  | KnownSearchMonitorRunFailReason
+  | (string & {});
+
+export type KnownSearchMonitorWebhookEvent =
   | "monitor.created"
   | "monitor.updated"
   | "monitor.deleted"
   | "monitor.run.created"
   | "monitor.run.completed";
+
+/**
+ * Search Monitor webhook event. A value not in
+ * `KnownSearchMonitorWebhookEvent` is kept as a string.
+ */
+export type SearchMonitorWebhookEvent =
+  | KnownSearchMonitorWebhookEvent
+  | (string & {});
 
 // --- Nested types ---
 
@@ -42,7 +74,8 @@ export interface SearchMonitorSearch {
 }
 
 export interface SearchMonitorTrigger {
-  type: "interval";
+  /** The trigger type. A value not listed is kept as a string. */
+  type: "interval" | (string & {});
   period: string;
 }
 
@@ -59,7 +92,8 @@ export interface GroundingCitation {
 export interface GroundingEntry {
   field: string;
   citations: GroundingCitation[];
-  confidence: "low" | "medium" | "high";
+  /** A value not listed is kept as a string. */
+  confidence: "low" | "medium" | "high" | (string & {});
 }
 
 export interface SearchMonitorRunOutput {

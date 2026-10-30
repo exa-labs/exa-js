@@ -5,8 +5,8 @@ import { AgentClient, BetaClient } from "./agent/client";
 import { headersForBetas } from "./agent/betas";
 import {
   exaErrorFromResponse,
-  readResponseBody,
-  truncateResponseBody,
+  isJsonContentType,
+  readJsonBody,
 } from "./error-response";
 import { ExaError, HttpStatusCode } from "./errors";
 import { SearchMonitorsClient } from "./monitors/client";
@@ -77,6 +77,10 @@ export type ContentsOptions = {
    */
   highlights?: HighlightsContentsOptions | true;
   summary?: SummaryContentsOptions | true;
+  /**
+   * @deprecated Use `maxAgeHours` instead. Does not guarantee freshly fetched
+   * content. Cannot be combined with `maxAgeHours`.
+   */
   livecrawl?: LivecrawlOptions;
   /**
    * @deprecated Use `text` or `highlights` instead.
@@ -90,6 +94,23 @@ export type ContentsOptions = {
   subpageTarget?: string | string[];
   extras?: ExtrasOptions;
 };
+
+/**
+ * Rejects contents options `T` that set both `maxAgeHours` and the deprecated
+ * `livecrawl`, which the API refuses together. The compiler reports the error
+ * on `livecrawl`, with the message below. Options that set one of them, or
+ * neither, are unaffected.
+ */
+type ExclusiveFreshnessOptions<T> = T extends {
+  maxAgeHours: number;
+  livecrawl: LivecrawlOptions;
+}
+  ? {
+      livecrawl: {
+        "Use maxAgeHours instead. livecrawl cannot be combined with maxAgeHours.": never;
+      };
+    }
+  : unknown;
 
 /**
  * Contents options for search requests: `ContentsOptions`, with subpage
@@ -514,6 +535,8 @@ export type ExtrasOptions = { links?: number; imageLinks?: number };
 /**
  * Options for livecrawling contents
  * @typedef {string} LivecrawlOptions
+ * @deprecated Use `maxAgeHours` instead. Does not guarantee freshly fetched
+ * content. Cannot be combined with `maxAgeHours`.
  */
 export type LivecrawlOptions =
   | "never"
@@ -652,10 +675,10 @@ export type ExtrasResponse = {
 
 /**
  * @typedef {Object} SubpagesResponse
- * @property {ContentsResultComponent<T extends ContentsOptions>} subpages - The subpages for a result
+ * @property {SearchResult[]} subpages - The subpages for a result, each with the fields of a result and the requested contents.
  */
 export type SubpagesResponse<T extends ContentsOptions> = {
-  subpages: ContentsResultComponent<T>[];
+  subpages: SearchResult<Omit<T, "subpages">>[];
 };
 
 export type Default<T extends {}, U> = [keyof T] extends [never] ? U : T;
@@ -1046,6 +1069,11 @@ export type AnswerStreamChunk = {
     author?: string;
     text?: string;
   }>;
+  /**
+   * The cost breakdown for this request. It arrives once, on a chunk of its
+   * own at the end of the stream.
+   */
+  costDollars?: CostDollars;
 };
 
 /**
@@ -1060,6 +1088,49 @@ export type SearchStreamChunk = AnswerStreamChunk & {
    */
   warnings?: SearchWarning[];
 };
+
+/** One entry of a stream chunk's `citations`. */
+type StreamCitation = NonNullable<AnswerStreamChunk["citations"]>[number];
+
+/**
+ * The cost breakdown a stream payload carries, or undefined when it carries
+ * none.
+ */
+function costDollarsOf(payload: unknown): CostDollars | undefined {
+  if (typeof payload !== "object" || payload === null) {
+    return undefined;
+  }
+  const costDollars = (payload as { costDollars?: unknown }).costDollars;
+  if (
+    typeof costDollars !== "object" ||
+    costDollars === null ||
+    typeof (costDollars as { total?: unknown }).total !== "number"
+  ) {
+    return undefined;
+  }
+  return costDollars as CostDollars;
+}
+
+/**
+ * The `results` of a search response as stream citations, with the fields a
+ * citation has. Returns undefined when there are no results.
+ */
+function citationsFromResults(results: unknown): StreamCitation[] | undefined {
+  if (!Array.isArray(results)) {
+    return undefined;
+  }
+  const citations = results
+    .filter((result) => typeof result === "object" && result !== null)
+    .map((result) => ({
+      id: result.id,
+      url: result.url,
+      title: result.title ?? undefined,
+      publishedDate: result.publishedDate ?? undefined,
+      author: result.author ?? undefined,
+      text: result.text ?? undefined,
+    }));
+  return citations.length > 0 ? citations : undefined;
+}
 
 /**
  * Represents a streaming answer response chunk from the /answer endpoint.
@@ -1416,18 +1487,7 @@ export class Exa {
         return (await this.parseSSEStream<T>(response)) as T;
       }
 
-      const { json, text } = await readResponseBody(response);
-
-      // A successful status with a non-JSON body usually means a proxy returned
-      // an error/redirect page; surface it instead of an opaque parse error.
-      if (json === undefined && text) {
-        throw new ExaError(
-          `Expected a JSON response but received a non-JSON body (status ${response.status}): ${truncateResponseBody(text)}`,
-          response.status,
-          new Date().toISOString(),
-          endpoint
-        );
-      }
+      const json = await readJsonBody(response, endpoint);
 
       this.reportWarnings(
         endpoint,
@@ -1639,7 +1699,8 @@ export class Exa {
    */
   async search<T extends ContentsOptions>(
     query: string,
-    options: RegularSearchOptions & BetaOptions & { contents: T },
+    options: RegularSearchOptions &
+      BetaOptions & { contents: T & ExclusiveFreshnessOptions<T> },
     requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>>;
   /**
@@ -1650,13 +1711,15 @@ export class Exa {
    * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<SearchResponse<{ text: true }>>} A list of relevant search results with text contents.
    */
-  async search(
+  async search<
+    C extends ContentsOptions | false | null | undefined = undefined,
+  >(
     query: string,
     options: (
       | Omit<DeepSearchOptions, "contents">
       | Omit<NonDeepSearchOptions, "contents">
     ) &
-      BetaOptions,
+      BetaOptions & { contents?: C & ExclusiveFreshnessOptions<C> },
     requestOptions?: RequestOptions
   ): Promise<SearchResponse<{ text: true }>>;
   async search<T extends ContentsOptions>(
@@ -1701,9 +1764,14 @@ export class Exa {
    *
    * Each iteration yields a chunk with partial text (`content`) or new citations.
    * When the API returns `warnings` about the request, one chunk after the text
-   * carries them.
+   * carries them. The last chunk carries the request's cost breakdown
+   * (`costDollars`).
    * Use this if you'd like to read synthesized search output incrementally.
    * The `lite` search type does not support streaming.
+   *
+   * A search without `outputSchema` has no text to stream. Its stream yields
+   * one chunk with the results as `citations`, then the warnings chunk when
+   * the API returns warnings. Call `search()` for every field of the results.
    * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    */
   streamSearch<Type extends string = never>(
@@ -1738,7 +1806,7 @@ export class Exa {
    */
   async searchAndContents<T extends ContentsOptions>(
     query: string,
-    options?: RegularSearchOptions & T,
+    options?: RegularSearchOptions & T & ExclusiveFreshnessOptions<T>,
     requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>> {
     const { contentsOptions, restOptions } =
@@ -1808,7 +1876,9 @@ export class Exa {
    */
   async findSimilar<T extends ContentsOptions>(
     url: string,
-    options: FindSimilarOptions & { contents: T },
+    options: FindSimilarOptions & {
+      contents: T & ExclusiveFreshnessOptions<T>;
+    },
     requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>>;
   /**
@@ -1822,9 +1892,13 @@ export class Exa {
    * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    * @returns {Promise<SearchResponse<{ text: true }>>} A list of similar search results with text contents.
    */
-  async findSimilar(
+  async findSimilar<
+    C extends ContentsOptions | false | null | undefined = undefined,
+  >(
     url: string,
-    options: Omit<FindSimilarOptions, "contents">,
+    options: Omit<FindSimilarOptions, "contents"> & {
+      contents?: C & ExclusiveFreshnessOptions<C>;
+    },
     requestOptions?: RequestOptions
   ): Promise<SearchResponse<{ text: true }>>;
   async findSimilar<T extends ContentsOptions>(
@@ -1899,7 +1973,7 @@ export class Exa {
    */
   async findSimilarAndContents<T extends ContentsOptions>(
     url: string,
-    options?: FindSimilarOptions & T,
+    options?: FindSimilarOptions & T & ExclusiveFreshnessOptions<T>,
     requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>> {
     const { contentsOptions, restOptions } =
@@ -1929,7 +2003,11 @@ export class Exa {
    */
   async getContents<T extends ContentsOptions>(
     urls: string | string[] | SearchResult<T>[],
-    options?: T & BetaOptions & UserIdentifierOptions & TransportRequestOptions,
+    options?: T &
+      ExclusiveFreshnessOptions<T> &
+      BetaOptions &
+      UserIdentifierOptions &
+      TransportRequestOptions,
     requestOptions?: RequestOptions
   ): Promise<SearchResponse<T>> {
     if (!urls || (Array.isArray(urls) && urls.length === 0)) {
@@ -2076,6 +2154,7 @@ export class Exa {
    * Stream an answer as an async generator
    *
    * Each iteration yields a chunk with partial text (`content`) or new citations.
+   * The last chunk carries the request's cost breakdown (`costDollars`).
    * Use this if you'd like to read the answer incrementally, e.g. in a chat UI.
    *
    * Example usage:
@@ -2087,6 +2166,9 @@ export class Exa {
    *   if (chunk.content) process.stdout.write(chunk.content);
    *   if (chunk.citations) {
    *     console.log("\nCitations: ", chunk.citations);
+   *   }
+   *   if (chunk.costDollars) {
+   *     console.log("\nCost: ", chunk.costDollars.total);
    *   }
    * }
    * ```
@@ -2156,6 +2238,15 @@ export class Exa {
     }
     const requestIdHeader = response.headers.get("x-request-id");
 
+    // A response with nothing to stream arrives whole, as JSON. A search
+    // without `outputSchema` answers this way.
+    if (isJsonContentType(response.headers.get("content-type"))) {
+      const payload = await readJsonBody(response, endpoint);
+      this.reportWarnings(endpoint, "POST", payload, requestIdHeader);
+      yield* this.jsonResponseChunks(payload);
+      return;
+    }
+
     const reader = response.body?.getReader();
     if (!reader) {
       throw new ExaError(
@@ -2192,11 +2283,8 @@ export class Exa {
             continue;
           }
 
-          const chunk = this.processChunk(chunkData);
           this.reportWarnings(endpoint, "POST", chunkData, requestIdHeader);
-          if (chunk.content || chunk.citations || chunk.warnings) {
-            yield chunk;
-          }
+          yield* this.payloadChunks(chunkData);
         }
       }
 
@@ -2205,11 +2293,8 @@ export class Exa {
         if (leftover && leftover !== "[DONE]") {
           try {
             const chunkData = JSON.parse(leftover);
-            const chunk = this.processChunk(chunkData);
             this.reportWarnings(endpoint, "POST", chunkData, requestIdHeader);
-            if (chunk.content || chunk.citations || chunk.warnings) {
-              yield chunk;
-            }
+            yield* this.payloadChunks(chunkData);
           } catch (e) {}
         }
       }
@@ -2221,6 +2306,41 @@ export class Exa {
       } catch {
         // ignore
       }
+    }
+  }
+
+  /**
+   * The chunks for a response the API sent whole as JSON instead of streaming
+   * it. The first carries its `results` as `citations`. The rest are the
+   * chunks `payloadChunks` makes of the whole payload: its `warnings`, then
+   * its `costDollars`. A chunk with nothing in it is left out, as in a stream.
+   */
+  private *jsonResponseChunks(payload: unknown): Generator<SearchStreamChunk> {
+    if (typeof payload !== "object" || payload === null) {
+      return;
+    }
+    const citations = citationsFromResults(
+      (payload as { results?: unknown }).results
+    );
+    if (citations) {
+      yield { citations };
+    }
+    yield* this.payloadChunks(payload);
+  }
+
+  /**
+   * The chunks one stream payload yields: the chunk `processChunk` makes of
+   * it, then its `costDollars` on a chunk of their own. A chunk with nothing
+   * in it is left out.
+   */
+  private *payloadChunks(chunkData: any): Generator<SearchStreamChunk> {
+    const chunk = this.processChunk(chunkData);
+    if (chunk.content || chunk.citations || chunk.warnings) {
+      yield chunk;
+    }
+    const costDollars = costDollarsOf(chunkData);
+    if (costDollars) {
+      yield { costDollars };
     }
   }
 

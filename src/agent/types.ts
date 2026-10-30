@@ -19,22 +19,41 @@ export interface AgentBetaOptions {
   betas?: string[];
 }
 
-export type AgentRunStatus =
+export type KnownAgentRunStatus =
   | "queued"
   | "running"
   | "completed"
   | "failed"
   | "cancelled";
 
-export type AgentStopReason =
+/**
+ * Agent run status. A value not in `KnownAgentRunStatus` is kept as a string.
+ */
+export type AgentRunStatus = KnownAgentRunStatus | (string & {});
+
+export type KnownAgentStopReason =
   | "schema_satisfied"
   | "budget_reached"
   | "time_limit_reached"
+  | "token_limit_reached"
+  | "iteration_limit_reached"
   | "stopped"
   | "error"
   | "cancelled";
 
-export type AgentConfidence = "low" | "medium" | "high";
+/**
+ * Why an Agent run stopped. A value not in `KnownAgentStopReason` is kept as
+ * a string.
+ */
+export type AgentStopReason = KnownAgentStopReason | (string & {});
+
+export type KnownAgentConfidence = "low" | "medium" | "high";
+
+/**
+ * Confidence of a grounding entry. A value not in `KnownAgentConfidence` is
+ * kept as a string.
+ */
+export type AgentConfidence = KnownAgentConfidence | (string & {});
 
 export type AgentEffort =
   | "minimal"
