@@ -9,5 +9,7 @@ tests
 .aider*
 
 .env
-.env.local
+.env.*
+*.env
+!.env.example
 personal/
