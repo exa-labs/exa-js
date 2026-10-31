@@ -55,16 +55,16 @@
     "prettier": "~3.5.3",
     "ts-morph": "^27.0.2",
     "ts-node": "~10.9.2",
-    "tsup": "~8.4.0",
+    "tsup": "~9.0.0",
     "tsx": "^4.21.0",
     "typescript": "~5.8.3",
-    "vitest": "~3.1.1"
+    "vitest": "~3.2.6"
   },
   "dependencies": {
     "cross-fetch": "~4.1.0",
     "dotenv": "~16.4.7",
-    "openai": "^5.0.1",
-    "zod": "^3.22.0",
+    "openai": "^7.47.0",
+    "zod": "^4.6.7",
     "zod-to-json-schema": "^3.20.0"
   },
   "directories": {
