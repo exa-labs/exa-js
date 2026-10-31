@@ -20,7 +20,10 @@ import {
 } from "../../src/agent";
 import {
   AgentRun,
+  AgentRunStatus,
+  AgentStopReason,
   DeletedAgentRun,
+  KnownAgentStopReason,
   ListAgentRunEventsResponse,
   ListAgentRunsResponse,
 } from "../../src/agent/types";
@@ -395,6 +398,34 @@ describe("Agent API", () => {
       limit: 10,
     });
     expect(result).toEqual(mockResponse);
+  });
+
+  it("lists Agent runs with stop reasons and statuses the SDK does not list", async () => {
+    const mockResponse: ListAgentRunsResponse = {
+      object: "list",
+      data: [
+        { ...createMockRun(), stopReason: "iteration_limit_reached" },
+        { ...createMockRun(), stopReason: "token_limit_reached" },
+        { ...createMockRun(), status: "paused", stopReason: "timeout_partial" },
+      ],
+      hasMore: false,
+      nextCursor: null,
+    };
+    const runClient = getProtectedClient(exa.agent.runs);
+    vi.spyOn(runClient, "request").mockResolvedValueOnce(mockResponse);
+
+    const result = await exa.agent.runs.list({ limit: 3 });
+
+    expect(result.data.map((run) => [run.status, run.stopReason])).toEqual([
+      ["completed", "iteration_limit_reached"],
+      ["completed", "token_limit_reached"],
+      ["paused", "timeout_partial"],
+    ]);
+    expectTypeOf<
+      "iteration_limit_reached" | "token_limit_reached"
+    >().toMatchTypeOf<KnownAgentStopReason>();
+    expectTypeOf<string>().toMatchTypeOf<AgentStopReason>();
+    expectTypeOf<string>().toMatchTypeOf<AgentRunStatus>();
   });
 
   it("lists Agent runs with legacy beta headers from the beta namespace", async () => {

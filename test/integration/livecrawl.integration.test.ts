@@ -49,6 +49,7 @@ integrationDescribe("Integration: livecrawl", () => {
     await expect(
       exa.searchAndContents("example domain", {
         numResults: 1,
+        // @ts-expect-error The types reject this pair. An untyped caller can still send it.
         livecrawl: "always",
         maxAgeHours: 1,
       })

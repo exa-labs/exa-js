@@ -4,6 +4,7 @@ import {
   CreateSearchMonitorParams,
   CreateSearchMonitorResponse,
   ListSearchMonitorRunsResponse,
+  ListSearchMonitorsParams,
   ListSearchMonitorsResponse,
   SearchMonitor,
   SearchMonitorRun,
@@ -75,6 +76,43 @@ describe("Search Monitors API", () => {
   });
 
   describe("Monitor Operations", () => {
+    it("should type monitor and run values the SDK does not list", async () => {
+      const mockMonitor: SearchMonitor = {
+        ...createMockMonitor(),
+        status: "archived",
+        trigger: { type: "cron", period: "0 0 * * *" },
+        webhook: {
+          url: "https://example.com/webhook",
+          events: ["monitor.run.failed"],
+        },
+      };
+      const mockRun: SearchMonitorRun = {
+        ...createMockMonitorRun(),
+        status: "skipped",
+      };
+
+      vi.spyOn(getProtectedClient(exa.monitors), "request").mockResolvedValueOnce(
+        mockMonitor
+      );
+      vi.spyOn(
+        getProtectedClient(exa.monitors.runs),
+        "request"
+      ).mockResolvedValueOnce(mockRun);
+
+      expect((await exa.monitors.get("sm_123456")).status).toBe("archived");
+      expect(
+        (await exa.monitors.runs.get("sm_123456", "run_123456")).status
+      ).toBe("skipped");
+    });
+    it("should let a monitor's status be passed back as update and list params", () => {
+      const monitor: SearchMonitor = {
+        ...createMockMonitor(),
+        status: "archived",
+      };
+      const update: UpdateSearchMonitorParams = { status: monitor.status };
+      const list: ListSearchMonitorsParams = { status: monitor.status };
+      expect([update.status, list.status]).toEqual(["archived", "archived"]);
+    });
     it("should create a new Search Monitor", async () => {
       const mockResponse: CreateSearchMonitorResponse = {
         ...createMockMonitor(),
@@ -307,6 +345,25 @@ describe("Search Monitors API", () => {
 
       expect(result.output?.content).toEqual(structuredContent);
     });
+
+    it.each(["source_not_available", "forbidden", "some_future_reason"])(
+      "should type a run that failed with %s",
+      async (failReason) => {
+        const mockResponse: SearchMonitorRun = {
+          ...createMockMonitorRun(),
+          status: "failed",
+          output: null,
+          failReason,
+        };
+
+        const runsClient = getProtectedClient(exa.monitors.runs);
+        vi.spyOn(runsClient, "request").mockResolvedValueOnce(mockResponse);
+
+        const result = await exa.monitors.runs.get("sm_123456", "run_123456");
+
+        expect(result.failReason).toBe(failReason);
+      }
+    );
 
     it("should paginate through all runs with listAll", async () => {
       const run1 = { ...createMockMonitorRun(), id: "run_1" };

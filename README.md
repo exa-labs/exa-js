@@ -67,6 +67,7 @@ console.log(resultWithOutput.output?.content);
 ```ts
 for await (const chunk of exa.streamSearch("Who leads OpenAI's safety team?", {
   type: "auto",
+  outputSchema: { type: "text" },
 })) {
   if (chunk.content) {
     process.stdout.write(chunk.content);
@@ -81,6 +82,7 @@ Search `outputSchema` modes:
 
 `systemPrompt` and `outputSchema` are supported on every search type.
 Search streaming is available via `streamSearch(...)`, which yields OpenAI-style chat completion chunks.
+A search without `outputSchema` has no text to stream. Its stream yields one chunk with the results as `citations`.
 
 For `type: "object"`, search currently enforces:
 
@@ -124,6 +126,10 @@ console.log(response.answer);
 for await (const chunk of exa.streamAnswer("Explain quantum computing")) {
   if (chunk.content) {
     process.stdout.write(chunk.content);
+  }
+  // The last chunk carries the cost.
+  if (chunk.costDollars) {
+    console.log("\nCost:", chunk.costDollars.total);
   }
 }
 ```
@@ -187,7 +193,7 @@ const completion = await openai.chat.completions.create({
   messages,
   tools: [
     exa.openai.webSearch(),
-    exa.openai.getContents({ summary: true, livecrawl: "preferred" }),
+    exa.openai.getContents({ summary: true, maxAgeHours: 1 }),
   ],
 });
 ```
