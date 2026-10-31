@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.27.0](https://github.com/exa-labs/exa-js/compare/v2.26.0...v2.27.0) (2026-10-31)
+
+
+### Features
+
+* add `costDollars` to final `streamAnswer` and `streamSearch` chunks ([c5df5b1](https://github.com/exa-labs/exa-js/commit/c5df5b1eeae1d03723fd9a84f1de7fdbd4a65bf2))
+* allow unknown Agent and Search Monitor response enum values as strings ([c5df5b1](https://github.com/exa-labs/exa-js/commit/c5df5b1eeae1d03723fd9a84f1de7fdbd4a65bf2))
+* allow unknown Agent run statuses and stop reasons as strings ([c5df5b1](https://github.com/exa-labs/exa-js/commit/c5df5b1eeae1d03723fd9a84f1de7fdbd4a65bf2))
+* reject `livecrawl` combined with `maxAgeHours` in contents option types ([c5df5b1](https://github.com/exa-labs/exa-js/commit/c5df5b1eeae1d03723fd9a84f1de7fdbd4a65bf2))
+* response enum types now include `(string & {})`, so exhaustive `switch` and `Record` checks need a default case ([c5df5b1](https://github.com/exa-labs/exa-js/commit/c5df5b1eeae1d03723fd9a84f1de7fdbd4a65bf2))
+
+
+### Bug Fixes
+
+* allow `CreateAgentMonitorFieldParams` to accept returned monitor field types ([c5df5b1](https://github.com/exa-labs/exa-js/commit/c5df5b1eeae1d03723fd9a84f1de7fdbd4a65bf2))
+* deprecate `livecrawl` in favor of `maxAgeHours` ([c5df5b1](https://github.com/exa-labs/exa-js/commit/c5df5b1eeae1d03723fd9a84f1de7fdbd4a65bf2))
+* fix `getContents` subpage types to include result fields and requested contents ([c5df5b1](https://github.com/exa-labs/exa-js/commit/c5df5b1eeae1d03723fd9a84f1de7fdbd4a65bf2))
+* fix `streamSearch` to yield citations from JSON search responses without `outputSchema` ([c5df5b1](https://github.com/exa-labs/exa-js/commit/c5df5b1eeae1d03723fd9a84f1de7fdbd4a65bf2))
+* resolve ESM type declarations for ESM imports ([#250](https://github.com/exa-labs/exa-js/issues/250)) ([0c830a9](https://github.com/exa-labs/exa-js/commit/0c830a982dc71846ca506b198a8ddc7633155701))
+
 ## [2.26.0](https://github.com/exa-labs/exa-js/compare/v2.25.0...v2.26.0) (2026-10-19)
 
 
