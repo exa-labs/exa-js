@@ -1,5 +1,10 @@
 import { assert, test, vi } from "vitest";
-import Exa from "../../src";
+import Exa, {
+  type ContentFetchStatus,
+  type ContentSource,
+  type KnownContentFetchStatus,
+  type KnownContentSource,
+} from "../../src";
 
 test("simple", () => {
   assert.equal("foo", "foo");
@@ -57,4 +62,33 @@ test("getContents types each subpage as a result with the requested contents", a
   assert.equal(subpage.title, "About");
   assert.equal(subpage.id, "https://a.com/about");
   assert.equal(subpage.text, "About us");
+});
+
+// The assignments compile only while the known values stay in the unions and
+// unlisted values stay assignable, which `tsc --noEmit` checks.
+test("getContents types status and source with known and unlisted values", async () => {
+  const known: [KnownContentFetchStatus, KnownContentSource][] = [
+    ["success", "cached"],
+    ["error", "crawled"],
+  ];
+  const unlisted: [ContentFetchStatus, ContentSource] = ["skipped", "archived"];
+  const exa = new Exa("test-api-key");
+  vi.spyOn(exa, "request").mockResolvedValueOnce({
+    statuses: [
+      { id: "https://a.com", status: "success", source: "cached" },
+      { id: "https://b.com", status: unlisted[0], source: unlisted[1] },
+    ],
+    results: [],
+  });
+
+  const response = await exa.getContents(["https://a.com", "https://b.com"]);
+
+  const [first, second] = response.statuses ?? [];
+  const firstPair: [ContentFetchStatus, ContentSource | undefined] = [
+    first.status,
+    first.source,
+  ];
+  assert.deepEqual(firstPair, known[0]);
+  assert.equal(second.status, "skipped");
+  assert.equal(second.source, "archived");
 });
