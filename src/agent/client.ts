@@ -2,10 +2,9 @@
  * Client for the Exa Agent API.
  */
 
-import { ZodSchema } from "zod";
 import { Exa } from "../index";
 import { exaErrorFromResponse } from "../error-response";
-import { isZodSchema, zodToJsonSchema } from "../zod-utils";
+import { isZodSchema, zodToJsonSchema, type ZodSchema } from "../zod-utils";
 import { AgentBaseClient } from "./base";
 import { headersForBetas } from "./betas";
 import { AgentMonitorsClient } from "./monitors/client";

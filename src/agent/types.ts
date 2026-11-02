@@ -2,7 +2,7 @@
  * Types for the Exa Agent API.
  */
 
-import { ZodSchema } from "zod";
+import type { ZodSchema } from "../zod-utils";
 
 /**
  * @deprecated `exa.agent` does not need a beta header.

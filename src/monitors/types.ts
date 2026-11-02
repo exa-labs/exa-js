@@ -99,10 +99,16 @@ export interface GroundingEntry {
 export interface SearchMonitorRunOutput {
   results?: Record<string, unknown>[] | null;
   /**
-   * Synthesized output. When the monitor is configured with an `outputSchema`,
-   * the API returns this as a structured object; otherwise it is a string.
+   * Synthesized output. Text for a text `outputSchema`, otherwise JSON matching
+   * the schema.
    */
-  content?: string | Record<string, unknown> | null;
+  content?:
+    | string
+    | number
+    | boolean
+    | Record<string, unknown>
+    | unknown[]
+    | null;
   grounding?: GroundingEntry[] | null;
 }
 

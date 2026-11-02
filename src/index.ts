@@ -1,5 +1,4 @@
 import fetch, { Headers } from "cross-fetch";
-import { ZodSchema } from "zod";
 import packageJson from "../package.json";
 import { AgentClient, BetaClient } from "./agent/client";
 import { headersForBetas } from "./agent/betas";
@@ -29,7 +28,7 @@ import {
 } from "./request-options";
 import { ResearchClient } from "./research/client";
 import { WebsetsClient } from "./websets/client";
-import { isZodSchema, zodToJsonSchema } from "./zod-utils";
+import { isZodSchema, zodToJsonSchema, type ZodSchema } from "./zod-utils";
 
 import { AnthropicTools } from "./tools/anthropic";
 import { OpenAITools } from "./tools/openai";
@@ -878,7 +877,7 @@ export type Entity = CompanyEntity | PersonEntity;
  * @property {string} url - The URL of the search result.
  * @property {string} [publishedDate] - The estimated creation date of the content.
  * @property {string} [author] - The author of the content, if available.
- * @property {number} [score] - Similarity score between the query/url and the result.
+ * @property {number} [score] - Legacy field. Current search types, including the default "auto", do not return it. Results arrive in relevance order, so keep that order instead of sorting by score.
  * @property {string} id - The temporary ID for the document.
  * @property {string} [image] - A representative image for the content, if any.
  * @property {string} [favicon] - A favicon for the site, if any.
