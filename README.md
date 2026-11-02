@@ -89,6 +89,8 @@ For `type: "object"`, search currently enforces:
 - max nesting depth: `2`
 - max total properties: `10`
 
+A schema can be declared outside the call (`as const`, or `satisfies DeepOutputSchema`).
+
 Deep search variants that also support `additionalQueries`:
 
 - `deep-lite`

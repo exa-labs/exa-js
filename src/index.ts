@@ -405,6 +405,7 @@ export type DeepTextOutputSchema = {
 
 /**
  * Deep search output schema mode for structured JSON object responses.
+ * Accepts any other JSON Schema keyword, and schemas declared `as const`.
  */
 export type DeepObjectOutputSchema = {
   type: "object";
@@ -415,7 +416,9 @@ export type DeepObjectOutputSchema = {
   /**
    * Required property names.
    */
-  required?: string[];
+  required?: readonly string[];
+  additionalProperties?: boolean;
+  [keyword: string]: unknown;
 };
 
 /**
@@ -1008,11 +1011,27 @@ export type ContentStatusError = {
   httpStatusCode?: number | null;
 };
 
+export type KnownContentFetchStatus = "success" | "error";
+
+/**
+ * Status of the content fetch operation. A value not in
+ * `KnownContentFetchStatus` is kept as a string.
+ */
+export type ContentFetchStatus = KnownContentFetchStatus | (string & {});
+
+export type KnownContentSource = "cached" | "crawled";
+
+/**
+ * Where the returned content was sourced from. A value not in
+ * `KnownContentSource` is kept as a string.
+ */
+export type ContentSource = KnownContentSource | (string & {});
+
 /** Status information for a requested URL. */
 export type Status = {
   id: string;
-  status: string;
-  source?: string;
+  status: ContentFetchStatus;
+  source?: ContentSource;
   error?: ContentStatusError | null;
 };
 
