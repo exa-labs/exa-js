@@ -643,6 +643,16 @@ function requestId(): string {
   return randomBytes(16).toString("hex");
 }
 
+/**
+ * The `score` the hosted API returns on the result at 0-based `rank`.
+ * `searchType` is undefined for the deprecated `/findSimilar`, which still
+ * returns a legacy similarity score. `/search` returns none.
+ */
+function resultScore(searchType: string | undefined, rank: number): number | undefined {
+  if (searchType === undefined) return Math.round((0.99 - 0.01 * (rank + 1)) * 100) / 100;
+  return undefined;
+}
+
 /** The response body shared by `/search` and `/findSimilar`. */
 function searchResponse(
   documents: FixtureDocument[],
@@ -653,7 +663,7 @@ function searchResponse(
   const results = documents.map((document, i) =>
     renderResult(document, contents, {
       index: i + 1,
-      score: Math.round((0.99 - 0.01 * (i + 1)) * 100) / 100,
+      score: resultScore(searchType, i),
       category,
     })
   );

@@ -3,7 +3,7 @@
  * the API as JSON Schema.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v3";
 import Exa, { type ContentsOptions } from "../../src";
 import { zodToJsonSchema } from "../../src/zod-utils";
 

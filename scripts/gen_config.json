@@ -72,7 +72,7 @@
       {"name": "id", "type": "string", "description": "The temporary ID for the document."},
       {"name": "publishedDate", "type": "string", "description": "The estimated creation date of the content."},
       {"name": "author", "type": "string", "description": "The author of the content, if available."},
-      {"name": "score", "type": "number", "description": "Similarity score between the query/url and the result."},
+      {"name": "score", "type": "number", "description": "Legacy field. Current search types, including the default \"auto\", do not return it. Results arrive in relevance order, so keep that order instead of sorting by score."},
       {"name": "image", "type": "string", "description": "A representative image for the content, if any."},
       {"name": "favicon", "type": "string", "description": "A favicon for the site, if any."},
       {"name": "text", "type": "string", "description": "The text content of the page (if text option enabled)."},

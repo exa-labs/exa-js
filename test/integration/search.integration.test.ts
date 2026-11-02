@@ -17,6 +17,17 @@ integrationDescribe("Search Contents Options", () => {
     expect(sampleResult.text.length).toBeLessThanOrEqual(10_000);
   });
 
+  it("Returns no score on the default auto search", async () => {
+    const response = await exa.search(testQuery, {
+      contents: false,
+      numResults: 3,
+    });
+    expect(response.results).not.toHaveLength(0);
+    for (const result of response.results) {
+      expect(result.score).toBeUndefined();
+    }
+  });
+
   it("Returns no contents when explicitly set to false", async () => {
     const response = await exa.search(testQuery, {
       contents: false,

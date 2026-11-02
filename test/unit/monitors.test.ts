@@ -346,6 +346,28 @@ describe("Search Monitors API", () => {
       expect(result.output?.content).toEqual(structuredContent);
     });
 
+    it("should accept list content for outputSchema runs", async () => {
+      const listContent = [
+        { title: "First hit", url: "https://example.com/1" },
+        { title: "Second hit", url: "https://example.com/2" },
+      ];
+      const mockResponse: SearchMonitorRun = {
+        ...createMockMonitorRun(),
+        output: {
+          results: null,
+          content: listContent,
+          grounding: null,
+        },
+      };
+
+      const runsClient = getProtectedClient(exa.monitors.runs);
+      vi.spyOn(runsClient, "request").mockResolvedValueOnce(mockResponse);
+
+      const result = await exa.monitors.runs.get("sm_123456", "run_123456");
+
+      expect(result.output?.content).toEqual(listContent);
+    });
+
     it.each(["source_not_available", "forbidden", "some_future_reason"])(
       "should type a run that failed with %s",
       async (failReason) => {

@@ -7,7 +7,7 @@ import {
   it,
   vi,
 } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v3";
 import Exa from "../../src";
 import {
   AgentBetaClient,
