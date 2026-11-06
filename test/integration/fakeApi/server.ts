@@ -616,7 +616,6 @@ function renderResult(
   if (contents.highlights) {
     const highlights = renderHighlights(document, contents.highlights);
     body.highlights = highlights;
-    body.highlightScores = highlights.map((_, i) => 0.9 - 0.1 * i);
   }
   if (contents.summary) {
     body.summary = renderSummary(document, contents.summary);
