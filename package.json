@@ -56,10 +56,10 @@
     "prettier": "~3.5.3",
     "ts-morph": "^27.0.2",
     "ts-node": "~10.9.2",
-    "tsup": "~8.4.0",
+    "tsup": "~9.0.0",
     "tsx": "^4.23.15",
     "typescript": "~5.8.3",
-    "vitest": "~4.1.12"
+    "vitest": "~5.1.0"
   },
   "dependencies": {
     "cross-fetch": "~4.1.0",
