@@ -653,10 +653,11 @@ export type TextResponse = { text: string };
 /**
  * @typedef {Object} HighlightsResponse
  * @property {string[]} highlights - The highlights as an array of strings.
- * @property {number[]} [highlightScores] - The corresponding scores as an array of floats, 0 to 1
+ * @property {number[]} [highlightScores] - Legacy field. The API no longer returns it.
  */
 export type HighlightsResponse = {
   highlights: string[];
+  /** @deprecated The API no longer returns this field. */
   highlightScores?: number[];
 };
 

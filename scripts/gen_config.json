@@ -77,7 +77,7 @@
       {"name": "favicon", "type": "string", "description": "A favicon for the site, if any."},
       {"name": "text", "type": "string", "description": "The text content of the page (if text option enabled)."},
       {"name": "highlights", "type": "string[]", "description": "Highlighted text snippets (if highlights option enabled)."},
-      {"name": "highlightScores", "type": "number[]", "description": "Scores for each highlight."},
+      {"name": "highlightScores", "type": "number[]", "description": "Legacy field. The API no longer returns it."},
       {"name": "summary", "type": "string", "description": "Summary of the content (if summary option enabled)."},
       {"name": "entities", "type": "Entity[]", "description": "Structured entity data for company or person search results."}
     ],
@@ -186,8 +186,7 @@
           "text": "While the health care industry was initially slow to adopt AI...",
           "highlights": [
             "AI is transforming healthcare through improved diagnostics and personalized treatment plans."
-          ],
-          "highlightScores": [0.85]
+          ]
         }
       ],
       "requestId": "b89fcd823e4f5a91c7d0fe1e6e8864f9"
@@ -216,8 +215,7 @@
           "text": "In recent years, artificial intelligence has made significant strides...",
           "highlights": [
             "AI is reshaping industries and creating new opportunities for innovation."
-          ],
-          "highlightScores": [0.92]
+          ]
         }
       ],
       "requestId": "c90gde934f5g6b02d8e1gf2f7f9975g0"
