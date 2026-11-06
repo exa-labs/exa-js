@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.28.0](https://github.com/exa-labs/exa-js/compare/v2.27.0...v2.28.0) (2026-11-06)
+
+
+### Features
+
+* add flexible object output schemas with readonly fields and custom keywords ([2c2caa4](https://github.com/exa-labs/exa-js/commit/2c2caa491971bacdcf7e934a9fb7975ee23403cc))
+* add typed known and extensible content fetch statuses and sources ([2c2caa4](https://github.com/exa-labs/exa-js/commit/2c2caa491971bacdcf7e934a9fb7975ee23403cc))
+* allow scalar and array JSON values in `SearchMonitorRunOutput.content` ([53d3539](https://github.com/exa-labs/exa-js/commit/53d3539006c0fad341e42c821b6d36ff144c4eb9))
+
+
+### Bug Fixes
+
+* add Node type definitions to the TypeScript configuration ([daeda88](https://github.com/exa-labs/exa-js/commit/daeda883ebcfc31950fb66d3cd65cb6a02c74548))
+* allow patched zod 4 and update vulnerable dependencies ([#260](https://github.com/exa-labs/exa-js/issues/260)) ([eff6032](https://github.com/exa-labs/exa-js/commit/eff60325b0994007e4bedf5f34ec964cde5082ba))
+* document lite search schema limitations ([9538ec4](https://github.com/exa-labs/exa-js/commit/9538ec45990b828edb585021a6c13d52f307d7c4))
+* support patched zod (&gt;=4.6.6, GHSA-mrhx-c7xc-m3w5) by importing the zod/v3 API ([53d3539](https://github.com/exa-labs/exa-js/commit/53d3539006c0fad341e42c821b6d36ff144c4eb9))
+
 ## [2.27.0](https://github.com/exa-labs/exa-js/compare/v2.26.0...v2.27.0) (2026-10-31)
 
 
