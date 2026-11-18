@@ -66,6 +66,16 @@ function handle(url: string): {
           requestId: "req_legacy1",
         }),
       };
+    case "/tagged-error":
+      return {
+        status: 400,
+        contentType: "application/json",
+        body: JSON.stringify({
+          requestId: "req_tagged",
+          error: "Invalid request body",
+          tag: "INVALID_REQUEST_BODY",
+        }),
+      };
     case "/empty-ok":
       return { status: 200, contentType: "application/json", body: "" };
     default:
@@ -173,6 +183,18 @@ describe("Exa.request non-JSON response handling", () => {
     expect(error.type).toBeUndefined();
     expect(error.code).toBeUndefined();
     expect(error.requestId).toBe("req_legacy1");
+    expect(error.tag).toBeUndefined();
+  });
+
+  it("keeps the tag of the API's error body", async () => {
+    const error = (await exa
+      .request("/tagged-error", "POST")
+      .catch((e) => e)) as ExaError;
+    expect(error).toBeInstanceOf(ExaError);
+    expect(error.statusCode).toBe(400);
+    expect(error.message).toBe("Invalid request body");
+    expect(error.requestId).toBe("req_tagged");
+    expect(error.tag).toBe("INVALID_REQUEST_BODY");
   });
 
   it("returns parsed JSON for a normal successful response", async () => {

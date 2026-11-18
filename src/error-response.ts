@@ -91,6 +91,7 @@ export function truncateResponseBody(text: string): string {
  *   requestId }`) gives the message and the envelope fields.
  * - A legacy body (`{ error: "...", message?, requestId? }`) gives
  *   `error` and `message` joined, and `requestId`.
+ * - A top-level `tag` (`{ error: "...", requestId, tag }`) is kept as `tag`.
  * - A body that is not a JSON object (an HTML page from a proxy, plain text,
  *   nothing) gives the status and a snippet of the body.
  *
@@ -154,6 +155,7 @@ export async function exaErrorFromResponse(
       message += (message.length > 0 ? ". " : "") + errorData.message;
     }
   }
+  const tag = typeof errorData.tag === "string" ? errorData.tag : undefined;
   return new ExaError(
     message,
     response.status,
@@ -165,9 +167,10 @@ export async function exaErrorFromResponse(
           code: envelope.code,
           detail: envelope.detail,
           requestId: errorData.requestId ?? envelope.requestId,
+          tag,
         }
-      : errorData.requestId
-        ? { requestId: errorData.requestId }
+      : errorData.requestId || tag
+        ? { requestId: errorData.requestId, tag }
         : undefined
   );
 }

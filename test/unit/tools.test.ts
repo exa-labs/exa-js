@@ -145,6 +145,8 @@ describe("LLM tools", () => {
         parameters: openaiTool.jsonSchema,
       },
     });
+    // @ts-expect-error a Chat Completions definition names its tool under `function`
+    expect(openaiTool.definition.name).toBeUndefined();
     expect(JSON.parse(JSON.stringify(responsesTool))).toEqual({
       type: "function",
       name: responsesTool.name,

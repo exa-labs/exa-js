@@ -1,7 +1,7 @@
 import { Exa } from "../index";
 import { WebsetsBaseClient } from "./base";
 import { Event, EventType, ListEventsResponse } from "./openapi";
-import { type RequestOptions } from "../request-options";
+import { type RequestOptions, collectAll } from "../request-options";
 
 /**
  * Options for listing Events
@@ -79,25 +79,10 @@ export class EventsClient extends WebsetsBaseClient {
     options?: ListEventsOptions,
     requestOptions?: RequestOptions
   ): AsyncGenerator<Event> {
-    let scoped = this.withRequestOptions(requestOptions);
-    let cursor: string | undefined = undefined;
-    const pageOptions = options ? { ...options } : {};
-
-    while (true) {
-      pageOptions.cursor = cursor;
-      const response = await scoped.list(pageOptions);
-
-      for (const event of response.data) {
-        yield event;
-      }
-
-      if (!response.hasMore || !response.nextCursor) {
-        break;
-      }
-
-      cursor = response.nextCursor;
-      scoped = scoped.forNextPage();
-    }
+    yield* this.withRequestOptions(requestOptions).paginate(
+      options?.cursor,
+      (view, cursor) => view.list({ ...options, cursor })
+    );
   }
 
   /**
@@ -110,11 +95,8 @@ export class EventsClient extends WebsetsBaseClient {
     options?: ListEventsOptions,
     requestOptions?: RequestOptions
   ): Promise<Event[]> {
-    const scoped = this.withRequestOptions(requestOptions);
-    const events: Event[] = [];
-    for await (const event of scoped.listAll(options)) {
-      events.push(event);
-    }
-    return events;
+    return collectAll(
+      this.withRequestOptions(requestOptions).listAll(options)
+    );
   }
 }

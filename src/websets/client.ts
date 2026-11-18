@@ -20,7 +20,7 @@ import {
 } from "./openapi";
 import { WebsetSearchesClient } from "./searches";
 import { WebsetWebhooksClient } from "./webhooks";
-import { sleep, type RequestOptions } from "../request-options";
+import { sleep, type RequestOptions, collectAll } from "../request-options";
 
 /**
  * Options for listing Websets (API only supports pagination)
@@ -184,25 +184,10 @@ export class WebsetsClient extends WebsetsBaseClient {
     options?: ListWebsetsOptions,
     requestOptions?: RequestOptions
   ): AsyncGenerator<Webset> {
-    let scoped = this.withRequestOptions(requestOptions);
-    let cursor: string | undefined = undefined;
-    const pageOptions = options ? { ...options } : {};
-
-    while (true) {
-      pageOptions.cursor = cursor;
-      const response = await scoped.list(pageOptions);
-
-      for (const webset of response.data) {
-        yield webset;
-      }
-
-      if (!response.hasMore || !response.nextCursor) {
-        break;
-      }
-
-      cursor = response.nextCursor;
-      scoped = scoped.forNextPage();
-    }
+    yield* this.withRequestOptions(requestOptions).paginate(
+      options?.cursor,
+      (view, cursor) => view.list({ ...options, cursor })
+    );
   }
 
   /**
@@ -215,12 +200,9 @@ export class WebsetsClient extends WebsetsBaseClient {
     options?: ListWebsetsOptions,
     requestOptions?: RequestOptions
   ): Promise<Webset[]> {
-    const scoped = this.withRequestOptions(requestOptions);
-    const websets: Webset[] = [];
-    for await (const webset of scoped.listAll(options)) {
-      websets.push(webset);
-    }
-    return websets;
+    return collectAll(
+      this.withRequestOptions(requestOptions).listAll(options)
+    );
   }
 
   /**

@@ -36,6 +36,12 @@ export interface ExaErrorEnvelope {
    * Server-side request id for support/debugging
    */
   requestId?: string;
+
+  /**
+   * Machine-readable error tag from the API's error body, e.g.
+   * "INVALID_REQUEST_BODY"
+   */
+  tag?: string;
 }
 
 /**
@@ -78,6 +84,12 @@ export class ExaError extends Error {
   requestId?: string;
 
   /**
+   * Machine-readable error tag from the API's error body, e.g.
+   * "INVALID_REQUEST_BODY"
+   */
+  tag?: string;
+
+  /**
    * Create a new ExaError
    * @param message Error message
    * @param statusCode HTTP status code
@@ -102,6 +114,7 @@ export class ExaError extends Error {
       this.code = envelope.code;
       this.detail = envelope.detail;
       this.requestId = envelope.requestId;
+      this.tag = envelope.tag;
     }
   }
 }

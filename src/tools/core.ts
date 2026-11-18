@@ -317,14 +317,17 @@ export function createGetContentsTool(
   }) as GetContentsTool;
 }
 
+/** What running a tool call needs: a tool's name and its runner. */
+export type RunnableTool = Pick<ExaToolSpec, "name" | "run">;
+
 export class ToolRegistry {
-  private readonly registry = new Map<string, ExaToolSpec>();
+  private readonly registry = new Map<string, RunnableTool>();
 
   register(tool: ExaToolSpec): void {
     this.registry.set(tool.name, tool);
   }
 
-  resolve(tools?: readonly ExaToolSpec[]): Map<string, ExaToolSpec> {
+  resolve(tools?: readonly RunnableTool[]): Map<string, RunnableTool> {
     return tools
       ? new Map(tools.map((tool) => [tool.name, tool]))
       : new Map(this.registry);
@@ -332,9 +335,9 @@ export class ToolRegistry {
 }
 
 export function getTool(
-  tools: Map<string, ExaToolSpec>,
+  tools: Map<string, RunnableTool>,
   name: string
-): ExaToolSpec | undefined {
+): RunnableTool | undefined {
   return tools.get(name);
 }
 

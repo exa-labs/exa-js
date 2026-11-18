@@ -19,7 +19,9 @@ import {
   pickRequestOptions,
   resolveRequestSignal,
   setClientDefaults,
+  setsHeader,
   streamRequestOptions,
+  untilAborted,
   validateTimeout,
   withClientDefaults,
   withDisposeOnBodySettled,
@@ -47,6 +49,58 @@ const HeadersImpl =
 
 const DEFAULT_MAX_CHARACTERS = 10_000;
 
+/** Base URL of the Exa API when neither `baseURL` nor `EXA_BASE_URL` sets one. */
+const DEFAULT_BASE_URL = "https://api.exa.ai";
+
+/**
+ * Returns the base URL a client sends its requests to: `baseURL`, else the
+ * `EXA_BASE_URL` environment variable unless it is blank, else
+ * {@link DEFAULT_BASE_URL}. Runtimes without `process`, such as browsers,
+ * have no environment to read. Trailing slashes are dropped, since every
+ * endpoint path the client appends starts with one.
+ */
+function resolveBaseURL(baseURL: string | undefined): string {
+  if (baseURL === undefined) {
+    const fromEnvironment =
+      typeof process === "undefined"
+        ? undefined
+        : process.env?.EXA_BASE_URL?.trim();
+    baseURL = fromEnvironment || DEFAULT_BASE_URL;
+  }
+  return baseURL.replace(/\/+$/, "");
+}
+
+/**
+ * Splits the `Exa` constructor's second and third arguments into the base URL
+ * and the client options. The second argument is either the base URL, with
+ * the options third, or the options themselves. A `URL` object counts as the
+ * base URL.
+ * @throws {TypeError} When options follow an options object, or when the base
+ * URL is given both as the second argument and as `options.baseURL`.
+ */
+function clientArguments(
+  second: string | ExaClientOptions | undefined,
+  third: ExaClientOptions | undefined
+): { baseURL: string | undefined; options: ExaClientOptions | undefined } {
+  if (typeof URL !== "undefined" && (second as unknown) instanceof URL) {
+    second = String(second);
+  }
+  if (typeof second === "object" && second !== null) {
+    if (third !== undefined) {
+      throw new TypeError(
+        "Pass the client options once, as the second argument or as the third after a base URL"
+      );
+    }
+    return { baseURL: second.baseURL, options: second };
+  }
+  if (second != null && third?.baseURL !== undefined) {
+    throw new TypeError(
+      "Pass the base URL once, as the second argument or as options.baseURL"
+    );
+  }
+  return { baseURL: second ?? third?.baseURL, options: third };
+}
+
 /** Exa-Beta token required for Dynamic Highlights (research preview). */
 export const DYNAMIC_HIGHLIGHTS_BETA = "dynamic-highlights-2026-08-28";
 
@@ -57,7 +111,7 @@ export const DYNAMIC_HIGHLIGHTS_BETA = "dynamic-highlights-2026-08-28";
  * @property {HighlightsContentsOptions | boolean} [highlights] - Recommended: `true`. Exa dynamically chooses the number of characters based on each document's relevance to your query.
  * @property {SummaryContentsOptions | boolean} [summary] - Options for retrieving summary.
  * @property {ContextOptions | boolean} [context] - Deprecated. Use `text` or `highlights`.
- * @property {number} [maxAgeHours] - Maximum age of cached content in hours. If content is older, it will be fetched fresh. Special values: 0 = always fetch fresh content, -1 = never fetch fresh (use cached content only). Example: 168 = fetch fresh for pages older than 7 days.
+ * @property {number} [maxAgeHours] - Maximum age of cached content in hours. If content is older, it will be fetched fresh. A failed fetch may return the latest cached copy instead. Special values: 0 = return live content, fetched within the last 60 seconds, -1 = never fetch fresh (use cached content only). Example: 168 = fetch fresh for pages older than 7 days.
  * @property {string} [snapshotAsOf] - ISO 8601 datetime. Return the newest stored version at or before this instant instead of live content.
  * @property {boolean} [filterEmptyResults] - If true, filters out results with no contents. Default is true.
  * @property {number} [subpages] - The number of subpages to return for each result, where each subpage is derived from an internal link for the result. Deprecated on `search()`; use `getContents()` to crawl subpages.
@@ -201,9 +255,17 @@ export type WarningsOption =
   | ((warning: ApiWarning, context: ApiWarningContext) => void);
 
 /**
- * Client-wide settings, given as the third argument of the `Exa` constructor.
+ * Client-wide settings, given as the second argument of the `Exa`
+ * constructor, or as the third after a base URL.
  */
 export type ExaClientOptions = {
+  /**
+   * The base URL of the Exa API, for example `https://api.eu.exa.ai` for the
+   * EU API. Defaults to the `EXA_BASE_URL` environment variable, or
+   * `https://api.exa.ai` when it is not set. Each client keeps its own base
+   * URL and API key.
+   */
+  baseURL?: string | undefined;
   /**
    * Default timeout in milliseconds for every request this client makes. A
    * per-call `timeout` overrides it. Unset by default, in which case the SDK
@@ -216,7 +278,60 @@ export type ExaClientOptions = {
    * endpoint, code and path. See {@link WarningsOption}.
    */
   warnings?: WarningsOption | undefined;
+  /**
+   * The `fetch` implementation the client sends its requests to the Exa API
+   * with. Defaults to the global `fetch`, or to a bundled implementation
+   * where the runtime has none.
+   */
+  fetch?: typeof fetch | undefined;
 };
+
+/**
+ * A function that returns the API key, given as `apiKey` instead of a
+ * string. The client calls it before each request and sends the string it
+ * returns as the API key. It never caches the result, so the function can
+ * return a key that rotates.
+ *
+ * It must return a non-empty string of visible ASCII characters. Anything
+ * else fails the request with a `TypeError`, and the request is not sent.
+ *
+ * The request's `timeout` and `signal` also bound the wait for the function.
+ * The `signal` it receives aborts when the request is cancelled or times
+ * out, so pass it to any request the function makes. The function's
+ * `signal` is `undefined` when the request has neither a `timeout` nor a
+ * `signal`.
+ *
+ * A request that sets its own `x-api-key` header, or removes it with `null`,
+ * does not call the function.
+ */
+export type ApiKeySource = (context: {
+  signal?: AbortSignal | undefined;
+}) => string | Promise<string>;
+
+/**
+ * The key an `apiKey` function returns for one request, used as it is.
+ * `signal` ends the wait with its reason, and a `signal` that has already
+ * aborted skips the call.
+ * @throws {TypeError} When the function does not return a non-empty string
+ * of visible ASCII characters.
+ */
+async function resolveApiKey(
+  apiKey: ApiKeySource,
+  signal: AbortSignal | undefined
+): Promise<string> {
+  if (signal?.aborted) {
+    throw signal.reason;
+  }
+  const pending = Promise.resolve(apiKey({ signal }));
+  const key = await (signal ? untilAborted(pending, signal) : pending);
+  // U+0021 to U+007E, the visible ASCII characters.
+  if (typeof key !== "string" || !/^[\x21-\x7E]+$/.test(key)) {
+    throw new TypeError(
+      "apiKey must return a non-empty string of visible ASCII characters"
+    );
+  }
+  return key;
+}
 
 /** Receives each warning with the request it is about. */
 type WarningHandler = (warning: ApiWarning, context: ApiWarningContext) => void;
@@ -1131,6 +1246,41 @@ function costDollarsOf(payload: unknown): CostDollars | undefined {
 }
 
 /**
+ * The `ExaError` an error event in a stream reports, or undefined when the
+ * payload is not one. `/search` reports a failure as
+ * `{ type: "error", error: { message, tag? }, requestId }` and `/answer` as
+ * `{ tag: "ERROR", payload: { error: { code, message }, requestId } }`.
+ */
+function streamErrorOf(
+  payload: any,
+  path: string,
+  requestIdHeader: string | null
+): ExaError | undefined {
+  const event =
+    payload?.type === "error"
+      ? payload
+      : payload?.tag === "ERROR"
+        ? payload.payload
+        : undefined;
+  if (typeof event !== "object" || event === null) {
+    return undefined;
+  }
+  const { code, message, tag } = event.error ?? {};
+  const requestId =
+    typeof event.requestId === "string" ? event.requestId : requestIdHeader;
+  return new ExaError(
+    typeof message === "string" && message ? message : "Unknown error",
+    typeof code === "number" ? code : HttpStatusCode.InternalServerError,
+    undefined,
+    path,
+    {
+      requestId: requestId ?? undefined,
+      tag: typeof tag === "string" ? tag : undefined,
+    }
+  );
+}
+
+/**
  * The `results` of a search response as stream citations, with the fields a
  * citation has. Returns undefined when there are no results.
  */
@@ -1212,6 +1362,10 @@ function withJsonSummarySchema<T>(contents: T): T {
 export class Exa {
   private baseURL: string;
   private headers: Headers;
+  /** Supplies the `x-api-key` of each request when `apiKey` is a function. */
+  private readonly apiKeySource: ApiKeySource | undefined;
+  /** `options.fetch`, or the default `fetch`, which sends every request. */
+  private readonly fetcher: typeof fetch;
   /** Client-wide transport defaults; a per-call option overrides each field. */
 
   /**
@@ -1373,18 +1527,35 @@ export class Exa {
 
   /**
    * Constructs the Exa API client.
-   * @param {string} apiKey - The API key for authentication.
-   * @param {string} [baseURL] - The base URL of the Exa API.
-   * @param {ExaClientOptions} [options] - Client-wide settings (`timeout`, `warnings`).
+   * @param {string | ApiKeySource} [apiKey] - The API key for authentication,
+   * or a function that returns it before each request. See {@link ApiKeySource}.
+   * @param {string | ExaClientOptions} [baseURLOrOptions] - Client-wide settings
+   * (`baseURL`, `timeout`, `warnings`, `fetch`), or the base URL alone with the
+   * settings as the third argument. The base URL defaults to the `EXA_BASE_URL`
+   * environment variable, or `https://api.exa.ai` when it is not set.
+   * @param {ExaClientOptions} [maybeOptions] - Client-wide settings, when the
+   * second argument is the base URL.
    * @throws {RangeError} When `options.timeout` is not an integer from 1 to 2147483647.
-   * @throws {TypeError} When `options.warnings` is not `"log"`, `"silent"` or a function.
+   * @throws {TypeError} When `options.warnings` is not `"log"`, `"silent"` or a function,
+   * when `options.fetch` is given and is not a function, or when the base URL
+   * or the options are given twice.
    */
+  constructor(apiKey?: string | ApiKeySource, options?: ExaClientOptions);
   constructor(
-    apiKey?: string,
-    baseURL: string = "https://api.exa.ai",
+    apiKey?: string | ApiKeySource,
+    baseURL?: string,
     options?: ExaClientOptions
+  );
+  constructor(
+    apiKey?: string | ApiKeySource,
+    baseURLOrOptions?: string | ExaClientOptions,
+    maybeOptions?: ExaClientOptions
   ) {
-    this.baseURL = baseURL;
+    const { baseURL, options } = clientArguments(
+      baseURLOrOptions,
+      maybeOptions
+    );
+    this.baseURL = resolveBaseURL(baseURL);
     this.warningHandler = warningHandlerFor(options?.warnings);
     setClientDefaults(
       this,
@@ -1392,20 +1563,36 @@ export class Exa {
         ? undefined
         : { timeout: validateTimeout(options.timeout) }
     );
-    if (!apiKey) {
-      apiKey = process.env.EXA_API_KEY;
-      if (!apiKey) {
-        throw new ExaError(
-          "API key must be provided as an argument or as an environment variable (EXA_API_KEY)",
-          HttpStatusCode.Unauthorized
-        );
-      }
+    const customFetch = options?.fetch;
+    if (customFetch !== undefined && typeof customFetch !== "function") {
+      throw new TypeError("options.fetch must be a function");
     }
-    this.headers = new HeadersImpl({
-      "x-api-key": apiKey,
-      "Content-Type": "application/json",
-      "User-Agent": `exa-node ${packageJson.version}`,
-    });
+    const send = customFetch ?? fetchImpl;
+    // Called unbound, because a browser's global fetch refuses any other `this`.
+    this.fetcher = (input, init) => send(input, init);
+    if (typeof apiKey === "function") {
+      this.apiKeySource = apiKey;
+      this.headers = new HeadersImpl({
+        "Content-Type": "application/json",
+        "User-Agent": `exa-node ${packageJson.version}`,
+      });
+    } else {
+      this.apiKeySource = undefined;
+      if (!apiKey) {
+        apiKey = process.env.EXA_API_KEY;
+        if (!apiKey) {
+          throw new ExaError(
+            "API key must be provided as an argument or as an environment variable (EXA_API_KEY)",
+            HttpStatusCode.Unauthorized
+          );
+        }
+      }
+      this.headers = new HeadersImpl({
+        "x-api-key": apiKey,
+        "Content-Type": "application/json",
+        "User-Agent": `exa-node ${packageJson.version}`,
+      });
+    }
 
     // Initialize the Websets client
     this.websets = new WebsetsClient(this);
@@ -1425,6 +1612,31 @@ export class Exa {
     };
     this.openai = new OpenAITools(this, this.toolRegistry);
     this.anthropic = new AnthropicTools(this, this.toolRegistry);
+  }
+
+  /**
+   * Returns the headers a request sends, which are `headers` with the call's
+   * `extraHeaders` on top and, when `apiKey` is a function, the key it returns
+   * as `x-api-key` beneath them. The function is called only when neither
+   * sets `x-api-key` nor removes it with `null`, whatever its case. Called
+   * inside each request's lifecycle, so the request's `signal` and `timeout`
+   * also bound the wait for the key.
+   */
+  private async requestHeaders(
+    headers: Record<string, string>,
+    extraHeaders: RequestOptions["headers"],
+    signal: AbortSignal | undefined
+  ): Promise<Record<string, string>> {
+    const merged = mergeRequestHeaders(headers, extraHeaders);
+    if (
+      !this.apiKeySource ||
+      setsHeader(headers, "x-api-key") ||
+      setsHeader(extraHeaders, "x-api-key")
+    ) {
+      return merged;
+    }
+    const apiKey = await resolveApiKey(this.apiKeySource, signal);
+    return mergeRequestHeaders({ "x-api-key": apiKey }, merged);
   }
 
   /**
@@ -1480,18 +1692,18 @@ export class Exa {
     if (headers) {
       combinedHeaders = { ...combinedHeaders, ...headers };
     }
-    combinedHeaders = mergeRequestHeaders(
-      combinedHeaders,
-      requestOptions?.headers
-    );
 
     const { signal, dispose, toRequestError } = resolveRequestSignal(
       withClientDefaults(this, requestOptions)
     );
     try {
-      const response = await fetchImpl(url, {
+      const response = await this.fetcher(url, {
         method,
-        headers: combinedHeaders,
+        headers: await this.requestHeaders(
+          combinedHeaders,
+          requestOptions?.headers,
+          signal
+        ),
         body: body ? JSON.stringify(body) : undefined,
         signal,
       });
@@ -1579,17 +1791,17 @@ export class Exa {
     if (headers) {
       combinedHeaders = { ...combinedHeaders, ...headers };
     }
-    combinedHeaders = mergeRequestHeaders(
-      combinedHeaders,
-      requestOptions?.headers
-    );
 
     const { signal, dispose, needsDispose, stopTimeout, toRequestError } =
       resolveRequestSignal(withClientDefaults(this, requestOptions));
     try {
-      const response = await fetchImpl(url, {
+      const response = await this.fetcher(url, {
         method,
-        headers: combinedHeaders,
+        headers: await this.requestHeaders(
+          combinedHeaders,
+          requestOptions?.headers,
+          signal
+        ),
         body: body ? JSON.stringify(body) : undefined,
         signal,
       });
@@ -1791,6 +2003,9 @@ export class Exa {
    * A search without `outputSchema` has no text to stream. Its stream yields
    * one chunk with the results as `citations`, then the warnings chunk when
    * the API returns warnings. Call `search()` for every field of the results.
+   *
+   * If the API reports an error partway through, the stream yields the chunks
+   * before it and then rejects with an `ExaError`.
    * @param {RequestOptions} [requestOptions] - Per-call request options (`signal`, `timeout`, `body`, `headers`, `query`).
    */
   streamSearch<Type extends string = never>(
@@ -2175,6 +2390,8 @@ export class Exa {
    * Each iteration yields a chunk with partial text (`content`) or new citations.
    * The last chunk carries the request's cost breakdown (`costDollars`).
    * Use this if you'd like to read the answer incrementally, e.g. in a chat UI.
+   * If the API reports an error partway through, the stream yields the chunks
+   * before it and then rejects with an `ExaError`.
    *
    * Example usage:
    * ```ts
@@ -2303,6 +2520,10 @@ export class Exa {
           }
 
           this.reportWarnings(endpoint, "POST", chunkData, requestIdHeader);
+          const error = streamErrorOf(chunkData, endpoint, requestIdHeader);
+          if (error) {
+            throw error;
+          }
           yield* this.payloadChunks(chunkData);
         }
       }
@@ -2310,11 +2531,18 @@ export class Exa {
       if (buffer.startsWith("data: ")) {
         const leftover = buffer.replace(/^data:\s*/, "").trim();
         if (leftover && leftover !== "[DONE]") {
+          let error: ExaError | undefined;
           try {
             const chunkData = JSON.parse(leftover);
             this.reportWarnings(endpoint, "POST", chunkData, requestIdHeader);
-            yield* this.payloadChunks(chunkData);
+            error = streamErrorOf(chunkData, endpoint, requestIdHeader);
+            if (!error) {
+              yield* this.payloadChunks(chunkData);
+            }
           } catch (e) {}
+          if (error) {
+            throw error;
+          }
         }
       }
     } finally {

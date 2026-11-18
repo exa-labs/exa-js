@@ -22,7 +22,7 @@ import {
   ListAgentRunsParams,
   ListAgentRunsResponse,
 } from "./types";
-import { sleep, type RequestOptions } from "../request-options";
+import { sleep, type RequestOptions, collectAll } from "../request-options";
 
 type WithBetaOptions<T> = T & AgentBetaOptions;
 type AgentTerminalStatus = "completed" | "failed" | "cancelled";
@@ -272,25 +272,10 @@ export class AgentRunsClient extends AgentBaseClient {
     options?: ListAgentRunsParams,
     requestOptions?: RequestOptions
   ): AsyncGenerator<AgentRun> {
-    let scoped = this.withRequestOptions(requestOptions);
-    let cursor: string | undefined = undefined;
-    const pageOptions = options ? { ...options } : {};
-
-    while (true) {
-      pageOptions.cursor = cursor;
-      const response = await scoped.list(pageOptions);
-
-      for (const run of response.data) {
-        yield run;
-      }
-
-      if (!response.hasMore || !response.nextCursor) {
-        break;
-      }
-
-      cursor = response.nextCursor;
-      scoped = scoped.forNextPage();
-    }
+    yield* this.withRequestOptions(requestOptions).paginate(
+      options?.cursor,
+      (view, cursor) => view.list({ ...options, cursor })
+    );
   }
 
   /**
@@ -300,12 +285,9 @@ export class AgentRunsClient extends AgentBaseClient {
     options?: ListAgentRunsParams,
     requestOptions?: RequestOptions
   ): Promise<AgentRun[]> {
-    const scoped = this.withRequestOptions(requestOptions);
-    const runs: AgentRun[] = [];
-    for await (const run of scoped.listAll(options)) {
-      runs.push(run);
-    }
-    return runs;
+    return collectAll(
+      this.withRequestOptions(requestOptions).listAll(options)
+    );
   }
 
   /**
@@ -534,38 +516,20 @@ export class AgentBetaRunsClient extends AgentRunsClient {
     options?: WithBetaOptions<ListAgentRunsParams>,
     requestOptions?: RequestOptions
   ): AsyncGenerator<AgentRun> {
-    let scoped = this.withRequestOptions(requestOptions);
-    let cursor: string | undefined = undefined;
     const { betas, ...pagination } = options ?? {};
-    const pageOptions: ListAgentRunsParams = { ...pagination };
-
-    while (true) {
-      pageOptions.cursor = cursor;
-      const response = await scoped.list({ ...pageOptions, betas });
-
-      for (const run of response.data) {
-        yield run;
-      }
-
-      if (!response.hasMore || !response.nextCursor) {
-        break;
-      }
-
-      cursor = response.nextCursor;
-      scoped = scoped.forNextPage();
-    }
+    yield* this.withRequestOptions(requestOptions).paginate(
+      pagination?.cursor,
+      (view, cursor) => view.list({ ...pagination, cursor, betas })
+    );
   }
 
   async getAll(
     options?: WithBetaOptions<ListAgentRunsParams>,
     requestOptions?: RequestOptions
   ): Promise<AgentRun[]> {
-    const scoped = this.withRequestOptions(requestOptions);
-    const runs: AgentRun[] = [];
-    for await (const run of scoped.listAll(options)) {
-      runs.push(run);
-    }
-    return runs;
+    return collectAll(
+      this.withRequestOptions(requestOptions).listAll(options)
+    );
   }
 
   async cancel(

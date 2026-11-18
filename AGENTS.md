@@ -8,7 +8,6 @@
 - Test Single: `npx vitest run test/path/to/test.ts`
 - Typecheck: `npm run typecheck`
 - Format: `npm run format`
-- Generate Docs: `npm run generate-docs`
 
 CI installs and tests with pnpm (`pnpm i && pnpm test`).
 

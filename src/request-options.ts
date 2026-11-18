@@ -9,6 +9,7 @@
  *   those fields out of JSON bodies and combine the places they can be given.
  * - `mergeRequestBody` / `mergeRequestHeaders`: add a call's extra `body` and
  *   `headers` to the request a method built.
+ * - `setsHeader`: whether a call's extra headers set or remove a header.
  * - `resolveRequestSignal`: one fetch-ready signal per request, plus the
  *   mapping from a fetch rejection to `ExaAbortError` / `ExaTimeoutError`.
  * - `withDisposeOnBodySettled`: holds request-owned listeners and timers until
@@ -16,6 +17,8 @@
  * - `RequestScopedClient`: lets an API sub-client run a method's requests
  *   with the caller's transport options.
  * - `sleep`: an abortable delay for polling helpers.
+ * - `untilAborted`: an abortable wait on a promise, such as the one an
+ *   `apiKey` function returns.
  */
 import { ExaAbortError, ExaError, ExaTimeoutError } from "./errors";
 
@@ -304,6 +307,21 @@ export function mergeRequestHeaders(
     }
   }
   return merged;
+}
+
+/**
+ * Whether `headers` set or remove the header `name`, whatever its case. An
+ * entry set to a string or to `null` counts. One set to `undefined` does not,
+ * because `mergeRequestHeaders` leaves the header as it is.
+ */
+export function setsHeader(
+  headers: Record<string, string | null | undefined> | undefined,
+  name: string
+): boolean {
+  const lowerCaseName = name.toLowerCase();
+  return Object.entries(headers ?? {}).some(
+    ([key, value]) => key.toLowerCase() === lowerCaseName && value !== undefined
+  );
 }
 
 /** Each client's default request options (`ExaClientOptions`), by client. */
@@ -689,6 +707,35 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
 }
 
 /**
+ * Settles as `promise` does, or rejects with the reason of `signal` once it
+ * aborts, whichever comes first. A `signal` that has already aborted rejects
+ * at once.
+ */
+export function untilAborted<T>(
+  promise: Promise<T>,
+  signal: AbortSignal
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(signal.reason);
+    if (signal.aborted) {
+      onAbort();
+    } else {
+      signal.addEventListener("abort", onAbort, { once: true });
+    }
+    promise.then(
+      (value) => {
+        signal.removeEventListener("abort", onAbort);
+        resolve(value);
+      },
+      (error: unknown) => {
+        signal.removeEventListener("abort", onAbort);
+        reject(error);
+      }
+    );
+  });
+}
+
+/**
  * Base for the API sub-clients (websets, research, agent, monitors).
  *
  * A public method receives the caller's request options as its trailing
@@ -734,4 +781,45 @@ export abstract class RequestScopedClient {
     view.requestOptions = { ...this.requestOptions, query: remaining };
     return view;
   }
+
+  /**
+   * Yields every item of a cursor-paginated listing. `fetchPage` fetches the
+   * page at `cursor` with the view it is given: this one for the first page,
+   * `forNextPage()` for the rest. Stops after a page without `hasMore` or
+   * without a `nextCursor`.
+   */
+  protected async *paginate<T>(
+    firstCursor: string | undefined,
+    fetchPage: (view: this, cursor: string | undefined) => Promise<CursorPage<T>>
+  ): AsyncGenerator<T> {
+    let view: this = this;
+    let cursor = firstCursor;
+    while (true) {
+      const page = await fetchPage(view, cursor);
+      for (const item of page.data) {
+        yield item;
+      }
+      if (!page.hasMore || !page.nextCursor) {
+        return;
+      }
+      cursor = page.nextCursor;
+      view = view.forNextPage();
+    }
+  }
+}
+
+/** One page of a cursor-paginated listing. */
+export interface CursorPage<T> {
+  data: T[];
+  hasMore: boolean;
+  nextCursor?: string | null;
+}
+
+/** Collects every item of a listing's `listAll` into an array. */
+export async function collectAll<T>(items: AsyncIterable<T>): Promise<T[]> {
+  const all: T[] = [];
+  for await (const item of items) {
+    all.push(item);
+  }
+  return all;
 }

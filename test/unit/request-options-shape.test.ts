@@ -79,7 +79,7 @@ describe("trailing requestOptions on the core methods", () => {
     const exa = await start(recording(bodies));
     const requestOptions = {
       signal: new AbortController().signal,
-      timeout: 1000,
+      timeout: 60_000,
     };
 
     await exa.search("test", undefined, requestOptions);

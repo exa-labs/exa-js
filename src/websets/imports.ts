@@ -13,6 +13,7 @@ import {
   UpdateImport,
 } from "./openapi";
 import {
+  collectAll,
   resolveRequestSignal,
   sleep,
   withClientDefaults,
@@ -319,25 +320,10 @@ export class ImportsClient extends WebsetsBaseClient {
     options?: PaginationParams,
     requestOptions?: RequestOptions
   ): AsyncGenerator<Import> {
-    let scoped = this.withRequestOptions(requestOptions);
-    let cursor: string | undefined = undefined;
-    const pageOptions = options ? { ...options } : {};
-
-    while (true) {
-      pageOptions.cursor = cursor;
-      const response = await scoped.list(pageOptions);
-
-      for (const importItem of response.data) {
-        yield importItem;
-      }
-
-      if (!response.hasMore || !response.nextCursor) {
-        break;
-      }
-
-      cursor = response.nextCursor;
-      scoped = scoped.forNextPage();
-    }
+    yield* this.withRequestOptions(requestOptions).paginate(
+      options?.cursor,
+      (view, cursor) => view.list({ ...options, cursor })
+    );
   }
 
   /**
@@ -350,11 +336,8 @@ export class ImportsClient extends WebsetsBaseClient {
     options?: PaginationParams,
     requestOptions?: RequestOptions
   ): Promise<Import[]> {
-    const scoped = this.withRequestOptions(requestOptions);
-    const imports: Import[] = [];
-    for await (const importItem of scoped.listAll(options)) {
-      imports.push(importItem);
-    }
-    return imports;
+    return collectAll(
+      this.withRequestOptions(requestOptions).listAll(options)
+    );
   }
 }
