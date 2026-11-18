@@ -15,7 +15,7 @@ import {
   TriggerSearchMonitorResponse,
   UpdateSearchMonitorParams,
 } from "./types";
-import { type RequestOptions } from "../request-options";
+import { type RequestOptions, collectAll } from "../request-options";
 
 /**
  * Client for managing Search Monitor Runs
@@ -74,25 +74,10 @@ export class SearchMonitorRunsClient extends SearchMonitorsBaseClient {
     options?: ListSearchMonitorRunsParams,
     requestOptions?: RequestOptions
   ): AsyncGenerator<SearchMonitorRun> {
-    let scoped = this.withRequestOptions(requestOptions);
-    let cursor: string | undefined = undefined;
-    const pageOptions = options ? { ...options } : {};
-
-    while (true) {
-      pageOptions.cursor = cursor;
-      const response = await scoped.list(monitorId, pageOptions);
-
-      for (const run of response.data) {
-        yield run;
-      }
-
-      if (!response.hasMore || !response.nextCursor) {
-        break;
-      }
-
-      cursor = response.nextCursor;
-      scoped = scoped.forNextPage();
-    }
+    yield* this.withRequestOptions(requestOptions).paginate(
+      options?.cursor,
+      (view, cursor) => view.list(monitorId, { ...options, cursor })
+    );
   }
 
   /**
@@ -107,12 +92,9 @@ export class SearchMonitorRunsClient extends SearchMonitorsBaseClient {
     options?: ListSearchMonitorRunsParams,
     requestOptions?: RequestOptions
   ): Promise<SearchMonitorRun[]> {
-    const scoped = this.withRequestOptions(requestOptions);
-    const runs: SearchMonitorRun[] = [];
-    for await (const run of scoped.listAll(monitorId, options)) {
-      runs.push(run);
-    }
-    return runs;
+    return collectAll(
+      this.withRequestOptions(requestOptions).listAll(monitorId, options)
+    );
   }
 }
 
@@ -235,25 +217,10 @@ export class SearchMonitorsClient extends SearchMonitorsBaseClient {
     options?: ListSearchMonitorsParams,
     requestOptions?: RequestOptions
   ): AsyncGenerator<SearchMonitor> {
-    let scoped = this.withRequestOptions(requestOptions);
-    let cursor: string | undefined = undefined;
-    const pageOptions = options ? { ...options } : {};
-
-    while (true) {
-      pageOptions.cursor = cursor;
-      const response = await scoped.list(pageOptions);
-
-      for (const monitor of response.data) {
-        yield monitor;
-      }
-
-      if (!response.hasMore || !response.nextCursor) {
-        break;
-      }
-
-      cursor = response.nextCursor;
-      scoped = scoped.forNextPage();
-    }
+    yield* this.withRequestOptions(requestOptions).paginate(
+      options?.cursor,
+      (view, cursor) => view.list({ ...options, cursor })
+    );
   }
 
   /**
@@ -266,11 +233,8 @@ export class SearchMonitorsClient extends SearchMonitorsBaseClient {
     options?: ListSearchMonitorsParams,
     requestOptions?: RequestOptions
   ): Promise<SearchMonitor[]> {
-    const scoped = this.withRequestOptions(requestOptions);
-    const monitors: SearchMonitor[] = [];
-    for await (const monitor of scoped.listAll(options)) {
-      monitors.push(monitor);
-    }
-    return monitors;
+    return collectAll(
+      this.withRequestOptions(requestOptions).listAll(options)
+    );
   }
 }

@@ -11,7 +11,7 @@ import {
   Webhook,
   WebhookAttempt,
 } from "./openapi";
-import { type RequestOptions } from "../request-options";
+import { type RequestOptions, collectAll } from "../request-options";
 
 /**
  * Options for listing webhooks (only pagination is supported by API)
@@ -91,25 +91,10 @@ export class WebsetWebhooksClient extends WebsetsBaseClient {
     options?: ListWebhooksOptions,
     requestOptions?: RequestOptions
   ): AsyncGenerator<Webhook> {
-    let scoped = this.withRequestOptions(requestOptions);
-    let cursor: string | undefined = undefined;
-    const pageOptions = options ? { ...options } : {};
-
-    while (true) {
-      pageOptions.cursor = cursor;
-      const response = await scoped.list(pageOptions);
-
-      for (const webhook of response.data) {
-        yield webhook;
-      }
-
-      if (!response.hasMore || !response.nextCursor) {
-        break;
-      }
-
-      cursor = response.nextCursor;
-      scoped = scoped.forNextPage();
-    }
+    yield* this.withRequestOptions(requestOptions).paginate(
+      options?.cursor,
+      (view, cursor) => view.list({ ...options, cursor })
+    );
   }
 
   /**
@@ -122,12 +107,9 @@ export class WebsetWebhooksClient extends WebsetsBaseClient {
     options?: ListWebhooksOptions,
     requestOptions?: RequestOptions
   ): Promise<Webhook[]> {
-    const scoped = this.withRequestOptions(requestOptions);
-    const webhooks: Webhook[] = [];
-    for await (const webhook of scoped.listAll(options)) {
-      webhooks.push(webhook);
-    }
-    return webhooks;
+    return collectAll(
+      this.withRequestOptions(requestOptions).listAll(options)
+    );
   }
 
   /**
@@ -197,25 +179,10 @@ export class WebsetWebhooksClient extends WebsetsBaseClient {
     options?: ListWebhookAttemptsOptions,
     requestOptions?: RequestOptions
   ): AsyncGenerator<WebhookAttempt> {
-    let scoped = this.withRequestOptions(requestOptions);
-    let cursor: string | undefined = undefined;
-    const pageOptions = options ? { ...options } : {};
-
-    while (true) {
-      pageOptions.cursor = cursor;
-      const response = await scoped.listAttempts(id, pageOptions);
-
-      for (const attempt of response.data) {
-        yield attempt;
-      }
-
-      if (!response.hasMore || !response.nextCursor) {
-        break;
-      }
-
-      cursor = response.nextCursor;
-      scoped = scoped.forNextPage();
-    }
+    yield* this.withRequestOptions(requestOptions).paginate(
+      options?.cursor,
+      (view, cursor) => view.listAttempts(id, { ...options, cursor })
+    );
   }
 
   /**
@@ -230,11 +197,8 @@ export class WebsetWebhooksClient extends WebsetsBaseClient {
     options?: ListWebhookAttemptsOptions,
     requestOptions?: RequestOptions
   ): Promise<WebhookAttempt[]> {
-    const scoped = this.withRequestOptions(requestOptions);
-    const attempts: WebhookAttempt[] = [];
-    for await (const attempt of scoped.listAllAttempts(id, options)) {
-      attempts.push(attempt);
-    }
-    return attempts;
+    return collectAll(
+      this.withRequestOptions(requestOptions).listAllAttempts(id, options)
+    );
   }
 }

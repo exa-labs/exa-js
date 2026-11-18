@@ -2119,6 +2119,19 @@ export interface components {
       canceledAt: string | null;
       /** @description The reason the search was canceled */
       canceledReason: WebsetSearchCanceledReason;
+      /** @description What the search cost, in dollars. Returned once the search has finished, for teams on the pay-as-you-go plan, which is charged for what each search uses. Omitted for teams on other plans. `emails`, `phoneNumbers` and `total` keep growing after the search has finished, as enrichments find contact details for its items. This response value is not an invoice record. */
+      costDollars?: {
+        /** @description Cost of the model usage the search needed, in dollars. */
+        agentCompute: number;
+        /** @description Cost of the emails that enrichments found for the items the search added, in dollars. */
+        emails: number;
+        /** @description Cost of the phone numbers that enrichments found for the items the search added, in dollars. */
+        phoneNumbers: number;
+        /** @description Cost of the Exa searches the search ran, in dollars. */
+        search: number;
+        /** @description Total cost of the search in dollars, including the emails and phone numbers found for its items. */
+        total: number;
+      };
       /** @description The number of results the search will attempt to find. The actual number of results may be less than this number depending on the search complexity. */
       count: number;
       /**

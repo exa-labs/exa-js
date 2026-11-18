@@ -3,6 +3,7 @@ import {
   createGetContentsTool,
   createWebSearchTool,
   type ExaToolSpec,
+  type RunnableTool,
   type GetContentsToolConfig,
   type WebSearchToolConfig,
   type ToolDefinition,
@@ -53,7 +54,7 @@ type OpenAIChatDefinition = {
   };
 };
 
-type OpenAIRunnable = ExaToolSpec & {
+type OpenAIRunnable = Omit<ExaToolSpec, "definition"> & {
   type: "function";
   function: {
     name: string;
@@ -136,7 +137,7 @@ export class OpenAIResponsesTools {
     private readonly registry: ToolRegistry,
     private readonly handleResponses: (
       responseOrOutputItems: ResponsesOutput | readonly unknown[],
-      options?: { tools?: readonly ExaToolSpec[] }
+      options?: { tools?: readonly RunnableTool[] }
     ) => Promise<ResponsesFunctionCallOutput[]>
   ) {}
 
@@ -164,7 +165,7 @@ export class OpenAIResponsesTools {
    */
   async handleToolCalls(
     responseOrOutputItems: ResponsesOutput | readonly unknown[],
-    options?: { tools?: readonly ExaToolSpec[] }
+    options?: { tools?: readonly RunnableTool[] }
   ): Promise<ResponsesFunctionCallOutput[]> {
     return this.handleResponses(responseOrOutputItems, options);
   }
@@ -236,7 +237,7 @@ export class OpenAITools {
    */
   handleToolCalls(
     assistantMessage: OpenAIAssistantMessage,
-    options?: { tools?: readonly ExaToolSpec[] }
+    options?: { tools?: readonly RunnableTool[] }
   ): Promise<OpenAIToolMessage[]>;
   /**
    * Run the function calls in a Responses API response (or output item array)
@@ -245,14 +246,14 @@ export class OpenAITools {
    */
   handleToolCalls(
     responseOrOutputItems: ResponsesOutput | readonly unknown[],
-    options?: { tools?: readonly ExaToolSpec[] }
+    options?: { tools?: readonly RunnableTool[] }
   ): Promise<ResponsesFunctionCallOutput[]>;
   async handleToolCalls(
     assistantMessage:
       | OpenAIAssistantMessage
       | ResponsesOutput
       | readonly unknown[],
-    options?: { tools?: readonly ExaToolSpec[] }
+    options?: { tools?: readonly RunnableTool[] }
   ): Promise<(OpenAIToolMessage | ResponsesFunctionCallOutput)[]> {
     if (isResponsesInput(assistantMessage)) {
       return this.handleResponsesToolCalls(assistantMessage, options);
@@ -262,7 +263,7 @@ export class OpenAITools {
 
   private async handleChatToolCalls(
     assistantMessage: OpenAIAssistantMessage,
-    options?: { tools?: readonly ExaToolSpec[] }
+    options?: { tools?: readonly RunnableTool[] }
   ): Promise<OpenAIToolMessage[]> {
     const tools = this.registry.resolve(options?.tools);
     const calls = (assistantMessage.tool_calls ?? []).filter(isOpenAIToolCall);
@@ -282,7 +283,7 @@ export class OpenAITools {
 
   private async handleResponsesToolCalls(
     responseOrOutputItems: ResponsesOutput | readonly unknown[],
-    options?: { tools?: readonly ExaToolSpec[] }
+    options?: { tools?: readonly RunnableTool[] }
   ): Promise<ResponsesFunctionCallOutput[]> {
     const tools = this.registry.resolve(options?.tools);
     const rawItems: readonly unknown[] =

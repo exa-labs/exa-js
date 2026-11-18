@@ -3,6 +3,7 @@ import {
   createGetContentsTool,
   createWebSearchTool,
   type ExaToolSpec,
+  type RunnableTool,
   type GetContentsToolConfig,
   type WebSearchToolConfig,
   ToolRegistry,
@@ -66,7 +67,7 @@ export class AnthropicTools {
    */
   async handleToolUse(
     message: AnthropicMessage,
-    options?: { tools?: readonly ExaToolSpec[] }
+    options?: { tools?: readonly RunnableTool[] }
   ): Promise<AnthropicToolResult[]> {
     const tools = this.registry.resolve(options?.tools);
     const blocks = (message.content ?? []).filter(isAnthropicToolUse);

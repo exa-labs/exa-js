@@ -378,7 +378,7 @@ Search, contents, and answer also accept `signal` and `timeout` inside their opt
 Set a default timeout for every request on the client; a per-call `timeout` overrides it. Without one, the SDK applies no timeout of its own.
 
 ```ts
-const exa = new Exa(process.env.EXA_API_KEY, undefined, { timeout: 30_000 });
+const exa = new Exa(process.env.EXA_API_KEY, { timeout: 30_000 });
 ```
 
 `timeout` is a positive integer up to 2,147,483,647 ms and applies to each HTTP request:
@@ -405,6 +405,59 @@ try {
 
 `request` / `rawRequest` take the same options as their sixth argument. With `rawRequest`, the timeout keeps running until the response body is consumed or cancelled, so do one or the other when finished. Keeping only a body reader or a cloned response does not end cancellation or timeout coverage, and an interrupted body read rejects with the platform's own error. Request timers and signal listeners are released when the body settles.
 
+## API key function and custom fetch
+
+Pass a function instead of a string as the API key, for example to read a key that rotates. The client calls the function before each request and sends the string it returns as the API key. It never caches the result.
+
+```ts
+import { readFile } from "node:fs/promises";
+
+const exa = new Exa(async ({ signal }) => {
+  const key = await readFile("/run/secrets/exa-api-key", {
+    encoding: "utf8",
+    signal,
+  });
+  return key.trim();
+});
+```
+
+- The function must return a non-empty string of visible ASCII characters. Anything else fails the request with a `TypeError`, and the request is not sent.
+- The request's `timeout` and `signal` also bound the wait for the function. The `signal` it receives aborts when the request is cancelled or times out, so pass it to any request the function makes. The function's `signal` is `undefined` when the request has neither a `timeout` nor a `signal`.
+- A request that sets its own `x-api-key` header, or removes it with `null`, does not call the function.
+
+The client's `fetch` option replaces the `fetch` it sends its requests to the Exa API with, for example to log them or route them through a proxy. It defaults to the global `fetch`, or to a bundled implementation where the runtime has none.
+
+```ts
+const exa = new Exa(process.env.EXA_API_KEY, {
+  fetch: (input, init) => {
+    console.log("Exa request", String(input));
+    return fetch(input, init);
+  },
+});
+```
+
+## Base URL
+
+The client sends its requests to `https://api.exa.ai`. To send them to another Exa API, such as the EU API at `https://api.eu.exa.ai`, pass `baseURL` in the client options or set the `EXA_BASE_URL` environment variable. `EXA_BASE_URL` applies to every client created without a base URL, and `baseURL` wins when both are set.
+
+```ts
+const exa = new Exa(process.env.EXA_API_KEY, { baseURL: "https://api.eu.exa.ai" });
+```
+
+Each client keeps its own API key and base URL, so one process can run several clients side by side, for example one per Exa team:
+
+```ts
+import Exa from "exa-js";
+
+const us = new Exa(process.env.EXA_US_API_KEY, { baseURL: "https://api.exa.ai" });
+const eu = new Exa(process.env.EXA_EU_API_KEY, { baseURL: "https://api.eu.exa.ai" });
+```
+
+- Give every client a `baseURL`, so `EXA_BASE_URL` reaches none of them.
+- The base URL can also be the constructor's second argument, as in `new Exa(apiKey, baseURL, options)`.
+- Browsers have no environment variables, so pass `baseURL` there.
+- A trailing slash on the base URL is ignored.
+
 ## Warnings
 
 The API can return `warnings` about a request, such as a field it ignores. At the time of writing, search responses carry them, including `streamSearch`. A warning never changes the status code or the results. It is for whoever maintains the code that builds the request. Fix the request, and don't pass the warning to a model. The response keeps them in `warnings`.
@@ -418,9 +471,9 @@ By default the client prints each one with `console.warn`, once per process for 
 The client's `warnings` option changes that. `"silent"` prints nothing. A function receives every warning, with the request it is about, instead of printing:
 
 ```ts
-const quiet = new Exa(process.env.EXA_API_KEY, undefined, { warnings: "silent" });
+const quiet = new Exa(process.env.EXA_API_KEY, { warnings: "silent" });
 
-const routed = new Exa(process.env.EXA_API_KEY, undefined, {
+const routed = new Exa(process.env.EXA_API_KEY, {
   warnings: (warning, { endpoint, method, requestId }) => {
     logger.warn({ ...warning, endpoint, method, requestId }, "Exa API warning");
   },
