@@ -53,7 +53,7 @@
     "openai": "^6.49.0",
     "openapi-typescript": "~7.6.1",
     "prettier": "~3.5.3",
-    "tsup": "~8.4.0",
+    "tsup": "~9.0.0",
     "typescript": "~5.8.3",
     "vitest": "~4.1.12"
   },
