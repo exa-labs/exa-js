@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.29.0](https://github.com/exa-labs/exa-js/compare/v2.28.0...v2.29.0) (2026-11-18)
+
+
+### Features
+
+* add `baseURL` and `EXA_BASE_URL` configuration for `Exa` clients ([01a4a8a](https://github.com/exa-labs/exa-js/commit/01a4a8acc2f62851ff894e10c10975b1bdffeefd))
+* add `ExaError.tag` for machine-readable API error tags ([01a4a8a](https://github.com/exa-labs/exa-js/commit/01a4a8acc2f62851ff894e10c10975b1bdffeefd))
+* add webset search `costDollars` details ([01a4a8a](https://github.com/exa-labs/exa-js/commit/01a4a8acc2f62851ff894e10c10975b1bdffeefd))
+
+
+### Bug Fixes
+
+* fix `cursor` pagination for agent runs, monitors, and websets lists ([01a4a8a](https://github.com/exa-labs/exa-js/commit/01a4a8acc2f62851ff894e10c10975b1bdffeefd))
+* fix `Exa` API key resolution with `ApiKeySource` and custom `fetch` ([01a4a8a](https://github.com/exa-labs/exa-js/commit/01a4a8acc2f62851ff894e10c10975b1bdffeefd))
+* fix `streamSearch` and `streamAnswer` to reject on API error events ([01a4a8a](https://github.com/exa-labs/exa-js/commit/01a4a8acc2f62851ff894e10c10975b1bdffeefd))
+* fix `streamSearch` errors to retain API `tag` and `requestId` ([01a4a8a](https://github.com/exa-labs/exa-js/commit/01a4a8acc2f62851ff894e10c10975b1bdffeefd))
+* fix tool helpers to accept `RunnableTool` values without definitions ([01a4a8a](https://github.com/exa-labs/exa-js/commit/01a4a8acc2f62851ff894e10c10975b1bdffeefd))
+
 ## [2.28.0](https://github.com/exa-labs/exa-js/compare/v2.27.0...v2.28.0) (2026-11-06)
 
 
