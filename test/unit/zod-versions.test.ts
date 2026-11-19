@@ -180,6 +180,114 @@ describe("zod schemas from any zod version", () => {
     }
   );
 
+  it("does not treat a JSON Schema with a `_zod` extension key as zod", () => {
+    const jsonSchema = {
+      type: "object",
+      properties: { name: { type: "string", minLength: 2 } },
+      required: ["name"],
+      _zod: { def: {} },
+    };
+    expect(isZodSchema(jsonSchema)).toBe(false);
+  });
+
+  it("answer() sends a JSON Schema with a `_zod` extension key unchanged", async () => {
+    const exa = new Exa("test-api-key", "https://api.exa.ai");
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce({ answer: {}, citations: [] });
+    const jsonSchema = {
+      type: "object",
+      properties: { name: { type: "string", minLength: 2 } },
+      required: ["name"],
+      _zod: { def: {} },
+    };
+
+    await exa.answer("q", { outputSchema: jsonSchema });
+
+    const body = requestSpy.mock.calls[0][2] as Record<string, any>;
+    expect(body.outputSchema).toEqual(jsonSchema);
+  });
+
+  it("converts a zod 4 schema with its own zod's converter when it has one", () => {
+    // The SDK's zod/v4/core can be older than the app's zod 4 and misread its
+    // internals (zod 3.25's converter drops minLength from a zod 4.6 schema).
+    const schema = z4.object({ name: z4.string().min(2) });
+    const ownConverter = vi.spyOn(schema, "toJSONSchema");
+
+    const json = zodToJsonSchema(schema);
+
+    expect(ownConverter).toHaveBeenCalled();
+    expect(json).toMatchObject({
+      properties: { name: { type: "string", minLength: 2 } },
+    });
+  });
+
+  it("converts a zod/mini schema, which has no converter method", () => {
+    const schema = zm.object({ name: zm.string().check(zm.minLength(2)) });
+    expect((schema as any).toJSONSchema).toBeUndefined();
+
+    expect(zodToJsonSchema(schema)).toMatchObject({
+      properties: { name: { type: "string", minLength: 2 } },
+      additionalProperties: false,
+    });
+  });
+
+  const transformed = {
+    "zod 3": z3.object({ headline: z3.string().transform((v) => v.trim()) }),
+    "zod 4": z4.object({ headline: z4.string().transform((v) => v.trim()) }),
+    "zod 4 mini": zm.object({
+      headline: zm.pipe(
+        zm.string(),
+        zm.transform((v: string) => v.trim())
+      ),
+    }),
+  };
+
+  it.each(Object.entries(transformed))(
+    "%s: a transformed field keeps its input type instead of becoming {}",
+    (_name, schema) => {
+      const json = zodToJsonSchema(schema);
+      expect(json).toMatchObject({
+        type: "object",
+        properties: { headline: { type: "string" } },
+        required: ["headline"],
+        additionalProperties: false,
+      });
+    }
+  );
+
+  it("answer() sends a zod 4 transformed field's input type", async () => {
+    const exa = new Exa("test-api-key", "https://api.exa.ai");
+    const requestSpy = vi
+      .spyOn(exa, "request")
+      .mockResolvedValueOnce({ answer: {}, citations: [] });
+
+    await exa.answer("q", { outputSchema: transformed["zod 4"] });
+
+    const body = requestSpy.mock.calls[0][2] as Record<string, any>;
+    expect(body.outputSchema.properties.headline).toEqual({ type: "string" });
+  });
+
+  it("zod 4: keeps loose and strict objects as declared in the fallback", () => {
+    const headline = z4.string().transform((v) => v.trim());
+    expect(
+      zodToJsonSchema(z4.looseObject({ headline })).additionalProperties
+    ).not.toBe(false);
+    expect(
+      zodToJsonSchema(z4.strictObject({ headline })).additionalProperties
+    ).toBe(false);
+  });
+
+  it("zod 4: a type with no JSON Schema form still converts, as in zod 3", () => {
+    const json = zodToJsonSchema(
+      z4.object({ headline: z4.string(), at: z4.date() })
+    );
+    expect(json).toMatchObject({
+      properties: { headline: { type: "string" }, at: {} },
+      additionalProperties: false,
+    });
+  });
+
   it("infers the answer type from a zod 4 schema", () => {
     const exa = new Exa("test-api-key", "https://api.exa.ai");
     vi.spyOn(exa, "request").mockResolvedValue({ answer: {}, citations: [] });
