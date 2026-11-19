@@ -66,75 +66,65 @@ export function isZodSchema(obj: unknown): obj is ZodSchema<any> {
 
 type Zod4ConvertParams = {
   target: "draft-7";
-  io?: "input" | "output";
-  unrepresentable?: "throw" | "any";
-  override?: (ctx: {
+  unrepresentable: "any";
+  override: (ctx: {
     zodSchema: unknown;
     jsonSchema: Record<string, unknown>;
   }) => void;
 };
 
-/**
- * In input mode zod leaves `additionalProperties` off a plain `z.object()`,
- * since unknown keys are accepted (and stripped) on input. Output mode, and
- * zod-to-json-schema for zod 3, mark it `false`; this keeps the input-mode
- * fallback the same shape.
- */
-const closeStripObjects: Zod4ConvertParams["override"] = ({
-  zodSchema,
-  jsonSchema,
-}) => {
-  const def = (zodSchema as { _zod?: { def?: Record<string, unknown> } })._zod
-    ?.def;
-  if (
-    def?.type === "object" &&
-    def.catchall === undefined &&
-    jsonSchema.additionalProperties === undefined
-  ) {
-    jsonSchema.additionalProperties = false;
-  }
-};
+type Zod4Def = { type?: string; in?: Zod4Schema<any>; out?: Zod4Schema<any> };
+
+function defOf(schema: unknown): Zod4Def | undefined {
+  return (schema as { _zod?: { def?: Zod4Def } })._zod?.def;
+}
 
 /**
- * Converts a zod 4 schema with the converter from the schema's own copy of
- * zod when it has one: classic schemas carry a `toJSONSchema` method. The
- * SDK's `zod/v4/core` converter can be older than the app's zod and misread
- * newer internals (zod 3.25's drops `minLength` from a zod 4.6 `.min()`), so
- * it is only the fallback, for `zod/mini` schemas, which have no method. (A
- * mini schema from a newer zod than the SDK resolves can still lose such
+ * Converts with the converter from the schema's own copy of zod when it has
+ * one: classic schemas carry a `toJSONSchema` method. The SDK's
+ * `zod/v4/core` converter can be older than the app's zod and misread newer
+ * internals (zod 3.25's drops `minLength` from a zod 4.6 `.min()`), so it is
+ * only the fallback, for `zod/mini` schemas, which have no method. (A mini
+ * schema from a newer zod than the SDK resolves can still lose such
  * constraints; mini exposes no converter of its own to use instead.)
+ */
+function convertZod4(
+  schema: Zod4Schema<any>,
+  params: Zod4ConvertParams
+): Record<string, unknown> {
+  const ownConverter = (schema as { toJSONSchema?: unknown }).toJSONSchema;
+  return (
+    typeof ownConverter === "function"
+      ? ownConverter.call(schema, params)
+      : convertZod4ToJsonSchema(schema as any, params)
+  ) as Record<string, unknown>;
+}
+
+/**
+ * Converts a zod 4 schema to JSON Schema by its output types, as before.
+ * Types with no JSON Schema form, such as `z.date()`, become `{}`, as they
+ * do for zod 3 schemas.
  *
- * Output types are tried first, as before. A schema with a `.transform()`
- * cannot be represented that way, so it falls back to its input types (what
- * zod-to-json-schema does for zod 3 effects) rather than sending the field as
- * `{}`, which constrains nothing. Only types with no JSON Schema form at all,
- * such as `z.date()`, are still sent as `{}`, as zod 3 schemas are.
+ * A `.transform()` field has no output type zod can describe, so it would
+ * also become `{}`, which constrains nothing. Such a field (a pipe whose
+ * output side is a transform) is described by its input side instead, what
+ * zod-to-json-schema does for zod 3 effects. Only that field changes; every
+ * other field keeps its output form.
  */
 function zod4ToJsonSchema(schema: Zod4Schema<any>): Record<string, unknown> {
-  const ownConverter = (schema as { toJSONSchema?: unknown }).toJSONSchema;
-  const convert = (params: Zod4ConvertParams): Record<string, unknown> =>
-    (typeof ownConverter === "function"
-      ? ownConverter.call(schema, params)
-      : convertZod4ToJsonSchema(schema as any, params)) as Record<
-      string,
-      unknown
-    >;
-
-  try {
-    return convert({ target: "draft-7" });
-  } catch {
-    // A transform or another output-only type: use the input types instead.
-  }
-  const input = {
+  const params: Zod4ConvertParams = {
     target: "draft-7",
-    io: "input",
-    override: closeStripObjects,
-  } as const;
-  try {
-    return convert(input);
-  } catch {
-    return convert({ ...input, unrepresentable: "any" });
-  }
+    unrepresentable: "any",
+    override: ({ zodSchema, jsonSchema }) => {
+      const def = defOf(zodSchema);
+      if (def?.type !== "pipe" || !def.in) return;
+      if (defOf(def.out)?.type !== "transform") return;
+      const { $schema: _drop, ...inputSide } = convertZod4(def.in, params);
+      for (const key of Object.keys(jsonSchema)) delete jsonSchema[key];
+      Object.assign(jsonSchema, inputSide);
+    },
+  };
+  return convertZod4(schema, params);
 }
 
 /**

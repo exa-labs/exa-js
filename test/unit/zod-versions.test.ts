@@ -288,6 +288,47 @@ describe("zod schemas from any zod version", () => {
     });
   });
 
+  it("zod 4: only a transformed field uses its input side; siblings keep output types", () => {
+    const json = zodToJsonSchema(
+      z4.object({
+        headline: z4.string().transform((v) => v.trim()),
+        at: z4.date(),
+        count: z4.codec(z4.string(), z4.number(), {
+          decode: Number,
+          encode: String,
+        }),
+        name: z4.string().default("x"),
+      })
+    );
+    expect(json).toMatchObject({
+      properties: {
+        headline: { type: "string" },
+        at: {},
+        count: { type: "number" },
+        name: { type: "string" },
+      },
+      required: ["headline", "at", "count", "name"],
+      additionalProperties: false,
+    });
+  });
+
+  it("zod 4: a nested transformed field keeps its object closed", () => {
+    const json = zodToJsonSchema(
+      z4.object({
+        story: z4.object({ title: z4.string().transform((v) => v.trim()) }),
+      })
+    );
+    expect(json).toMatchObject({
+      properties: {
+        story: {
+          type: "object",
+          properties: { title: { type: "string" } },
+          additionalProperties: false,
+        },
+      },
+    });
+  });
+
   it("infers the answer type from a zod 4 schema", () => {
     const exa = new Exa("test-api-key", "https://api.exa.ai");
     vi.spyOn(exa, "request").mockResolvedValue({ answer: {}, citations: [] });
